@@ -48,7 +48,7 @@ class LandingPage extends React.Component {
                 <Container>
                     <Row>
                         <Col>
-                            <h1>Nodes</h1>
+                            <h1>Bitcoin Cash Nodes</h1>
                         </Col>
                     </Row>
                 </Container>
