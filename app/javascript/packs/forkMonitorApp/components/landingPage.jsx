@@ -14,6 +14,8 @@ import {
     Jumbotron
 } from 'reactstrap';
 
+import Nodes from './nodes';
+
 class LandingPage extends React.Component {
   constructor(props) {
     super(props);
@@ -51,6 +53,7 @@ class LandingPage extends React.Component {
                     </Row>
                 </Container>
             </Jumbotron>
+            <Nodes/>
         </div>
       );
   }
