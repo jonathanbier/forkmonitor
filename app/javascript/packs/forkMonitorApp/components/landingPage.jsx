@@ -53,6 +53,15 @@ class LandingPage extends React.Component {
                     </Row>
                 </Container>
             </Jumbotron>
+            <Jumbotron>
+                <Container>
+                    <Row>
+                        <Col>
+                            <h4>Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40UTC on 15th November 2018</h4>
+                        </Col>
+                    </Row>
+                </Container>
+            </Jumbotron>
             <Nodes/>
         </div>
       );
