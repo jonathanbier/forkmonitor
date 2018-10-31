@@ -10,8 +10,38 @@ gem install bundler foreman
 bundle install --without production
 ```
 
+Create a file `.env` and add node connection info:
+
+```
+NODE_1=host:port|username|password|name
+NODE_2=...
+...
+```
+
+To check if nodes are reachable:
+
+```
+rake debug:node_info
+```
+
 Run the server:
 
 ```
 foreman start -f Procfile.dev -p 3000
+```
+
+To manually query a node:
+
+```
+rails c
+info = BitcoinClient.nodes[0].getblockchaininfo
+info["blocks"]
+=> 548121
+```
+
+To get the list of RPC commands and execute an arbitrary command:
+
+```
+puts BitcoinClient.nodes[0].help
+BitcoinClient.nodes[0].client.request("getblock", )
 ```
