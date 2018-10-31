@@ -1,9 +1,14 @@
 class BitcoinClient
   @@nodes = nil
 
-  def initialize(rpchost, rpcuser, rpcpassword, name)
+  def initialize(rpchost, rpcuser, rpcpassword, name, pos)
     @client = Bitcoiner.new(rpcuser,rpcpassword,rpchost)
     @name = name
+    @pos = pos
+  end
+
+  def pos
+    @pos
   end
 
   def name
@@ -36,6 +41,15 @@ class BitcoinClient
     @client.request("getblock", hash)
   end
 
+  # Update database with latest info from this node
+  def poll!
+    info = getinfo
+    block_info = getblock(getbestblockhash)
+    node = Node.create_with(name: @name, version: info["version"]).find_or_create_by(pos: @pos)
+    block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
+    node.update block: block
+  end
+
   def self.nodes
     load_nodes! if @@nodes.nil?
     @@nodes
@@ -49,7 +63,7 @@ class BitcoinClient
       break if ENV["NODE_#{ n }"].nil?
       credentials = ENV["NODE_#{ n }"].split("|")
       # TODO: sanity check credentials
-      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3])
+      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3], n)
     end
 
     return @@nodes
