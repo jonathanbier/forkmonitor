@@ -7,7 +7,7 @@ the bundler and foreman gems, then run bundler:
 
 ```
 gem install bundler foreman
-bundle install
+bundle install --without production
 ```
 
 Run the server:
