@@ -22,5 +22,10 @@
         "spec": true
       }
     ]
-  ]
+  ],
+  "env": {
+    "test": {
+      "presets": [["env"], "react"]
+    }
+  }
 }

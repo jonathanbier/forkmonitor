@@ -1,5 +1,7 @@
 import React from 'react';
 
+import axios from 'axios';
+
 import {
     Container,
     Row,
@@ -13,6 +15,7 @@ Number.prototype.pad = function(size) {
   return s;
 }
 
+axios.defaults.headers.post['Content-Type'] = 'application/json'
 
 class Nodes extends React.Component {
   constructor(props) {
@@ -30,15 +33,8 @@ class Nodes extends React.Component {
   }
 
   getNodes() {
-   let request = new Request('/api/v1/nodes', {
-     method: 'GET',
-     headers: new Headers({
-       'Content-Type': 'application/json'
-     })
-   });
-
-   fetch(request).then(function (response) {
-     return response.json();
+   axios.get('/api/v1/nodes').then(function (response) {
+     return response.data;
    }).then(function (nodes) {
      this.setState({
        nodes: nodes
@@ -54,7 +50,7 @@ class Nodes extends React.Component {
             {this.state.nodes.map(function (node, index) {
               var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
               return (
-                <Row key={node.pos}>
+                <Row key={node.pos} className="node-info">
                   <Col>
                     <h4>{node.name} {version[0]}.{version[1]}.{version[2]}
                       {version[3] > 0 &&
