@@ -3,7 +3,8 @@ import React from 'react';
 import {
     Container,
     Row,
-    Col
+    Col,
+    Badge
 } from 'reactstrap';
 
 Number.prototype.pad = function(size) {
@@ -60,7 +61,13 @@ class Nodes extends React.Component {
                         <span>.{version[3]}</span>
                       }
                     </h4>
+                    {node.unreachable_since!=null &&
+                      <Badge color="warning">Offline</Badge>
+                    }
                     <ul>
+                      {node.unreachable_since!=null &&
+                        <li>Offline since {node.unreachable_since}</li>
+                      }
                       <li>Height: {node.best_block.height}</li>
                       <li>Timestamp: {node.best_block.timestamp}</li>
                       <li>Hash: {node.best_block.hash}</li>

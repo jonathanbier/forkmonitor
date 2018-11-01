@@ -25,8 +25,22 @@ class BitcoinClient
     @client.request("help")
   end
 
-  def getinfo
-    @client.request("getinfo")
+  def getnetworkinfo
+    begin
+      # Try getnetworkinfo, fall back to getinfo for older nodes
+      begin
+        return @client.request("getnetworkinfo")
+      rescue Bitcoiner::Client::JSONRPCError => e
+          if e.message.include?("404")
+            return @client.request("getinfo")
+          else
+            raise
+          end
+      end
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getnetworkinfo or getinfo failed for node #{@pos}: " + e.message
+      raise
+    end
   end
 
   def getblockchaininfo
@@ -34,20 +48,37 @@ class BitcoinClient
   end
 
   def getbestblockhash
-    @client.request("getbestblockhash")
+    begin
+      return @client.request("getbestblockhash")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getbestblockhash failed for node #{@pos}: " + e.message
+      raise
+    end
   end
 
   def getblock(hash)
-    @client.request("getblock", hash)
+    begin
+      return @client.request("getblock", hash)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getblock(#{hash}) failed for node #{@pos}: " + e.message
+      raise
+    end
   end
 
   # Update database with latest info from this node
   def poll!
-    info = getinfo
-    block_info = getblock(getbestblockhash)
+    begin
+      info = getnetworkinfo
+      block_info = getblock(getbestblockhash)
+    rescue Bitcoiner::Client::JSONRPCError
+      node = Node.create_with(name: @name, version: info.present? && info["version"]).find_or_create_by(pos: @pos)
+      node.update unreachable_since: node.unreachable_since || DateTime.now
+      return
+    end
+
     node = Node.create_with(name: @name, version: info["version"]).find_or_create_by(pos: @pos)
     block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
-    node.update block: block
+    node.update block: block, unreachable_since: nil
   end
 
   def self.nodes
