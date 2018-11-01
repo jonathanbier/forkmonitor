@@ -62,6 +62,17 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
+  ActionMailer::Base.smtp_settings = {
+    :address        => 'smtp.sendgrid.net',
+    :port           => '587',
+    :authentication => :plain,
+    :user_name      => ENV['SENDGRID_USERNAME'],
+    :password       => ENV['SENDGRID_PASSWORD'],
+    :enable_starttls_auto => true
+  }
+
+  ActionMailer::Base.smtp_settings[:domain] = 'heroku.com'
+
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true
@@ -84,4 +95,15 @@ Rails.application.configure do
 
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
+
+  Rails.application.config.middleware.use ExceptionNotification::Rack,
+    :email => {
+      :email_prefix => "[Fork Monitor Exception] ",
+      :sender_address => ENV['EXCEPTION_FROM_EMAIL'],
+      :exception_recipients => ENV['BUGS_TO'].split(",")
+    },
+    :error_grouping => true,
+   :ignore_exceptions => ["Rack::Timeout::RequestTimeoutException"] + ExceptionNotifier.ignored_exceptions
+
+  ExceptionNotifier::Rake.configure
 end
