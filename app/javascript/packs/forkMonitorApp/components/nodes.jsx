@@ -2,6 +2,8 @@ import React from 'react';
 
 import axios from 'axios';
 
+import Moment from 'react-moment';
+
 import {
     Container,
     Row,
@@ -64,8 +66,7 @@ class Nodes extends React.Component {
                       {node.unreachable_since!=null &&
                         <li>Offline since {node.unreachable_since}</li>
                       }
-                      <li>Height: {node.best_block.height}</li>
-                      <li>Timestamp: {node.best_block.timestamp}</li>
+                      <li>Height: {node.best_block.height} (<Moment format="YYYY-MM-DD HH:mm" parse="X">{node.best_block.timestamp}</Moment>)</li>
                       <li>Hash: {node.best_block.hash}</li>
                       <li>Work: {node.best_block.work}</li>
                     </ul>
