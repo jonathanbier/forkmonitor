@@ -24,6 +24,7 @@ class Nodes extends React.Component {
     super(props);
 
     this.state = {
+      coin: props.coin,
       nodes: []
     };
 
@@ -35,7 +36,7 @@ class Nodes extends React.Component {
   }
 
   getNodes() {
-   axios.get('/api/v1/nodes').then(function (response) {
+   axios.get('/api/v1/nodes/' + this.state.coin).then(function (response) {
      return response.data;
    }).then(function (nodes) {
      this.setState({
@@ -52,7 +53,7 @@ class Nodes extends React.Component {
             {this.state.nodes.map(function (node, index) {
               var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
               return (
-                <Row key={node.pos} className="node-info">
+                <Row key={node.pos} className="pull-left node-info">
                   <Col>
                     <h4>{node.name} {version[0]}.{version[1]}.{version[2]}
                       {version[3] > 0 &&

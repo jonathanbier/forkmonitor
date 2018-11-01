@@ -13,7 +13,7 @@ bundle install --without production
 Create a file `.env` and add node connection info:
 
 ```
-NODE_1=host:port|username|password|name
+NODE_1=BTC:host:port|username|password|name
 NODE_2=...
 ...
 ```

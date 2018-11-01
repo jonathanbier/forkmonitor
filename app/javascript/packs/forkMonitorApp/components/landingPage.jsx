@@ -12,8 +12,12 @@ import {
     Row,
     Col,
     Jumbotron,
-    UncontrolledAlert
+    UncontrolledAlert,
+    TabContent,
+    TabPane
 } from 'reactstrap';
+
+import classnames from 'classnames';
 
 import Nodes from './nodes';
 
@@ -22,8 +26,11 @@ class LandingPage extends React.Component {
     super(props);
 
     this.toggle = this.toggle.bind(this);
+    this.toggleTab = this.toggleTab.bind(this);
+
     this.state = {
-        isOpen: false
+        isOpen: false,
+        activeTab: '1'
     };
   }
   toggle() {
@@ -31,6 +38,14 @@ class LandingPage extends React.Component {
           isOpen: !this.state.isOpen
       });
   }
+  toggleTab(tab) {
+    if (this.state.activeTab !== tab) {
+      this.setState({
+        activeTab: tab
+      });
+    }
+   }
+
   render() {
       return(
         <div>
@@ -45,19 +60,36 @@ class LandingPage extends React.Component {
                     </Nav>
                 </Collapse>
             </Navbar>
-            <Jumbotron>
-                <Container>
-                    <Row>
-                        <Col>
-                            <h1>Bitcoin Cash Nodes</h1>
-                        </Col>
-                    </Row>
-                </Container>
-            </Jumbotron>
-            <UncontrolledAlert color="info">
-              Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40UTC on 15th November 2018
-            </UncontrolledAlert>
-            <Nodes/>
+            <Nav tabs>
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: this.state.activeTab === '1' })}
+                  onClick={() => { this.toggleTab('1'); }}
+                >
+                  Bitcoin
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink
+                  className={classnames({ active: this.state.activeTab === '2' })}
+                  onClick={() => { this.toggleTab('2'); }}
+                >
+                  Bitcoin Cash
+                </NavLink>
+              </NavItem>
+            </Nav>
+            <TabContent activeTab={this.state.activeTab}>
+             <TabPane tabId="1" align="lef">
+              <br />
+               <Nodes coin="BTC"/>
+             </TabPane>
+             <TabPane tabId="2">
+               <UncontrolledAlert color="info">
+                 Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40UTC on 15th November 2018
+               </UncontrolledAlert>
+               <Nodes coin="BCH"/>
+             </TabPane>
+           </TabContent>
         </div>
       );
   }

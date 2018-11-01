@@ -4,7 +4,8 @@ Rails.application.routes.draw do
 
   namespace :api, {format: 'json'} do
     namespace :v1 do
-      resources :nodes
+      resources :nodes, only: [:index]
+      match '/nodes/:coin', :to => 'nodes#index', :as => "nodes_for_coin", :via => :get
     end
   end
 end

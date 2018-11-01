@@ -1,10 +1,15 @@
 class BitcoinClient
   @@nodes = nil
 
-  def initialize(rpchost, rpcuser, rpcpassword, name, pos)
+  def initialize(coin, rpchost, rpcuser, rpcpassword, name, pos)
     @client = Bitcoiner.new(rpcuser,rpcpassword,rpchost)
+    @coin = coin
     @name = name
     @pos = pos
+  end
+
+  def coin
+    @coin
   end
 
   def pos
@@ -76,7 +81,7 @@ class BitcoinClient
       return
     end
 
-    node = Node.create_with(name: @name, version: info["version"]).find_or_create_by(pos: @pos)
+    node = Node.create_with(coin: @coin, name: @name, version: info["version"]).find_or_create_by(pos: @pos)
     block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
     node.update block: block, unreachable_since: nil
   end
@@ -94,7 +99,7 @@ class BitcoinClient
       break if ENV["NODE_#{ n }"].nil?
       credentials = ENV["NODE_#{ n }"].split("|")
       # TODO: sanity check credentials
-      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3], n)
+      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3], credentials[4], n)
     end
 
     return @@nodes
@@ -102,7 +107,7 @@ class BitcoinClient
 
   def self.poll!
     self.nodes.each do |node|
-      puts "Polling node #{node.pos} (#{node.name})..."
+      puts "Polling #{ node.coin } node #{node.pos} (#{node.name})..."
       node.poll!
     end
   end
