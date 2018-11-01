@@ -40,7 +40,7 @@ class LandingPage extends React.Component {
                 <Collapse isOpen={this.state.isOpen} navbar>
                     <Nav className="ml-auto" navbar>
                         <NavItem>
-                            <NavLink href="https://blog.bitmex.com/research/">BitMEX Research</NavLink>
+                            <NavLink href="https://github.com/BitMEXResearch/forkmonitor">Github</NavLink>
                         </NavItem>
                     </Nav>
                 </Collapse>
