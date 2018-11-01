@@ -32,6 +32,9 @@ gem 'bitcoiner'
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
 
+# There is no request timeout mechanism inside of Puma. 
+gem "rack-timeout"
+
 group :development, :test do
   # Use sqlite3 as the database for Active Record
   gem 'sqlite3'
