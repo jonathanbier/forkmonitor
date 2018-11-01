@@ -22,17 +22,17 @@ class BitcoinClient
   # TODO: patch bitcoiner gem so we can do client.help (etc), get rid of
   #       these wrappers and avoid exposing @client.
   def help
-    @client.request("help")
+    request("help")
   end
 
   def getnetworkinfo
     begin
       # Try getnetworkinfo, fall back to getinfo for older nodes
       begin
-        return @client.request("getnetworkinfo")
+        return request("getnetworkinfo")
       rescue Bitcoiner::Client::JSONRPCError => e
           if e.message.include?("404")
-            return @client.request("getinfo")
+            return request("getinfo")
           else
             raise
           end
@@ -44,12 +44,12 @@ class BitcoinClient
   end
 
   def getblockchaininfo
-    @client.request("getblockchaininfo")
+    request("getblockchaininfo")
   end
 
   def getbestblockhash
     begin
-      return @client.request("getbestblockhash")
+      return request("getbestblockhash")
     rescue Bitcoiner::Client::JSONRPCError => e
       puts "getbestblockhash failed for node #{@pos}: " + e.message
       raise
@@ -58,7 +58,7 @@ class BitcoinClient
 
   def getblock(hash)
     begin
-      return @client.request("getblock", hash)
+      return request("getblock", hash)
     rescue Bitcoiner::Client::JSONRPCError => e
       puts "getblock(#{hash}) failed for node #{@pos}: " + e.message
       raise
@@ -98,5 +98,18 @@ class BitcoinClient
     end
 
     return @@nodes
+  end
+
+  def self.poll!
+    self.nodes.each do |node|
+      puts "Polling node #{node.pos} (#{node.name})..."
+      node.poll!
+    end
+  end
+
+  private
+
+  def request(*args)
+    @client.request(*args)
   end
 end

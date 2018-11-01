@@ -32,7 +32,7 @@ gem 'bitcoiner'
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
 
-# There is no request timeout mechanism inside of Puma. 
+# There is no request timeout mechanism inside of Puma.
 gem "rack-timeout"
 
 group :development, :test do
@@ -40,6 +40,11 @@ group :development, :test do
   gem 'sqlite3'
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
+
+  gem 'rspec-rails', '~> 3.8'
+  gem 'factory_bot'
+
+  gem 'rails-controller-testing'
 
   # Shim to load environment variables from .env into ENV
   gem 'dotenv-rails'
@@ -52,6 +57,11 @@ group :development do
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
   gem 'spring-watcher-listen', '~> 2.0.0'
+
+  # Automatically run tests, etc:
+  gem 'guard'
+  gem 'guard-rspec', require: false
+  gem 'terminal-notifier-guard', '~> 1.6.1'
 end
 
 group :production do
