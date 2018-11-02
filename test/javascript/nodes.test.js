@@ -20,7 +20,7 @@ test('rendered component', async () => {
     hash: "abcd",
     height: 500000,
     timestamp: 1,
-    work: "1"
+    work: 86.000001
   }
   const resp = {data: [
     {pos: 1, name: "Bitcoin Core", version: 1000, best_block: best_block, unreachable_since: null},
@@ -31,4 +31,5 @@ test('rendered component', async () => {
   const wrapper = shallow(<Nodes />);
   await flushPromises();
   expect(wrapper.find('.node-info')).toHaveLength(2);
+  expect(wrapper.find('.node-info li').contains("Work:  ")).toEqual(true);
 });

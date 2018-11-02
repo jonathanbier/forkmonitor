@@ -3,6 +3,7 @@ import React from 'react';
 import axios from 'axios';
 
 import Moment from 'react-moment';
+import NumberFormat from 'react-number-format';
 
 import {
     Container,
@@ -69,7 +70,7 @@ class Nodes extends React.Component {
                       }
                       <li>Height: {node.best_block.height} (<Moment format="YYYY-MM-DD HH:mm" parse="X">{node.best_block.timestamp}</Moment>)</li>
                       <li>Hash: {node.best_block.hash}</li>
-                      <li>Work: {node.best_block.work}</li>
+                      <li>Work:  <NumberFormat value={node.best_block.work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} /></li>
                     </ul>
                   </Col>
                 </Row>);

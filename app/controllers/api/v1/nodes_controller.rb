@@ -5,6 +5,6 @@ class Api::V1::NodesController < ApplicationController
     else
       @nodes = Node.all
     end
-    render json: @nodes.order(pos: :asc)
+    render json: @nodes
   end
 end

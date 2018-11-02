@@ -5916,7 +5916,7 @@ prompts@^0.1.9:
     kleur "^2.0.1"
     sisteransi "^0.1.1"
 
-prop-types@^15.5.8, prop-types@^15.6.1, prop-types@^15.6.2:
+prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.6.2:
   version "15.6.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.2.tgz#05d5ca77b4453e985d60fc7ff8c859094a497102"
   dependencies:
@@ -6087,6 +6087,12 @@ react-lifecycles-compat@^3.0.4:
 react-moment@^0.8.2:
   version "0.8.2"
   resolved "https://registry.yarnpkg.com/react-moment/-/react-moment-0.8.2.tgz#9361a38668b7864dc170a0d69ee3d0da3cc4b2c3"
+
+react-number-format@^4.0.1:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/react-number-format/-/react-number-format-4.0.1.tgz#b3fb8d3447a825aec814a8202048a12aebf8aea1"
+  dependencies:
+    prop-types "^15.6.0"
 
 react-popper@^0.10.4:
   version "0.10.4"
