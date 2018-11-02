@@ -61,7 +61,7 @@ class Nodes extends React.Component {
                   <Row key={work}><Col>
                     <Breadcrumb>
                       <BreadcrumbItem active>
-                        Accumulated PoW: <NumberFormat value={work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
+                        Accumulated log2(PoW)=<NumberFormat value={work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
                       </BreadcrumbItem>
                     </Breadcrumb>
                     {this.state.nodes.filter(o => o.best_block.work == work).map(function (node, index) {
