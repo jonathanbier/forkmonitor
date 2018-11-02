@@ -112,6 +112,17 @@ class BitcoinClient
     end
   end
 
+  def self.poll_repeat!
+    while true
+      sleep 1
+
+      self.nodes.each do |node|
+        puts "Polling #{ node.coin } node #{node.pos} (#{node.name})..."
+        node.poll!
+      end
+    end
+  end
+
   private
 
   def request(*args)
