@@ -63,13 +63,13 @@ class Nodes extends React.Component {
                   <Row key={chaintip.hash}><Col>
                     <Breadcrumb>
                       <BreadcrumbItem active>
-                        Chaintip { chaintip.hash }
+                        Chaintip: { chaintip.hash }
                       </BreadcrumbItem>
                     </Breadcrumb>
                     <p>
-                     Height { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
+                     Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
                      <br/>
-                     Accumulated log2(PoW)=<NumberFormat value={chaintip.work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
+                     Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
                     </p>
                     Nodes:
                     <ul>
