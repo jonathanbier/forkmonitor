@@ -29,7 +29,7 @@ class Nodes extends React.Component {
     this.state = {
       coin: props.coin,
       nodes: [],
-      pow: []
+      chaintips: []
     };
 
     this.getNodes = this.getNodes.bind(this);
@@ -43,9 +43,11 @@ class Nodes extends React.Component {
    axios.get('/api/v1/nodes/' + this.state.coin).then(function (response) {
      return response.data;
    }).then(function (nodes) {
+     var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.hash === elem.hash) == pos)
+
      this.setState({
        nodes: nodes,
-       pow: [...(new Set(nodes.map(node => node.best_block.work)))]
+       chaintips: unique(nodes.map(node => node.best_block))
      });
 
    }.bind(this)).catch(function (error) {
@@ -56,42 +58,43 @@ class Nodes extends React.Component {
   render() {
       return(
           <Container>
-              {this.state.pow.map(function (work) {
+              {this.state.chaintips.map(function (chaintip, index) {
                 return (
-                  <Row key={work}><Col>
+                  <Row key={chaintip.hash}><Col>
                     <Breadcrumb>
                       <BreadcrumbItem active>
-                        Accumulated log2(PoW)=<NumberFormat value={work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
+                        Chaintip { chaintip.hash }
                       </BreadcrumbItem>
                     </Breadcrumb>
-                    {this.state.nodes.filter(o => o.best_block.work == work).map(function (node, index) {
+                    <p>
+                     Height { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
+                     <br/>
+                     Accumulated log2(PoW)=<NumberFormat value={chaintip.work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
+                    </p>
+                    Nodes:
+                    <ul>
+                    {this.state.nodes.filter(o => o.best_block.hash == chaintip.hash).map(function (node, index) {
                       var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
                       return (
-                        <Row key={node.pos} className="pull-left node-info">
-                          <Col>
-                            <h4>{node.name} {version[0]}.{version[1]}.{version[2]}
-                              {version[3] > 0 &&
-                                <span>.{version[3]}</span>
-                              }
-                            </h4>
-                            {node.unreachable_since!=null &&
-                              <Badge color="warning">Offline</Badge>
-                            }
-                            <ul>
+                        <li key={node.pos} className="pull-left node-info">
+                          <b>
+                            {node.name} {version[0]}.{version[1]}.{version[2]}
+                                {version[3] > 0 &&
+                                  <span>.{version[3]}</span>
+                                }
                               {node.unreachable_since!=null &&
-                                <li>Offline since {node.unreachable_since}</li>
+                                <Badge color="warning">Offline</Badge>
                               }
-                              <li>Height: {node.best_block.height} (<Moment format="YYYY-MM-DD HH:mm" parse="X">{node.best_block.timestamp}</Moment>)</li>
-                              <li>Hash: {node.best_block.hash}</li>
-                            </ul>
-                          </Col>
-                        </Row>)
+                            </b>
+                        </li>)
                     }.bind(this))}
-                    {work!=this.state.pow[-1] &&
+                    </ul>
+                    {  index != this.state.chaintips.length - 1 &&
                       <hr/>
                     }
-                  </Col></Row>)
-              }.bind(this))}
+                  </Col>
+                  </Row>
+              )}.bind(this))}
           </Container>
       );
   }
