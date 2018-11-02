@@ -113,6 +113,18 @@ class BitcoinClient
   end
 
   def self.poll_repeat!
+    # Trap ^C
+    Signal.trap("INT") {
+      puts "\nShutting down gracefully..."
+      exit
+    }
+
+    # Trap `Kill `
+    Signal.trap("TERM") {
+      puts "\nShutting down gracefully..."
+      exit
+    }
+
     while true
       sleep 1
 
