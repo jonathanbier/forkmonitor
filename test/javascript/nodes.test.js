@@ -30,6 +30,7 @@ test('rendered component', async () => {
 
   const wrapper = shallow(<Nodes />);
   await flushPromises();
+  console.log(wrapper.find('nav').debug());
+  expect(wrapper.state("pow")).toEqual([86.000001]);
   expect(wrapper.find('.node-info')).toHaveLength(2);
-  expect(wrapper.find('.node-info li').contains("Work:  ")).toEqual(true);
 });
