@@ -85,7 +85,7 @@ class LandingPage extends React.Component {
              </TabPane>
              <TabPane tabId="2">
                <UncontrolledAlert color="info">
-                 Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40UTC on 15th November 2018
+                 Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40 UTC on 15th November 2018
                </UncontrolledAlert>
                <Nodes coin="BCH"/>
              </TabPane>
