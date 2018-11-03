@@ -82,7 +82,15 @@ class BitcoinClient
     end
 
     node = Node.create_with(coin: @coin, name: @name, version: info["version"]).find_or_create_by(pos: @pos)
-    block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
+
+    begin
+      # Not atomic and called very frequently, so sometimes it tries to insert
+      # a block that was already inserted. In that case try again, so it updates
+      # the existing block instead.
+      block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
+    rescue
+      retry
+    end
     node.update block: block, unreachable_since: nil
   end
 
@@ -126,11 +134,12 @@ class BitcoinClient
     }
 
     while true
-      sleep 1
+      sleep 5
 
       self.nodes.each do |node|
         puts "Polling #{ node.coin } node #{node.pos} (#{node.name})..."
         node.poll!
+        sleep 0.5
       end
     end
   end
