@@ -50,7 +50,7 @@ class LandingPage extends React.Component {
       return(
         <div>
             <Navbar color="inverse" light expand="md">
-                <NavbarBrand href="/">Fork Monitor</NavbarBrand>
+                <NavbarBrand href="/"><b>Fork Monitor</b></NavbarBrand>
                 <NavbarToggler onClick={this.toggle} />
                 <Collapse isOpen={this.state.isOpen} navbar>
                     <Nav className="ml-auto" navbar>
