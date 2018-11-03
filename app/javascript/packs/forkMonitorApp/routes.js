@@ -13,7 +13,7 @@ const App = (props) => (
        <div className="container">
          <span className="text-muted">
          <p>Sponsored by:<br />
-           <img src="https://blog.bitmex.com/wp-content/uploads/2018/11/logo.png" height="100pt"/>
+           <a href="https://research.bitmex.com"><img src="https://blog.bitmex.com/wp-content/uploads/2018/11/logo.png" height="100pt"/></a>
          </p>
          <p className="text-muted disclaimer">
             This material should not be the basis for making investment decisions,
