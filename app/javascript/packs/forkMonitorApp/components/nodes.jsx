@@ -93,7 +93,7 @@ class Nodes extends React.Component {
                     <p>
                      Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
                      <br/>
-                     Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={3} fixedDecimalScale={true} />
+                     Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
                     </p>
                     Nodes:
                     <ul>
