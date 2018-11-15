@@ -8,4 +8,7 @@ Rails.application.routes.draw do
       match '/nodes/:coin', :to => 'nodes#index', :as => "nodes_for_coin", :via => :get
     end
   end
+
+  get 'nodes/btc', to: "pages#root"
+  get 'nodes/bch', to: "pages#root"
 end

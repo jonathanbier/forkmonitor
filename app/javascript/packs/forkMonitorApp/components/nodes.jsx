@@ -11,7 +11,9 @@ import {
     Col,
     Badge,
     BreadcrumbItem,
-    Breadcrumb
+    Breadcrumb,
+    TabPane,
+    UncontrolledAlert
 } from 'reactstrap';
 
 Number.prototype.pad = function(size) {
@@ -27,7 +29,7 @@ class Nodes extends React.Component {
     super(props);
 
     this.state = {
-      coin: props.coin,
+      coin: props.match.params.coin,
       nodes: [],
       chaintips: []
     };
@@ -36,16 +38,31 @@ class Nodes extends React.Component {
   }
 
   componentDidMount() {
-    this.getNodes()
+    this.getNodes(this.state.coin);
   }
 
-  getNodes() {
-   axios.get('/api/v1/nodes/' + this.state.coin).then(function (response) {
+  componentWillReceiveProps(nextProps) {
+    const currentCoin = this.state && this.state.coin;
+    const nextCoin = nextProps.match.params.coin;
+
+    if (currentCoin !== nextCoin) {
+      this.setState({
+        nodes: [],
+        chaintips: []
+      });
+      this.getNodes(nextProps.match.params.coin);
+    }
+
+  }
+
+  getNodes(coin) {
+   axios.get('/api/v1/nodes/' + coin).then(function (response) {
      return response.data;
    }).then(function (nodes) {
      var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.hash === elem.hash) == pos)
 
      this.setState({
+       coin: coin,
        nodes: nodes,
        chaintips: unique(nodes.map(node => node.best_block))
      });
@@ -57,8 +74,15 @@ class Nodes extends React.Component {
 
   render() {
       return(
+        <TabPane align="left" >
+          <br />
+          { this.state.coin === "bch" &&
+            <UncontrolledAlert color="info">
+              Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40UTC on 15th November 2018
+            </UncontrolledAlert>
+          }
           <Container>
-              {this.state.chaintips.map(function (chaintip, index) {
+              {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
                 return (
                   <Row key={chaintip.hash}><Col>
                     <Breadcrumb>
@@ -96,6 +120,7 @@ class Nodes extends React.Component {
                   </Row>
               )}.bind(this))}
           </Container>
+        </TabPane>
       );
   }
 }

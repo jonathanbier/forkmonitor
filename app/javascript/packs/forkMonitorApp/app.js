@@ -1,14 +1,9 @@
 import React from 'react'
-import {
-  BrowserRouter as Router,
-  Route,
-} from 'react-router-dom'
-import LandingPage from './components/landingPage';
+
+import Navigation from './components/navigation';
 const App = (props) => (
     <div>
-      <Router>
-        <Route exact path='/' component={LandingPage} />
-      </Router>
+      <Navigation />
       <footer className="footer">
        <div className="container">
          <span className="text-muted">
@@ -29,6 +24,9 @@ const App = (props) => (
             The website is sponsored by BitMEX Research and neither BitMEX, nor
             any other entity, will be liable whatsoever for any direct or consequential
             loss arising from the use of this publication/communication or its contents.
+          </p>
+          <p className="text-muted disclaimer">
+            Source code on <a href="https://github.com/BitMEXResearch/forkmonitor">Github</a>
           </p>
         </span>
        </div>
