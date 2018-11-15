@@ -85,7 +85,7 @@ class LandingPage extends React.Component {
              </TabPane>
              <TabPane tabId="2">
                <UncontrolledAlert color="info">
-                 Bitcoin Cash is expected to conduct a hardfork upgrade at about 16:40 UTC on 15th November 2018
+                 The last common block between ABC and SV should be the 6th block with a timestamp after 16:40 UTC on 15th November 2018
                </UncontrolledAlert>
                <Nodes coin="BCH"/>
              </TabPane>
