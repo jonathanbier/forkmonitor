@@ -100,9 +100,9 @@ class Nodes extends React.Component {
                       { this.state.chaintips_common_block[index] &&
                         <span>
                           <br/>
-                          Coins mined since the split: { 12.5*(chaintip.height - this.state.chaintips_common_block[index].height) }
+                          Coins mined since the split: <NumberFormat value={ 12.5*(chaintip.height - this.state.chaintips_common_block[index].height) } displayType={'text'} thousandSeparator={true} />
                           <br/>
-                          Estimated cost of mining since the split: US$ <NumberFormat value={ 0.00000144041*(Math.pow(2, chaintip.work) - Math.pow(2, this.state.chaintips_common_block[index].work)) / Math.pow(10,12) } displayType={'text'} decimalScale={0} thousandSeparator={true} />
+                          Estimated cost of mining since the split: US$<NumberFormat value={ 0.00000144041*(Math.pow(2, chaintip.work) - Math.pow(2, this.state.chaintips_common_block[index].work)) / Math.pow(10,12) } displayType={'text'} decimalScale={0} thousandSeparator={true} />
                         </span>
                       }
                     </p>
