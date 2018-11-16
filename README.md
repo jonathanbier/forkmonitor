@@ -13,10 +13,12 @@ bundle install --without production
 Create a file `.env` and add node connection info:
 
 ```
-NODE_1=BTC:host:port|username|password|name
+NODE_1=BTC:host:port|username|password|name|height
 NODE_2=...
 ...
 ```
+
+The optional `height` fields indicates a common ancestor, used to calculate proof-of-work since a fork. 
 
 To check if nodes are reachable:
 

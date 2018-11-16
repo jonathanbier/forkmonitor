@@ -1,11 +1,12 @@
 class BitcoinClient
   @@nodes = nil
 
-  def initialize(coin, rpchost, rpcuser, rpcpassword, name, pos)
+  def initialize(coin, rpchost, rpcuser, rpcpassword, name, pos, common_height)
     @client = Bitcoiner.new(rpcuser,rpcpassword,rpchost)
     @coin = coin
     @name = name
     @pos = pos
+    @common_height = common_height ? common_height.to_i : nil
   end
 
   def coin
@@ -52,6 +53,15 @@ class BitcoinClient
     request("getblockchaininfo")
   end
 
+  def getblockhash(height)
+    begin
+      return request("getblockhash", height)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getblockhash #{ height } failed for node #{@pos}: " + e.message
+      raise
+    end
+  end
+
   def getbestblockhash
     begin
       return request("getbestblockhash")
@@ -83,6 +93,13 @@ class BitcoinClient
 
     node = Node.create_with(coin: @coin, name: @name, version: info["version"]).find_or_create_by(pos: @pos)
 
+    if @common_height && !node.common_block
+      common_block_hash = getblockhash(@common_height)
+      common_block_info = getblock(common_block_hash)
+      common_block = Block.create_with(height: @common_height, timestamp: common_block_info["time"], work: common_block_info["chainwork"]).find_or_create_by(block_hash: common_block_info["hash"])
+      node.update common_block: common_block
+    end
+
     begin
       # Not atomic and called very frequently, so sometimes it tries to insert
       # a block that was already inserted. In that case try again, so it updates
@@ -107,7 +124,7 @@ class BitcoinClient
       break if ENV["NODE_#{ n }"].nil?
       credentials = ENV["NODE_#{ n }"].split("|")
       # TODO: sanity check credentials
-      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3], credentials[4], n)
+      @@nodes << self.new(credentials[0], credentials[1], credentials[2], credentials[3], credentials[4], n, credentials[5])
     end
 
     return @@nodes

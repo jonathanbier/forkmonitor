@@ -59,12 +59,15 @@ class Nodes extends React.Component {
    axios.get('/api/v1/nodes/' + coin).then(function (response) {
      return response.data;
    }).then(function (nodes) {
-     var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.hash === elem.hash) == pos)
+     var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.best.hash === elem.best.hash) == pos)
+
+     var chaintips_and_common = unique(nodes.map(node => ({best: node.best_block, common: node.common_block})));
 
      this.setState({
        coin: coin,
        nodes: nodes,
-       chaintips: unique(nodes.map(node => node.best_block))
+       chaintips: chaintips_and_common.map(x => x.best),
+       chaintips_common_block: chaintips_and_common.map(x => x.common)
      });
 
    }.bind(this)).catch(function (error) {
@@ -91,9 +94,17 @@ class Nodes extends React.Component {
                       </BreadcrumbItem>
                     </Breadcrumb>
                     <p>
-                     Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
-                     <br/>
-                     Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
+                      Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
+                      <br/>
+                      Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
+                      { this.state.chaintips_common_block[index] &&
+                        <span>
+                          <br/>
+                          Coins mined since the split: { 12.5*(chaintip.height - this.state.chaintips_common_block[index].height) }
+                          <br/>
+                          Estimated cost of mining since the split: US$ <NumberFormat value={ 0.00000144041*(Math.pow(2, chaintip.work) - Math.pow(2, this.state.chaintips_common_block[index].work)) / Math.pow(10,12) } displayType={'text'} decimalScale={0} thousandSeparator={true} />
+                        </span>
+                      }
                     </p>
                     Nodes:
                     <ul>
