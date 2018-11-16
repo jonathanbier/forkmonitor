@@ -94,7 +94,9 @@ class Nodes extends React.Component {
                      Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
                      <br/>
                      Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
-                    </p>
+                     <br/>
+                     Coins mined since the split: { 12.5*(chaintip.height - 556766) }    
+                     </p>
                     Nodes:
                     <ul>
                     {this.state.nodes.filter(o => o.best_block.hash == chaintip.hash).map(function (node, index) {
