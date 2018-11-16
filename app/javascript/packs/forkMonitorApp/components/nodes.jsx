@@ -78,7 +78,7 @@ class Nodes extends React.Component {
           <br />
           { this.state.coin === "bch" &&
             <UncontrolledAlert color="info">
-              The last common block between ABC and SV was mined. Height: 556766, log2(PoW): 87.723, hash: 00000000000000000102d94fde9bd0807a2cc7582fe85dd6349b73ce4e8d9322 at 17:52 UTC on 15th November 2018
+              The last common block between ABC and SV was mined. Height: 556766, Log2(PoW): 87.723, Hash: 00000000000000000102d94fde9bd0807a2cc7582fe85dd6349b73ce4e8d9322 at 17:52 UTC on 15th November 2018
             </UncontrolledAlert>
           }
           <Container>
