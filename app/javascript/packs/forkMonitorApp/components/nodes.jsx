@@ -95,7 +95,9 @@ class Nodes extends React.Component {
                      <br/>
                      Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
                      <br/>
-                     Coins mined since the split: { 12.5*(chaintip.height - 556766) }    
+                     Coins mined since the split: { 12.5*(chaintip.height - 556766) } 
+                     <br/>
+                     Estimated cost of mining since the split: US${ 0.00000144041*(chainwork - 0x000000000000000000000000000000000000000000d3367b433e911be0f8dbb9) } 
                      </p>
                     Nodes:
                     <ul>
