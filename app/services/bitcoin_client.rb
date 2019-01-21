@@ -26,7 +26,7 @@ class BitcoinClient
           end
       end
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getnetworkinfo or getinfo failed for node #{@pos}: " + e.message
+      puts "getnetworkinfo or getinfo failed for node #{@id}: " + e.message
       raise
     end
   end
@@ -39,7 +39,7 @@ class BitcoinClient
     begin
       return request("getblockhash", height)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblockhash #{ height } failed for node #{@pos}: " + e.message
+      puts "getblockhash #{ height } failed for node #{@id}: " + e.message
       raise
     end
   end
@@ -48,7 +48,7 @@ class BitcoinClient
     begin
       return request("getbestblockhash")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getbestblockhash failed for node #{@pos}: " + e.message
+      puts "getbestblockhash failed for node #{@id}: " + e.message
       raise
     end
   end
@@ -57,7 +57,7 @@ class BitcoinClient
     begin
       return request("getblock", hash)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblock(#{hash}) failed for node #{@pos}: " + e.message
+      puts "getblock(#{hash}) failed for node #{@id}: " + e.message
       raise
     end
   end

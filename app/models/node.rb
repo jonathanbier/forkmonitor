@@ -5,7 +5,7 @@ class Node < ApplicationRecord
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
 
   def as_json(options = nil)
-    super({ only: [:pos, :name, :version, :unreachable_since] }.merge(options || {})).merge({best_block: block, common_block: common_block})
+    super({ only: [:id, :name, :version, :unreachable_since] }.merge(options || {})).merge({best_block: block, common_block: common_block})
   end
 
   def client
@@ -49,7 +49,7 @@ class Node < ApplicationRecord
 
   def self.poll!
     self.all.each do |node|
-      puts "Polling #{ node.coin } node #{node.pos} (#{node.name})..."
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..."
       node.poll!
     end
   end
@@ -71,7 +71,7 @@ class Node < ApplicationRecord
       sleep 5
 
       self.all.each do |node|
-        puts "Polling #{ node.coin } node #{node.pos} (#{node.name})..."
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name})..."
         node.poll!
         sleep 0.5
       end

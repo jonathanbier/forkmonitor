@@ -111,7 +111,7 @@ class Nodes extends React.Component {
                     {this.state.nodes.filter(o => o.best_block.hash == chaintip.hash).map(function (node, index) {
                       var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
                       return (
-                        <li key={node.pos} className="pull-left node-info">
+                        <li key={node.id} className="pull-left node-info">
                           <b>
                             {node.name} {version[0]}.{version[1]}.{version[2]}
                                 {version[3] > 0 &&
