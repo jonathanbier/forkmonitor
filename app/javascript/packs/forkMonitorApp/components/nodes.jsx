@@ -56,7 +56,7 @@ class Nodes extends React.Component {
   }
 
   getNodes(coin) {
-   axios.get('/api/v1/nodes/' + coin).then(function (response) {
+   axios.get('/api/v1/nodes/coin/' + coin).then(function (response) {
      return response.data;
    }).then(function (nodes) {
      var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.best.hash === elem.best.hash) == pos)

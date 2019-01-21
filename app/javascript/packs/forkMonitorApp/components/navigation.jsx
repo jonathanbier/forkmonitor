@@ -28,6 +28,7 @@ import {
 import classnames from 'classnames';
 
 import Nodes from './nodes';
+import AdminPage from './adminPage';
 
 class Navigation extends React.Component {
   constructor(props) {
@@ -53,11 +54,17 @@ class Navigation extends React.Component {
                   <NavLink>Bitcoin Cash</NavLink>
                 </LinkContainer>
               </NavItem>
+              <NavItem className="NavItem">
+                <LinkContainer to="/admin">
+                  <NavLink>Admin</NavLink>
+                </LinkContainer>
+              </NavItem>
             </Nav>
             <TabContent>
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
                 <Route path='/nodes/:coin' component={Nodes} />
+                <Route path='/admin' component={AdminPage} />
               </Switch>
             </TabContent>
           </div>

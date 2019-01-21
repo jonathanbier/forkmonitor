@@ -4,11 +4,12 @@ Rails.application.routes.draw do
 
   namespace :api, {format: 'json'} do
     namespace :v1 do
-      resources :nodes, only: [:index]
-      match '/nodes/:coin', :to => 'nodes#index', :as => "nodes_for_coin", :via => :get
+      match '/nodes/coin/:coin', :to => 'nodes#index', :as => "nodes_for_coin", :via => :get
+      resources :nodes, only: [:index, :show, :update, :destroy, :create]
     end
   end
 
   get 'nodes/btc', to: "pages#root"
   get 'nodes/bch', to: "pages#root"
+  get 'admin', to: "pages#root"
 end

@@ -5,7 +5,11 @@ class Node < ApplicationRecord
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
 
   def as_json(options = nil)
-    super({ only: [:id, :name, :version, :unreachable_since] }.merge(options || {})).merge({best_block: block, common_block: common_block})
+    fields = [:id, :name, :version, :unreachable_since]
+    if options && options[:admin]
+      fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
+    end
+    super({ only: fields }.merge(options || {})).merge({best_block: block, common_block: common_block})
   end
 
   def client
