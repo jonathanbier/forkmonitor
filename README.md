@@ -1,4 +1,4 @@
-# Fork Monitor
+# Fork Monitor [![Build Status](https://travis-ci.org/BitMEXResearch/forkmonitor.svg?branch=master)](https://travis-ci.org/BitMEXResearch/forkmonitor)
 
 ## Development
 
@@ -18,7 +18,7 @@ NODE_2=...
 ...
 ```
 
-The optional `height` fields indicates a common ancestor, used to calculate proof-of-work since a fork. 
+The optional `height` fields indicates a common ancestor, used to calculate proof-of-work since a fork.
 
 To check if nodes are reachable:
 
