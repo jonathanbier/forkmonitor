@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2018_11_16_163546) do
+ActiveRecord::Schema.define(version: 2019_01_21_085048) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -32,6 +32,10 @@ ActiveRecord::Schema.define(version: 2018_11_16_163546) do
     t.datetime "unreachable_since"
     t.string "coin"
     t.integer "common_block_id"
+    t.string "rpchost"
+    t.string "rpcuser"
+    t.string "rpcpassword"
+    t.integer "common_height"
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["common_block_id"], name: "index_nodes_on_common_block_id"
   end

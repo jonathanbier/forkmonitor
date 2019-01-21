@@ -3,11 +3,11 @@ require 'rails_helper'
 describe BitcoinClient do
   describe "instance" do
     before do
-      @client = described_class.new("BTC", "127.0.0.1", "user", "password", "Bitcoin Core", 1)
+      @client = described_class.new("127.0.0.1", "user", "password")
     end
 
     describe "help" do
-      it "should help rpc method" do
+      it "should call help rpc method" do
         expect(@client).to receive(:request).with("help")
         @client.help
       end
