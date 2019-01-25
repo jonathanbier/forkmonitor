@@ -6374,12 +6374,41 @@ ra-core@^2.6.1:
     redux-saga "~0.16.0"
     reselect "~3.0.0"
 
+ra-core@^2.6.2:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/ra-core/-/ra-core-2.6.2.tgz#e518fabc05f670b2176f8f58899fbb022114585a"
+  dependencies:
+    classnames "~2.2.5"
+    date-fns "^1.29.0"
+    inflection "~1.12.0"
+    lodash "~4.17.5"
+    node-polyglot "^2.2.2"
+    prop-types "~15.6.1"
+    query-string "~5.1.1"
+    ra-language-english "^2.6.1"
+    react-redux "~5.0.7"
+    react-router "~4.2.0"
+    react-router-dom "~4.2.2"
+    react-router-redux "~5.0.0-alpha.9"
+    recompose "~0.26.0"
+    redux "~3.7.2"
+    redux-form "~7.4.0"
+    redux-saga "~0.16.0"
+    reselect "~3.0.0"
+
 ra-data-json-server@^2.6.1:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/ra-data-json-server/-/ra-data-json-server-2.6.1.tgz#ae27de15d4da4b0cd7caa95b16b036b8c50c25ae"
   dependencies:
     query-string "~5.1.1"
     ra-core "^2.6.1"
+
+ra-data-simple-rest@^2.6.2:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/ra-data-simple-rest/-/ra-data-simple-rest-2.6.2.tgz#3de5210b56fe85ab7eea9a5e0ba74f344b06cd20"
+  dependencies:
+    query-string "~5.1.1"
+    ra-core "^2.6.2"
 
 ra-language-english@^2.6.1:
   version "2.6.1"

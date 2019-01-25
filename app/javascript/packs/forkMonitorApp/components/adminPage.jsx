@@ -1,19 +1,29 @@
 import React from 'react';
 
-import { Admin, Resource, EditGuesser } from 'react-admin';
+import { Admin, Resource, EditGuesser, fetchUtils } from 'react-admin';
 import { NodeList, NodeEdit, NodeCreate } from './nodesAdmin';
-import jsonServerProvider from 'ra-data-json-server';
+import authProvider from './authProvider';
+import simpleRestProvider from 'ra-data-simple-rest';
+
+const httpClient = (url, options = {}) => {
+    if (!options.headers) {
+        options.headers = new Headers({ Accept: 'application/json' });
+    }
+    const token = localStorage.getItem('token');
+    options.headers.set('Authorization', `Bearer ${token}`);
+    return fetchUtils.fetchJson(url, options);
+}
+
+const dataProvider = simpleRestProvider('/api/v1', httpClient);
 
 class AdminPage extends React.Component {
   constructor(props) {
     super(props);
-
-    this.dataProvider = jsonServerProvider('/api/v1');
   }
 
   render() {
     return(
-      <Admin dataProvider={this.dataProvider}>
+      <Admin dataProvider={dataProvider} authProvider={authProvider}>
         <Resource name="nodes" list={NodeList} edit={NodeEdit}  create={NodeCreate} />
       </Admin>
     );

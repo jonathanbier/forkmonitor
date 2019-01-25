@@ -54,11 +54,14 @@ class Navigation extends React.Component {
                   <NavLink>Bitcoin Cash</NavLink>
                 </LinkContainer>
               </NavItem>
-              <NavItem className="NavItem">
-                <LinkContainer to="/admin">
-                  <NavLink>Admin</NavLink>
-                </LinkContainer>
-              </NavItem>
+              {
+                window.location.pathname == "/admin" &&
+                <NavItem className="NavItem">
+                  <LinkContainer to="/admin">
+                    <NavLink>Admin</NavLink>
+                  </LinkContainer>
+                </NavItem>
+              }
             </Nav>
             <TabContent>
               <Switch>

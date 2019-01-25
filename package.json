@@ -12,6 +12,7 @@
     "moment": "^2.22.2",
     "prop-types": "^15.6.2",
     "ra-data-json-server": "^2.6.1",
+    "ra-data-simple-rest": "^2.6.2",
     "react": "^16.6.0",
     "react-admin": "^2.6.1",
     "react-dom": "^16.6.0",

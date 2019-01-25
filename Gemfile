@@ -28,6 +28,11 @@ gem 'bootsnap', '>= 1.1.0', require: false
 # Ruby interface to the 'bitcoind' JSON-RPC API
 gem 'bitcoiner'
 
+gem 'rack-cors', require: 'rack/cors'
+
+# Authentication
+gem 'devise-jwt'
+
 # Email when something breaks
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
