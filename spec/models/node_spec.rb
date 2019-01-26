@@ -124,10 +124,12 @@ RSpec.describe Node, :type => :model do
     end
 
     it "should detect if node A and B are at the same block" do
-      expect(@A.check_if_behind!(@B)).to eq(false)
+      expect(@A.check_if_behind!(@B)).to eq(nil)
     end
 
     describe "when behind" do
+      let(:user) { create(:user) }
+
       before do
         @B.client.mock_set_height(560177)
         @B.poll!
@@ -140,7 +142,10 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should detect if node A is behind node B" do
-        expect(@A.check_if_behind!(@B)).to eq(true)
+        lag = @A.check_if_behind!(@B)
+        expect(lag).not_to be_nil
+        expect(lag.node_a).to eq(@A)
+        expect(lag.node_b).to eq(@B)
       end
 
       it "should be nil if the node is unreachable" do
@@ -161,6 +166,17 @@ RSpec.describe Node, :type => :model do
         @A.poll!
         expect(@A.peer_count).to eq(0)
         expect(@A.check_if_behind!(@B)).to eq(nil)
+      end
+
+      it "should send an email to all users" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      end
+
+      it "should send email only once" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
     end

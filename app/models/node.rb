@@ -101,7 +101,7 @@ class Node < ApplicationRecord
     # Remove entry if no longer behind
     if lag_entry && !behind
       lag_entry.destroy
-      return false
+      return nil
     end
 
     # Store when we first discover the lag:
@@ -112,7 +112,16 @@ class Node < ApplicationRecord
     # Return false if behind but still in grace period:
     return false if lag_entry && ((Time.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60))
 
-    return behind
+    # Send email after grace period
+    if lag_entry && !lag_entry.notified_at
+      lag_entry.update notified_at: Time.now
+      User.all.each do |user|
+        UserMailer.with(user: user, lag: lag_entry).lag_email.deliver
+      end
+    end
+
+
+    return lag_entry
   end
 
   def self.poll!
@@ -148,8 +157,8 @@ class Node < ApplicationRecord
   def self.check_laggards!
     nodes = self.bitcoin_by_version
     nodes.drop(1).each do |node|
-      behind  = node.check_if_behind!(nodes.first)
-      puts "Check if #{ node.version } is behind #{ nodes.first.version }... #{ behind }" if Rails.env.development?
+      lag  = node.check_if_behind!(nodes.first)
+      puts "Check if #{ node.version } is behind #{ nodes.first.version }... #{ lag.present? }" if Rails.env.development?
     end
   end
 

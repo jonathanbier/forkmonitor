@@ -89,6 +89,7 @@ GEM
       rake (>= 0.9.0)
     factory_bot (4.11.1)
       activesupport (>= 3.0.0)
+    ffaker (2.10.0)
     ffi (1.10.0)
     formatador (0.2.5)
     globalid (0.4.2)
@@ -264,6 +265,7 @@ DEPENDENCIES
   exception_notification
   exception_notification-rake (~> 0.3.0)
   factory_bot
+  ffaker
   guard
   guard-rspec
   jbuilder (~> 2.5)

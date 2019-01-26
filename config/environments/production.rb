@@ -64,7 +64,7 @@ Rails.application.configure do
 
   config.action_mailer.default_url_options = {
     host: URI(ENV['URL']).host,
-    scheme: URI(ENV['URL']).scheme
+    protocol: URI(ENV['URL']).scheme
   }
 
   # Ignore bad email addresses and do not raise email delivery errors.
