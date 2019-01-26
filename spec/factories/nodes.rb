@@ -1,7 +1,9 @@
 FactoryBot.define do
    factory :node do
-     block
-     sequence(:version) { |n| n * 10000 }
      name { "Bitcoin Core" }
+   end
+
+   factory :node_with_block, parent: :node do
+     block
    end
  end

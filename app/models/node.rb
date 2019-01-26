@@ -14,7 +14,7 @@ class Node < ApplicationRecord
 
   def client
     if !@client
-      @client = BitcoinClient.new(self.rpchost, self.rpcuser, self.rpcpassword)
+      @client = self.class.client_klass.new(self.rpchost, self.rpcuser, self.rpcpassword)
     end
     return @client
   end
@@ -53,7 +53,7 @@ class Node < ApplicationRecord
 
   def self.poll!
     self.all.each do |node|
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..."
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
       node.poll!
     end
   end
@@ -80,5 +80,11 @@ class Node < ApplicationRecord
         sleep 0.5
       end
     end
+  end
+
+  private
+
+  def self.client_klass
+    Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 end
