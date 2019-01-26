@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_26_120314) do
+ActiveRecord::Schema.define(version: 2019_01_26_172552) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -29,6 +29,15 @@ ActiveRecord::Schema.define(version: 2019_01_26_120314) do
     t.index ["jti"], name: "index_jwt_blacklist_on_jti"
   end
 
+  create_table "lags", force: :cascade do |t|
+    t.integer "node_a_id"
+    t.integer "node_b_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["node_a_id"], name: "index_lags_on_node_a_id"
+    t.index ["node_b_id"], name: "index_lags_on_node_b_id"
+  end
+
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
@@ -42,6 +51,9 @@ ActiveRecord::Schema.define(version: 2019_01_26_120314) do
     t.string "rpcuser"
     t.string "rpcpassword"
     t.integer "common_height"
+    t.boolean "ibd"
+    t.integer "peercount"
+    t.integer "peer_count"
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["common_block_id"], name: "index_nodes_on_common_block_id"
   end

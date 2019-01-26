@@ -72,15 +72,133 @@ RSpec.describe Node, :type => :model do
         expect(@node.unreachable_since).to be_nil
       end
     end
+
+    describe "Bitcoin Core 0.10.3" do
+      before do
+        @node = build(:node)
+        @node.client.mock_version(100300)
+        @node.poll!
+      end
+
+      it "should get IBD status from verificationprogress" do
+        expect(@node.ibd).to eq(false)
+      end
+
+      it "should use time from getblock instead of getblockchaininfo" do
+        expect(@node.block.timestamp).to equal(1548498742)
+      end
+
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        expect(@node.block.height).to equal(560179)
+        expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.parent).not_to be_nil
+        expect(@node.block.parent.parent.height).to equal(560177)
+        expect(@node.block.parent.parent.timestamp).to equal(1548500251)
+
+      end
+
+      describe "Bitcoin ABC" do
+        before do
+          @node = build(:node, coin: "BCH")
+          @node.client.mock_coin("BCH")
+          @node.poll!
+        end
+
+        it "should have correct data" do
+          expect(@node.version).to equal(180500)
+          expect(@node.block.timestamp).to equal(1548498742)
+        end
+      end
+    end
+  end
+
+  describe "check_if_behind!" do
+    before do
+      @A = build(:node)
+      @A.poll!
+
+      @B = build(:node)
+      @B.poll!
+    end
+
+    it "should detect if node A and B are at the same block" do
+      expect(@A.check_if_behind!(@B)).to eq(false)
+    end
+
+    describe "when behind" do
+      before do
+        @B.client.mock_set_height(560177)
+        @B.poll!
+        @first_check = @A.check_if_behind!(@B)
+        Timecop.freeze(Time.now + 15 * 60)
+      end
+
+      it "should be false if the difference is recent" do
+        expect(@first_check).to eq(false)
+      end
+
+      it "should detect if node A is behind node B" do
+        expect(@A.check_if_behind!(@B)).to eq(true)
+      end
+
+      it "should be nil if the node is unreachable" do
+        @A.client.mock_unreachable
+        @A.poll!
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+      end
+
+      it "should be nil if the node is in initial block download" do
+        @A.client.mock_ibd(true)
+        @A.poll!
+        expect(@A.ibd).to eq(true)
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+      end
+
+      it "should be nil if the node has no peers" do
+        @A.client.mock_peer_count(0)
+        @A.poll!
+        expect(@A.peer_count).to eq(0)
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+      end
+
+    end
   end
 
   describe "class" do
     describe "poll!" do
-      it "should call poll! on all nodes" do
+      it "should call poll! on all nodes, followed by check_laggards!" do
         node = create(:node_with_block)
         expect(Node).to receive(:all).and_return [node]
+        expect(Node).to receive(:check_laggards!)
         expect(node).to receive(:poll!)
         Node.poll!
+      end
+    end
+
+    describe "check_laggards!" do
+      before do
+        @A = build(:node)
+        @A.client.mock_version(170100)
+        @A.poll!
+
+        @B = build(:node)
+        @B.client.mock_version(100300)
+        @B.poll!
+      end
+
+      it "should call check_if_behind! against the newest node" do
+        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+          relation.call.each {|record|
+            if record.id == @A.id
+              expect(record).not_to receive(:check_if_behind!)
+            else
+              expect(record).to receive(:check_if_behind!)
+            end
+          }
+        }
+        Node.check_laggards!
       end
     end
   end
