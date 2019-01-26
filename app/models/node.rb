@@ -40,12 +40,18 @@ class Node < ApplicationRecord
       self.update common_block: common_block
     end
 
+    # Not atomic and called very frequently, so sometimes it tries to insert
+    # a block that was already inserted. In that case try again, so it updates
+    # the existing block instead.
     begin
-      # Not atomic and called very frequently, so sometimes it tries to insert
-      # a block that was already inserted. In that case try again, so it updates
-      # the existing block instead.
-      block = Block.create_with(height: block_info["height"], timestamp: block_info["time"], work: block_info["chainwork"]).find_or_create_by(block_hash: block_info["hash"])
+      block = Block.find_by(block_hash: block_info["hash"])
+
+      if !block
+        block = build_new_block!(block_info)
+        block.save
+      end
     rescue
+      raise if Rails.env.test?
       retry
     end
     self.update block: block, unreachable_since: nil
@@ -86,5 +92,28 @@ class Node < ApplicationRecord
 
   def self.client_klass
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
+  end
+
+  def build_new_block!(block_info)
+    block = Block.new(
+      block_hash: block_info["hash"],
+      height: block_info["height"],
+      timestamp: block_info["time"],
+      work: block_info["chainwork"]
+    )
+    # Find parent block, unless this is the first block for a new node (and only for BTC)
+    if self.id && self.coin == "BTC"
+      block.parent = find_or_fetch_parent!(block, block_info["previousblockhash"])
+    end
+    return block
+  end
+
+  def find_or_fetch_parent!(block, previousblockhash)
+    parent = Block.find_by(block_hash: previousblockhash)
+    if !parent
+      block_info = client.getblock(previousblockhash)
+      parent = build_new_block!(block_info)
+    end
+    return parent
   end
 end

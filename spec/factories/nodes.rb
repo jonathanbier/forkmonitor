@@ -1,5 +1,6 @@
 FactoryBot.define do
    factory :node do
+     coin { "BTC"}
      name { "Bitcoin Core" }
    end
 

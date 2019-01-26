@@ -41,6 +41,23 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.height).to equal(560177)
       end
 
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        expect(@node.block.height).to equal(560179)
+        expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.parent).not_to be_nil
+        expect(@node.block.parent.parent.height).to equal(560177)
+      end
+
+      it "should not store intermediate blocks for altcoin nodes" do
+        @node.update coin: "BCH"
+        @node.client.mock_set_height(560178)
+        @node.poll!
+        expect(@node.block.height).to equal(560178)
+        expect(@node.block.parent).to be_nil
+      end
+
       it "should detect when node becomes unreachable" do
         @node.client.mock_unreachable
         @node.poll!

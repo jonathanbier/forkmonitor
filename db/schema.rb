@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_25_152556) do
+ActiveRecord::Schema.define(version: 2019_01_26_120314) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -19,7 +19,9 @@ ActiveRecord::Schema.define(version: 2019_01_25_152556) do
     t.string "work"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "parent_id"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
+    t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end
 
   create_table "jwt_blacklist", force: :cascade do |t|
