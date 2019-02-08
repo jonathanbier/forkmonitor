@@ -8,7 +8,7 @@ const App = (props) => (
       <footer className="footer">
        <div className="container">
          <span className="text-muted">
-         <p>Sponsored by:<br />
+         <p>
            <a href="https://research.bitmex.com"><img src="https://blog.bitmex.com/wp-content/uploads/2018/11/BitMEX-Research-Logo-Color-RGB.png" height="100pt"/></a>
          </p>
          <p className="text-muted disclaimer">
