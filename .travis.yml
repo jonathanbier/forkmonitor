@@ -7,6 +7,8 @@ cache:
 before_install:
   - gem update --system # travis-ci/travis-ci#8978
   - gem install bundler
+  - yarn
 script:
   - bundle exec rake db:migrate RAILS_ENV=test
   - bundle exec rake
+  - yarn test
