@@ -10,30 +10,50 @@ gem install bundler foreman
 bundle install --without production
 ```
 
+You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a package
+manager for NodeJS. Once installed, run:
+
+```
+yarn
+```
+
+Now run the server (this can take a while the first time, as well as each time you modify javascript):
+
+```
+foreman start -f Procfile.dev -p 3000
+```
+
 To check if nodes are reachable:
 
 ```
 rake debug:node_info
 ```
 
-Run the server:
-
-```
-foreman start -f Procfile.dev -p 3000
-```
-
 To manually query a node:
 
-```
+```rb
 rails c
-info = BitcoinClient.nodes[0].getblockchaininfo
+info = Node.first.client.getblockchaininfo
 info["blocks"]
 => 548121
 ```
 
 To get the list of RPC commands and execute an arbitrary command:
 
+```rb
+puts Node.first.client.help
+Node.first.client.request("getblock", ...)
 ```
-puts BitcoinClient.nodes[0].help
-BitcoinClient.nodes[0].client.request("getblock", )
+
+To run Rails tests and monitor for changes:
+
+```sh
+guard
+<hit enter>
+```
+
+To run Javascript tests and monitor for changes:
+
+```sh
+yarn test --watch
 ```
