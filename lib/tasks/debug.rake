@@ -1,14 +1,18 @@
 namespace 'debug' do :env
   desc "Print basic info from each node"
   task :node_info => :environment do
-    BitcoinClient.nodes.each do |node|
-      info = node.getinfo
-      block = node.getblock(node.getbestblockhash)
-      puts "#{node.name} #{info['version']}"
-      puts "Height: #{block['height']}"
-      puts "Time: #{block['time']}"
-      puts "Hash: #{block['hash']}"
-      puts "Work: #{block['chainwork']}"
+    Node.all.each do |node|
+      puts "#{node.name} #{node.version}"
+      puts "Height: #{node.block.height}"
+      puts "Time  : #{node.block.timestamp}"
+      puts "Hash  : #{node.block.block_hash}"
+      puts "Work  : #{node.block.work}"
+      begin
+        networkinfo = node.client.getnetworkinfo
+        puts "Reachable"
+      rescue Bitcoiner::Client::JSONRPCError
+        puts "Unreachable"
+      end
       puts ""
     end
   end
