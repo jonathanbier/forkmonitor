@@ -35,6 +35,7 @@ class Node < ApplicationRecord
       self.update(version: networkinfo["version"], peer_count: networkinfo["connections"])
     end
 
+    ibd_before = self.ibd
     if blockchaininfo.present?
       ibd = blockchaininfo["initialblockdownload"].present? ?
             blockchaininfo["initialblockdownload"] :
@@ -65,7 +66,8 @@ class Node < ApplicationRecord
           blockchaininfo["bestblockhash"],
           blockchaininfo["blocks"],
           mediantime,
-          blockchaininfo["chainwork"]
+          blockchaininfo["chainwork"],
+          ibd_before
         )
         block.save
       end
@@ -168,15 +170,19 @@ class Node < ApplicationRecord
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 
-  def build_new_block!(block_hash, height, mediantime, chainwork)
+  def build_new_block!(block_hash, height, mediantime, chainwork, ibd_before)
     block = Block.new(
       block_hash: block_hash,
       height: height,
       timestamp: mediantime,
       work: chainwork
     )
-    # Find parent block, unless this is the first block for a new node (and only for BTC)
-    if self.id && self.coin == "BTC"
+    # Find parent block, unless:
+    # * this is not a BTC node; or
+    # * this is the first block for a new node (we don't want to fetch the entire chain); or
+    # * the node is Initial Blockchain Download (IBD); or
+    # * we just exited from IBD
+    if self.id && self.coin == "BTC" && !(self.ibd || ibd_before)
       block_info = client.getblock(block_hash)
       block.parent = find_or_fetch_parent!(block, block_info["previousblockhash"])
     end
@@ -187,7 +193,7 @@ class Node < ApplicationRecord
     parent = Block.find_by(block_hash: previousblockhash)
     if !parent
       block_info = client.getblock(previousblockhash)
-      parent = build_new_block!(block_info["hash"], block_info["height"], block_info["mediantime"] || block_info["time"], block_info["chainwork"])
+      parent = build_new_block!(block_info["hash"], block_info["height"], block_info["mediantime"] || block_info["time"], block_info["chainwork"], false)
     end
     return parent
   end

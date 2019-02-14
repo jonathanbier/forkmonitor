@@ -12,28 +12,57 @@ RSpec.describe Node, :type => :model do
     describe "on first run" do
       before do
         @node = build(:node)
-        @node.poll!
       end
 
       it "should save the node" do
+        @node.poll!
         expect(@node.id).not_to be_nil
       end
 
       it "should store the node version" do
+        @node.poll!
         expect(@node.version).to eq(170100)
       end
 
       it "should store the latest block" do
+        @node.poll!
         expect(@node.block).not_to be_nil
         expect(@node.block.height).to equal(560176)
+      end
+
+      it "should get IBD status, if true" do
+        @node.client.mock_ibd(true)
+        @node.client.mock_set_height(976)
+
+        @node.poll!
+        expect(@node.ibd).to eq(true)
+      end
+
+      it "should get IBD status, if false" do
+        @node.client.mock_ibd(false)
+        @node.client.mock_set_height(560179)
+
+        @node.poll!
+        expect(@node.ibd).to eq(false)
       end
     end
 
     describe "on subsequent runs" do
       before do
         @node = build(:node)
+        @node.client.mock_ibd(false)
+
         @node.poll! # stores the block and node entry
         @node.client.mock_set_height(560177)
+      end
+
+      it "should get IBD status" do
+        expect(@node.ibd).to eq(false)
+
+        @node.client.mock_set_height(976)
+        @node.client.mock_ibd(true)
+        @node.poll!
+        expect(@node.ibd).to eq(true)
       end
 
       it "should update to the latest block" do
@@ -56,6 +85,33 @@ RSpec.describe Node, :type => :model do
         @node.poll!
         expect(@node.block.height).to equal(560178)
         expect(@node.block.parent).to be_nil
+      end
+
+      it "should not store intermediate blocks during initial blockchain download" do
+        @node.client.mock_ibd(true)
+        @node.client.mock_set_height(976)
+        @node.poll!
+        expect(@node.block.height).to equal(976)
+        expect(@node.block.parent).to be_nil
+      end
+
+      it "should not store intermediate blocks when existing initial blockchain download" do
+        @node.client.mock_ibd(true)
+        @node.client.mock_set_height(976)
+        @node.poll!
+
+        # Exit IBD, fetching all previous blocks would take forever, so don't:
+        @node.client.mock_ibd(false)
+        @node.client.mock_set_height(560177)
+        @node.poll!
+        expect(@node.block.height).to equal(560177)
+        expect(@node.block.parent).to be_nil
+
+        # Two blocks later, now it should fetch intermediate blocks:
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        expect(@node.block.height).to equal(560179)
+        expect(@node.block.parent.height).to equal(560178)
       end
 
       it "should detect when node becomes unreachable" do
@@ -81,6 +137,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should get IBD status from verificationprogress" do
+        @node.client.mock_ibd(true)
         expect(@node.ibd).to eq(false)
       end
 
@@ -98,18 +155,18 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.parent.parent.timestamp).to equal(1548500251)
 
       end
+    end
 
-      describe "Bitcoin ABC" do
-        before do
-          @node = build(:node, coin: "BCH")
-          @node.client.mock_coin("BCH")
-          @node.poll!
-        end
+    describe "Bitcoin ABC" do
+      before do
+        @node = build(:node, coin: "BCH")
+        @node.client.mock_coin("BCH")
+        @node.poll!
+      end
 
-        it "should have correct data" do
-          expect(@node.version).to equal(180500)
-          expect(@node.block.timestamp).to equal(1548498742)
-        end
+      it "should have correct data" do
+        expect(@node.version).to equal(180500)
+        expect(@node.block.timestamp).to equal(1548515214)
       end
     end
   end

@@ -94,13 +94,13 @@ class BitcoinClientMock
   def getblockchaininfo
     {
       170100 => {
-        "chain": "main",
+        "chain" => "main",
         "blocks" => @height,
         "headers" => @height,
         "bestblockhash" => @block_hashes[@height],
-        # "difficulty": 5883988430955.408,
-        # "mediantime" => 1548515214,
-        "verificationprogress" => 0.9999884832545263,
+        # "difficulty" => 5883988430955.408,
+        "mediantime" => 1548515214,
+        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
         "initialblockdownload" => @ibd,
         "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
         "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
