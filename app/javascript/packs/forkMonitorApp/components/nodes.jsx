@@ -118,7 +118,10 @@ class Nodes extends React.Component {
                                   <span>.{version[3]}</span>
                                 }
                               {node.unreachable_since!=null &&
-                                <Badge color="warning">Offline</Badge>
+                                <span> <Badge color="warning">Offline</Badge></span>
+                              }
+                              {node.ibd &&
+                                <span> <Badge color="info">Syncing</Badge></span>
                               }
                             </b>
                         </li>)

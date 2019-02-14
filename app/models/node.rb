@@ -7,7 +7,7 @@ class Node < ApplicationRecord
   scope :bitcoin_by_version, -> { where(coin: "BTC").reorder(version: :desc) }
 
   def as_json(options = nil)
-    fields = [:id, :name, :version, :unreachable_since]
+    fields = [:id, :name, :version, :unreachable_since, :ibd]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
     end
