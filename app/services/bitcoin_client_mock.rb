@@ -8,6 +8,8 @@ class BitcoinClientMock
     @coin = "BTC"
 
     @block_hashes = {
+      975 => "00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c",
+      976 => "00000000ed7ccf7b89a2f3fc7eac955412ba92f29f1a3f7fa336e05be728724e",
       560175 => "00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef",
       560176 => "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab",
       560177 => "00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef",
@@ -16,6 +18,7 @@ class BitcoinClientMock
     }
     @blocks = {}
 
+    add_mock_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1")
     add_mock_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5")
     add_mock_block(560177, 1548500251, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a")
     add_mock_block(560178, 1548502864, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f")
@@ -64,6 +67,21 @@ class BitcoinClientMock
           "connections" => @peer_count,
           "relayfee"=>5.0e-05,
         },
+        130000 =>
+        {
+          "version" => 130000,
+          "subversion" => "/Satoshi:0.13.0/",
+          "protocolversion" => 70014,
+          "localservices" => "0000000000000005",
+          "localrelay" => true,
+          "timeoffset" => 0,
+          "connections" => 8,
+          "networks" => [
+          ],
+          "relayfee" => 0.00001000,
+          "localaddresses" => [],
+          "warnings" => ""
+        },
         170100 => {
           "version" => 170100,
           "subversion" => "/Satoshi:0.17.1/",
@@ -108,6 +126,20 @@ class BitcoinClientMock
         "softforks" => [],
         "bip9_softforks" => {},
         "warnings" => ""
+      },
+      130000 => {
+        "chain" => "main",
+        "blocks" => @height,
+        "headers" => @height,
+        "bestblockhash" => @block_hashes[@height],
+        # "difficulty" => 1,
+        "mediantime" => 1232327230,
+        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+        "pruned" => false,
+        "softforks" => [],
+        "bip9_softforks" => {
+        }
       },
       100300 => {
         "chain" => "main",

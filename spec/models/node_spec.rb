@@ -129,6 +129,37 @@ RSpec.describe Node, :type => :model do
       end
     end
 
+    describe "Bitcoin Core 0.13.0" do
+      before do
+        @node = build(:node)
+        @node.client.mock_version(130000)
+        @node.client.mock_ibd(true)
+        @node.client.mock_set_height(976)
+        @node.poll!
+      end
+
+      it "should get IBD status from verificationprogress" do
+        expect(@node.ibd).to eq(true)
+
+        @node.client.mock_ibd(false)
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        expect(@node.ibd).to eq(false)
+      end
+
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560177)
+        @node.client.mock_ibd(false)
+        @node.poll! # Intermediately blocks are not fetched immediately after existing IBD
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        expect(@node.block.height).to equal(560179)
+        expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.parent).not_to be_nil
+        expect(@node.block.parent.parent.height).to equal(560177)
+      end
+    end
+
     describe "Bitcoin Core 0.10.3" do
       before do
         @node = build(:node)
