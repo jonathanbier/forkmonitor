@@ -23,14 +23,12 @@ test('rendered component', async () => {
     work: 86.000001
   }
   const resp = {data: [
-    {pos: 1, name: "Bitcoin Core", version: 1000, best_block: best_block, unreachable_since: null},
-    {pos: 2, name: "Bitcoin Core", version: 2000, best_block: best_block, unreachable_since: null}
+    {id: 1, name: "Bitcoin Core", version: 170100, best_block: best_block, unreachable_since: null, ibd: false},
+    {id: 2, name: "Bitcoin Core", version: 160300, best_block: best_block, unreachable_since: null, ibd: false}
   ]}
   axios.get.mockResolvedValue(resp);
 
-  const wrapper = shallow(<Nodes />);
+  const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
   await flushPromises();
-  console.log(wrapper.find('nav').debug());
-  expect(wrapper.state("pow")).toEqual([86.000001]);
   expect(wrapper.find('.node-info')).toHaveLength(2);
 });
