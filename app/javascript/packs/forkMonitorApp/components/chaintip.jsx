@@ -6,16 +6,11 @@ import NumberFormat from 'react-number-format';
 import {
     Row,
     Col,
-    Badge,
     BreadcrumbItem,
     Breadcrumb
 } from 'reactstrap';
 
-Number.prototype.pad = function(size) {
-  var s = String(this);
-  while (s.length < (size || 2)) {s = "0" + s;}
-  return s;
-}
+import Node from './node'
 
 class Chaintip extends React.Component {
   constructor(props) {
@@ -54,22 +49,9 @@ class Chaintip extends React.Component {
           Nodes:
           <ul>
           {this.state.nodes.filter(o => o.best_block.hash == this.state.chaintip.hash).map(function (node, index) {
-            var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
             return (
-              <li key={node.id} className="pull-left node-info">
-                <b>
-                  {node.name} {version[0]}.{version[1]}.{version[2]}
-                      {version[3] > 0 &&
-                        <span>.{version[3]}</span>
-                      }
-                    {node.unreachable_since!=null &&
-                      <span> <Badge color="warning">Offline</Badge></span>
-                    }
-                    {node.ibd &&
-                      <span> <Badge color="info">Syncing</Badge></span>
-                    }
-                  </b>
-              </li>)
+              <Node node={ node } key={node.id} className="pull-left node-info" />
+            )
           }.bind(this))}
           </ul>
           {  this.state.last &&
