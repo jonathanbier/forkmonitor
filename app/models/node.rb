@@ -62,15 +62,14 @@ class Node < ApplicationRecord
           mediantime = client.getblock(blockchaininfo["bestblockhash"])["time"]
         end
 
-        block = build_new_block!(
-          blockchaininfo["bestblockhash"],
-          blockchaininfo["blocks"],
-          mediantime,
-          blockchaininfo["chainwork"],
-          ibd_before
+        block = Block.create(
+          block_hash: blockchaininfo["bestblockhash"],
+          height: blockchaininfo["blocks"],
+          timestamp: mediantime,
+          work: blockchaininfo["chainwork"]
         )
-        block.save
       end
+      find_block_ancestors!(block, ibd_before)
     rescue
       raise if Rails.env.test?
       retry
@@ -170,31 +169,28 @@ class Node < ApplicationRecord
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 
-  def build_new_block!(block_hash, height, mediantime, chainwork, ibd_before)
-    block = Block.new(
-      block_hash: block_hash,
-      height: height,
-      timestamp: mediantime,
-      work: chainwork
-    )
-    # Find parent block, unless:
-    # * this is not a BTC node; or
-    # * this is the first block for a new node (we don't want to fetch the entire chain); or
-    # * the node is Initial Blockchain Download (IBD); or
-    # * we just exited from IBD
-    if self.id && self.coin == "BTC" && !(self.ibd || ibd_before)
-      block_info = client.getblock(block_hash)
-      block.parent = find_or_fetch_parent!(block, block_info["previousblockhash"])
+  def find_block_ancestors!(child_block, ibd_before)
+    block = child_block
+    while block.parent.nil? do
+      block_info = client.getblock(block.block_hash)
+      parent = Block.find_by(block_hash: block_info["previousblockhash"])
+      block.update parent: parent
+      break if parent
+      # Fetch parent block, unless:
+      # * this is not a BTC node; or
+      # * this is the first block for a new node (we don't want to fetch the entire chain); or
+      # * the node is Initial Blockchain Download (IBD); or
+      # * we just exited from IBD
+      break if !self.id || self.coin != "BTC" || (self.ibd || ibd_before)
+      puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
+      block_info = client.getblock(block_info["previousblockhash"])
+      parent = block.create_parent(
+        block_hash: block_info["hash"],
+        height: block_info["height"],
+        timestamp: block_info["mediantime"] || block_info["time"],
+        work: block_info["chainwork"]
+      )
+      block = parent
     end
-    return block
-  end
-
-  def find_or_fetch_parent!(block, previousblockhash)
-    parent = Block.find_by(block_hash: previousblockhash)
-    if !parent
-      block_info = client.getblock(previousblockhash)
-      parent = build_new_block!(block_info["hash"], block_info["height"], block_info["mediantime"] || block_info["time"], block_info["chainwork"], false)
-    end
-    return parent
   end
 end

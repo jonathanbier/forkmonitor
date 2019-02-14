@@ -51,9 +51,9 @@ RSpec.describe Node, :type => :model do
       before do
         @node = build(:node)
         @node.client.mock_ibd(false)
+        @node.client.mock_set_height(560177)
 
         @node.poll! # stores the block and node entry
-        @node.client.mock_set_height(560177)
       end
 
       it "should get IBD status" do
@@ -75,6 +75,7 @@ RSpec.describe Node, :type => :model do
         @node.poll!
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.height).to equal(560178)
         expect(@node.block.parent.parent).not_to be_nil
         expect(@node.block.parent.parent.height).to equal(560177)
       end
@@ -84,7 +85,7 @@ RSpec.describe Node, :type => :model do
         @node.client.mock_set_height(560178)
         @node.poll!
         expect(@node.block.height).to equal(560178)
-        expect(@node.block.parent).to be_nil
+        expect(@node.block.parent.parent).to be_nil
       end
 
       it "should not store intermediate blocks during initial blockchain download" do
@@ -133,12 +134,14 @@ RSpec.describe Node, :type => :model do
       before do
         @node = build(:node)
         @node.client.mock_version(130000)
-        @node.client.mock_ibd(true)
-        @node.client.mock_set_height(976)
-        @node.poll!
+        @node.client.mock_set_height(560177)
+        @node.poll! # First poll stores the block and node entry
       end
 
       it "should get IBD status from verificationprogress" do
+        @node.client.mock_ibd(true)
+        @node.client.mock_set_height(976)
+        @node.poll!
         expect(@node.ibd).to eq(true)
 
         @node.client.mock_ibd(false)
@@ -148,13 +151,11 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should store intermediate blocks" do
-        @node.client.mock_set_height(560177)
-        @node.client.mock_ibd(false)
-        @node.poll! # Intermediately blocks are not fetched immediately after existing IBD
         @node.client.mock_set_height(560179)
         @node.poll!
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.height).to equal(560178)
         expect(@node.block.parent.parent).not_to be_nil
         expect(@node.block.parent.parent.height).to equal(560177)
       end
@@ -181,10 +182,10 @@ RSpec.describe Node, :type => :model do
         @node.poll!
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.height).to equal(560178)
         expect(@node.block.parent.parent).not_to be_nil
         expect(@node.block.parent.parent.height).to equal(560177)
         expect(@node.block.parent.parent.timestamp).to equal(1548500251)
-
       end
     end
 
