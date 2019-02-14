@@ -110,7 +110,7 @@ class Node < ApplicationRecord
     end
 
     # Return false if behind but still in grace period:
-    return false if lag_entry && ((Time.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60))
+    return false if lag_entry && ((Time.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60).to_i)
 
     # Send email after grace period
     if lag_entry && !lag_entry.notified_at
