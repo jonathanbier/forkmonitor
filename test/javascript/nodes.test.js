@@ -30,5 +30,5 @@ test('rendered component', async () => {
 
   const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
   await flushPromises();
-  expect(wrapper.find('.node-info')).toHaveLength(2);
+  expect(wrapper.find('Chaintip')).toHaveLength(1);
 });

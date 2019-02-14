@@ -2,25 +2,13 @@ import React from 'react';
 
 import axios from 'axios';
 
-import Moment from 'react-moment';
-import NumberFormat from 'react-number-format';
-
 import {
     Container,
-    Row,
-    Col,
-    Badge,
-    BreadcrumbItem,
-    Breadcrumb,
     TabPane,
     UncontrolledAlert
 } from 'reactstrap';
 
-Number.prototype.pad = function(size) {
-  var s = String(this);
-  while (s.length < (size || 2)) {s = "0" + s;}
-  return s;
-}
+import Chaintip from './chaintip'
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
@@ -86,53 +74,15 @@ class Nodes extends React.Component {
           }
           <Container>
               {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
-                return (
-                  <Row key={chaintip.hash}><Col>
-                    <Breadcrumb>
-                      <BreadcrumbItem active>
-                        Chaintip: { chaintip.hash }
-                      </BreadcrumbItem>
-                    </Breadcrumb>
-                    <p>
-                      Height: { chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{chaintip.timestamp}</Moment>)
-                      <br/>
-                      Accumulated log2(PoW): <NumberFormat value={chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
-                      { this.state.chaintips_common_block[index] &&
-                        <span>
-                          <br/>
-                          Coins mined since the split: <NumberFormat value={ 12.5*(chaintip.height - this.state.chaintips_common_block[index].height) } displayType={'text'} thousandSeparator={true} />
-                          <br/>
-                          Estimated cost of mining since the split: US$<NumberFormat value={ 0.00000144041*(Math.pow(2, chaintip.work) - Math.pow(2, this.state.chaintips_common_block[index].work)) / Math.pow(10,12) } displayType={'text'} decimalScale={0} thousandSeparator={true} />
-                        </span>
-                      }
-                    </p>
-                    Nodes:
-                    <ul>
-                    {this.state.nodes.filter(o => o.best_block.hash == chaintip.hash).map(function (node, index) {
-                      var version = node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
-                      return (
-                        <li key={node.id} className="pull-left node-info">
-                          <b>
-                            {node.name} {version[0]}.{version[1]}.{version[2]}
-                                {version[3] > 0 &&
-                                  <span>.{version[3]}</span>
-                                }
-                              {node.unreachable_since!=null &&
-                                <span> <Badge color="warning">Offline</Badge></span>
-                              }
-                              {node.ibd &&
-                                <span> <Badge color="info">Syncing</Badge></span>
-                              }
-                            </b>
-                        </li>)
-                    }.bind(this))}
-                    </ul>
-                    {  index != this.state.chaintips.length - 1 &&
-                      <hr/>
-                    }
-                  </Col>
-                  </Row>
-              )}.bind(this))}
+                return (<Chaintip
+                  key={ chaintip.hash }
+                  chaintip={ chaintip }
+                  nodes={ this.state.nodes }
+                  index={ index }
+                  last={ index != this.state.chaintips.length - 1 }
+                  common_block={ this.state.chaintips_common_block[index] }
+                />)
+              }.bind(this))}
           </Container>
         </TabPane>
       );
