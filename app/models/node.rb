@@ -75,7 +75,7 @@ class Node < ApplicationRecord
   # any of our other nodes saw this block, found it to have enough proof of work
   # and considered it valid. This can normally happen under two circumstances:
   # 1. the node is unaware of a soft-fork and initially accepts a block that newer
-  #    nodes reject. We detect this if we poll the node before the block is reorgd out.
+  #    nodes reject
   # 2. the node has a consensus bug
   def check_chaintips!
     # Return nil if node is unreachble:
@@ -84,6 +84,8 @@ class Node < ApplicationRecord
     chaintips = client.getchaintips
     chaintips.each do |chaintip|
       case chaintip["status"]
+      when "valid-fork"
+        find_or_create_block_and_ancestors!(chaintip["hash"]) unless chaintip["height"] < self.block.height - 1000
       when "invalid"
         block = Block.find_by(block_hash: chaintip["hash"])
         return block if block

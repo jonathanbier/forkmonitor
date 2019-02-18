@@ -258,9 +258,50 @@ RSpec.describe Node, :type => :model do
             "status" => "valid-fork"
           }
         ])
+        # Add intermediate fork blofk 560177, same work, created slight later
+        @B.client.mock_add_block(560177, 1548500252, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a", "0000000000000000000000000000000000000000000000000000000000560177")
+
+        # Add valid-fork block 560178, same work, created slight later
+        @B.client.mock_add_block(560178, 1548500251, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f", "0000000000000000000000000000000000000000000000000000000000560178", "0000000000000000000000000000000000000000000000000000000000560177")
+
+        @B.poll!
       end
-      it "should do nothing" do
+
+      it "should return nothing" do
         expect(@B.check_chaintips!).to eq(nil)
+      end
+
+      it "should add the valid fork blocks up to the common ancenstor" do
+        expect(@B.block.parent).not_to be_nil
+
+        @B.check_chaintips!
+
+        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
+        expect(fork_block).not_to be_nil
+        expect(fork_block.parent).not_to be_nil
+        expect(fork_block.parent.height).to eq(560177)
+        expect(fork_block.parent.block_hash).to eq("0000000000000000000000000000000000000000000000000000000000560177")
+        expect(fork_block.parent.parent).not_to be_nil
+        expect(fork_block.parent.parent.height).to eq(560176)
+      end
+
+      it "should ignore forks more than 1000 blocks ago" do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }, {
+            "height" => 400000,
+            "hash" => "00000000000000000000000000000000000000000000000000000000004000000",
+            "branchlen" => 1,
+            "status" => "valid-fork"
+          }
+        ])
+        @B.check_chaintips!
+        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
+        expect(fork_block).to be_nil
       end
     end
 
