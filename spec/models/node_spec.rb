@@ -274,10 +274,24 @@ RSpec.describe Node, :type => :model do
   describe "class" do
     describe "poll!" do
       it "should call poll! on all nodes, followed by check_laggards!" do
-        node = create(:node_with_block)
-        expect(Node).to receive(:all).and_return [node]
+        node1 = create(:node_with_block, coin: "BTC", version: 170000)
+        node2 = create(:node_with_block, coin: "BTC", version: 160000)
+        node3 = create(:node_with_block, coin: "BCH")
+
         expect(Node).to receive(:check_laggards!)
-        expect(node).to receive(:poll!)
+
+        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+          relation.call.each {|node|
+                expect(node).to receive(:poll!)
+          }
+        }
+
+        expect(Node).to receive(:altcoin_by_version).once().and_wrap_original {|relation|
+          relation.call.each {|node|
+            expect(node).to receive(:poll!)
+          }
+        }
+
         Node.poll!
       end
     end

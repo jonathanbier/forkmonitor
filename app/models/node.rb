@@ -6,6 +6,8 @@ class Node < ApplicationRecord
 
   scope :bitcoin_by_version, -> { where(coin: "BTC").reorder(version: :desc) }
 
+  scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
+
   def as_json(options = nil)
     fields = [:id, :name, :version, :unreachable_since, :ibd]
     if options && options[:admin]
@@ -133,11 +135,16 @@ class Node < ApplicationRecord
   end
 
   def self.poll!
-    self.all.each do |node|
+    self.bitcoin_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
       node.poll!
     end
     self.check_laggards!
+
+    self.altcoin_by_version.each do |node|
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
+      node.poll!
+    end
   end
 
   def self.poll_repeat!
