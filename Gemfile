@@ -70,7 +70,7 @@ group :development do
   gem 'terminal-notifier-guard', '~> 1.6.1'
 end
 
-group :production do
+group :production, :test_pg do
   # Use Postgres as the database for Active Record
   gem 'pg'
 end

@@ -7,7 +7,7 @@ the bundler and foreman gems, then run bundler:
 
 ```
 gem install bundler foreman
-bundle install --without production
+bundle install --without production:test_pg
 ```
 
 You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a package

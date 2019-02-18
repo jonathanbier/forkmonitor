@@ -1,6 +1,7 @@
 class Node < ApplicationRecord
   belongs_to :block
   belongs_to :common_block, foreign_key: "common_block_id", class_name: "Block", required: false
+  belongs_to :first_seen_by, foreign_key: "first_seen_by_id", class_name: "Node", required: false
   has_many :invalid_blocks
 
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }

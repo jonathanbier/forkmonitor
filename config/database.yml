@@ -20,6 +20,12 @@ test:
   <<: *default
   database: db/test.sqlite3
 
+# Test locally with Postgres:
+test_pg:
+  adapter: postgresql
+  encoding: unicode
+  database: fork_monitor_test
+
 production:
   adapter: postgresql
   encoding: unicode
