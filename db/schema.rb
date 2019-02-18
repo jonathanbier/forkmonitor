@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_01_26_202056) do
+ActiveRecord::Schema.define(version: 2019_02_18_094624) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -20,6 +20,7 @@ ActiveRecord::Schema.define(version: 2019_01_26_202056) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "parent_id"
+    t.integer "mediantime"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end

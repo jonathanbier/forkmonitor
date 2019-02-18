@@ -198,7 +198,7 @@ RSpec.describe Node, :type => :model do
 
       it "should have correct data" do
         expect(@node.version).to equal(180500)
-        expect(@node.block.timestamp).to equal(1548515214)
+        expect(@node.block.timestamp).to equal(1548498742)
       end
     end
   end

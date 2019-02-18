@@ -48,6 +48,7 @@ class Node < ApplicationRecord
       common_block_info = client.getblock(common_block_hash)
       common_block = Block.create_with(
         height: self.common_height,
+        mediantime: common_block_info["mediantime"],
         timestamp: common_block_info["time"],
         work: common_block_info["chainwork"]
       ).find_or_create_by(block_hash: common_block_info["hash"])
@@ -70,6 +71,7 @@ class Node < ApplicationRecord
         block = Block.create(
           block_hash: block_info["hash"],
           height: block_info["height"],
+          mediantime: block_info["mediantime"],
           timestamp: block_info["time"],
           work: block_info["chainwork"]
         )
