@@ -203,6 +203,112 @@ RSpec.describe Node, :type => :model do
     end
   end
 
+  describe "check_chaintips!" do
+    before do
+      @A = build(:node)
+      @A.client.mock_version(170100)
+      @A.client.mock_set_height(560178)
+      @A.poll!
+
+      @B = build(:node)
+      @B.client.mock_version(160300)
+      @B.client.mock_set_height(560178)
+      @B.poll!
+    end
+
+    describe "only an active chaintip" do
+      before do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen": 0,
+            "status": "active"
+          }
+        ])
+      end
+      it "should do nothing" do
+        expect(@B.check_chaintips!).to eq(nil)
+      end
+    end
+
+    describe "one active and one valid-fork chaintip" do
+      before do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen": 0,
+            "status": "active"
+          }, {
+            "height" => 560178,
+            "hash" => "0000000000000000000000000000000000000000000000000000000000560178",
+            "branchlen": 0,
+            "status": "valid-fork"
+          }
+        ])
+      end
+      it "should do nothing" do
+        expect(@B.check_chaintips!).to eq(nil)
+      end
+    end
+
+    describe "one active and one invalid chaintip, not in our db" do
+      before do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }, {
+            "height" => 560179,
+            "hash" => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
+            "branchlen" => 0,
+            "status" => "invalid"
+          }
+        ])
+      end
+      it "should do nothing" do
+        expect(@B.check_chaintips!).to eq(nil)
+      end
+    end
+
+    describe "one active and one invalid chaintip in our db" do
+      before do
+        # Make node A accept the block:
+        @A.client.mock_set_height(560179)
+        @A.poll!
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          },
+          {
+            "height" => 560179,
+            "hash" => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
+            "branchlen" => 0,
+            "status" => "invalid"
+          }
+        ])
+      end
+      it "should return failing block" do
+        disputed_block = @A.block
+        expect(disputed_block.height).to eq(560179)
+        expect(disputed_block.block_hash).to eq("000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc")
+        expect(@B.check_chaintips!).to eq(disputed_block)
+      end
+
+      it "should be nil if the node is unreachable" do
+        @B.client.mock_unreachable
+        @B.poll!
+        expect(@B.check_chaintips!).to eq(nil)
+      end
+    end
+  end
+
   describe "check_if_behind!" do
     before do
       @A = build(:node)
@@ -273,12 +379,14 @@ RSpec.describe Node, :type => :model do
 
   describe "class" do
     describe "poll!" do
-      it "should call poll! on all nodes, followed by check_laggards!" do
+      it "should call poll! on all nodes, followed by check_laggards! and check_chaintips!" do
         node1 = create(:node_with_block, coin: "BTC", version: 170000)
         node2 = create(:node_with_block, coin: "BTC", version: 160000)
         node3 = create(:node_with_block, coin: "BCH")
 
         expect(Node).to receive(:check_laggards!)
+
+        expect(Node).to receive(:check_chaintips!)
 
         expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
@@ -318,6 +426,27 @@ RSpec.describe Node, :type => :model do
           }
         }
         Node.check_laggards!
+      end
+    end
+
+    describe "check_chaintips!" do
+      before do
+        @A = build(:node)
+        @A.client.mock_version(170100)
+        @A.poll!
+
+        @B = build(:node)
+        @B.client.mock_version(100300)
+        @B.poll!
+      end
+
+      it "should call check_chaintips! against nodes" do
+        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+          relation.call.each {|record|
+              expect(record).to receive(:check_chaintips!)
+          }
+        }
+        Node.check_chaintips!
       end
     end
   end

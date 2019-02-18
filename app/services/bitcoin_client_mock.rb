@@ -6,6 +6,7 @@ class BitcoinClientMock
     @peer_count = 100
     @version = 170100
     @coin = "BTC"
+    @chaintips = []
 
     @block_hashes = {
       975 => "00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c",
@@ -55,6 +56,10 @@ class BitcoinClientMock
     @peer_count = peer_count
   end
 
+  def mock_chaintips(tips)
+    @chaintips = tips
+  end
+
   def getnetworkinfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
     if @coin == "BTC"
@@ -81,6 +86,17 @@ class BitcoinClientMock
           ],
           "relayfee" => 0.00001000,
           "localaddresses" => [],
+          "warnings" => ""
+        },
+        160300 => {
+          "version" => 160300,
+          "subversion" => "/Satoshi:0.16.3/",
+          "protocolversion" => 70015,
+          "localservices" => "0000000000000409",
+          "localrelay" => true,
+          "timeoffset" => -1,
+          "networkactive" => true,
+          "connections" => @peer_count,
           "warnings" => ""
         },
         170100 => {
@@ -113,6 +129,22 @@ class BitcoinClientMock
   def getblockchaininfo
     {
       170100 => {
+        "chain" => "main",
+        "blocks" => @height,
+        "headers" => @height,
+        "bestblockhash" => @block_hashes[@height],
+        # "difficulty" => 5883988430955.408,
+        "mediantime" => 1548515214,
+        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+        "initialblockdownload" => @ibd,
+        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+        "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+        "pruned" => false,
+        "softforks" => [],
+        "bip9_softforks" => {},
+        "warnings" => ""
+      },
+      160300 => {
         "chain" => "main",
         "blocks" => @height,
         "headers" => @height,
@@ -172,6 +204,10 @@ class BitcoinClientMock
     raise Bitcoiner::Client::JSONRPCError unless @blocks[hash]
 
     return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+  end
+
+  def getchaintips
+    @chaintips
   end
 
   private

@@ -86,6 +86,36 @@ class Node < ApplicationRecord
     self.update block: block, unreachable_since: nil
   end
 
+  # getchaintips returns all known chaintips for a node, which can be:
+  # * active: the current chaintip, added to our database with poll!
+  # * valid-fork: valid chain, but not the most proof-of-work
+  # * valid-headers: potentially valid chain, but not fully checked due to insufficient proof-of-work
+  # * headers-only: same as valid-header, but even less checking done
+  # * invalid: checked and found invalid, we want to make sure other nodes don't follow this, because:
+  #   1) the other nodes haven't seen it all; or
+  #   2) the other nodes did see it and also consider it invalid; or
+  #   3) the other nodes haven't bothered to check because it doesn't have enough proof-of-work
+
+  # We check all invalid chaintips against the database, to see if at any point in time
+  # any of our other nodes saw this block, found it to have enough proof of work
+  # and considered it valid. This can normally happen under two circumstances:
+  # 1. the node is unaware of a soft-fork and initially accepts a block that newer
+  #    nodes reject. We detect this if we poll the node before the block is reorgd out.
+  # 2. the node has a consensus bug
+  def check_chaintips!
+    # Return nil if node is unreachble:
+    return nil if self.unreachable_since
+
+    chaintips = client.getchaintips
+    chaintips.each do |chaintip|
+      if chaintip["status"] == "invalid"
+        block = Block.find_by(block_hash: chaintip["hash"])
+        return block if block
+      end
+    end
+    return nil
+  end
+
   # Should be run after polling all nodes, otherwise it may find false positives
   def check_if_behind!(node)
     # Return nil if this node is in IBD:
@@ -140,6 +170,7 @@ class Node < ApplicationRecord
       node.poll!
     end
     self.check_laggards!
+    self.check_chaintips!
 
     self.altcoin_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
@@ -168,6 +199,11 @@ class Node < ApplicationRecord
     end
   end
 
+  def self.check_chaintips!
+    self.bitcoin_by_version.each do |node|
+      node.check_chaintips!
+    end
+  end
 
   def self.check_laggards!
     nodes = self.bitcoin_by_version

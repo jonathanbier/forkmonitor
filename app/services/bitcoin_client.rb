@@ -71,6 +71,16 @@ class BitcoinClient
     end
   end
 
+  def getchaintips
+    begin
+      return request("getchaintips")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getchaintips failed for node #{@id}: " + e.message
+      raise
+    end
+  end
+
+
   private
 
   def request(*args)
