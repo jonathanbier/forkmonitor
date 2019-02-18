@@ -10,13 +10,14 @@ import {
     Breadcrumb
 } from 'reactstrap';
 
-import Node from './node'
+import Node from './node';
 
 class Chaintip extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
+      coin: props.coin,
       nodes: props.nodes,
       chaintip: props.chaintip,
       index: props.index,

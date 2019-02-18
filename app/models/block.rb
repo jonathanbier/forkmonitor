@@ -5,7 +5,7 @@ class Block < ApplicationRecord
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
 
   def as_json(options = nil)
-    super({ only: [:height, :timestamp] }.merge(options || {})).merge({hash: block_hash, work: log2_pow})
+    super({ only: [:height, :timestamp] }.merge(options || {})).merge({hash: block_hash, work: log2_pow, first_seen_by: first_seen_by})
   end
 
   def log2_pow

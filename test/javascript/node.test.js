@@ -25,11 +25,6 @@ describe('Node', () => {
       node={ node }
     />)
   });
-
-  test('should display version', () => {
-    expect(wrapper.find('.node-version')).toHaveLength(1);
-    expect(wrapper.find('.node-version').text()).toContain("0.17.1");
-  });
 });
 
 describe('Sync', () => {

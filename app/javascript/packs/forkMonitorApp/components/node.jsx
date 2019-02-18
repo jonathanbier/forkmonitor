@@ -1,7 +1,6 @@
 import React from 'react';
 
 import Moment from 'react-moment';
-import NumberFormat from 'react-number-format';
 
 import {
     Badge,
@@ -9,11 +8,7 @@ import {
     Breadcrumb
 } from 'reactstrap';
 
-Number.prototype.pad = function(size) {
-  var s = String(this);
-  while (s.length < (size || 2)) {s = "0" + s;}
-  return s;
-}
+import NodeName from './nodeName';
 
 class Node extends React.Component {
   constructor(props) {
@@ -25,17 +20,10 @@ class Node extends React.Component {
   }
 
   render() {
-    const version = this.state.node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
     return(
       <li>
         <b>
-          {this.state.node.name}
-          <span className="node-version">
-            { " " }{version[0]}.{version[1]}.{version[2]}
-            {version[3] > 0 &&
-              <span>.{version[3]}</span>
-            }
-          </span>
+          <NodeName node={this.state.node} />
           {this.state.node.unreachable_since!=null &&
             <span> <Badge color="warning">Offline</Badge></span>
           }
