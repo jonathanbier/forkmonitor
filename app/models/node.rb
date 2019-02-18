@@ -53,7 +53,8 @@ class Node < ApplicationRecord
         height: self.common_height,
         mediantime: common_block_info["mediantime"],
         timestamp: common_block_info["time"],
-        work: common_block_info["chainwork"]
+        work: common_block_info["chainwork"],
+        first_seen_by: self
       ).find_or_create_by(block_hash: common_block_info["hash"])
       self.update common_block: common_block
     end
@@ -226,7 +227,8 @@ class Node < ApplicationRecord
           height: block_info["height"],
           mediantime: block_info["mediantime"],
           timestamp: block_info["time"],
-          work: block_info["chainwork"]
+          work: block_info["chainwork"],
+          first_seen_by: self
         )
       end
 
@@ -268,7 +270,8 @@ class Node < ApplicationRecord
         height: block_info["height"],
         mediantime: block_info["mediantime"],
         timestamp: block_info["time"],
-        work: block_info["chainwork"]
+        work: block_info["chainwork"],
+        first_seen_by: self
       )
       block.update parent: parent
 

@@ -28,6 +28,7 @@ RSpec.describe Node, :type => :model do
         @node.poll!
         expect(@node.block).not_to be_nil
         expect(@node.block.height).to equal(560176)
+        expect(@node.block.first_seen_by).to eq(@node)
       end
 
       it "should get IBD status, if true" do
@@ -77,6 +78,7 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
         expect(@node.block.parent.height).to equal(560178)
+        expect(@node.block.parent.first_seen_by).to eq(@node)
         expect(@node.block.parent.parent).not_to be_nil
         expect(@node.block.parent.parent.height).to equal(560177)
       end
