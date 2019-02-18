@@ -19,7 +19,12 @@ RSpec.describe UserMailer, type: :mailer do
   describe "invalid block notify" do
     let(:user) { create(:user) }
     let(:invalid_block) { create(:invalid_block) }
+    let(:node2) { create(:node_with_block, version: 160300) }
     let(:mail) { UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email }
+
+    before do
+      invalid_block.block.update first_seen_by: node2
+    end
 
     it "renders the headers" do
       expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 170100 considers block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
@@ -29,5 +34,10 @@ RSpec.describe UserMailer, type: :mailer do
     it "renders the body" do
       expect(mail.body.encoded).to include("https://forkmonitor.info/nodes/btc")
     end
+
+    it "mentions which node first saw the block" do
+      expect(mail.body.encoded).to include("Bitcoin Core 160300")
+    end
+
   end
 end

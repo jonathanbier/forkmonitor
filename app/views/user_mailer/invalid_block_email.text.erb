@@ -1,1 +1,5 @@
+<% if @invalid_block.block.first_seen_by.present? %>
+  This block was first seen and accepted as valid by <%= @invalid_block.block.first_seen_by.name %> <%= @invalid_block.block.first_seen_by.version %>.
+<% end %>
+
 For more information, see: <%= nodes_btc_url %>
