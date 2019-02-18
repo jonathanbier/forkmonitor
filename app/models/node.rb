@@ -1,6 +1,7 @@
 class Node < ApplicationRecord
   belongs_to :block
   belongs_to :common_block, foreign_key: "common_block_id", class_name: "Block", required: false
+  has_many :invalid_blocks
 
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
 
@@ -88,7 +89,16 @@ class Node < ApplicationRecord
         find_or_create_block_and_ancestors!(chaintip["hash"]) unless chaintip["height"] < self.block.height - 1000
       when "invalid"
         block = Block.find_by(block_hash: chaintip["hash"])
-        return block if block
+        if block
+          invalid_block = InvalidBlock.find_or_create_by(node: self, block: block)
+          if !invalid_block.notified_at
+            User.all.each do |user|
+              UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
+            end
+            invalid_block.update notified_at: Time.now
+          end
+          return block
+        end
       end
     end
     return nil

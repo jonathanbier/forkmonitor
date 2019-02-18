@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_02_18_094624) do
+ActiveRecord::Schema.define(version: 2019_02_18_163224) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -23,6 +23,16 @@ ActiveRecord::Schema.define(version: 2019_02_18_094624) do
     t.integer "mediantime"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
+  end
+
+  create_table "invalid_blocks", force: :cascade do |t|
+    t.integer "block_id"
+    t.integer "node_id"
+    t.datetime "notified_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_invalid_blocks_on_block_id"
+    t.index ["node_id"], name: "index_invalid_blocks_on_node_id"
   end
 
   create_table "jwt_blacklist", force: :cascade do |t|

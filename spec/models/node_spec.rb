@@ -327,6 +327,8 @@ RSpec.describe Node, :type => :model do
     end
 
     describe "one active and one invalid chaintip in our db" do
+      let(:user) { create(:user) }
+
       before do
         # Make node A accept the block:
         @A.client.mock_set_height(560179)
@@ -358,6 +360,25 @@ RSpec.describe Node, :type => :model do
         @B.poll!
         expect(@B.check_chaintips!).to eq(nil)
       end
+
+      it "should store an InvalidBlock entry" do
+        disputed_block = @B.check_chaintips!
+        expect(InvalidBlock.count).to eq(1)
+        expect(InvalidBlock.first.block).to eq(disputed_block)
+        expect(InvalidBlock.first.node).to eq(@B)
+      end
+
+      it "should send an email to all users" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @B.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      end
+
+      it "should send email only once" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @B.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @B.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
     end
   end
 
