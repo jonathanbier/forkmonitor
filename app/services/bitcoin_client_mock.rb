@@ -17,6 +17,7 @@ class BitcoinClientMock
       560179 => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc"
     }
     @blocks = {}
+    @block_headers = {}
 
     add_mock_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1")
     add_mock_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5")
@@ -166,16 +167,25 @@ class BitcoinClientMock
     return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
   end
 
+  def getblockheader(hash)  # Added in v0.12
+    raise Bitcoiner::Client::JSONRPCError if @version < 120000
+    raise Bitcoiner::Client::JSONRPCError unless @blocks[hash]
+
+    return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+  end
+
   private
 
   def add_mock_block(height, mediantime, chainwork)
-    @blocks[@block_hashes[height]] = {
+    header = {
       "height" => height,
-      "mediantime" => mediantime,
       "time" => mediantime,
+      "mediantime" => mediantime,
       "chainwork" => chainwork,
       "hash" => @block_hashes[height],
       "previousblockhash" => @block_hashes[height - 1]
     }
+    @block_headers[@block_hashes[height]] = header
+    @blocks[@block_hashes[height]] = header
   end
 end

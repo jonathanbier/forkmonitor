@@ -62,6 +62,15 @@ class BitcoinClient
     end
   end
 
+  def getblockheader(hash)
+    begin
+      return request("getblockheader", hash)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getblockheader(#{hash}) failed for node #{@id}: " + e.message
+      raise
+    end
+  end
+
   private
 
   def request(*args)

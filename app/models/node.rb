@@ -46,7 +46,11 @@ class Node < ApplicationRecord
     if self.common_height && !self.common_block
       common_block_hash = client.getblockhash(self.common_height)
       common_block_info = client.getblock(common_block_hash)
-      common_block = Block.create_with(height: self.common_height, timestamp: common_block_info["mediantime"] || common_block_info["time"], work: common_block_info["chainwork"]).find_or_create_by(block_hash: common_block_info["hash"])
+      common_block = Block.create_with(
+        height: self.common_height,
+        timestamp: common_block_info["time"],
+        work: common_block_info["chainwork"]
+      ).find_or_create_by(block_hash: common_block_info["hash"])
       self.update common_block: common_block
     end
 
@@ -57,16 +61,17 @@ class Node < ApplicationRecord
       block = Block.find_by(block_hash: blockchaininfo["bestblockhash"])
 
       if !block
-        mediantime = blockchaininfo["mediantime"]
-        if !mediantime # Not included in getblockchaininfo for older nodes
-          mediantime = client.getblock(blockchaininfo["bestblockhash"])["time"]
+        if self.version >= 120000
+          block_info = client.getblockheader(blockchaininfo["bestblockhash"])
+        else
+          block_info = client.getblock(blockchaininfo["bestblockhash"])
         end
 
         block = Block.create(
-          block_hash: blockchaininfo["bestblockhash"],
-          height: blockchaininfo["blocks"],
-          timestamp: mediantime,
-          work: blockchaininfo["chainwork"]
+          block_hash: block_info["hash"],
+          height: block_info["height"],
+          timestamp: block_info["time"],
+          work: block_info["chainwork"]
         )
       end
       find_block_ancestors!(block, ibd_before)
