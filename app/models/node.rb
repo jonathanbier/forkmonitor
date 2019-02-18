@@ -57,32 +57,7 @@ class Node < ApplicationRecord
       self.update common_block: common_block
     end
 
-    # Not atomic and called very frequently, so sometimes it tries to insert
-    # a block that was already inserted. In that case try again, so it updates
-    # the existing block instead.
-    begin
-      block = Block.find_by(block_hash: blockchaininfo["bestblockhash"])
-
-      if !block
-        if self.version >= 120000
-          block_info = client.getblockheader(blockchaininfo["bestblockhash"])
-        else
-          block_info = client.getblock(blockchaininfo["bestblockhash"])
-        end
-
-        block = Block.create(
-          block_hash: block_info["hash"],
-          height: block_info["height"],
-          mediantime: block_info["mediantime"],
-          timestamp: block_info["time"],
-          work: block_info["chainwork"]
-        )
-      end
-      find_block_ancestors!(block, ibd_before)
-    rescue
-      raise if Rails.env.test?
-      retry
-    end
+    block = find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"], ibd_before)
     self.update block: block, unreachable_since: nil
   end
 
@@ -108,7 +83,8 @@ class Node < ApplicationRecord
 
     chaintips = client.getchaintips
     chaintips.each do |chaintip|
-      if chaintip["status"] == "invalid"
+      case chaintip["status"]
+      when "invalid"
         block = Block.find_by(block_hash: chaintip["hash"])
         return block if block
       end
@@ -219,10 +195,47 @@ class Node < ApplicationRecord
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 
+  def find_or_create_block_and_ancestors!(hash, ibd_before = false)
+    # Not atomic and called very frequently, so sometimes it tries to insert
+    # a block that was already inserted. In that case try again, so it updates
+    # the existing block instead.
+    begin
+      block = Block.find_by(block_hash: hash)
+
+      if block.nil?
+        if self.version >= 120000
+          block_info = client.getblockheader(hash)
+        else
+          block_info = client.getblock(hash)
+        end
+
+        block = Block.create(
+          block_hash: block_info["hash"],
+          height: block_info["height"],
+          mediantime: block_info["mediantime"],
+          timestamp: block_info["time"],
+          work: block_info["chainwork"]
+        )
+      end
+
+      find_block_ancestors!(block, ibd_before)
+    rescue
+      raise if Rails.env.test?
+      retry
+    end
+    return block
+  end
+
   def find_block_ancestors!(child_block, ibd_before)
-    block = child_block
-    while block.parent.nil? do
-      block_info = client.getblock(block.block_hash)
+    block_id = child_block.id
+    loop do
+      block = Block.find(block_id)
+      break if block.parent
+      if self.version >= 120000
+        block_info = client.getblockheader(block.block_hash)
+      else
+        block_info = client.getblock(block.block_hash)
+      end
       parent = Block.find_by(block_hash: block_info["previousblockhash"])
       block.update parent: parent
       break if parent
@@ -233,14 +246,21 @@ class Node < ApplicationRecord
       # * we just exited from IBD
       break if !self.id || self.coin != "BTC" || (self.ibd || ibd_before)
       puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
-      block_info = client.getblock(block_info["previousblockhash"])
-      parent = block.create_parent(
+      if self.version >= 120000
+        block_info = client.getblockheader(block_info["previousblockhash"])
+      else
+        block_info = client.getblock(block_info["previousblockhash"])
+      end
+      parent = Block.create(
         block_hash: block_info["hash"],
         height: block_info["height"],
-        timestamp: block_info["mediantime"] || block_info["time"],
+        mediantime: block_info["mediantime"],
+        timestamp: block_info["time"],
         work: block_info["chainwork"]
       )
-      block = parent
+      block.update parent: parent
+
+      block_id = parent.id
     end
   end
 end

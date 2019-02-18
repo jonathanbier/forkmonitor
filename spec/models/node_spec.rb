@@ -73,6 +73,7 @@ RSpec.describe Node, :type => :model do
       it "should store intermediate blocks" do
         @node.client.mock_set_height(560179)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
         expect(@node.block.parent.height).to equal(560178)
@@ -84,6 +85,7 @@ RSpec.describe Node, :type => :model do
         @node.update coin: "BCH"
         @node.client.mock_set_height(560178)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560178)
         expect(@node.block.parent.parent).to be_nil
       end
@@ -92,6 +94,7 @@ RSpec.describe Node, :type => :model do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(976)
         expect(@node.block.parent).to be_nil
       end
@@ -105,12 +108,14 @@ RSpec.describe Node, :type => :model do
         @node.client.mock_ibd(false)
         @node.client.mock_set_height(560177)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560177)
         expect(@node.block.parent).to be_nil
 
         # Two blocks later, now it should fetch intermediate blocks:
         @node.client.mock_set_height(560179)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent.height).to equal(560178)
       end
@@ -153,6 +158,7 @@ RSpec.describe Node, :type => :model do
       it "should store intermediate blocks" do
         @node.client.mock_set_height(560179)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
         expect(@node.block.parent.height).to equal(560178)
@@ -180,6 +186,7 @@ RSpec.describe Node, :type => :model do
       it "should store intermediate blocks" do
         @node.client.mock_set_height(560179)
         @node.poll!
+        @node.reload
         expect(@node.block.height).to equal(560179)
         expect(@node.block.parent).not_to be_nil
         expect(@node.block.parent.height).to equal(560178)
@@ -207,11 +214,15 @@ RSpec.describe Node, :type => :model do
     before do
       @A = build(:node)
       @A.client.mock_version(170100)
+      @A.client.mock_set_height(560176)
+      @A.poll!
       @A.client.mock_set_height(560178)
       @A.poll!
 
       @B = build(:node)
       @B.client.mock_version(160300)
+      @B.client.mock_set_height(560176)
+      @B.poll!
       @B.client.mock_set_height(560178)
       @B.poll!
     end
@@ -222,8 +233,8 @@ RSpec.describe Node, :type => :model do
           {
             "height" => 560178,
             "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen": 0,
-            "status": "active"
+            "branchlen" => 0,
+            "status" => "active"
           }
         ])
       end
@@ -238,13 +249,13 @@ RSpec.describe Node, :type => :model do
           {
             "height" => 560178,
             "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen": 0,
-            "status": "active"
+            "branchlen" => 0,
+            "status" => "active"
           }, {
             "height" => 560178,
             "hash" => "0000000000000000000000000000000000000000000000000000000000560178",
-            "branchlen": 0,
-            "status": "valid-fork"
+            "branchlen" => 2,
+            "status" => "valid-fork"
           }
         ])
       end

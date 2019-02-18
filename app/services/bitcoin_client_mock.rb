@@ -20,11 +20,11 @@ class BitcoinClientMock
     @blocks = {}
     @block_headers = {}
 
-    add_mock_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1")
-    add_mock_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5")
-    add_mock_block(560177, 1548500251, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a")
-    add_mock_block(560178, 1548502864, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f")
-    add_mock_block(560179, 1548503410, "000000000000000000000000000000000000000004dad4860af8e98d7d1bd404")
+    mock_add_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1")
+    mock_add_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5")
+    mock_add_block(560177, 1548500251, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a")
+    mock_add_block(560178, 1548502864, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f")
+    mock_add_block(560179, 1548503410, "000000000000000000000000000000000000000004dad4860af8e98d7d1bd404")
 
   end
 
@@ -200,8 +200,8 @@ class BitcoinClientMock
   end
 
   def getblockheader(hash)  # Added in v0.12
-    raise Bitcoiner::Client::JSONRPCError if @version < 120000
-    raise Bitcoiner::Client::JSONRPCError unless @blocks[hash]
+    raise Bitcoiner::Client::JSONRPCError, hash if @version < 120000
+    raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
 
     return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
   end
@@ -210,18 +210,18 @@ class BitcoinClientMock
     @chaintips
   end
 
-  private
-
-  def add_mock_block(height, mediantime, chainwork)
+  def mock_add_block(height, mediantime, chainwork, block_hash = nil, previousblockhash = nil)
+    block_hash ||= @block_hashes[height]
+    previousblockhash ||= @block_hashes[height - 1]
     header = {
       "height" => height,
       "time" => mediantime,
       "mediantime" => mediantime,
       "chainwork" => chainwork,
-      "hash" => @block_hashes[height],
-      "previousblockhash" => @block_hashes[height - 1]
+      "hash" => block_hash,
+      "previousblockhash" => previousblockhash
     }
-    @block_headers[@block_hashes[height]] = header
-    @blocks[@block_hashes[height]] = header
+    @block_headers[block_hash] = header
+    @blocks[block_hash] = header
   end
 end
