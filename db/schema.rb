@@ -10,10 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_02_18_163224) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+ActiveRecord::Schema.define(version: 2019_02_25_153608) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -24,6 +24,7 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
     t.datetime "updated_at", null: false
     t.bigint "parent_id"
     t.integer "mediantime"
+    t.integer "version"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end
