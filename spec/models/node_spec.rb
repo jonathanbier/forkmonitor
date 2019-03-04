@@ -101,7 +101,7 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.parent).to be_nil
       end
 
-      it "should not store intermediate blocks when existing initial blockchain download" do
+      it "should not store intermediate blocks when exiting initial blockchain download" do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
@@ -522,6 +522,33 @@ RSpec.describe Node, :type => :model do
           }
         }
         Node.check_chaintips!
+      end
+    end
+
+    describe "fetch_ancestors!" do
+      before do
+        @A = build(:node)
+        @A.client.mock_version(170100)
+        @A.client.mock_set_height(560178)
+        @A.poll!
+
+        @B = build(:node)
+        @B.client.mock_version(100300)
+        @B.client.mock_set_height(560178)
+        @B.poll!
+      end
+
+      it "should call find_block_ancestors! against the newest node" do
+        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+          relation.call.each {|record|
+            if record.id == @A.id
+              expect(record).to receive(:find_block_ancestors!)
+            else
+              expect(record).not_to receive(:find_block_ancestors!)
+            end
+          }
+        }
+        Node.fetch_ancestors!(560176)
       end
     end
   end

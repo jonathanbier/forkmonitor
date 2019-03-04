@@ -154,6 +154,51 @@ class Node < ApplicationRecord
     return lag_entry
   end
 
+  def find_block_ancestors!(child_block, until_height, keep_going = false)
+    block_id = child_block.id
+    loop do
+      block = Block.find(block_id)
+      parent = block.parent
+      if parent
+        break unless keep_going
+      else
+        if self.version >= 120000
+          block_info = client.getblockheader(block.block_hash)
+        else
+          block_info = client.getblock(block.block_hash)
+        end
+        parent = Block.find_by(block_hash: block_info["previousblockhash"])
+        block.update parent: parent
+      end
+      if parent
+        break unless keep_going
+      else
+        # Fetch parent block, unless:
+        # * this is not a BTC node; or
+        # * this is the first block for a new node (we don't want to fetch the entire chain); or
+        # * the node is Initial Blockchain Download (IBD); or
+        # * we just exited from IBD (in which case until_height is set to height - 1)
+        break if !self.id || self.coin != "BTC" || block.height == until_height || self.ibd
+        puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
+        if self.version >= 120000
+          block_info = client.getblockheader(block_info["previousblockhash"])
+        else
+          block_info = client.getblock(block_info["previousblockhash"])
+        end
+        parent = Block.create(
+          block_hash: block_info["hash"],
+          height: block_info["height"],
+          mediantime: block_info["mediantime"],
+          timestamp: block_info["time"],
+          work: block_info["chainwork"],
+          first_seen_by: self
+        )
+        block.update parent: parent
+      end
+      block_id = parent.id
+    end
+  end
+
   def self.poll!
     self.bitcoin_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
@@ -203,6 +248,12 @@ class Node < ApplicationRecord
     end
   end
 
+  def self.fetch_ancestors!(until_height)
+    node = Node.bitcoin_by_version.first
+    throw "Node in Initial Blockchain Download" if node.ibd
+    node.find_block_ancestors!(node.block, until_height, true)
+  end
+
   private
 
   def self.client_klass
@@ -233,50 +284,11 @@ class Node < ApplicationRecord
         )
       end
 
-      find_block_ancestors!(block, ibd_before)
+      find_block_ancestors!(block, ibd_before ? block.height : 0)
     rescue
       raise if Rails.env.test?
       retry
     end
     return block
-  end
-
-  def find_block_ancestors!(child_block, ibd_before)
-    block_id = child_block.id
-    loop do
-      block = Block.find(block_id)
-      break if block.parent
-      if self.version >= 120000
-        block_info = client.getblockheader(block.block_hash)
-      else
-        block_info = client.getblock(block.block_hash)
-      end
-      parent = Block.find_by(block_hash: block_info["previousblockhash"])
-      block.update parent: parent
-      break if parent
-      # Fetch parent block, unless:
-      # * this is not a BTC node; or
-      # * this is the first block for a new node (we don't want to fetch the entire chain); or
-      # * the node is Initial Blockchain Download (IBD); or
-      # * we just exited from IBD
-      break if !self.id || self.coin != "BTC" || (self.ibd || ibd_before)
-      puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
-      if self.version >= 120000
-        block_info = client.getblockheader(block_info["previousblockhash"])
-      else
-        block_info = client.getblock(block_info["previousblockhash"])
-      end
-      parent = Block.create(
-        block_hash: block_info["hash"],
-        height: block_info["height"],
-        mediantime: block_info["mediantime"],
-        timestamp: block_info["time"],
-        work: block_info["chainwork"],
-        first_seen_by: self
-      )
-      block.update parent: parent
-
-      block_id = parent.id
-    end
   end
 end
