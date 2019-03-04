@@ -449,6 +449,13 @@ RSpec.describe Node, :type => :model do
         expect(@A.check_if_behind!(@B)).to eq(nil)
       end
 
+      it "should be nil if other node is in initial block download" do
+        @B.client.mock_ibd(true)
+        @B.poll!
+        expect(@B.ibd).to eq(true)
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+      end
+
       it "should be nil if the node has no peers" do
         @A.client.mock_peer_count(0)
         @A.poll!

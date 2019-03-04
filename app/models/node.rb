@@ -107,6 +107,9 @@ class Node < ApplicationRecord
 
   # Should be run after polling all nodes, otherwise it may find false positives
   def check_if_behind!(node)
+    # Return nil if other node is in IBD:
+    return nil if node.ibd
+
     # Return nil if this node is in IBD:
     return nil if self.ibd
 
