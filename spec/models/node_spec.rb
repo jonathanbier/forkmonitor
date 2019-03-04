@@ -12,6 +12,7 @@ RSpec.describe Node, :type => :model do
     describe "on first run" do
       before do
         @node = build(:node)
+        @node.client.mock_ibd(true)
       end
 
       it "should save the node" do
@@ -24,7 +25,13 @@ RSpec.describe Node, :type => :model do
         expect(@node.version).to eq(170100)
       end
 
-      it "should store the latest block" do
+      it "should not store the latest block if in IBD" do
+        @node.poll!
+        expect(@node.block).to be_nil
+      end
+
+      it "should store the latest block if not in IBD" do
+        @node.client.mock_ibd(false)
         @node.poll!
         expect(@node.block).not_to be_nil
         expect(@node.block.height).to equal(560176)
@@ -51,19 +58,14 @@ RSpec.describe Node, :type => :model do
     describe "on subsequent runs" do
       before do
         @node = build(:node)
-        @node.client.mock_ibd(false)
-        @node.client.mock_set_height(560177)
 
+        @node.client.mock_set_height(560177)
         @node.poll! # stores the block and node entry
       end
 
       it "should get IBD status" do
-        expect(@node.ibd).to eq(false)
-
-        @node.client.mock_set_height(976)
-        @node.client.mock_ibd(true)
         @node.poll!
-        expect(@node.ibd).to eq(true)
+        expect(@node.ibd).to eq(false)
       end
 
       it "should update to the latest block" do
@@ -92,23 +94,30 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.parent.parent).to be_nil
       end
 
-      it "should not store intermediate blocks during initial blockchain download" do
+      it "should not store blocks during initial blockchain download" do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
         @node.reload
-        expect(@node.block.height).to equal(976)
-        expect(@node.block.parent).to be_nil
+        expect(@node.block).to be_nil
       end
 
-      it "should not store intermediate blocks when exiting initial blockchain download" do
+      it "should not fetch parent blocks beyond the oldest block in the database" do
+        # Blocks during IBD are not stored
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
+        expect(@node.block).to be_nil
 
         # Exit IBD, fetching all previous blocks would take forever, so don't:
         @node.client.mock_ibd(false)
         @node.client.mock_set_height(560177)
+        @node.poll!
+        @node.reload
+        expect(@node.block.height).to equal(560177)
+        expect(@node.block.parent).to be_nil
+
+        # Poll again, same block, so still don't fetch earlier blocks:
         @node.poll!
         @node.reload
         expect(@node.block.height).to equal(560177)
@@ -386,10 +395,19 @@ RSpec.describe Node, :type => :model do
 
   describe "check_if_behind!" do
     before do
+      # Prepare two nodes that are out of IBD and have been polled
       @A = build(:node)
+      @A.client.mock_set_height(560176)
+      @A.client.mock_ibd(true)
+      @A.poll!
+      @A.client.mock_ibd(false)
       @A.poll!
 
       @B = build(:node)
+      @B.client.mock_set_height(560176)
+      @B.client.mock_ibd(true)
+      @B.poll!
+      @B.client.mock_ibd(false)
       @B.poll!
     end
 

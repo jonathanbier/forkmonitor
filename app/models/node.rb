@@ -1,5 +1,5 @@
 class Node < ApplicationRecord
-  belongs_to :block
+  belongs_to :block, required: false
   belongs_to :common_block, foreign_key: "common_block_id", class_name: "Block", required: false
   belongs_to :first_seen_by, foreign_key: "first_seen_by_id", class_name: "Node", required: false
   has_many :invalid_blocks
@@ -39,7 +39,6 @@ class Node < ApplicationRecord
       self.update(version: networkinfo["version"], peer_count: networkinfo["connections"])
     end
 
-    ibd_before = self.ibd
     if blockchaininfo.present?
       ibd = blockchaininfo["initialblockdownload"].present? ?
             blockchaininfo["initialblockdownload"] :
@@ -60,7 +59,7 @@ class Node < ApplicationRecord
       self.update common_block: common_block
     end
 
-    block = find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"], ibd_before)
+    block = self.ibd ? nil : find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"]) unless self.ibd
     self.update block: block, unreachable_since: nil
   end
 
@@ -154,14 +153,13 @@ class Node < ApplicationRecord
     return lag_entry
   end
 
-  def find_block_ancestors!(child_block, until_height, keep_going = false)
+  def find_block_ancestors!(child_block, until_height)
     block_id = child_block.id
     loop do
       block = Block.find(block_id)
+      return if block.height == until_height
       parent = block.parent
-      if parent
-        break unless keep_going
-      else
+      if parent.nil?
         if self.version >= 120000
           block_info = client.getblockheader(block.block_hash)
         else
@@ -170,15 +168,10 @@ class Node < ApplicationRecord
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
         block.update parent: parent
       end
-      if parent
-        break unless keep_going
-      else
+      if parent.nil?
         # Fetch parent block, unless:
-        # * this is not a BTC node; or
-        # * this is the first block for a new node (we don't want to fetch the entire chain); or
-        # * the node is Initial Blockchain Download (IBD); or
-        # * we just exited from IBD (in which case until_height is set to height - 1)
-        break if !self.id || self.coin != "BTC" || block.height == until_height || self.ibd
+        # * this is not a BTC node
+        break if !self.id || self.coin != "BTC"
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
         if self.version >= 120000
           block_info = client.getblockheader(block_info["previousblockhash"])
@@ -251,7 +244,7 @@ class Node < ApplicationRecord
   def self.fetch_ancestors!(until_height)
     node = Node.bitcoin_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
-    node.find_block_ancestors!(node.block, until_height, true)
+    node.find_block_ancestors!(node.block, until_height)
   end
 
   private
@@ -260,7 +253,7 @@ class Node < ApplicationRecord
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 
-  def find_or_create_block_and_ancestors!(hash, ibd_before = false)
+  def find_or_create_block_and_ancestors!(hash)
     # Not atomic and called very frequently, so sometimes it tries to insert
     # a block that was already inserted. In that case try again, so it updates
     # the existing block instead.
@@ -284,7 +277,10 @@ class Node < ApplicationRecord
         )
       end
 
-      find_block_ancestors!(block, ibd_before ? block.height : 0)
+      # Prevent new instances from going too far back due to Bitcoin Cash fork blocks:
+      oldest_block = [Block.minimum(:height), 560000].max
+
+      find_block_ancestors!(block, oldest_block ? oldest_block : block.height)
     rescue
       raise if Rails.env.test?
       retry
