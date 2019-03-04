@@ -80,8 +80,8 @@ class Node < ApplicationRecord
   #    nodes reject
   # 2. the node has a consensus bug
   def check_chaintips!
-    # Return nil if node is unreachble:
-    return nil if self.unreachable_since
+    # Return nil if node is unreachble or in IBD:
+    return nil if self.unreachable_since || self.ibd
 
     chaintips = client.getchaintips
     chaintips.each do |chaintip|

@@ -238,6 +238,24 @@ RSpec.describe Node, :type => :model do
       @B.poll!
     end
 
+    describe "one node in IBD" do
+      before do
+        @A.client.mock_ibd(true)
+        @A.poll!
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }
+        ])
+      end
+      it "should do nothing" do
+        expect(@A.check_chaintips!).to eq(nil)
+      end
+    end
+
     describe "only an active chaintip" do
       before do
         @B.client.mock_chaintips([
