@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_02_18_163224) do
+ActiveRecord::Schema.define(version: 2019_02_25_153608) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
     t.integer "parent_id"
     t.integer "mediantime"
     t.integer "first_seen_by_id"
+    t.integer "version"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
