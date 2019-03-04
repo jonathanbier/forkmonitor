@@ -12,9 +12,6 @@
 
 ActiveRecord::Schema.define(version: 2019_02_18_163224) do
 
-  # These are extensions that must be enabled in order to support this database
-  enable_extension "plpgsql"
-
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
     t.integer "height"
@@ -22,15 +19,17 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
     t.string "work"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "parent_id"
+    t.integer "parent_id"
     t.integer "mediantime"
+    t.integer "first_seen_by_id"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
+    t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end
 
   create_table "invalid_blocks", force: :cascade do |t|
-    t.bigint "block_id"
-    t.bigint "node_id"
+    t.integer "block_id"
+    t.integer "node_id"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -44,8 +43,8 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
   end
 
   create_table "lags", force: :cascade do |t|
-    t.bigint "node_a_id"
-    t.bigint "node_b_id"
+    t.integer "node_a_id"
+    t.integer "node_b_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "notified_at"
@@ -56,12 +55,12 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
-    t.bigint "block_id"
+    t.integer "block_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
     t.string "coin"
-    t.bigint "common_block_id"
+    t.integer "common_block_id"
     t.string "rpchost"
     t.string "rpcuser"
     t.string "rpcpassword"
@@ -87,7 +86,4 @@ ActiveRecord::Schema.define(version: 2019_02_18_163224) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
-  add_foreign_key "invalid_blocks", "blocks"
-  add_foreign_key "invalid_blocks", "nodes"
-  add_foreign_key "nodes", "blocks"
 end
