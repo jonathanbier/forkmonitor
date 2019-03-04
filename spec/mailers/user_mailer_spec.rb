@@ -40,4 +40,20 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
   end
+
+  describe "version bits notify" do
+    let(:user) { create(:user) }
+    let(:node ) { create(:node_with_block, version: 170100) }
+    let(:mail) { UserMailer.with(user: user, bit: 1, tally: 2, window: 3, block: node.block).version_bits_email }
+
+    it "renders the headers" do
+      expect(mail.subject).to eq("[ForkMonitor] version bit 1 was set 2 times between blocks #{ node.block.height - 2} and #{ node.block.height }")
+      expect(mail.to).to eq([user.email])
+    end
+
+    it "renders the body" do
+      expect(mail.body.encoded).to include("https://forkmonitor.info/nodes/btc")
+    end
+
+  end
 end

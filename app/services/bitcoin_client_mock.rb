@@ -15,17 +15,22 @@ class BitcoinClientMock
       560176 => "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab",
       560177 => "00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef",
       560178 => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-      560179 => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc"
+      560179 => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
+      560180 => "0000000000000000002d802cf5fdbbfa94926be7f03b40be75eb6c3c13cbc8e4",
+      560181 => "0000000000000000002641ea2457674fea1b2fc5fcfe6fde416dca2a0e13aec2",
+      560182 => "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
     }
     @blocks = {}
     @block_headers = {}
 
-    mock_add_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1")
-    mock_add_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5")
-    mock_add_block(560177, 1548500251, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a")
-    mock_add_block(560178, 1548502864, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f")
-    mock_add_block(560179, 1548503410, "000000000000000000000000000000000000000004dad4860af8e98d7d1bd404")
-
+    mock_add_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1", nil, nil, [])
+    mock_add_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5", nil, nil, [])
+    mock_add_block(560177, 1548500251, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a", nil, nil, [1])
+    mock_add_block(560178, 1548502864, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f", nil, nil, [1, 2])
+    mock_add_block(560179, 1548503410, "000000000000000000000000000000000000000004dad4860af8e98d7d1bd404", nil, nil, [])
+    mock_add_block(560180, 1548498447, "000000000000000000000000000000000000000004dad9e0095d385d3474e479", nil, nil, [])
+    mock_add_block(560181, 1548498742, "000000000000000000000000000000000000000004dadf3a07c1872cebcdf4ee", nil, nil, [])
+    mock_add_block(560182, 1548500251, "000000000000000000000000000000000000000004dae4940625d5fca3270563", nil, nil, [])
   end
 
   def mock_coin(coin)
@@ -210,16 +215,23 @@ class BitcoinClientMock
     @chaintips
   end
 
-  def mock_add_block(height, mediantime, chainwork, block_hash = nil, previousblockhash = nil)
+  def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version_bits=nil)
     block_hash ||= @block_hashes[height]
     previousblockhash ||= @block_hashes[height - 1]
+    version_bits ||= []
+    version = 0
+    version_bits.each do |bit|
+      version = version + (1 << (bit - 1))
+    end
+
     header = {
       "height" => height,
       "time" => mediantime,
       "mediantime" => mediantime,
       "chainwork" => chainwork,
       "hash" => block_hash,
-      "previousblockhash" => previousblockhash
+      "previousblockhash" => previousblockhash,
+      "version" => version
     }
     @block_headers[block_hash] = header
     @blocks[block_hash] = header

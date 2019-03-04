@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_02_25_153608) do
+ActiveRecord::Schema.define(version: 2019_03_04_135206) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -85,6 +85,17 @@ ActiveRecord::Schema.define(version: 2019_02_25_153608) do
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+  end
+
+  create_table "version_bits", force: :cascade do |t|
+    t.integer "bit"
+    t.integer "activate_block_id"
+    t.integer "deactivate_block_id"
+    t.datetime "notified_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["activate_block_id"], name: "index_version_bits_on_activate_block_id"
+    t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
 end

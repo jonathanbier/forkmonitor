@@ -18,4 +18,17 @@ class UserMailer < ApplicationMailer
       subject: "[ForkMonitor] #{ @invalid_block.node.name } #{ @invalid_block.node.version } considers block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
     )
   end
+
+  def version_bits_email
+    @user = params[:user]
+    @bit = params[:bit]
+    @tally = params[:tally]
+    @window = params[:window]
+    @block = params[:block]
+
+    mail(
+      to: @user.email,
+      subject: "[ForkMonitor] version bit #{ @bit } was set #{ @tally } times between blocks #{ @block.height - @window + 1 } and #{ @block.height }"
+    )
+  end
 end

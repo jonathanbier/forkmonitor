@@ -287,8 +287,8 @@ RSpec.describe Node, :type => :model do
             "status" => "valid-fork"
           }
         ])
-        # Add intermediate fork blofk 560177, same work, created slight later
-        @B.client.mock_add_block(560177, 1548500252, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a", "0000000000000000000000000000000000000000000000000000000000560177")
+        # Add intermediate fork block 560177, same work, created slight later
+        @B.client.mock_add_block(560177, 1548500252, "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a", "0000000000000000000000000000000000000000000000000000000000560177", "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab")
 
         # Add valid-fork block 560178, same work, created slight later
         @B.client.mock_add_block(560178, 1548500251, "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f", "0000000000000000000000000000000000000000000000000000000000560178", "0000000000000000000000000000000000000000000000000000000000560177")
@@ -495,9 +495,96 @@ RSpec.describe Node, :type => :model do
     end
   end
 
+  describe "check_versionbits!" do
+    before do
+      @node = build(:node)
+      @node.client.mock_version(170100)
+      @node.client.mock_set_height(560176)
+      @node.poll!
+      @node.client.mock_set_height(560177)
+      @node.poll!
+    end
+
+    describe "during IBD" do
+      before do
+        @node.client.mock_ibd(true)
+        @node.poll!
+      end
+      it "should do nothing" do
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(0)
+      end
+    end
+
+    describe "below threshold" do
+      it "should do nothing" do
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(0)
+      end
+    end
+
+    describe "above threshold" do
+      let(:user) { create(:user) }
+
+      before do
+        @node.client.mock_set_height(560178)
+        @node.poll!
+        @node.reload
+      end
+
+      it "should store a VersionBit entry" do
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(1)
+        expect(VersionBit.first.bit).to eq(1)
+        expect(VersionBit.first.activate).to eq(@node.block)
+      end
+
+      it "should send an email to all users" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      end
+
+      it "should send email only once" do
+        expect(User).to receive(:all).and_return [user]
+        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        @node.reload
+        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "should leave existing VersionBit entry alone" do
+        expect(User).to receive(:all).and_return [user]
+
+        @node.check_versionbits!
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        @node.reload
+        expect(@node.block.height).to eq(560179)
+        expect(@node.block.parent.height).to eq(560178)
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(1)
+        expect(VersionBit.first.bit).to eq(1)
+        expect(VersionBit.first.activate).to eq(@node.block.parent)
+      end
+
+
+      it "should mark VersionBit entry inactive if not signalled for" do
+        @node.check_versionbits!
+
+        @node.client.mock_set_height(560182)
+        @node.poll!
+        @node.reload
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(1)
+        expect(VersionBit.first.deactivate).to eq(@node.block)
+      end
+    end
+  end
+
   describe "class" do
     describe "poll!" do
-      it "should call poll! on all nodes, followed by check_laggards! and check_chaintips!" do
+      it "should call poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!" do
         node1 = create(:node_with_block, coin: "BTC", version: 170000)
         node2 = create(:node_with_block, coin: "BTC", version: 160000)
         node3 = create(:node_with_block, coin: "BCH")
@@ -508,7 +595,10 @@ RSpec.describe Node, :type => :model do
 
         expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
-                expect(node).to receive(:poll!)
+            expect(node).to receive(:poll!)
+            if node.version ==  170000
+              expect(node).to receive(:check_versionbits!)
+            end
           }
         }
 

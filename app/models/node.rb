@@ -157,6 +157,56 @@ class Node < ApplicationRecord
     return lag_entry
   end
 
+  def check_versionbits!
+    return nil if self.ibd
+
+    threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'].to_i || 50
+    window = Rails.env.test? ? 3 : 100
+
+    block = self.block
+    until_height = block.height - (window - 1)
+
+    versions_window = [[0] * 32] * window
+
+    while block.height >= until_height
+      if !block.version.present?
+        puts "Missing version for block #{ block.height }"
+        exit(1)
+      end
+
+      versions_window.shift()
+      versions_window.push(("%.32b" % (block.version & ~0b100000000000000000000000000000)).split("").collect{|s|s.to_i})
+
+      break unless block = block.parent
+    end
+
+    versions_tally = versions_window.transpose.map(&:sum)
+    current_alerts = VersionBit.where(deactivate: nil).map{ |vb| [vb.bit, vb] }.to_h
+    versions_tally.each_with_index do |tally, bit|
+      if tally >= threshold
+        puts "Bit #{ 32 - bit } exceeds threshold" unless Rails.env.test?
+        if current_alerts[32 - bit].nil?
+          current_alerts[32 - bit] = VersionBit.create(bit: 32 - bit, activate: self.block)
+        end
+      elsif tally == 0
+        current_alert = current_alerts[32 - bit]
+        if current_alert.present?
+          puts "Turn off alert for bit #{ 32 - bit }" unless Rails.env.test?
+          current_alerts[32 - bit].update deactivate: self.block
+        end
+      end
+
+      # Send email
+      current_alert = current_alerts[32 - bit]
+      if current_alert && !current_alert.deactivate && !current_alert.notified_at
+        User.all.each do |user|
+          UserMailer.with(user: user, bit: 32 - bit, tally: tally, window: window, block: self.block).version_bits_email.deliver
+        end
+        current_alert.update notified_at: Time.now
+      end
+    end
+  end
+
   def find_block_ancestors!(child_block, until_height)
     block_id = child_block.id
     loop do
@@ -198,12 +248,14 @@ class Node < ApplicationRecord
   end
 
   def self.poll!
-    self.bitcoin_by_version.each do |node|
+    bitcoin_nodes = self.bitcoin_by_version
+    bitcoin_nodes.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
       node.poll!
     end
     self.check_laggards!
     self.check_chaintips!
+    bitcoin_nodes.first.check_versionbits!
 
     self.altcoin_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?

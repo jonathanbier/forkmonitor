@@ -15,6 +15,8 @@ namespace 'blocks' do :env
 
   desc "Version bit alerts"
   task :version_bit_alerts, [:height] => :environment do |action, args|
+    threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'] || 50
+
     block = Node.where(coin: "BTC").reorder(version: :desc).first.block
     until_height = args.height.to_i
 
@@ -45,7 +47,7 @@ namespace 'blocks' do :env
       versions_window_new.push(("%.32b" % (block.version & ~0b100000000000000000000000000000)).split("").collect{|s|s.to_i})
 
       versions_tally = versions_window_new.transpose.map(&:sum)
-      if versions_tally.max >= 10
+      if versions_tally.max >= threshold
         pos = versions_tally.index(versions_tally.max)
         if !active_alert_new[pos]
           active_alert_new[pos] = true
