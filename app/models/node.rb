@@ -60,7 +60,7 @@ class Node < ApplicationRecord
       self.update common_block: common_block
     end
 
-    block = self.ibd ? nil : find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"]) unless self.ibd
+    block = self.ibd ? nil : find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"])
     self.update block: block, unreachable_since: nil
   end
 
@@ -286,7 +286,7 @@ class Node < ApplicationRecord
       # Prevent new instances from going too far back due to Bitcoin Cash fork blocks:
       oldest_block = [Block.minimum(:height), 560000].max
 
-      find_block_ancestors!(block, oldest_block ? oldest_block : block.height)
+      find_block_ancestors!(block, oldest_block)
     rescue
       raise if Rails.env.test?
       retry
