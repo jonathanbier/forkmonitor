@@ -15,7 +15,7 @@ namespace 'blocks' do :env
 
   desc "Version bit alerts"
   task :version_bit_alerts, [:height] => :environment do |action, args|
-    threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'] || 50
+    threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'].to_i || 50
 
     block = Node.where(coin: "BTC").reorder(version: :desc).first.block
     until_height = args.height.to_i

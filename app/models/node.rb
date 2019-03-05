@@ -174,7 +174,6 @@ class Node < ApplicationRecord
         exit(1)
       end
 
-      versions_window.shift()
       versions_window.push(("%.32b" % (block.version & ~0b100000000000000000000000000000)).split("").collect{|s|s.to_i})
 
       break unless block = block.parent
@@ -184,8 +183,8 @@ class Node < ApplicationRecord
     current_alerts = VersionBit.where(deactivate: nil).map{ |vb| [vb.bit, vb] }.to_h
     versions_tally.each_with_index do |tally, bit|
       if tally >= threshold
-        puts "Bit #{ 32 - bit } exceeds threshold" unless Rails.env.test?
         if current_alerts[32 - bit].nil?
+          puts "Bit #{ 32 - bit } exceeds threshold" unless Rails.env.test?
           current_alerts[32 - bit] = VersionBit.create(bit: 32 - bit, activate: self.block)
         end
       elsif tally == 0
