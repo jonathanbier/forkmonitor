@@ -159,6 +159,7 @@ class Node < ApplicationRecord
 
   def check_versionbits!
     return nil if self.ibd
+    self.reload # Block parent links may be stale otherwise
 
     threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'].to_i || 50
     window = Rails.env.test? ? 3 : 100
@@ -186,8 +187,10 @@ class Node < ApplicationRecord
       break unless block = block.parent
     end
 
+    return nil if versions_window.length != window # Less than 100 blocks or missing parent info
+
     versions_tally = versions_window.transpose.map(&:sum)
-    throw if versions_tally.length != 29
+    throw "Unexpected versions_tally = #{ versions_tally.length } != 29"  if versions_tally.length != 29
     current_alerts = VersionBit.where(deactivate: nil).map{ |vb| [vb.bit, vb] }.to_h
     versions_tally.each_with_index do |tally, bit|
       if tally >= threshold
