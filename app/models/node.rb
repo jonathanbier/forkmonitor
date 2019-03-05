@@ -166,7 +166,7 @@ class Node < ApplicationRecord
     block = self.block
     until_height = block.height - (window - 1)
 
-    versions_window = [[0] * 32] * window
+    versions_window = []
 
     while block.height >= until_height
       if !block.version.present?
