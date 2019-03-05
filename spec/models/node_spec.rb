@@ -572,12 +572,30 @@ RSpec.describe Node, :type => :model do
       it "should mark VersionBit entry inactive if not signalled for" do
         @node.check_versionbits!
 
-        @node.client.mock_set_height(560182)
+        @node.client.mock_set_height(560181)
         @node.poll!
         @node.reload
         @node.check_versionbits!
         expect(VersionBit.count).to eq(1)
         expect(VersionBit.first.deactivate).to eq(@node.block)
+
+        @node.client.mock_set_height(560182)
+        @node.poll!
+        @node.reload
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(1)
+        expect(VersionBit.first.deactivate).to eq(@node.block.parent)
+      end
+
+      it "should not mark VersionBit entry inactive too early" do
+        @node.check_versionbits!
+
+        @node.client.mock_set_height(560180)
+        @node.poll!
+        @node.reload
+        @node.check_versionbits!
+        expect(VersionBit.count).to eq(1)
+        expect(VersionBit.first.deactivate).to be_nil
       end
     end
   end

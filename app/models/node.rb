@@ -174,32 +174,40 @@ class Node < ApplicationRecord
         exit(1)
       end
 
-      versions_window.push(("%.32b" % (block.version & ~0b100000000000000000000000000000)).split("").collect{|s|s.to_i})
-
+      # First three bits of field have no meaning in BIP9. nVersion is a little-endian
+      # signed integer that must be greater than 2, which is 0x0010 in binary and 0x02 in hex.
+      # By setting the least significant byte to >= 0x02 this requirement is met
+      # regardless of the next 3 bytes.
+      # This is why nVersion changed from 4 (0x00000004) to 536870912 (0x20000000) for most blocks.
+      # In fact, nVersion 4 (0x00000004) would now indicate signalling for a soft fork on bit 26.
+      #        mask: 0xe0000000 (bit 0-28)
+      # BIP320 mask: 0xe0001fff (loses bit 13-28)
+      versions_window.push(("%.32b" % (block.version & ~0xe0000000)).split("").drop(3).reverse().collect{|s|s.to_i})
       break unless block = block.parent
     end
 
     versions_tally = versions_window.transpose.map(&:sum)
+    throw if versions_tally.length != 29
     current_alerts = VersionBit.where(deactivate: nil).map{ |vb| [vb.bit, vb] }.to_h
     versions_tally.each_with_index do |tally, bit|
       if tally >= threshold
-        if current_alerts[32 - bit].nil?
-          puts "Bit #{ 32 - bit } exceeds threshold" unless Rails.env.test?
-          current_alerts[32 - bit] = VersionBit.create(bit: 32 - bit, activate: self.block)
+        if current_alerts[bit].nil?
+          puts "Bit #{ bit } exceeds threshold" unless Rails.env.test?
+          current_alerts[bit] = VersionBit.create(bit: bit, activate: self.block)
         end
       elsif tally == 0
-        current_alert = current_alerts[32 - bit]
+        current_alert = current_alerts[bit]
         if current_alert.present?
-          puts "Turn off alert for bit #{ 32 - bit }" unless Rails.env.test?
-          current_alerts[32 - bit].update deactivate: self.block
+          puts "Turn off alert for bit #{ bit }" unless Rails.env.test?
+          current_alert.update deactivate: self.block
         end
       end
 
       # Send email
-      current_alert = current_alerts[32 - bit]
+      current_alert = current_alerts[bit]
       if current_alert && !current_alert.deactivate && !current_alert.notified_at
         User.all.each do |user|
-          UserMailer.with(user: user, bit: 32 - bit, tally: tally, window: window, block: self.block).version_bits_email.deliver
+          UserMailer.with(user: user, bit: bit, tally: tally, window: window, block: self.block).version_bits_email.deliver
         end
         current_alert.update notified_at: Time.now
       end
