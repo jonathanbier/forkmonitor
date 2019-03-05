@@ -208,10 +208,12 @@ class Node < ApplicationRecord
   end
 
   def find_block_ancestors!(child_block, until_height = nil)
+    # Prevent new instances from going too far back due to Bitcoin Cash fork blocks:
+    oldest_block = [Block.minimum(:height), 560000].max
     block_id = child_block.id
     loop do
       block = Block.find(block_id)
-      return if until_height && block.height == until_height
+      return if until_height ? block.height == until_height : block.height == oldest_block
       parent = block.parent
       if parent.nil?
         if self.version >= 120000
@@ -337,10 +339,7 @@ class Node < ApplicationRecord
         )
       end
 
-      # Prevent new instances from going too far back due to Bitcoin Cash fork blocks:
-      oldest_block = [Block.minimum(:height), 560000].max
-
-      find_block_ancestors!(block, oldest_block)
+      find_block_ancestors!(block)
     rescue
       raise if Rails.env.test?
       retry

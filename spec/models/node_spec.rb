@@ -593,7 +593,12 @@ RSpec.describe Node, :type => :model do
       expect(Block.minimum(:height)).to equal(560179)
     end
 
-    it "should fetch parents beyond the oldest block" do
+    it "should not fetch parents beyond the oldest block" do
+      @node.find_block_ancestors!(@node.block)
+      expect(Block.minimum(:height)).to equal(560179)
+    end
+
+    it "with block argument should fetch parents beyond the oldest block" do
       @node.client.mock_set_height(560182)
       @node.poll!
       @node.reload
