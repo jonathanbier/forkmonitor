@@ -582,6 +582,30 @@ RSpec.describe Node, :type => :model do
     end
   end
 
+  describe "find_block_ancestors!" do
+    before do
+      @node = build(:node)
+      expect(Block.minimum(:height)).to equal(nil)
+      @node.client.mock_set_height(560179)
+      @node.poll!
+      @node.reload
+      expect(@node.block.height).to equal(560179)
+      expect(Block.minimum(:height)).to equal(560179)
+    end
+
+    it "should fetch parents beyond the oldest block" do
+      @node.client.mock_set_height(560182)
+      @node.poll!
+      @node.reload
+      expect(@node.block.height).to equal(560182)
+      expect(Block.count).to equal(4)
+
+      @node.find_block_ancestors!(@node.block, 560176)
+      expect(Block.count).to equal(7)
+      expect(Block.minimum(:height)).to equal(560176)
+    end
+  end
+
   describe "class" do
     describe "poll!" do
       it "should call poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!" do

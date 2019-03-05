@@ -207,11 +207,11 @@ class Node < ApplicationRecord
     end
   end
 
-  def find_block_ancestors!(child_block, until_height)
+  def find_block_ancestors!(child_block, until_height = nil)
     block_id = child_block.id
     loop do
       block = Block.find(block_id)
-      return if block.height == until_height
+      return if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
         if self.version >= 120000
@@ -222,7 +222,9 @@ class Node < ApplicationRecord
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
         block.update parent: parent
       end
-      if parent.nil?
+      if parent.present?
+        return if until_height.nil?
+      else
         # Fetch parent block, unless:
         # * this is not a BTC node
         break if !self.id || self.coin != "BTC"
