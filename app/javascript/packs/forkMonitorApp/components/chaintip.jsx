@@ -49,7 +49,7 @@ class Chaintip extends React.Component {
           </p>
           Nodes:
           <ul>
-          {this.state.nodes.filter(o => o.best_block.hash == this.state.chaintip.hash).map(function (node, index) {
+          {this.state.nodes.filter(o => o.best_block && o.best_block.hash == this.state.chaintip.hash).map(function (node, index) {
             return (
               <Node node={ node } key={node.id} className="pull-left node-info" />
             )

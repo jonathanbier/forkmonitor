@@ -54,7 +54,7 @@ class Nodes extends React.Component {
     axios.get('/api/v1/nodes/coin/' + coin).then(function (response) {
       return response.data;
     }).then(function (nodes) {
-      var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.best.hash === elem.best.hash) == pos)
+      var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x.best && elem.best && x.best.hash === elem.best.hash) == pos)
 
       var chaintips_and_common = unique(nodes.map(node => ({best: node.best_block, common: node.common_block})));
 
