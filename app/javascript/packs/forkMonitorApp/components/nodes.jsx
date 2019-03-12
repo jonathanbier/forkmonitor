@@ -9,6 +9,7 @@ import {
 } from 'reactstrap';
 
 import Chaintip from './chaintip';
+import NodesWithoutTip from './nodesWithoutTip';
 import NodeName from './nodeName';
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
@@ -21,6 +22,7 @@ class Nodes extends React.Component {
       coin: props.match.params.coin,
       nodes: [],
       chaintips: [],
+      nodesWithoutTip: [],
       invalid_blocks: []
     };
 
@@ -43,6 +45,7 @@ class Nodes extends React.Component {
     if (currentCoin !== nextCoin) {
       this.setState({
         nodes: [],
+        nodesWithoutTip: [],
         chaintips: []
       });
       this.getNodes(nextProps.match.params.coin);
@@ -62,7 +65,8 @@ class Nodes extends React.Component {
         coin: coin,
         nodes: nodes,
         chaintips: chaintips_and_common.map(x => x.best),
-        chaintips_common_block: chaintips_and_common.map(x => x.common)
+        chaintips_common_block: chaintips_and_common.map(x => x.common),
+        nodesWithoutTip: nodes.filter(node => node.best_block == null)
       });
 
       }.bind(this)).catch(function (error) {
@@ -118,7 +122,11 @@ class Nodes extends React.Component {
                   invalid_blocks={ this.state.invalid_blocks }
                 />)
               }.bind(this))}
+              { this.state.nodesWithoutTip.length > 0 &&
+                <NodesWithoutTip coin={ this.state.coin } nodes={ this.state.nodesWithoutTip } />
+              }
           </Container>
+
         </TabPane>
       );
   }

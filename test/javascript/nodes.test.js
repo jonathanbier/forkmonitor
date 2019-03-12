@@ -31,6 +31,7 @@ test('rendered component', async () => {
   const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
   await flushPromises();
   expect(wrapper.find('Chaintip')).toHaveLength(1);
+  expect(wrapper.find('NodesWithoutTip')).toHaveLength(0);
 });
 
 test('can handle node without best block', async () => {
@@ -49,4 +50,5 @@ test('can handle node without best block', async () => {
   const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
   await flushPromises();
   expect(wrapper.find('Chaintip')).toHaveLength(1);
+  expect(wrapper.find('NodesWithoutTip')).toHaveLength(1);
 });
