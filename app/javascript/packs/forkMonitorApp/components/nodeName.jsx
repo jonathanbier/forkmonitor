@@ -7,24 +7,21 @@ Number.prototype.pad = function(size) {
 }
 
 class NodeName extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      node: props.node
-    };
-  }
-
   render() {
-    const version = this.state.node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number)
+    var versionString = ""
+    if (this.props.node.version) {
+      const version = this.props.node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number);
+      versionString =  ` ${version[0]}.${version[1]}.${version[2]}`;
+      if (versionString[3] > 0) {
+        versionString += `.${version[3]}`;
+      }
+    }
+
     return(
       <span>
-        {this.state.node.name}
+        {this.props.node.name}
         <span className="node-version">
-          { " " }{version[0]}.{version[1]}.{version[2]}
-          {version[3] > 0 &&
-            <span>.{version[3]}</span>
-          }
+          {versionString}
         </span>
       </span>
     )
