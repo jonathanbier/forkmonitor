@@ -7,7 +7,7 @@ RSpec.describe UserMailer, type: :mailer do
     let(:mail) { UserMailer.with(user: user, lag: lag).lag_email }
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 100300 is 1 blocks behind 170100")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.10.3 is 1 blocks behind 170100")
       expect(mail.to).to eq([user.email])
     end
 
@@ -27,7 +27,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 170100 considers block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
       expect(mail.to).to eq([user.email])
     end
 
@@ -36,7 +36,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "mentions which node first saw the block" do
-      expect(mail.body.encoded).to include("Bitcoin Core 160300")
+      expect(mail.body.encoded).to include("Bitcoin Core 0.16.3")
     end
 
   end
