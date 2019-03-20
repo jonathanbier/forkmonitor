@@ -1,5 +1,25 @@
 # Fork Monitor [![Build Status](https://travis-ci.org/BitMEXResearch/forkmonitor.svg?branch=master)](https://travis-ci.org/BitMEXResearch/forkmonitor) [![Coverage Status](https://coveralls.io/repos/github/BitMEXResearch/forkmonitor/badge.svg?branch=master)](https://coveralls.io/github/BitMEXResearch/forkmonitor?branch=master)
 
+## RSS feeds
+
+### Invalid Blocks
+
+https://forkmonitor.info/feeds/invalid_blocks.rss
+
+Fork Monitor stores all valid blocks in its own database, including intermediate blocks between poll moments, and including `valid-fork` entries from `getchaintips`. It then takes the `invalid` chaintip entries from each node and checks if it knows that block. If so then it sends out an alert.
+
+### Version bit signaling
+
+https://forkmonitor.info/feeds/version_bits.rss
+
+Version bits flagged in the past 100 blocks (currently uses 10 as lower threshold).
+
+### Lagging test nodes
+
+https://forkmonitor.info/feeds/lagging_nodes.rss
+
+Checks if any of the test nodes fell behind. This doesn't have to be a consensus problem, but we filter common reasons like being offline, in initial block download or not having peers.
+
 ## Development
 
 Install Ruby 2.5.3 through a version manager such as [RVM](https://rvm.io). Install
