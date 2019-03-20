@@ -167,10 +167,9 @@ class Node < ApplicationRecord
     self.reload # Block parent links may be stale otherwise
 
     threshold = Rails.env.test? ? 2 : ENV['VERSION_BITS_THRESHOLD'].to_i || 50
-    window = Rails.env.test? ? 3 : 100
 
     block = self.block
-    until_height = block.height - (window - 1)
+    until_height = block.height - (VersionBit::WINDOW - 1)
 
     versions_window = []
 
@@ -192,7 +191,7 @@ class Node < ApplicationRecord
       break unless block = block.parent
     end
 
-    return nil if versions_window.length != window # Less than 100 blocks or missing parent info
+    return nil if versions_window.length != VersionBit::WINDOW # Less than 100 blocks or missing parent info
 
     versions_tally = versions_window.transpose.map(&:sum)
     throw "Unexpected versions_tally = #{ versions_tally.length } != 29"  if versions_tally.length != 29
@@ -215,7 +214,7 @@ class Node < ApplicationRecord
       current_alert = current_alerts[bit]
       if current_alert && !current_alert.deactivate && !current_alert.notified_at
         User.all.each do |user|
-          UserMailer.with(user: user, bit: bit, tally: tally, window: window, block: self.block).version_bits_email.deliver
+          UserMailer.with(user: user, bit: bit, tally: tally, window: VersionBit::WINDOW, block: self.block).version_bits_email.deliver
         end
         current_alert.update notified_at: Time.now
       end
