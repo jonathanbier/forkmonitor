@@ -37,7 +37,8 @@
   },
   "jest": {
     "roots": [
-      "test/javascript"
+      "test/javascript",
+      "app/javascript/packs/forkMonitorApp"
     ],
     "moduleDirectories": [
       "node_modules",
