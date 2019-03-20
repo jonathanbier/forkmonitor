@@ -10,6 +10,11 @@ class Node < ApplicationRecord
 
   scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
 
+  def name_with_version
+    version_arr = self.version.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
+    return "#{ self.name } #{ version_arr[3] == 0 ? version_arr[0..2].join(".") : version_arr.join(".") }"
+  end
+
   def as_json(options = nil)
     fields = [:id, :name, :version, :unreachable_since, :ibd]
     if options && options[:admin]

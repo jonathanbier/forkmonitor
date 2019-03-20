@@ -8,6 +8,18 @@ RSpec.describe Node, :type => :model do
     end
   end
 
+  describe "name_with_version" do
+    it "should combine node name with version" do
+      node = create(:node, version: 170001)
+      expect(node.name_with_version).to eq("Bitcoin Core 0.17.0.1")
+    end
+
+    it "should drop the 4th digit if zero" do
+      node = create(:node, version: 170000)
+      expect(node.name_with_version).to eq("Bitcoin Core 0.17.0")
+    end
+  end
+
   describe "poll!" do
     describe "on first run" do
       before do

@@ -5,7 +5,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{ @lag.node_a.name } #{ @lag.node_a.version } is #{ @lag.node_b.block.height - @lag.node_a.block.height } blocks behind #{ @lag.node_b.version }"
+      subject: "[ForkMonitor] #{ @lag.node_a.name_with_version } is #{ @lag.node_b.block.height - @lag.node_a.block.height } blocks behind #{ @lag.node_b.version }"
     )
   end
 
@@ -15,7 +15,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{ @invalid_block.node.name } #{ @invalid_block.node.version } considers block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
+      subject: "[ForkMonitor] #{ @invalid_block.node.name_with_version } considers block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
     )
   end
 
