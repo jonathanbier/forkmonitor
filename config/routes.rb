@@ -21,7 +21,7 @@ Rails.application.routes.draw do
 
   scope format: true, constraints: { format: /rss/ } do
     get 'feeds/invalid_blocks' => 'feeds#invalid_blocks'
-    get 'feeds/nodes_behind' => 'feeds#nodes_behind'
+    get 'feeds/lagging_nodes' => 'feeds#lagging_nodes'
     get 'feeds/version_bits' => 'feeds#version_bits'
   end
 

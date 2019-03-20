@@ -19,18 +19,18 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
-    describe "GET nodes_behind feed" do
-      let!(:node_behind) { create(:lag) }
+    describe "GET lagging_nodes feed" do
+      let!(:lagging_node) { create(:lag) }
 
       it "should be rendered" do
-        get :nodes_behind, format: :rss
-        expect(response).to render_template("feeds/nodes_behind")
+        get :lagging_nodes, format: :rss
+        expect(response).to render_template("feeds/lagging_nodes")
         expect(response.body).to include("behind")
       end
 
       it "should contain a lagging node" do
-        get :nodes_behind, format: :rss
-        expect(response.body).to include(node_behind.node_a.name_with_version)
+        get :lagging_nodes, format: :rss
+        expect(response.body).to include(lagging_node.node_a.name_with_version)
       end
     end
 

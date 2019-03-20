@@ -8,10 +8,10 @@ class FeedsController < ApplicationController
     end
   end
 
-  def nodes_behind
+  def lagging_nodes
     respond_to do |format|
       format.rss do
-        @nodes_behind = Lag.all
+        @lagging_nodes = Lag.all
       end
     end
   end
