@@ -11,15 +11,15 @@ class NodeName extends React.Component {
     var versionString = ""
     if (this.props.node.version) {
       const version = this.props.node.version.pad(8).split( /(?=(?:..)*$)/ ).map(Number);
-      versionString =  ` ${version[0]}.${version[1]}.${version[2]}`;
-      if (versionString[3] > 0) {
+      versionString =  `${version[0]}.${version[1]}.${version[2]}`;
+      if (version[3] > 0) {
         versionString += `.${version[3]}`;
       }
     }
 
     return(
       <span>
-        {this.props.node.name}
+        {this.props.node.name}{ " " }
         <span className="node-version">
           {versionString}
         </span>
