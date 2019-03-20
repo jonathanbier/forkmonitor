@@ -19,6 +19,12 @@ Rails.application.routes.draw do
     end
   end
 
+  scope format: true, constraints: { format: /rss/ } do
+    get 'feeds/invalid_blocks' => 'feeds#invalid_blocks'
+    get 'feeds/nodes_behind' => 'feeds#nodes_behind'
+    get 'feeds/version_bits' => 'feeds#version_bits'
+  end
+
   get 'nodes/btc', to: "pages#root"
   get 'nodes/bch', to: "pages#root"
   get 'admin', to: "pages#root"

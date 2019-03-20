@@ -5,4 +5,9 @@ FactoryBot.define do
      sequence(:timestamp) { |n| 1500000000 * 60 * 10 }
      sequence(:work) { |n| n.to_s(16).rjust(32,"0") }
    end
+
+   factory :block_first_seen_by, parent: :block do
+     association :first_seen_by, factory: :node_with_block, version: 160100
+   end
+
  end
