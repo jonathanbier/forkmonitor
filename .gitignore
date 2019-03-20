@@ -28,6 +28,9 @@
 .byebug_history
 .DS_Store
 
+coverage
+coverage-js
+
 # Ignore master key for decrypting credentials and more.
 /config/master.key
 /public/packs

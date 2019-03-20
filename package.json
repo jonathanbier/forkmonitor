@@ -27,13 +27,15 @@
   },
   "devDependencies": {
     "babel-jest": "^23.6.0",
+    "coveralls": "^3.0.3",
     "jest": "^23.6.0",
     "regenerator-runtime": "^0.12.1",
     "webpack-dev-server": "2.11.2"
   },
   "scripts": {
-    "test": "jest",
-    "test-watch": "jest --watch"
+    "test": "node_modules/jest/bin/jest.js",
+    "test-watch": "node_modules/jest/bin/jest.js --watch",
+    "coveralls": "node_modules/jest/bin/jest.js --collectCoverage --coverageDirectory=coverage-js && cat ./coverage-js/lcov.info | coveralls"
   },
   "jest": {
     "roots": [

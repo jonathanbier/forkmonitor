@@ -11,4 +11,5 @@ before_install:
 script:
   - bundle exec rake db:migrate RAILS_ENV=test
   - bundle exec rake
-  - yarn test
+  - npm test
+  - npm run coveralls
