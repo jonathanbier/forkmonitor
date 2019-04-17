@@ -1,0 +1,12 @@
+<p>
+  We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
+  <ul>
+    <% @blocks.each do | block | %>
+      <li><%= block.block_hash %></li>
+    <% end %>
+  </ul>
+</p>
+
+<p>
+  For more information, see: <%= nodes_btc_url %>
+</p>

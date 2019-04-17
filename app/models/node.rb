@@ -312,6 +312,12 @@ class Node < ApplicationRecord
     tip_height = Block.where(is_btc: true).maximum(:height)
     if Block.where(is_btc: true, height: tip_height).count > 1
       @orphan_candidate = OrphanCandidate.find_or_create_by(height: tip_height)
+      if @orphan_candidate.notified_at.nil?
+        User.all.each do |user|
+          UserMailer.with(user: user, orphan_candidate: @orphan_candidate).orphan_candidate_email.deliver
+        end
+        @orphan_candidate.update notified_at: Time.now
+      end
     end
   end
 

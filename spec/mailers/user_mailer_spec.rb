@@ -56,4 +56,26 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
   end
+
+  describe "orphan candidate notify" do
+    let(:user) { create(:user) }
+    let(:orphan_candidate) { create(:orphan_candidate, height: 500000) }
+    before do
+      @block1 = create(:block, height: 500000)
+      @block2 = create(:block, height: 500000)
+    end
+
+    let(:mail) { UserMailer.with(user: user, orphan_candidate: orphan_candidate).orphan_candidate_email }
+
+    it "renders the headers" do
+      expect(mail.subject).to eq("[ForkMonitor] potential orphan block at height #{ orphan_candidate.height }")
+      expect(mail.to).to eq([user.email])
+    end
+
+    it "renders the body" do
+      expect(mail.body.encoded).to include(@block1.block_hash)
+      expect(mail.body.encoded).to include(@block2.block_hash)
+    end
+
+  end
 end

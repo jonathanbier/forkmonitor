@@ -31,4 +31,15 @@ class UserMailer < ApplicationMailer
       subject: "[ForkMonitor] version bit #{ @bit } was set #{ @tally } times between blocks #{ @block.height - @window + 1 } and #{ @block.height }"
     )
   end
+
+  def orphan_candidate_email
+    @user = params[:user]
+    @orphan_candidate = params[:orphan_candidate]
+    @blocks = Block.where(is_btc: true, height: @orphan_candidate.height)
+
+    mail(
+      to: @user.email,
+      subject: "[ForkMonitor] potential orphan block at height #{ @orphan_candidate.height }"
+    )
+  end
 end
