@@ -329,10 +329,11 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should trigger potential orphan alert" do
-        expect(User).to receive(:all).and_return [user]
+        expect(User).to receive(:all).twice.and_return [user]
         expect(Node).to receive(:bitcoin_by_version).twice.and_return [@A, @B]
 
-        expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        # One alert for each height:
+        expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(2)
         # Just once...
         expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end

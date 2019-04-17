@@ -308,10 +308,10 @@ class Node < ApplicationRecord
     self.bitcoin_by_version.each do |node|
       node.check_chaintips!
     end
-    # Look for potential orphan blocks, i.e. more than one block at the tip height
+    # Look for potential orphan blocks, i.e. more than one block at the same height
     tip_height = Block.where(is_btc: true).maximum(:height)
-    if Block.where(is_btc: true, height: tip_height).count > 1
-      @orphan_candidate = OrphanCandidate.find_or_create_by(height: tip_height)
+    Block.where(is_btc: true).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
+      @orphan_candidate = OrphanCandidate.find_or_create_by(height: block.height)
       if @orphan_candidate.notified_at.nil?
         User.all.each do |user|
           UserMailer.with(user: user, orphan_candidate: @orphan_candidate).orphan_candidate_email.deliver

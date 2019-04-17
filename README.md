@@ -15,8 +15,8 @@ https://forkmonitor.info/feeds/orphan_candidates.rss
 Creates an alert if there is more than one block at the tip height of the chain.
 E.g. if there are two blocks at height N then one is expected to get orphaned.
 
-This will not create an alert for all orphan blocks, only those that haven't been
-orphaned yet at the moment of polling.
+This will not create an alert for all orphan blocks, only those that have been
+processed by our nodes.
 
 ### Version bit signaling
 
