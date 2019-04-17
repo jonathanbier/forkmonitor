@@ -17,6 +17,8 @@
 require 'coveralls'
 Coveralls.wear!
 
+require 'helpers/controller_spec_helpers.rb'
+
 RSpec.configure do |config|
   config.filter_run_when_matching :focus
 
@@ -102,4 +104,6 @@ RSpec.configure do |config|
   # as the one that triggered the failure.
   Kernel.srand config.seed
 =end
+
+  config.include ControllerSpecHelpers, :type => :controller
 end
