@@ -80,6 +80,14 @@ class BitcoinClient
     end
   end
 
+  def gettxoutsetinfo
+    begin
+      return request("gettxoutsetinfo")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "gettxoutsetinfo failed for node #{@id}: " + e.message
+      raise
+    end
+  end
 
   private
 

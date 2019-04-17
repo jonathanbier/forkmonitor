@@ -47,5 +47,12 @@ describe BitcoinClient do
         @client.getblockheader("hash")
       end
     end
+
+    describe "gettxoutsetinfo" do
+      it "should call gettxoutsetinfo rpc method" do
+        expect(@client).to receive(:request).with("gettxoutsetinfo")
+        @client.gettxoutsetinfo
+      end
+    end
   end
 end

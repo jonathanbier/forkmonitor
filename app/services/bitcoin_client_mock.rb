@@ -215,6 +215,33 @@ class BitcoinClientMock
     @chaintips
   end
 
+  def gettxoutsetinfo
+    if @height == 560176
+      return {
+        "height" => @height, # Actually 572023
+        "bestblock" => @block_hashes[@height],
+        "transactions" => 29221340,
+        "txouts" => 53336961,
+        "bogosize" => 4018808071,
+        "hash_serialized_2" => "9bd2d3a6d6aa32e68f3c48286986a1c8771180f2c46bb316bb0073b194835d6b",
+        "disk_size" => 3202897585,
+        "total_amount" => 17650117.32457854
+      }
+    elsif @height == 560178
+      return {
+        "height" => @height, # Actually 572025,
+        "bestblock" => @block_hashes[@height],
+        "transactions" => 29222816,
+        "txouts" => 53340690,
+        "bogosize" => 4019083859,
+        "hash_serialized_2" => "f970cc0aabb3adff4e18a75460ef58c91eb8a181ec97e0d3d8acb71f55402c0a",
+        "disk_size" => 3147778574,
+        "total_amount" => 17650142.32457854
+      }
+    end
+    throw "No mock txoutset for height #{ @height }"
+  end
+
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000
     block_hash ||= @block_hashes[height]
     previousblockhash ||= @block_hashes[height - 1]
