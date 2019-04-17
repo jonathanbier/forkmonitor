@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       resources :invalid_blocks, only: [:index, :show]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
+      resources :blocks, only: [:index]
     end
   end
 

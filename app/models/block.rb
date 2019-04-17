@@ -6,7 +6,9 @@ class Block < ApplicationRecord
 
   def as_json(options = nil)
     super({ only: [:height, :timestamp] }.merge(options || {})).merge({
+      id: id,
       hash: block_hash,
+      timestamp: timestamp,
       work: log2_pow,
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
