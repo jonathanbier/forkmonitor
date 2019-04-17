@@ -60,7 +60,8 @@ class Node < ApplicationRecord
         timestamp: common_block_info["time"],
         work: common_block_info["chainwork"],
         version: block_info["version"],
-        first_seen_by: self
+        first_seen_by: self,
+        is_btc: self.coin == "BTC"
       ).find_or_create_by(block_hash: common_block_info["hash"])
       self.update common_block: common_block
     end
@@ -251,6 +252,7 @@ class Node < ApplicationRecord
           block_info = client.getblock(block_info["previousblockhash"])
         end
         parent = Block.create(
+          is_btc: self.coin == "BTC",
           block_hash: block_info["hash"],
           height: block_info["height"],
           mediantime: block_info["mediantime"],
@@ -343,6 +345,7 @@ class Node < ApplicationRecord
         end
 
         block = Block.create(
+          is_btc: self.coin == "BTC",
           block_hash: block_info["hash"],
           height: block_info["height"],
           mediantime: block_info["mediantime"],

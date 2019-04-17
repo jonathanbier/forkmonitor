@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_03_04_135206) do
+ActiveRecord::Schema.define(version: 2019_04_17_085001) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -23,8 +23,10 @@ ActiveRecord::Schema.define(version: 2019_03_04_135206) do
     t.integer "mediantime"
     t.integer "first_seen_by_id"
     t.integer "version"
+    t.boolean "is_btc", default: false
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
+    t.index ["is_btc"], name: "index_blocks_on_is_btc"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end
 
