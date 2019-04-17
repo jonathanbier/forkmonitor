@@ -24,4 +24,12 @@ class FeedsController < ApplicationController
     end
   end
 
+  def orphan_candidates
+    respond_to do |format|
+      format.rss do
+        @orphan_candidates = OrphanCandidate.all
+      end
+    end
+  end
+
 end

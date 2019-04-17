@@ -18,6 +18,7 @@ Rails.application.routes.draw do
       resources :invalid_blocks, only: [:index, :show]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
+      resources :orphan_candidates, only: [:index, :show]
       resources :blocks, only: [:index]
     end
   end
@@ -26,6 +27,7 @@ Rails.application.routes.draw do
     get 'feeds/invalid_blocks' => 'feeds#invalid_blocks'
     get 'feeds/lagging_nodes' => 'feeds#lagging_nodes'
     get 'feeds/version_bits' => 'feeds#version_bits'
+    get 'feeds/orphan_candidates' => 'feeds#orphan_candidates'
   end
 
   get 'nodes/btc', to: "pages#root"
