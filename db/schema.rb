@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_17_112257) do
+ActiveRecord::Schema.define(version: 2019_04_17_132856) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -79,6 +79,15 @@ ActiveRecord::Schema.define(version: 2019_04_17_112257) do
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "tx_outsets", force: :cascade do |t|
+    t.integer "block_id"
+    t.integer "txouts"
+    t.decimal "total_amount", precision: 16, scale: 8
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_tx_outsets_on_block_id"
   end
 
   create_table "users", force: :cascade do |t|

@@ -28,7 +28,21 @@ class Block < ApplicationRecord
     throw "Node in Initial Blockchain Download" if node.ibd
 
     puts "Get the total UTXO balance at the tip..." unless Rails.env.test?
+    txoutsetinfo = node.client.gettxoutsetinfo
+
     # Make sure we have all blocks up to the tip.
+    block = Block.find_by(block_hash: txoutsetinfo["hash"])
+    if block.nil?
+      puts "Fetch recent blocks..." unless Rails.env.test?
+      node.poll!
+      block = node.block
+      if block.block_hash != txoutsetinfo["bestblock"]
+        throw "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
+      end
+    end
+
+    outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block)
+
     # TODO: Check that the previous snapshot is a block ancestor, otherwise delete it
 
     # TODO: Check that inflation does not exceed 12.5 BTC per block (abort this simlified check after halvening)

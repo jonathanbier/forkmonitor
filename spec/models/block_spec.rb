@@ -19,5 +19,36 @@ RSpec.describe Block, :type => :model do
       expect(Block.maximum(:height)).to eq(560176)
       allow(Node).to receive(:bitcoin_by_version).and_return [@node]
     end
+
+    it "should call gettxoutsetinfo" do
+      Block.check_inflation!
+      expect(TxOutset.count).to eq(1)
+      expect(TxOutset.first.block.height).to eq(560176)
+    end
+
+    it "should not create duplicate TxOutset entries" do
+      Block.check_inflation!
+      Block.check_inflation!
+      expect(TxOutset.count).to eq(1)
+    end
+
+    describe "two different blocks" do
+      before do
+        Block.check_inflation!
+
+        @node.client.mock_set_height(560178)
+        Block.check_inflation!
+      end
+
+      it "should fetch intermediate blocks" do
+        expect(Block.maximum(:height)).to eq(560178)
+        expect(TxOutset.count).to eq(2)
+        expect(TxOutset.last.block.height).to eq(560178)
+      end
+
+      it "mock UTXO set should have increase by be 2 x 12.5 BTC" do
+        expect(TxOutset.last.total_amount - TxOutset.first.total_amount).to eq(25.0)
+      end
+    end
   end
 end
