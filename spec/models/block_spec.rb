@@ -9,4 +9,15 @@ RSpec.describe Block, :type => :model do
       expect(block.log2_pow).to eq(1.0)
     end
   end
+
+  describe "self.check_inflation!" do
+    before do
+      @node = build(:node, version: 170001)
+      @node.client.mock_set_height(560176)
+      @node.poll!
+      @node.reload
+      expect(Block.maximum(:height)).to eq(560176)
+      allow(Node).to receive(:bitcoin_by_version).and_return [@node]
+    end
+  end
 end

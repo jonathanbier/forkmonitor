@@ -8,3 +8,12 @@ describe "blocks:fetch_ancestors" do
     subject.invoke("1")
   end
 end
+
+describe "blocks:check_inflation" do
+  include_context "rake"
+
+  it "should call :check_inflation! on Block" do
+    expect(Block).to receive(:check_inflation!)
+    subject.invoke()
+  end
+end
