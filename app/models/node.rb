@@ -310,7 +310,7 @@ class Node < ApplicationRecord
     end
     # Look for potential orphan blocks, i.e. more than one block at the same height
     tip_height = Block.where(is_btc: true).maximum(:height)
-    Block.where(is_btc: true).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
+    Block.select(:height).where(is_btc: true).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
       @orphan_candidate = OrphanCandidate.find_or_create_by(height: block.height)
       if @orphan_candidate.notified_at.nil?
         User.all.each do |user|
