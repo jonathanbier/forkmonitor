@@ -51,6 +51,8 @@ development:
     watch_options:
       ignored: /node_modules/
 
+development_pg:
+  <<: *development
 
 test:
   <<: *default
@@ -60,7 +62,7 @@ test:
   public_output_path: packs-test
 
 test_pg:
-  <<: *default
+  <<: *test
   compile: true
 
   # Compile test packs to a separate directory

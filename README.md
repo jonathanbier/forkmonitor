@@ -87,3 +87,16 @@ To run Javascript tests and monitor for changes:
 ```sh
 yarn test --watch
 ```
+
+## Postgres
+
+By default development and test environments use SQlite3. In order to develop and
+test with Postgres, use the test_pg and development_pg environments instead.
+
+```sh
+bundle install --with test_pg:development_pg
+RAILS_ENV=test_pg rake db:migrate
+RAILS_ENV=development_pg rake db:migrate
+RAILS_ENV=test_pg rspec
+RAILS_ENV=development_pg rails server
+```
