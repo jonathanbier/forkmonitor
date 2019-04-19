@@ -299,9 +299,24 @@ class Node < ApplicationRecord
       block_hash = header["previousblockhash"]
     end
 
-    puts "Main chain transactions: #{ main_txs.size }"
-    puts "Fork transactions      : #{ fork_txs.size }"
-    puts "Overlap                : #{ (main_txs & fork_txs).size }"
+    # Collect all transaction ids in main chain up to tip
+    block_hash = client.getbestblockhash
+    main_tip_txs = []
+    while true do
+      header = client.getblockheader(block_hash)
+      puts "Processing main chain block at height #{ header["height"] }"
+      block = client.getblock(block_hash, 1)
+      main_tip_txs.concat block["tx"]
+      block_hash = header["previousblockhash"]
+      break if header["height"] == fork_max_height + 1
+    end
+
+    puts "Main chain transactions            : #{ main_txs.size }"
+    puts "Fork transactions                  : #{ fork_txs.size }"
+    puts "Overlap (same # blocks)            : #{ (main_txs & fork_txs).size }"
+    puts "Overlap at tip                     : #{ ((main_txs + main_tip_txs) & fork_txs).size }"
+    puts "Unique txs main chain (ex coinbase): #{ ((main_txs + main_tip_txs) - fork_txs).size - fork_len }"
+    puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
   end
 
   def self.poll!
