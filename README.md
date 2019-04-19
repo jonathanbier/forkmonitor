@@ -100,3 +100,25 @@ RAILS_ENV=development_pg rake db:migrate
 RAILS_ENV=test_pg rspec
 RAILS_ENV=development_pg rails server
 ```
+
+## Tools
+
+To get a list of chaintips for all nodes run:
+
+```rb
+rake blocks:get_chaintips
+```
+
+```
+Node 1: Bitcoin Core 0.17.99:
+HEIGHT | BRANCHLEN | STATUS        | HASH
+-------|-----------|---------------|-----------------------------------------------------------------
+572319 | 0         | active        | 0000000000000000002671de2c0d7966398eef6c36e5c23706e36f2b6ba34633
+525890 | 1         | valid-headers | 0000000000000000003d068ec400b1042b8d1ed867cf3c380b64ca074c6d12c7
+```
+
+To investigate orphaned blocks (`valid-fork`), use the node id and chaintip hash from above:
+
+```rb
+rake blocks:investigate_chaintip[NODE_ID,CHAINTIP_HASH]
+```

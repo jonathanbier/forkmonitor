@@ -53,7 +53,7 @@ class BitcoinClient
     end
   end
 
-  def getblock(hash)
+  def getblock(hash, verbosity = 1)
     begin
       return request("getblock", hash)
     rescue Bitcoiner::Client::JSONRPCError => e

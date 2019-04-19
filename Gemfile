@@ -42,6 +42,9 @@ gem "rack-timeout"
 # Measure test coverage
 gem 'coveralls', require: false
 
+# Print arrays as a table
+gem 'table_print'
+
 group :development, :test do
   # Use sqlite3 as the database for Active Record
   gem 'sqlite3'

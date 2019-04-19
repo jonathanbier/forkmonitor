@@ -267,10 +267,47 @@ class Node < ApplicationRecord
     end
   end
 
+  def investigate_chaintip(block_hash)
+    # Find chaintip:
+    chaintips = client.getchaintips
+    matches = chaintips.select {|tip| tip["hash"] == block_hash }
+    throw "Chaintip #{ block_hash } not found on node #{id} (#{name_with_version})" if matches.empty?
+    chaintip = matches.first
+    throw "Chaintip is not a valid-fork" unless chaintip["status"] == "valid-fork"
+    fork_len = chaintip["branchlen"]
+    header = client.getblockheader(block_hash)
+    fork_max_height = header["height"]
+
+    # Collect all transaction ids in fork:
+    fork_txs = []
+    fork_len.times do
+      header = client.getblockheader(block_hash)
+      puts "Processing fork block at height #{ header["height"] }"
+      block = client.getblock(block_hash, 1)
+      fork_txs.concat block["tx"]
+      block_hash = header["previousblockhash"]
+    end
+
+    # Collect all transaction ids in main chain up to same height
+    block_hash = client.getblockhash(fork_max_height)
+    main_txs = []
+    fork_len.times do
+      header = client.getblockheader(block_hash)
+      puts "Processing main chain block at height #{ header["height"] }"
+      block = client.getblock(block_hash, 1)
+      main_txs.concat block["tx"]
+      block_hash = header["previousblockhash"]
+    end
+
+    puts "Main chain transactions: #{ main_txs.size }"
+    puts "Fork transactions      : #{ fork_txs.size }"
+    puts "Overlap                : #{ (main_txs & fork_txs).size }"
+  end
+
   def self.poll!
     bitcoin_nodes = self.bitcoin_by_version
     bitcoin_nodes.each do |node|
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
     self.check_laggards!
@@ -278,7 +315,7 @@ class Node < ApplicationRecord
     bitcoin_nodes.first.check_versionbits!
 
     self.altcoin_by_version.each do |node|
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name})..." unless Rails.env.test?
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
   end
