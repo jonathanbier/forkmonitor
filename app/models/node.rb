@@ -10,6 +10,18 @@ class Node < ApplicationRecord
 
   scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
 
+  def parse_version(v)
+    return if v.nil?
+    if v[0] == "v"
+      digits = v[1..-1].split(".").collect{|d| d.to_i}
+      padding = [0] * (4 - digits.size)
+      digits.push(*padding)
+      return digits[3] + digits[2] * 100 + digits[1] * 10000 + digits[0] * 1000000
+    else
+      return v
+    end
+  end
+
   def name_with_version
     version_arr = self.version.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
     return "#{ self.name } #{ version_arr[3] == 0 ? version_arr[0..2].join(".") : version_arr.join(".") }"
@@ -41,7 +53,7 @@ class Node < ApplicationRecord
     end
 
     if networkinfo.present?
-      self.update(version: networkinfo["version"], peer_count: networkinfo["connections"])
+      self.update(version: parse_version(networkinfo["version"]), peer_count: networkinfo["connections"])
     end
 
     if blockchaininfo.present?

@@ -114,7 +114,18 @@ class BitcoinClientMock
           "networkactive" => true,
           "connections" => @peer_count,
           "warnings" => ""
-        }
+        },
+        "v1.0.2" => {
+          "version" => "v1.0.2",
+          "subversion" => "/bcoin:v1.0.2/",
+          "protocolversion" => 70015,
+          "localservices" => "00000009",
+          "localrelay" => true,
+          "timeoffset" => 0,
+          "networkactive" => true,
+          "connections" => @peer_count,
+          "warnings" => ""
+        },
       }[@version]
     else
       {
@@ -186,7 +197,21 @@ class BitcoinClientMock
         "bestblockhash" => @block_hashes[@height],
         "verificationprogress" => @ibd ? 0.5 : 1.0,
         "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
-      }
+      },
+      "v1.0.2" => {
+        "chain" => "main",
+        "blocks" => @height,
+        "headers" => @height,
+        "bestblockhash" => @block_hashes[@height],
+        # "difficulty" => 1,
+        "mediantime" => 1232327230,
+        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+        "pruned" => false,
+        "softforks" => [],
+        "bip9_softforks" => {
+        }
+      },
     }[@version]
   end
 

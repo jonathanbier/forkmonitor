@@ -3,8 +3,8 @@ require "rails_helper"
 RSpec.describe Node, :type => :model do
   describe "version" do
     it "should be set" do
-      node = create(:node_with_block)
-      expect(node.version).not_to eq(0)
+      node = create(:node_with_block, version: 160300)
+      expect(node.version).to eq(160300)
     end
   end
 
@@ -12,6 +12,11 @@ RSpec.describe Node, :type => :model do
     it "should combine node name with version" do
       node = create(:node, version: 170001)
       expect(node.name_with_version).to eq("Bitcoin Core 0.17.0.1")
+    end
+
+    it "should handle 1.0 version" do
+      node = create(:node, version: 1000000)
+      expect(node.name_with_version).to eq("Bitcoin Core 1.0.0")
     end
 
     it "should drop the 4th digit if zero" do
@@ -35,6 +40,12 @@ RSpec.describe Node, :type => :model do
       it "should store the node version" do
         @node.poll!
         expect(@node.version).to eq(170100)
+      end
+
+      it "should parse v1.0.2 variant (e.g. Bcoin)" do
+        @node.client.mock_version("v1.0.2")
+        @node.poll!
+        expect(@node.version).to eq(1000200)
       end
 
       it "should not store the latest block if in IBD" do
