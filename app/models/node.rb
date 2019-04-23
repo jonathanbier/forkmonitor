@@ -7,6 +7,7 @@ class Node < ApplicationRecord
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
 
   scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).reorder(version: :desc) }
+  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false) }
 
   scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
 
@@ -332,14 +333,20 @@ class Node < ApplicationRecord
   end
 
   def self.poll!
-    bitcoin_nodes = self.bitcoin_core_by_version
-    bitcoin_nodes.each do |node|
+    bitcoin_core_nodes = self.bitcoin_core_by_version
+    bitcoin_core_nodes.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
+
+    bitcoin_alternative_implementations.each do |node|
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+      node.poll!
+    end
+
     self.check_laggards!
     self.check_chaintips!
-    bitcoin_nodes.first.check_versionbits!
+    bitcoin_core_nodes.first.check_versionbits!
 
     self.altcoin_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -372,6 +379,9 @@ class Node < ApplicationRecord
     self.bitcoin_core_by_version.each do |node|
       node.check_chaintips!
     end
+    self.bitcoin_alternative_implementations.each do |node|
+      node.check_chaintips!
+    end
     # Look for potential orphan blocks, i.e. more than one block at the same height
     tip_height = Block.where(is_btc: true).maximum(:height)
     Block.select(:height).where(is_btc: true).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
@@ -386,10 +396,15 @@ class Node < ApplicationRecord
   end
 
   def self.check_laggards!
-    nodes = self.bitcoin_core_by_version
-    nodes.drop(1).each do |node|
-      lag  = node.check_if_behind!(nodes.first)
-      puts "Check if #{ node.version } is behind #{ nodes.first.version }... #{ lag.present? }" if Rails.env.development?
+    core_nodes = self.bitcoin_core_by_version
+    core_nodes.drop(1).each do |node|
+      lag  = node.check_if_behind!(core_nodes.first)
+      puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
+    end
+
+    self.bitcoin_alternative_implementations.each do |node|
+      lag  = node.check_if_behind!(core_nodes.first)
+      puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
     end
   end
 
