@@ -24,7 +24,7 @@ class Block < ApplicationRecord
 
   def self.check_inflation!
     # Use the latest node for this check
-    node = Node.bitcoin_by_version.first
+    node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
 
     puts "Get the total UTXO balance at the tip..." unless Rails.env.test?

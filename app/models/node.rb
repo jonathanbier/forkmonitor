@@ -6,7 +6,7 @@ class Node < ApplicationRecord
 
   default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
 
-  scope :bitcoin_by_version, -> { where(coin: "BTC").reorder(version: :desc) }
+  scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).reorder(version: :desc) }
 
   scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
 
@@ -16,7 +16,7 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :name, :version, :unreachable_since, :ibd]
+    fields = [:id, :name, :version, :unreachable_since, :ibd, :is_core]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
     end
@@ -320,7 +320,7 @@ class Node < ApplicationRecord
   end
 
   def self.poll!
-    bitcoin_nodes = self.bitcoin_by_version
+    bitcoin_nodes = self.bitcoin_core_by_version
     bitcoin_nodes.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
@@ -357,7 +357,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!
-    self.bitcoin_by_version.each do |node|
+    self.bitcoin_core_by_version.each do |node|
       node.check_chaintips!
     end
     # Look for potential orphan blocks, i.e. more than one block at the same height
@@ -374,7 +374,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_laggards!
-    nodes = self.bitcoin_by_version
+    nodes = self.bitcoin_core_by_version
     nodes.drop(1).each do |node|
       lag  = node.check_if_behind!(nodes.first)
       puts "Check if #{ node.version } is behind #{ nodes.first.version }... #{ lag.present? }" if Rails.env.development?
@@ -382,7 +382,7 @@ class Node < ApplicationRecord
   end
 
   def self.fetch_ancestors!(until_height)
-    node = Node.bitcoin_by_version.first
+    node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
     node.find_block_ancestors!(node.block, until_height)
   end

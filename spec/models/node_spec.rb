@@ -330,7 +330,7 @@ RSpec.describe Node, :type => :model do
 
       it "should trigger potential orphan alert" do
         expect(User).to receive(:all).twice.and_return [user]
-        expect(Node).to receive(:bitcoin_by_version).twice.and_return [@A, @B]
+        expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@A, @B]
 
         # One alert for each height:
         expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(2)
@@ -664,7 +664,7 @@ RSpec.describe Node, :type => :model do
 
         expect(Node).to receive(:check_chaintips!)
 
-        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+        expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
             expect(node).to receive(:poll!)
             if node.version ==  170000
@@ -695,7 +695,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call check_if_behind! against the newest node" do
-        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+        expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|record|
             if record.id == @A.id
               expect(record).not_to receive(:check_if_behind!)
@@ -720,7 +720,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call check_chaintips! against nodes" do
-        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+        expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|record|
               expect(record).to receive(:check_chaintips!)
           }
@@ -743,7 +743,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call find_block_ancestors! against the newest node" do
-        expect(Node).to receive(:bitcoin_by_version).and_wrap_original {|relation|
+        expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|record|
             if record.id == @A.id
               expect(record).to receive(:find_block_ancestors!)

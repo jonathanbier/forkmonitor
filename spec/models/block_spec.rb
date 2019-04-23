@@ -17,7 +17,7 @@ RSpec.describe Block, :type => :model do
       @node.poll!
       @node.reload
       expect(Block.maximum(:height)).to eq(560176)
-      allow(Node).to receive(:bitcoin_by_version).and_return [@node]
+      allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
     end
 
     it "should call gettxoutsetinfo" do

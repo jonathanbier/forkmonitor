@@ -4,12 +4,14 @@ import {
   Edit,
   Create,
   Datagrid,
+  BooleanField,
   TextField,
   DateField,
   NumberField,
   SimpleForm,
   NumberInput,
-  TextInput
+  TextInput,
+  BooleanInput
 } from 'react-admin';
 
 export const NodeList = props => (
@@ -20,6 +22,7 @@ export const NodeList = props => (
             <NumberField source="id" />
             <TextField source="coin" />
             <TextField source="name" />
+            <BooleanField source="is_core" />
             <TextField source="version" />
             <DateField source="unreachable_since" />
             <NumberField source="best_block.height" />
@@ -33,6 +36,7 @@ export const NodeEdit = props => (
         <SimpleForm>
             <TextInput source="coin" />
             <TextInput source="name" />
+            <BooleanInput source="is_core" />
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
@@ -46,6 +50,7 @@ export const NodeCreate = props => (
         <SimpleForm>
             <TextInput source="coin" />
             <TextInput source="name" />
+            <BooleanInput source="is_core" />
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />

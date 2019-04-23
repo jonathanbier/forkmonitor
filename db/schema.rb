@@ -14,6 +14,7 @@ ActiveRecord::Schema.define(version: 2019_04_17_132856) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+ActiveRecord::Schema.define(version: 2019_04_23_103402) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -73,6 +74,7 @@ ActiveRecord::Schema.define(version: 2019_04_17_132856) do
     t.integer "common_height"
     t.boolean "ibd"
     t.integer "peer_count"
+    t.boolean "is_core", default: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["common_block_id"], name: "index_nodes_on_common_block_id"
   end
