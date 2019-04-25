@@ -4,8 +4,6 @@ class Node < ApplicationRecord
   belongs_to :first_seen_by, foreign_key: "first_seen_by_id", class_name: "Node", required: false
   has_many :invalid_blocks
 
-  default_scope { includes(:block).order("blocks.work desc", name: :asc, version: :desc) }
-
   scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).reorder(version: :desc) }
   scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false) }
 

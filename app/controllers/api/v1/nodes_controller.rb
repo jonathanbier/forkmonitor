@@ -4,7 +4,8 @@ class Api::V1::NodesController < ApplicationController
 
   # Unauthenticated list of nodes, per coin:
   def index_coin
-    @nodes = Node.where(coin: params[:coin].upcase)
+    @nodes = Node.where(coin: params[:coin].upcase).includes(:block).order("blocks.work desc", is_core: :desc ,name: :asc, version: :desc)
+
     render json: @nodes
   end
 
