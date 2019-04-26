@@ -44,6 +44,7 @@ RSpec.describe Node, :type => :model do
 
       it "should parse v1.0.2 variant (e.g. Bcoin)" do
         @node.client.mock_version("v1.0.2")
+        @node.client.mock_is_core(false)
         @node.poll!
         expect(@node.version).to eq(1000200)
       end
@@ -209,6 +210,40 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should get IBD status from verificationprogress" do
+        @node.client.mock_ibd(true)
+        expect(@node.ibd).to eq(false)
+      end
+
+      it "should use time from getblock instead of getblockchaininfo" do
+        expect(@node.block.timestamp).to equal(1548498742)
+      end
+
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560179)
+        @node.poll!
+        @node.reload
+        expect(@node.block.height).to equal(560179)
+        expect(@node.block.parent).not_to be_nil
+        expect(@node.block.parent.height).to equal(560178)
+        expect(@node.block.parent.parent).not_to be_nil
+        expect(@node.block.parent.parent.height).to equal(560177)
+        expect(@node.block.parent.parent.timestamp).to equal(1548500251)
+      end
+    end
+
+    describe "Bitcoin Core 0.8.6" do
+      before do
+        # Mock an additional more modern node:
+        @node_ref = build(:node)
+        @node_ref.client.mock_version(170100)
+        @node_ref.poll!
+
+        @node = build(:node)
+        @node.client.mock_version(80600)
+        @node.poll!
+      end
+
+      it "should get IBD status by comparing to other nodes" do
         @node.client.mock_ibd(true)
         expect(@node.ibd).to eq(false)
       end

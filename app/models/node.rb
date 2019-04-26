@@ -43,16 +43,32 @@ class Node < ApplicationRecord
 
   # Update database with latest info from this node
   def poll!
-    begin
-      networkinfo = client.getnetworkinfo
-      blockchaininfo = client.getblockchaininfo
-    rescue Bitcoiner::Client::JSONRPCError
-      self.update unreachable_since: self.unreachable_since || DateTime.now
-      return
+    if self.is_core && self.version.present? && self.version < 100000
+      begin
+        info = client.getinfo
+      rescue Bitcoiner::Client::JSONRPCError
+        self.update unreachable_since: self.unreachable_since || DateTime.now
+        return
+      end
+    else # Version is not known the first time
+      begin
+        networkinfo = client.getnetworkinfo
+        blockchaininfo = client.getblockchaininfo
+      rescue Bitcoiner::Client::JSONRPCError
+        # Try getinfo for ancient nodes:
+        begin
+          info = client.getinfo
+        rescue Bitcoiner::Client::JSONRPCError
+          self.update unreachable_since: self.unreachable_since || DateTime.now
+          return
+        end
+      end
     end
 
     if networkinfo.present?
       self.update(version: parse_version(networkinfo["version"]), peer_count: networkinfo["connections"])
+    elsif info.present?
+      self.update(version: parse_version(info["version"]), peer_count: info["connections"])
     end
 
     if blockchaininfo.present?
@@ -60,6 +76,10 @@ class Node < ApplicationRecord
             blockchaininfo["initialblockdownload"] :
             blockchaininfo["verificationprogress"] < 0.99
       self.update ibd: ibd
+    elsif info.present?
+      # getinfo for v0.8.6 doesn't contain initialblockdownload boolean or verificationprogress.
+      # As long as we also poll newer nodes, we can infer IBD status from how far behind it is.
+      self.update ibd: info["blocks"] < Block.where(is_btc: true).maximum(:height) - 10
     end
 
     if self.common_height && !self.common_block
@@ -77,7 +97,13 @@ class Node < ApplicationRecord
       self.update common_block: common_block
     end
 
-    block = self.ibd ? nil : find_or_create_block_and_ancestors!(blockchaininfo["bestblockhash"])
+    if blockchaininfo.present?
+      best_block_hash = blockchaininfo["bestblockhash"]
+    elsif info.present?
+      best_block_hash = client.getblockhash(info["blocks"])
+    end
+
+    block = self.ibd ? nil : find_or_create_block_and_ancestors!(best_block_hash)
     self.update block: block, unreachable_since: nil
   end
 
@@ -375,7 +401,9 @@ class Node < ApplicationRecord
 
   def self.check_chaintips!
     self.bitcoin_core_by_version.each do |node|
-      node.check_chaintips!
+      if node.version >= 100000 # getchaintips was added in v0.10
+        node.check_chaintips!
+      end
     end
     self.bitcoin_alternative_implementations.each do |node|
       node.check_chaintips!

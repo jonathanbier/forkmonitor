@@ -15,24 +15,29 @@ class BitcoinClient
 
   def getnetworkinfo
     begin
-      # Try getnetworkinfo, fall back to getinfo for older nodes
-      begin
-        return request("getnetworkinfo")
-      rescue Bitcoiner::Client::JSONRPCError => e
-          if e.message.include?("404")
-            return request("getinfo")
-          else
-            raise
-          end
-      end
+      return request("getnetworkinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getnetworkinfo or getinfo failed for node #{@id}: " + e.message
+      puts "getnetworkinfo failed for node #{@id}: " + e.message
+      raise
+    end
+  end
+
+  def getinfo
+    begin
+      return request("getinfo")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getinfo failed for node #{@id}: " + e.message
       raise
     end
   end
 
   def getblockchaininfo
-    request("getblockchaininfo")
+    begin
+      return request("getblockchaininfo")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getblockchaininfo failed for node #{@id}: " + e.message
+      raise
+    end
   end
 
   def getblockhash(height)

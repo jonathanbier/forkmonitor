@@ -6,6 +6,7 @@ class BitcoinClientMock
     @peer_count = 100
     @version = 170100
     @coin = "BTC"
+    @is_core = true
     @chaintips = []
 
     @block_hashes = {
@@ -41,6 +42,10 @@ class BitcoinClientMock
     @version = version
   end
 
+  def mock_is_core(is_core)
+    @is_core = is_core
+  end
+
   def mock_set_height(height)
     @height = height
   end
@@ -65,8 +70,24 @@ class BitcoinClientMock
     @chaintips = tips
   end
 
+  def getinfo
+    raise Bitcoiner::Client::JSONRPCError if !@reachable
+    {
+      80600 => {
+        "version" => 80600,
+        "protocolversion" => 70001,
+        "blocks" => @height,
+        # "difficulty" => 5883988430955.408,
+        "warnings" => "",
+        "errors" => "URGENT: Alert key compromised, upgrade required",
+        "connections" => 8
+      }
+    }[@version]
+  end
+
   def getnetworkinfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
+    raise Bitcoiner::Client::JSONRPCError if @coin == "BTC" && @is_core && @version < 100000
     if @coin == "BTC"
       {
         100300 => {
@@ -143,6 +164,8 @@ class BitcoinClientMock
   end
 
   def getblockchaininfo
+    raise Bitcoiner::Client::JSONRPCError if !@reachable
+    raise Bitcoiner::Client::JSONRPCError if @coin == "BTC" && @is_core && @version < 100000
     {
       170100 => {
         "chain" => "main",
