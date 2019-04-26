@@ -53,8 +53,8 @@ class Node < ApplicationRecord
       end
     else # Version is not known the first time
       begin
-        networkinfo = client.getnetworkinfo
         blockchaininfo = client.getblockchaininfo
+        networkinfo = client.getnetworkinfo
       rescue Bitcoiner::Client::JSONRPCError
         # Try getinfo for ancient nodes:
         begin
@@ -73,9 +73,13 @@ class Node < ApplicationRecord
     end
 
     if blockchaininfo.present?
-      ibd = blockchaininfo["initialblockdownload"].present? ?
-            blockchaininfo["initialblockdownload"] :
-            blockchaininfo["verificationprogress"] < 0.99
+      if blockchaininfo["initialblockdownload"].present?
+        ibd = blockchaininfo["initialblockdownload"]
+      elsif blockchaininfo["verificationprogress"].present?
+        ibd = blockchaininfo["verificationprogress"] < 0.99
+      elsif self.coin == "BTC"
+        ibd = info["blocks"] < Block.where(is_btc: true).maximum(:height) - 10
+      end
       self.update ibd: ibd
     elsif info.present?
       # getinfo for v0.8.6 doesn't contain initialblockdownload boolean or verificationprogress.
@@ -128,7 +132,12 @@ class Node < ApplicationRecord
     # Return nil if node is unreachble or in IBD:
     return nil if self.unreachable_since || self.ibd
 
-    chaintips = client.getchaintips
+    begin
+      chaintips = client.getchaintips
+    rescue Bitcoiner::Client::JSONRPCError
+      # Assuming this node doesn't implement it
+      return nil
+    end
     chaintips.each do |chaintip|
       case chaintip["status"]
       when "valid-fork"
