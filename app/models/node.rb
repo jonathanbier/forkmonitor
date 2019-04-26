@@ -4,10 +4,10 @@ class Node < ApplicationRecord
   belongs_to :first_seen_by, foreign_key: "first_seen_by_id", class_name: "Node", required: false
   has_many :invalid_blocks
 
-  scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).reorder(version: :desc) }
-  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false) }
+  scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).where.not(version: nil).order(version: :desc) }
+  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false).where.not(version: nil) }
 
-  scope :altcoin_by_version, -> { where.not(coin: "BTC").reorder(version: :desc) }
+  scope :altcoin_by_version, -> { where.not(coin: "BTC").order(version: :desc) }
 
   def parse_version(v)
     return if v.nil?
