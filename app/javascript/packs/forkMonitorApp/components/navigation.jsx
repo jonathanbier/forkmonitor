@@ -51,12 +51,12 @@ class Navigation extends React.Component {
               </NavItem>
               <NavItem className="NavItem">
                 <LinkContainer to="/nodes/bch">
-                  <NavLink>Bitcoin Cash ABC</NavLink>
+                  <NavLink>Bitcoin Cash</NavLink>
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
                 <LinkContainer to="/nodes/bsv">
-                  <NavLink>Bitcoin Cash SV</NavLink>
+                  <NavLink>Bitcoin SV</NavLink>
                 </LinkContainer>
               </NavItem>
               {
