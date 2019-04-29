@@ -6,8 +6,8 @@ class Api::V1::BlocksController < ApplicationController
     @range = JSON.parse(params["range"])
     @offset = @range[0]
     @limit = @range[1]
-    @blocks = Block.where(is_btc: true).order(height: :desc).offset(@offset).limit(@limit)
-    response.headers['Content-Range'] = Block.where(is_btc: true).count
+    @blocks = Block.where(coin: :btc).order(height: :desc).offset(@offset).limit(@limit)
+    response.headers['Content-Range'] = Block.where(coin: :btc).count
     render json: @blocks
   end
 

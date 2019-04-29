@@ -109,15 +109,6 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.parent.parent.height).to equal(560177)
       end
 
-      it "should not store intermediate blocks for altcoin nodes" do
-        @node.update coin: "BCH"
-        @node.client.mock_set_height(560178)
-        @node.poll!
-        @node.reload
-        expect(@node.block.height).to equal(560178)
-        expect(@node.block.parent.parent).to be_nil
-      end
-
       it "should not store blocks during initial blockchain download" do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
@@ -269,6 +260,7 @@ RSpec.describe Node, :type => :model do
       before do
         @node = build(:node, coin: "BCH")
         @node.client.mock_coin("BCH")
+        @node.client.mock_version(180500)
         @node.poll!
       end
 
@@ -276,7 +268,39 @@ RSpec.describe Node, :type => :model do
         expect(@node.version).to equal(180500)
         expect(@node.block.timestamp).to equal(1548498742)
       end
+
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560178)
+        @node.poll!
+        @node.reload
+        expect(@node.block.height).to equal(560178)
+        expect(@node.block.parent.parent).not_to be_nil
+      end
+
     end
+
+    describe "Bitcoin SV" do
+      before do
+        @node = build(:node, coin: "BSV")
+        @node.client.mock_coin("BSV")
+        @node.client.mock_version(180500) # TODO: use a real SV version
+        @node.poll!
+      end
+
+      it "should have correct data" do
+        expect(@node.version).to equal(180500)
+        expect(@node.block.timestamp).to equal(1548498742)
+      end
+
+      it "should store intermediate blocks" do
+        @node.client.mock_set_height(560178)
+        @node.poll!
+        @node.reload
+        expect(@node.block.height).to equal(560178)
+        expect(@node.block.parent.parent).not_to be_nil
+      end
+    end
+
   end
 
   describe "check_chaintips!" do
@@ -705,6 +729,7 @@ RSpec.describe Node, :type => :model do
         node1 = create(:node_with_block, coin: "BTC", version: 170000)
         node2 = create(:node_with_block, coin: "BTC", version: 160000)
         node3 = create(:node_with_block, coin: "BCH")
+        node4 = create(:node_with_block, coin: "BSV")
 
         expect(Node).to receive(:check_laggards!)
 
@@ -719,7 +744,13 @@ RSpec.describe Node, :type => :model do
           }
         }
 
-        expect(Node).to receive(:altcoin_by_version).once().and_wrap_original {|relation|
+        expect(Node).to receive(:bch_by_version).once().and_wrap_original {|relation|
+          relation.call.each {|node|
+            expect(node).to receive(:poll!)
+          }
+        }
+
+        expect(Node).to receive(:bsv_by_version).once().and_wrap_original {|relation|
           relation.call.each {|node|
             expect(node).to receive(:poll!)
           }

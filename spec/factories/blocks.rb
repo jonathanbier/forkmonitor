@@ -4,7 +4,7 @@ FactoryBot.define do
      sequence(:height) { |n| 500000 + n }
      sequence(:timestamp) { |n| 1500000000 * 60 * 10 }
      sequence(:work) { |n| n.to_s(16).rjust(32,"0") }
-     is_btc { true }
+     coin { :btc }
    end
 
    factory :block_first_seen_by, parent: :block do

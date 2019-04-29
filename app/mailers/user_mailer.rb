@@ -35,7 +35,7 @@ class UserMailer < ApplicationMailer
   def orphan_candidate_email
     @user = params[:user]
     @orphan_candidate = params[:orphan_candidate]
-    @blocks = Block.where(is_btc: true, height: @orphan_candidate.height)
+    @blocks = Block.where(coin: :btc, height: @orphan_candidate.height)
 
     mail(
       to: @user.email,

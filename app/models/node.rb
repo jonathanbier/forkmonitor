@@ -8,7 +8,8 @@ class Node < ApplicationRecord
   scope :bitcoin_core_unknown_version, -> { where(coin: "BTC", is_core: true).where(version: nil) }
   scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false) }
 
-  scope :altcoin_by_version, -> { where.not(coin: "BTC").order(version: :desc) }
+  scope :bch_by_version, -> { where(coin: "BCH").order(version: :desc) }
+  scope :bsv_by_version, -> { where(coin: "BSV").order(version: :desc) }
 
   def parse_version(v)
     return if v.nil?
@@ -78,28 +79,13 @@ class Node < ApplicationRecord
       elsif blockchaininfo["verificationprogress"].present?
         ibd = blockchaininfo["verificationprogress"] < 0.99
       elsif self.coin == "BTC"
-        ibd = info["blocks"] < Block.where(is_btc: true).maximum(:height) - 10
+        ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
       self.update ibd: ibd
     elsif info.present?
       # getinfo for v0.8.6 doesn't contain initialblockdownload boolean or verificationprogress.
       # As long as we also poll newer nodes, we can infer IBD status from how far behind it is.
-      self.update ibd: info["blocks"] < Block.where(is_btc: true).maximum(:height) - 10
-    end
-
-    if self.common_height && !self.common_block
-      common_block_hash = client.getblockhash(self.common_height)
-      common_block_info = client.getblock(common_block_hash)
-      common_block = Block.create_with(
-        height: self.common_height,
-        mediantime: common_block_info["mediantime"],
-        timestamp: common_block_info["time"],
-        work: common_block_info["chainwork"],
-        version: block_info["version"],
-        first_seen_by: self,
-        is_btc: self.coin == "BTC"
-      ).find_or_create_by(block_hash: common_block_info["hash"])
-      self.update common_block: common_block
+      self.update ibd: info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
     end
 
     if blockchaininfo.present?
@@ -291,9 +277,8 @@ class Node < ApplicationRecord
       if parent.present?
         return if until_height.nil?
       else
-        # Fetch parent block, unless:
-        # * this is not a BTC node
-        break if !self.id || self.coin != "BTC"
+        # Fetch parent block:
+        break if !self.id
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
         if self.version >= 120000
           block_info = client.getblockheader(block_info["previousblockhash"])
@@ -301,7 +286,7 @@ class Node < ApplicationRecord
           block_info = client.getblock(block_info["previousblockhash"])
         end
         parent = Block.create(
-          is_btc: self.coin == "BTC",
+          coin: self.coin.downcase.to_sym,
           block_hash: block_info["hash"],
           height: block_info["height"],
           mediantime: block_info["mediantime"],
@@ -389,10 +374,16 @@ class Node < ApplicationRecord
     self.check_chaintips!
     bitcoin_core_nodes.first.check_versionbits!
 
-    self.altcoin_by_version.each do |node|
+    self.bch_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
+
+    self.bsv_by_version.each do |node|
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+      node.poll!
+    end
+
   end
 
   def self.poll_repeat!
@@ -426,8 +417,8 @@ class Node < ApplicationRecord
       node.check_chaintips!
     end
     # Look for potential orphan blocks, i.e. more than one block at the same height
-    tip_height = Block.where(is_btc: true).maximum(:height)
-    Block.select(:height).where(is_btc: true).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
+    tip_height = Block.where(coin: :btc).maximum(:height)
+    Block.select(:height).where(coin: :btc).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
       @orphan_candidate = OrphanCandidate.find_or_create_by(height: block.height)
       if @orphan_candidate.notified_at.nil?
         User.all.each do |user|
@@ -478,7 +469,7 @@ class Node < ApplicationRecord
         end
 
         block = Block.create(
-          is_btc: self.coin == "BTC",
+          coin: self.coin.downcase.to_sym,
           block_hash: block_info["hash"],
           height: block_info["height"],
           mediantime: block_info["mediantime"],

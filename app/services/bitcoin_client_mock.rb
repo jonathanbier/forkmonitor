@@ -148,94 +148,152 @@ class BitcoinClientMock
           "warnings" => ""
         },
       }[@version]
-    else
+    elsif @coin == "BCH"
       {
-        "version" => 180500,
-        "subversion" => "/Bitcoin ABC:0.18.5(EB32.0)/",
-        "protocolversion" => 70015,
-        "localservices" => "0000000000000024",
-        "localrelay"=> true,
-        "timeoffset"=> 0,
-        "networkactive"=> true,
-        "connections"=> @peer_count,
-        "relayfee" => 1.0e-05,
-        "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"}
+        180500 => {
+          "version" => 180500,
+          "subversion" => "/Bitcoin ABC:0.18.5(EB32.0)/",
+          "protocolversion" => 70015,
+          "localservices" => "0000000000000024",
+          "localrelay"=> true,
+          "timeoffset"=> 0,
+          "networkactive"=> true,
+          "connections"=> @peer_count,
+          "relayfee" => 1.0e-05,
+          "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
+        }
+      }[@version]
+    else # SV: using the same mock data as ABC for now
+      {
+        180500 => {
+          "version" => 180500,
+          "subversion" => "/Bitcoin ABC:0.18.5(EB32.0)/",
+          "protocolversion" => 70015,
+          "localservices" => "0000000000000024",
+          "localrelay"=> true,
+          "timeoffset"=> 0,
+          "networkactive"=> true,
+          "connections"=> @peer_count,
+          "relayfee" => 1.0e-05,
+          "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
+        }
+      }[@version]
     end
   end
 
   def getblockchaininfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
-    raise Bitcoiner::Client::JSONRPCError if @coin == "BTC" && @is_core && @version < 100000
-    {
-      170100 => {
-        "chain" => "main",
-        "blocks" => @height,
-        "headers" => @height,
-        "bestblockhash" => @block_hashes[@height],
-        # "difficulty" => 5883988430955.408,
-        "mediantime" => 1548515214,
-        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-        "initialblockdownload" => @ibd,
-        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-        "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
-        "pruned" => false,
-        "softforks" => [],
-        "bip9_softforks" => {},
-        "warnings" => ""
-      },
-      160300 => {
-        "chain" => "main",
-        "blocks" => @height,
-        "headers" => @height,
-        "bestblockhash" => @block_hashes[@height],
-        # "difficulty" => 5883988430955.408,
-        "mediantime" => 1548515214,
-        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-        "initialblockdownload" => @ibd,
-        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-        "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
-        "pruned" => false,
-        "softforks" => [],
-        "bip9_softforks" => {},
-        "warnings" => ""
-      },
-      130000 => {
-        "chain" => "main",
-        "blocks" => @height,
-        "headers" => @height,
-        "bestblockhash" => @block_hashes[@height],
-        # "difficulty" => 1,
-        "mediantime" => 1232327230,
-        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-        "pruned" => false,
-        "softforks" => [],
-        "bip9_softforks" => {
+    if @coin == "BTC"
+      raise Bitcoiner::Client::JSONRPCError if @is_core && @version < 100000
+      {
+        170100 => {
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 5883988430955.408,
+          "mediantime" => 1548515214,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "initialblockdownload" => @ibd,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {},
+          "warnings" => ""
+        },
+        160300 => {
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 5883988430955.408,
+          "mediantime" => 1548515214,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "initialblockdownload" => @ibd,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {},
+          "warnings" => ""
+        },
+        130000 => {
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 1,
+          "mediantime" => 1232327230,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {
+          }
+        },
+        100300 => {
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          "verificationprogress" => @ibd ? 0.5 : 1.0,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
+        },
+        "v1.0.2" => {
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 1,
+          "mediantime" => 1232327230,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {
+          }
+        },
+      }[@version]
+    elsif @coin == "BCH"
+      {
+        180500 => { # Copied from BTC
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 5883988430955.408,
+          "mediantime" => 1548515214,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "initialblockdownload" => @ibd,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {},
+          "warnings" => ""
         }
-      },
-      100300 => {
-        "chain" => "main",
-        "blocks" => @height,
-        "headers" => @height,
-        "bestblockhash" => @block_hashes[@height],
-        "verificationprogress" => @ibd ? 0.5 : 1.0,
-        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
-      },
-      "v1.0.2" => {
-        "chain" => "main",
-        "blocks" => @height,
-        "headers" => @height,
-        "bestblockhash" => @block_hashes[@height],
-        # "difficulty" => 1,
-        "mediantime" => 1232327230,
-        "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-        "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-        "pruned" => false,
-        "softforks" => [],
-        "bip9_softforks" => {
+      }[@version]
+    else # BSV
+      {
+        180500 => { # Copied from BTC
+          "chain" => "main",
+          "blocks" => @height,
+          "headers" => @height,
+          "bestblockhash" => @block_hashes[@height],
+          # "difficulty" => 5883988430955.408,
+          "mediantime" => 1548515214,
+          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+          "initialblockdownload" => @ibd,
+          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+          "pruned" => false,
+          "softforks" => [],
+          "bip9_softforks" => {},
+          "warnings" => ""
         }
-      },
-    }[@version]
+      }[@version]
+    end
   end
 
   def getblockhash(height)

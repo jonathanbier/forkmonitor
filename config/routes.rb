@@ -32,5 +32,6 @@ Rails.application.routes.draw do
 
   get 'nodes/btc', to: "pages#root"
   get 'nodes/bch', to: "pages#root"
+  get 'nodes/bsv', to: "pages#root"
   get 'admin', to: "pages#root"
 end

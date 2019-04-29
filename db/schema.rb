@@ -10,11 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_17_132856) do
+ActiveRecord::Schema.define(version: 2019_04_29_100124) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-ActiveRecord::Schema.define(version: 2019_04_23_103402) do
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -27,10 +26,10 @@ ActiveRecord::Schema.define(version: 2019_04_23_103402) do
     t.integer "mediantime"
     t.bigint "first_seen_by_id"
     t.integer "version"
-    t.boolean "is_btc", default: false
+    t.integer "coin"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
+    t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
-    t.index ["is_btc"], name: "index_blocks_on_is_btc"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
   end
 
@@ -67,16 +66,13 @@ ActiveRecord::Schema.define(version: 2019_04_23_103402) do
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
     t.string "coin"
-    t.bigint "common_block_id"
     t.string "rpchost"
     t.string "rpcuser"
     t.string "rpcpassword"
-    t.integer "common_height"
     t.boolean "ibd"
     t.integer "peer_count"
     t.boolean "is_core", default: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
-    t.index ["common_block_id"], name: "index_nodes_on_common_block_id"
   end
 
   create_table "orphan_candidates", force: :cascade do |t|
