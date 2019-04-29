@@ -30,12 +30,12 @@ class Chaintip extends React.Component {
     return(
         <Row><Col>
           <Breadcrumb>
-            <BreadcrumbItem active>
+            <BreadcrumbItem active className="chaintip-hash">
               Chaintip: { this.state.chaintip.hash }
             </BreadcrumbItem>
           </Breadcrumb>
           <p>
-            Height: { this.state.chaintip.height } (<Moment format="YYYY-MM-DD HH:mm" parse="X">{this.state.chaintip.timestamp}</Moment>)
+            Height: <NumberFormat value={ this.state.chaintip.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.state.chaintip.timestamp}</Moment> UTC)
             <br/>
             Accumulated log2(PoW): <NumberFormat value={this.state.chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
             { this.state.common_block &&
