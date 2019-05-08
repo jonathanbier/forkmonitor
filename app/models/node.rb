@@ -1,7 +1,7 @@
 class Node < ApplicationRecord
   belongs_to :block, required: false
   belongs_to :common_block, foreign_key: "common_block_id", class_name: "Block", required: false
-  belongs_to :first_seen_by, foreign_key: "first_seen_by_id", class_name: "Node", required: false
+  has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
 
   scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).where.not(version: nil).order(version: :desc) }
