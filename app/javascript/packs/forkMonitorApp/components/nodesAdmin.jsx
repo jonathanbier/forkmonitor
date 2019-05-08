@@ -26,7 +26,6 @@ export const NodeList = props => (
             <TextField source="version" />
             <DateField source="unreachable_since" />
             <NumberField source="best_block.height" />
-            <NumberField source="common_block.height" />
         </Datagrid>
     </List>
 );
@@ -40,7 +39,6 @@ export const NodeEdit = props => (
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
-            <NumberInput source="common_block" />
         </SimpleForm>
     </Edit>
 );
@@ -54,7 +52,6 @@ export const NodeCreate = props => (
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
-            <NumberInput source="common_block" />
         </SimpleForm>
     </Create>
 );

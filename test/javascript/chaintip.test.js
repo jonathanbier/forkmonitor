@@ -25,7 +25,6 @@ test('rendered component', () => {
     nodes={ nodes }
     index={ 0 }
     last={ true }
-    common_block={ null }
   />);
   expect(wrapper.find('.node-info')).toHaveLength(2);
 });
@@ -48,7 +47,6 @@ test('can handle node without chaintip', () => {
     nodes={ nodes }
     index={ 0 }
     last={ true }
-    common_block={ null }
   />);
   expect(wrapper.find('.node-info')).toHaveLength(1);
 });

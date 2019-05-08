@@ -21,7 +21,6 @@ class Chaintip extends React.Component {
       nodes: props.nodes,
       chaintip: props.chaintip,
       index: props.index,
-      common_block: props.common_block,
       last: props.last
     };
   }
@@ -38,14 +37,6 @@ class Chaintip extends React.Component {
             Height: <NumberFormat value={ this.state.chaintip.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.state.chaintip.timestamp}</Moment> UTC)
             <br/>
             Accumulated log2(PoW): <NumberFormat value={this.state.chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
-            { this.state.common_block &&
-              <span>
-                <br/>
-                Coins mined since the split: <NumberFormat value={ 12.5*(this.state.chaintip.height - this.state.common_block.height) } displayType={'text'} thousandSeparator={true} />
-                <br/>
-                Estimated cost of mining since the split: US$<NumberFormat value={ 0.00000144041*(Math.pow(2, this.state.chaintip.work) - Math.pow(2, this.state.common_block.work)) / Math.pow(10,12) } displayType={'text'} decimalScale={0} thousandSeparator={true} />
-              </span>
-            }
           </p>
           Nodes:
           <ul>

@@ -1,6 +1,5 @@
 class Node < ApplicationRecord
   belongs_to :block, required: false
-  belongs_to :common_block, foreign_key: "common_block_id", class_name: "Block", required: false
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
 
@@ -33,7 +32,7 @@ class Node < ApplicationRecord
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
     end
-    super({ only: fields }.merge(options || {})).merge({best_block: block, common_block: common_block})
+    super({ only: fields }.merge(options || {})).merge({best_block: block})
   end
 
   def client
