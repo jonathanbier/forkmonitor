@@ -31,13 +31,15 @@ class Block < ApplicationRecord
     puts "Get the total UTXO balance at the tip..." unless Rails.env.test?
     txoutsetinfo = node.client.gettxoutsetinfo
 
-    # Make sure we have all blocks up to the tip.
-    block = Block.find_by(block_hash: txoutsetinfo["hash"])
+    # Make sure we have all blocks up to the tip
+    block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
     if block.nil?
       puts "Fetch recent blocks..." unless Rails.env.test?
       node.poll!
-      block = node.block
-      if block.block_hash != txoutsetinfo["bestblock"]
+      # Try again. The tip may move already moved on because gettxoutsetinfo is slow.
+      block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
+
+      if block.nil?
         throw "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
       end
     end
