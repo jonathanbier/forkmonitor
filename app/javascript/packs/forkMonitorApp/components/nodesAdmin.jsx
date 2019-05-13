@@ -11,8 +11,19 @@ import {
   SimpleForm,
   NumberInput,
   TextInput,
-  BooleanInput
+  SelectInput
 } from 'react-admin';
+
+const client_choices = [
+    { id: "core", name: "Bitcoin Core"},
+    { id: "bcoin", name: "bcoin"},
+    { id: "knots", name: "Knots"},
+    { id: "btcd", name: "Btcd"},
+    { id: "libbitcoin", name: "libbitcoin"},
+    { id: "abc", name: "Bitcoin ABC"},
+    { id: "sv", name: "Bitcoin SV"},
+    { id: "bu", name: "Bitcoin Unlimited"},
+];
 
 export const NodeList = props => (
     <List {...props}
@@ -21,8 +32,8 @@ export const NodeList = props => (
         <Datagrid rowClick="edit">
             <NumberField source="id" />
             <TextField source="coin" />
-            <TextField source="name" />
-            <BooleanField source="is_core" />
+            <TextField source="client_type" />
+            <TextField source="name"/>
             <TextField source="version" />
             <DateField source="unreachable_since" />
             <NumberField source="best_block.height" />
@@ -33,9 +44,9 @@ export const NodeList = props => (
 export const NodeEdit = props => (
     <Edit {...props}>
         <SimpleForm>
-            <TextInput source="coin" />
+            <TextInput source="coin" defaultValue="BTC"  />
             <TextInput source="name" />
-            <BooleanInput source="is_core" />
+            <SelectInput source="client_type" choices={ client_choices } />
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
@@ -47,8 +58,8 @@ export const NodeCreate = props => (
     <Create {...props}>
         <SimpleForm>
             <TextInput source="coin" />
-            <TextInput source="name" />
-            <BooleanInput source="is_core" />
+            <TextInput source="name" defaultValue="Bitcoin Core" />
+            <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="rpchost" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />

@@ -4,7 +4,7 @@ class Api::V1::NodesController < ApplicationController
 
   # Unauthenticated list of nodes, per coin:
   def index_coin
-    @nodes = Node.where(coin: params[:coin].upcase).includes(:block).order("blocks.work desc", is_core: :desc ,name: :asc, version: :desc)
+    @nodes = Node.where(coin: params[:coin].upcase).includes(:block).order("blocks.work desc", client_type: :asc ,name: :asc, version: :desc)
 
     render json: @nodes
   end
@@ -56,6 +56,6 @@ class Api::V1::NodesController < ApplicationController
   end
 
   def node_params
-    params.require(:node).permit(:name, :coin, :is_core, :rpchost, :rpcuser, :rpcpassword)
+    params.require(:node).permit(:name, :coin, :client_type, :rpchost, :rpcuser, :rpcpassword)
   end
 end

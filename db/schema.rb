@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_04_29_100124) do
+ActiveRecord::Schema.define(version: 2019_05_13_131355) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -71,7 +71,8 @@ ActiveRecord::Schema.define(version: 2019_04_29_100124) do
     t.string "rpcpassword"
     t.boolean "ibd"
     t.integer "peer_count"
-    t.boolean "is_core", default: false
+    t.integer "client"
+    t.integer "client_type"
     t.index ["block_id"], name: "index_nodes_on_block_id"
   end
 

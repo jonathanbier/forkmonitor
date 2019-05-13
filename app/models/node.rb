@@ -3,9 +3,11 @@ class Node < ApplicationRecord
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
 
-  scope :bitcoin_core_by_version, -> { where(coin: "BTC", is_core: true).where.not(version: nil).order(version: :desc) }
-  scope :bitcoin_core_unknown_version, -> { where(coin: "BTC", is_core: true).where(version: nil) }
-  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC", is_core: false) }
+  scope :bitcoin_core_by_version, -> { where(coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
+  scope :bitcoin_core_unknown_version, -> { where(coin: "BTC", client_type: :core).where(version: nil) }
+  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC"). where.not(client_type: :core) }
+
+  enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu]
 
   scope :bch_by_version, -> { where(coin: "BCH").order(version: :desc) }
   scope :bsv_by_version, -> { where(coin: "BSV").order(version: :desc) }
@@ -28,7 +30,7 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :name, :version, :unreachable_since, :ibd, :is_core]
+    fields = [:id, :name, :version, :unreachable_since, :ibd, :client_type]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
     end
@@ -44,7 +46,7 @@ class Node < ApplicationRecord
 
   # Update database with latest info from this node
   def poll!
-    if self.is_core && self.version.present? && self.version < 100000
+    if self.client_type == :core && self.version.present? && self.version < 100000
       begin
         info = client.getinfo
       rescue Bitcoiner::Client::JSONRPCError

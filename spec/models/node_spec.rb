@@ -44,7 +44,7 @@ RSpec.describe Node, :type => :model do
 
       it "should parse v1.0.2 variant (e.g. Bcoin)" do
         @node.client.mock_version("v1.0.2")
-        @node.client.mock_is_core(false)
+        @node.client.mock_client_type(:bcoin)
         @node.poll!
         expect(@node.version).to eq(1000200)
       end
