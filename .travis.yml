@@ -5,6 +5,13 @@ bundler_args: --without production:development
 cache:
   - bundler
 before_install:
+  - "git clone https://github.com/zeromq/zeromq4-x libzmq \
+&& cd libzmq                                        \
+&& ./autogen.sh                                     \
+&& ./configure --with-pgm                           \
+&& make                                             \
+&& sudo make install                                \
+&& cd .."
   - gem update --system # travis-ci/travis-ci#8978
   - gem install bundler
   - yarn

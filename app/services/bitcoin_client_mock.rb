@@ -1,5 +1,5 @@
 class BitcoinClientMock
-  def initialize(rpchost, rpcport, rpcuser, rpcpassword)
+  def initialize(client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
     @reachable = true
     @ibd = false
@@ -68,6 +68,14 @@ class BitcoinClientMock
 
   def mock_chaintips(tips)
     @chaintips = tips
+  end
+
+  def getblockheight
+    if @client_type == :libbitcoin
+      return @height
+    else
+      raise "Only used by libbitcoin"
+    end
   end
 
   def getinfo
@@ -310,11 +318,24 @@ class BitcoinClientMock
     return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
   end
 
-  def getblockheader(hash)  # Added in v0.12
-    raise Bitcoiner::Client::JSONRPCError, hash if @version < 120000
-    raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
-
-    return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+  def getblockheader(hash_or_height)
+    if @client_type == :libbitcoin
+      raise "Must provide height or hash" unless hash_or_height.present?
+      if hash_or_height.is_a?(Numeric)
+        hash = @block_hashes[hash_or_height]
+      else
+        hash = hash_or_height
+      end
+      raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
+      return @block_headers[hash].tap { |b| b.delete("mediantime") && b.delete("time") && b.delete("chainwork") }
+    else
+      # Added in v0.12
+      throw "Must provide hash" if hash_or_height.is_a?(Numeric)
+      hash = hash_or_height
+      raise Bitcoiner::Client::JSONRPCError, hash if @version < 120000
+      raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
+      return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+    end
   end
 
   def getchaintips

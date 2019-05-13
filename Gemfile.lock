@@ -1,6 +1,8 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    0mq (0.5.3)
+      ffi-rzmq-core (~> 1.0)
     actioncable (5.2.2)
       actionpack (= 5.2.2)
       nio4r (~> 2.0)
@@ -99,6 +101,8 @@ GEM
       activesupport (>= 3.0.0)
     ffaker (2.10.0)
     ffi (1.10.0)
+    ffi-rzmq-core (1.0.7)
+      ffi
     formatador (0.2.5)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
@@ -283,6 +287,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  0mq (~> 0.5.3)
   bitcoiner
   bootsnap (>= 1.1.0)
   byebug

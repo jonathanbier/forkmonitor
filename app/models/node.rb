@@ -39,14 +39,19 @@ class Node < ApplicationRecord
 
   def client
     if !@client
-      @client = self.class.client_klass.new(self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
+      @client = self.class.client_klass.new(self.client_type.to_sym, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
     end
     return @client
   end
 
   # Update database with latest info from this node
   def poll!
-    if self.client_type == :core && self.version.present? && self.version < 100000
+    if self.client_type == :libbitcoin || self.client_type == "libbitcoin"
+      block_height = client.getblockheight
+      header = client.getblockheader(block_height)
+      best_block_hash = header["hash"]
+      previousblockhash = header["previousblockhash"]
+    elsif self.client_type == :core && self.version.present? && self.version < 100000
       begin
         info = client.getinfo
       rescue Bitcoiner::Client::JSONRPCError
@@ -267,7 +272,7 @@ class Node < ApplicationRecord
       return if until_height ? block.height == until_height : block.height == oldest_block
       parent = block.parent
       if parent.nil?
-        if self.version >= 120000
+        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
           block_info = client.getblockheader(block.block_hash)
         else
           block_info = client.getblock(block.block_hash)
@@ -281,7 +286,7 @@ class Node < ApplicationRecord
         # Fetch parent block:
         break if !self.id
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
-        if self.version >= 120000
+        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
           block_info = client.getblockheader(block_info["previousblockhash"])
         else
           block_info = client.getblock(block_info["previousblockhash"])
@@ -415,7 +420,7 @@ class Node < ApplicationRecord
       end
     end
     self.bitcoin_alternative_implementations.each do |node|
-      node.check_chaintips!
+      node.check_chaintips! unless node.client_type.to_sym == :libbitcoin
     end
     # Look for potential orphan blocks, i.e. more than one block at the same height
     tip_height = Block.where(coin: :btc).maximum(:height)
@@ -463,7 +468,7 @@ class Node < ApplicationRecord
       block = Block.find_by(block_hash: hash)
 
       if block.nil?
-        if self.version >= 120000
+        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
           block_info = client.getblockheader(hash)
         else
           block_info = client.getblock(hash)

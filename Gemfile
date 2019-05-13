@@ -45,6 +45,9 @@ gem 'coveralls', require: false
 # Print arrays as a table
 gem 'table_print'
 
+# ZeroMQ to communicate with libbitcoin
+gem '0mq', '~> 0.5.3'
+
 group :development, :test do
   # Use sqlite3 as the database for Active Record
   gem 'sqlite3'
