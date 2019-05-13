@@ -14,6 +14,12 @@ import {
   SelectInput
 } from 'react-admin';
 
+const coin_choices = [
+  { id: "BTC", name: "Bitcoin"},
+  { id: "BCH", name: "Bitcoin Cash"},
+  { id: "BSV", name: "Bitcoin SV"}
+]
+
 const client_choices = [
     { id: "core", name: "Bitcoin Core"},
     { id: "bcoin", name: "bcoin"},
@@ -44,7 +50,7 @@ export const NodeList = props => (
 export const NodeEdit = props => (
     <Edit {...props}>
         <SimpleForm>
-            <TextInput source="coin" defaultValue="BTC"  />
+            <SelectInput source="coin" choices={ coin_choices } />
             <TextInput source="name" />
             <SelectInput source="client_type" choices={ client_choices } />
             <TextInput source="rpchost" />
@@ -58,7 +64,7 @@ export const NodeEdit = props => (
 export const NodeCreate = props => (
     <Create {...props}>
         <SimpleForm>
-            <TextInput source="coin" />
+            <SelectInput source="coin" defaultValue="BTC" choices={ coin_choices } />
             <TextInput source="name" defaultValue="Bitcoin Core" />
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="rpchost" />
