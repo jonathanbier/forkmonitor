@@ -1,6 +1,6 @@
 class BitcoinClient
-  def initialize(rpchost, rpcuser, rpcpassword)
-    @client = Bitcoiner.new(rpcuser,rpcpassword,rpchost)
+  def initialize(rpchost, rpcport, rpcuser, rpcpassword)
+    @client = Bitcoiner.new(rpcuser,rpcpassword, "#{ rpchost }:#{ rpcport }")
   end
 
 # TODO: patch bitcoiner gem so we can do client.help (etc), get rid of

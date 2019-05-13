@@ -1,5 +1,5 @@
 class BitcoinClientMock
-  def initialize(rpchost, rpcuser, rpcpassword)
+  def initialize(rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
     @reachable = true
     @ibd = false

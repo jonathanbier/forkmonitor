@@ -56,6 +56,6 @@ class Api::V1::NodesController < ApplicationController
   end
 
   def node_params
-    params.require(:node).permit(:name, :coin, :client_type, :rpchost, :rpcuser, :rpcpassword)
+    params.require(:node).permit(:name, :coin, :client_type, :rpchost, :rpcport, :rpcuser, :rpcpassword)
   end
 end

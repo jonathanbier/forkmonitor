@@ -48,6 +48,7 @@ export const NodeEdit = props => (
             <TextInput source="name" />
             <SelectInput source="client_type" choices={ client_choices } />
             <TextInput source="rpchost" />
+            <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
         </SimpleForm>
@@ -61,6 +62,7 @@ export const NodeCreate = props => (
             <TextInput source="name" defaultValue="Bitcoin Core" />
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="rpchost" />
+            <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
         </SimpleForm>

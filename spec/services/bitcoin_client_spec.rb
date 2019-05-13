@@ -3,7 +3,7 @@ require 'rails_helper'
 describe BitcoinClient do
   describe "instance" do
     before do
-      @client = described_class.new("127.0.0.1", "user", "password")
+      @client = described_class.new("127.0.0.1", "8332", "user", "password")
     end
 
     describe "help" do

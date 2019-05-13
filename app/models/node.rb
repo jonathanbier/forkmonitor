@@ -32,14 +32,14 @@ class Node < ApplicationRecord
   def as_json(options = nil)
     fields = [:id, :name, :version, :unreachable_since, :ibd, :client_type]
     if options && options[:admin]
-      fields << :id << :coin << :rpchost << :rpcuser << :rpcpassword
+      fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword
     end
     super({ only: fields }.merge(options || {})).merge({best_block: block})
   end
 
   def client
     if !@client
-      @client = self.class.client_klass.new(self.rpchost, self.rpcuser, self.rpcpassword)
+      @client = self.class.client_klass.new(self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
     end
     return @client
   end
