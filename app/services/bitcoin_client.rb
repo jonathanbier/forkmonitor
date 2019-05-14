@@ -18,6 +18,20 @@ class BitcoinClient
     @client
   end
 
+  def recv_array_with_timeout(socket, timeout, command)
+    begin
+      Timeout::timeout(timeout) {
+        # Maximum 5 seconds of patience.
+        # The use of Thread.interrupt is considered unsafe, but at least we're not
+        # locking a database.
+        return socket.recv_array
+      }
+    rescue Timeout::Error => e
+        puts "Timeout: #{ command }"
+        return nil
+    end
+  end
+
   def help
     request("help")
   end
@@ -33,10 +47,14 @@ class BitcoinClient
 
   def getblockheight
     raise "Not implemented" unless @client_type == :libbitcoin
-    @socket.send_array ['blockchain.fetch_last_height'.b, [1].pack("I"), ''.b]
-    res = @socket.recv_array
+    command = 'blockchain.fetch_last_height'
+    @socket.send_array [command.b, [1].pack("I"), ''.b]
+
+    res = recv_array_with_timeout(@socket, 5, command)
+    return nil if res.nil?
+
     error_code = res[2][0..3].unpack("L<")[0]
-    throw "Failed with error code: #{ error_code }" if error_code > 0
+    throw "#{ command } failed with error code: #{ error_code }" if error_code > 0
     return res[2][4..-1].unpack("L<")[0]
   end
 
@@ -98,7 +116,8 @@ class BitcoinClient
     else
       command = 'blockchain.fetch_block_header'
       @socket.send_array [command.b, [1].pack("I"), hash_or_height.is_a?(Numeric) ? [hash_or_height].pack("I") : [hash_or_height.reverse].pack("h*")]
-      res = @socket.recv_array
+      res = recv_array_with_timeout(@socket, 5, command)
+      return nil if res.nil?
       error_code = res[2][0..3].unpack("L<")[0]
       throw "#{ command } failed with error code: #{ error_code }" if error_code > 0
       block_header = res[2][4..-1]
@@ -111,7 +130,8 @@ class BitcoinClient
       else
         command = 'blockchain.fetch_block_height'
         @socket.send_array [command.b, [1].pack("I"), [block_hash.reverse].pack("h*")]
-        res = @socket.recv_array
+        res = recv_array_with_timeout(@socket, 5, command)
+        return nil if res.nil?
         error_code = res[2][0..3].unpack("L<")[0]
         throw "#{ command } failed with error code: #{ error_code }" if error_code > 0
         height = res[2][4..-1].unpack("L<")[0]

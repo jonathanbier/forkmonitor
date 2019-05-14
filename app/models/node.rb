@@ -48,6 +48,10 @@ class Node < ApplicationRecord
   def poll!
     if self.client_type == :libbitcoin || self.client_type == "libbitcoin"
       block_height = client.getblockheight
+      if block_height.nil?
+        self.update unreachable_since: self.unreachable_since || DateTime.now
+        return
+      end
       header = client.getblockheader(block_height)
       best_block_hash = header["hash"]
       previousblockhash = header["previousblockhash"]
