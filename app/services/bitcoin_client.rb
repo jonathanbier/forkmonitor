@@ -6,10 +6,21 @@ class BitcoinClient
     @client_type = client_type
     if @client_type == :libbitcoin
       @socket = ZMQ::Socket.new ZMQ::REQ
-      @socket.connect "tcp://#{ rpchost }:#{ rpcport }"
+      @socket_uri = "tcp://#{ rpchost }:#{ rpcport }"
+      zmq_connect
     else
       @client = Bitcoiner.new(rpcuser,rpcpassword, "#{ rpchost }:#{ rpcport }")
     end
+  end
+
+  def zmq_connect
+    @socket.connect @socket_uri
+    @zmq_connected = true
+  end
+
+  def zmq_disconnect
+    @socket.disconnect @socket_uri
+    @zmq_connected = false
   end
 
 # TODO: patch bitcoiner gem so we can do client.help (etc), get rid of
@@ -28,6 +39,7 @@ class BitcoinClient
       }
     rescue Timeout::Error => e
         puts "Timeout: #{ command }"
+        zmq_disconnect
         return nil
     end
   end
@@ -48,6 +60,7 @@ class BitcoinClient
   def getblockheight
     raise "Not implemented" unless @client_type == :libbitcoin
     command = 'blockchain.fetch_last_height'
+    zmq_connect unless @zmq_connected
     @socket.send_array [command.b, [1].pack("I"), ''.b]
 
     res = recv_array_with_timeout(@socket, 5, command)
@@ -115,6 +128,7 @@ class BitcoinClient
       end
     else
       command = 'blockchain.fetch_block_header'
+      zmq_connect unless @zmq_connected
       @socket.send_array [command.b, [1].pack("I"), hash_or_height.is_a?(Numeric) ? [hash_or_height].pack("I") : [hash_or_height.reverse].pack("h*")]
       res = recv_array_with_timeout(@socket, 5, command)
       return nil if res.nil?
@@ -129,6 +143,7 @@ class BitcoinClient
         height = hash_or_height
       else
         command = 'blockchain.fetch_block_height'
+        zmq_connect unless @zmq_connected
         @socket.send_array [command.b, [1].pack("I"), [block_hash.reverse].pack("h*")]
         res = recv_array_with_timeout(@socket, 5, command)
         return nil if res.nil?
