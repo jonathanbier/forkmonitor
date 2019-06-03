@@ -41,7 +41,7 @@ class Navigation extends React.Component {
         <Router>
           <div>
             <Navbar color="inverse" light expand="md">
-                <NavbarBrand href="/"><img src="https://blog.bitmex.com/wp-content/uploads/2019/02/fm.png" height="50pt"/></NavbarBrand>
+                <NavbarBrand href="/"><img src="https://blog.bitmex.com/wp-content/uploads/2019/06/fmlogo.png" height="50pt"/></NavbarBrand>
             </Navbar>
             <Nav tabs>
               <NavItem className="NavItem">
