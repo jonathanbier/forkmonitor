@@ -172,6 +172,8 @@ class Node < ApplicationRecord
     behind = nil
     lag_entry = Lag.find_by(node_a: self, node_b: node)
 
+    return nil if self.block.nil? || node.block.nil?
+
     # Not behind if at the same block
     if self.block == node.block
       behind = false
