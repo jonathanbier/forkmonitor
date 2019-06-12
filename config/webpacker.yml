@@ -4,14 +4,18 @@ default: &default
   source_path: app/javascript
   source_entry_path: packs
   public_output_path: packs
+  public_root_path: public
   cache_path: tmp/cache/webpacker
 
   # Additional paths webpack should lookup modules
   # ['app/assets', 'engine/foo/app/assets']
-  resolved_paths: []
+  resolved_paths: ['forkMonitorApp/assets/stylesheets']
 
   # Reload manifest.json on all requests so we reload latest compiled packs
   cache_manifest: false
+
+  # Extract and emit a css file
+  extract_css: false
 
   extensions:
     - .jsx
@@ -32,6 +36,12 @@ development: &development
   <<: *default
   compile: true
 
+  # Verifies that correct packages and versions are installed by inspecting package.json, yarn.lock, and node_modules
+  check_yarn_integrity: true
+
+  # Extract and emit a css file
+  extract_css: true
+
   # Reference: https://webpack.js.org/configuration/dev-server/
   dev_server:
     https: false
@@ -49,7 +59,7 @@ development: &development
     headers:
       'Access-Control-Allow-Origin': '*'
     watch_options:
-      ignored: /node_modules/
+      ignored: '**/node_modules/**'
 
 development_pg:
   <<: *development
@@ -73,6 +83,9 @@ production:
 
   # Production depends on precompilation of packs prior to booting for performance.
   compile: false
+
+  # Extract and emit a css file
+  extract_css: true
 
   # Cache manifest.json for performance
   cache_manifest: true
