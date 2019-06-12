@@ -43,9 +43,11 @@ class Nodes extends React.Component {
       this.setState({
         nodes: [],
         nodesWithoutTip: [],
-        chaintips: []
+        chaintips: [],
+        invalid_blocks: []
       });
       this.getNodes(nextProps.match.params.coin);
+      this.getInvalidBlocks(nextProps.match.params.coin);
     }
 
   }
@@ -62,7 +64,7 @@ class Nodes extends React.Component {
         coin: coin,
         nodes: nodes,
         chaintips: chaintips,
-        nodesWithoutTip: nodes.filter(node => node.best_block == null)
+        nodesWithoutTip: nodes.filter(node => node.best_block == null),
       });
 
       }.bind(this)).catch(function (error) {
@@ -86,7 +88,7 @@ class Nodes extends React.Component {
       return(
         <TabPane align="left" >
           <br />
-          { (this.state.coin === "btc" && this.state && this.state.invalid_blocks || []).map(function (invalid_block) {
+          { (this.state && this.state.invalid_blocks || []).map(function (invalid_block) {
             return (
                 <UncontrolledAlert color="danger" key={invalid_block.id}>
                   <NodeName node={invalid_block.node} /> considers
