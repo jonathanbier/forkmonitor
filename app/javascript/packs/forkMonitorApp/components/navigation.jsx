@@ -25,6 +25,8 @@ import {
   LinkContainer
 } from 'react-router-bootstrap'
 
+import LogoImage from '../assets/images/logo.png'
+
 import classnames from 'classnames';
 
 import Nodes from './nodes';
@@ -41,7 +43,7 @@ class Navigation extends React.Component {
         <Router>
           <div>
             <Navbar color="inverse" light expand="md">
-                <NavbarBrand href="/"><img src="https://blog.bitmex.com/wp-content/uploads/2019/06/fmlogo.png" height="39pt"/></NavbarBrand>
+                <NavbarBrand href="/"><img src={ LogoImage } height="39pt"/></NavbarBrand>
             </Navbar>
             <Nav tabs>
               <NavItem className="NavItem">

@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap'
 
+import LogoImage from './assets/images/logo_subscript.png'
+
 import React from 'react'
 
 import Navigation from './components/navigation';
@@ -11,7 +13,7 @@ const App = (props) => (
        <div className="container">
          <span className="text-muted">
          <p>
-           <a href="https://research.bitmex.com"><img src="https://blog.bitmex.com/wp-content/uploads/2019/05/BitMEX-Research-Logo-Color-RGB.png" height="100pt"/></a>
+           <a href="https://research.bitmex.com"><img src={ LogoImage } height="100pt"/></a>
          </p>
          <p className="text-muted disclaimer">
             This material should not be the basis for making investment decisions,
