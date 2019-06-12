@@ -15,6 +15,11 @@ gem 'jbuilder', '~> 2.5'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
+# Rails asset pipeline
+gem 'sprockets-rails'
+
+gem 'rails_real_favicon'
+
 # Use ActiveStorage variant
 # gem 'mini_magick', '~> 4.8'
 
