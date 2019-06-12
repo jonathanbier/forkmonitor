@@ -32,10 +32,7 @@ class Nodes extends React.Component {
 
   componentDidMount() {
     this.getNodes(this.state.coin);
-
-    if (this.state.coin == "btc") {
-      this.getInvalidBlocks();
-    }
+    this.getInvalidBlocks(this.state.coin);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -73,8 +70,8 @@ class Nodes extends React.Component {
       });
    }
 
-   getInvalidBlocks() {
-     axios.get('/api/v1/invalid_blocks').then(function (response) {
+   getInvalidBlocks(coin) {
+     axios.get('/api/v1/invalid_blocks?coin=' + coin).then(function (response) {
        return response.data;
      }).then(function (invalid_blocks) {
        this.setState({
