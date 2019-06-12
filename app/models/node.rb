@@ -363,7 +363,7 @@ class Node < ApplicationRecord
     puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
   end
 
-  def self.poll!
+  def self.poll!(options = {})
     bitcoin_core_nodes = self.bitcoin_core_by_version
     bitcoin_core_nodes.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -376,11 +376,13 @@ class Node < ApplicationRecord
     end
 
     bitcoin_alternative_implementations.each do |node|
+      # Skip libbitcoin in repeat poll, due to ZMQ socket errors
+      next if options[:repeat] && node.client_type.to_sym == :libbitcoin
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
 
-    self.check_laggards!
+    self.check_laggards!(options)
     self.check_chaintips!
     bitcoin_core_nodes.first.check_versionbits!
 
@@ -410,10 +412,15 @@ class Node < ApplicationRecord
     }
 
     while true
-      sleep 5
+      sleep 5 unless Rails.env.test?
 
-      self.poll!
-      sleep 0.5
+      self.poll!(repeat: true)
+
+      if Rails.env.test?
+        break
+      else
+        sleep 0.5
+      end
     end
   end
 
@@ -439,7 +446,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.check_laggards!
+  def self.check_laggards!(options = {})
     core_nodes = self.bitcoin_core_by_version
     core_nodes.drop(1).each do |node|
       lag  = node.check_if_behind!(core_nodes.first)
@@ -447,6 +454,7 @@ class Node < ApplicationRecord
     end
 
     self.bitcoin_alternative_implementations.each do |node|
+      next if options[:repeat] && node.client_type.to_sym == :libbitcoin
       lag  = node.check_if_behind!(core_nodes.first)
       puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
     end

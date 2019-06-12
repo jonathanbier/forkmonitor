@@ -783,6 +783,14 @@ RSpec.describe Node, :type => :model do
       end
     end
 
+    describe "poll_repeat!" do
+      it "should call poll!" do
+        expect(Node).to receive(:poll!).with({repeat: true})
+
+        Node.poll_repeat!
+      end
+    end
+
     describe "check_laggards!" do
       before do
         @A = build(:node)
