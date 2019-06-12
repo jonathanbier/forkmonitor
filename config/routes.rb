@@ -24,10 +24,10 @@ Rails.application.routes.draw do
   end
 
   scope format: true, constraints: { format: /rss/ } do
-    get 'feeds/invalid_blocks' => 'feeds#invalid_blocks'
+    get 'feeds/invalid_blocks/:coin' => 'feeds#invalid_blocks'
     get 'feeds/lagging_nodes' => 'feeds#lagging_nodes'
     get 'feeds/version_bits' => 'feeds#version_bits'
-    get 'feeds/orphan_candidates' => 'feeds#orphan_candidates'
+    get 'feeds/orphan_candidates/:coin' => 'feeds#orphan_candidates'
   end
 
   get 'nodes/btc', to: "pages#root"

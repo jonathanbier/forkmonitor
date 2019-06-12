@@ -27,7 +27,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers BTC block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
       expect(mail.to).to eq([user.email])
     end
 
@@ -59,7 +59,7 @@ RSpec.describe UserMailer, type: :mailer do
 
   describe "orphan candidate notify" do
     let(:user) { create(:user) }
-    let(:orphan_candidate) { create(:orphan_candidate, height: 500000) }
+    let(:orphan_candidate) { create(:orphan_candidate, coin: :btc, height: 500000) }
     before do
       @block1 = create(:block, height: 500000)
       @block2 = create(:block, height: 500000)
@@ -68,7 +68,7 @@ RSpec.describe UserMailer, type: :mailer do
     let(:mail) { UserMailer.with(user: user, orphan_candidate: orphan_candidate).orphan_candidate_email }
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] potential orphan block at height #{ orphan_candidate.height }")
+      expect(mail.subject).to eq("[ForkMonitor] potential BTC orphan block at height #{ orphan_candidate.height }")
       expect(mail.to).to eq([user.email])
     end
 

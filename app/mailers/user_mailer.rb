@@ -15,7 +15,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{ @invalid_block.node.name_with_version } considers block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
+      subject: "[ForkMonitor] #{ @invalid_block.node.name_with_version } considers #{ @invalid_block.block.coin.upcase } block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
     )
   end
 
@@ -35,11 +35,11 @@ class UserMailer < ApplicationMailer
   def orphan_candidate_email
     @user = params[:user]
     @orphan_candidate = params[:orphan_candidate]
-    @blocks = Block.where(coin: :btc, height: @orphan_candidate.height)
+    @blocks = Block.where(coin: @orphan_candidate.coin, height: @orphan_candidate.height)
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] potential orphan block at height #{ @orphan_candidate.height }"
+      subject: "[ForkMonitor] potential #{ @orphan_candidate.coin.upcase } orphan block at height #{ @orphan_candidate.height }"
     )
   end
 end

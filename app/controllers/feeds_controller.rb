@@ -1,9 +1,10 @@
 class FeedsController < ApplicationController
+  before_action :set_coin, only: [:invalid_blocks, :orphan_candidates]
 
   def invalid_blocks
     respond_to do |format|
       format.rss do
-        @invalid_blocks = InvalidBlock.all
+        @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin])
       end
     end
   end
@@ -27,9 +28,14 @@ class FeedsController < ApplicationController
   def orphan_candidates
     respond_to do |format|
       format.rss do
-        @orphan_candidates = OrphanCandidate.all
+        @orphan_candidates = OrphanCandidate.where(coin: @coin)
       end
     end
   end
 
+  private
+
+  def set_coin
+    @coin = params[:coin].downcase.to_sym
+  end
 end
