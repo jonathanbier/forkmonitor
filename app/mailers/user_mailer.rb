@@ -35,11 +35,11 @@ class UserMailer < ApplicationMailer
   def orphan_candidate_email
     @user = params[:user]
     @orphan_candidate = params[:orphan_candidate]
-    @blocks = Block.where(coin: :btc, height: @orphan_candidate.height)
+    @blocks = Block.where(coin: @orphan_candidate.coin, height: @orphan_candidate.height)
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] potential orphan block at height #{ @orphan_candidate.height }"
+      subject: "[ForkMonitor] potential #{ @orphan_candidate.coin.upcase } orphan block at height #{ @orphan_candidate.height }"
     )
   end
 end

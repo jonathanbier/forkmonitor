@@ -52,18 +52,18 @@ RSpec.describe FeedsController, type: :controller do
 
     describe "GET orphan_candidates feed" do
       before do
-        @block1 = create(:block, height: 500000)
-        @orphan_candidate = create(:orphan_candidate, height: 500000)
+        @block1 = create(:block, coin: :btc, height: 500000)
+        @orphan_candidate = create(:orphan_candidate, coin: :btc, height: 500000)
       end
 
       it "should be rendered" do
-        get :orphan_candidates, format: :rss
+        get :orphan_candidates, params: {coin: "btc"}, format: :rss
         expect(response).to render_template("feeds/orphan_candidates")
-        expect(response.body).to include("Orphan candidates")
+        expect(response.body).to include("BTC orphan candidates")
       end
 
       it "should contain block hashes" do
-        get :orphan_candidates, format: :rss
+        get :orphan_candidates, params: {coin: "btc"}, format: :rss
         expect(response.body).to include(@block1.block_hash)
       end
     end
