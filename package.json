@@ -28,10 +28,10 @@
     "webpack-cli": "^3.3.4"
   },
   "devDependencies": {
-    "babel-jest": "^23.6.0",
-    "coveralls": "^3.0.3",
-    "jest": "^23.6.0",
-    "regenerator-runtime": "^0.12.1",
+    "babel-jest": "^24.8.0",
+    "coveralls": "^3.0.4",
+    "jest": "^24.6",
+    "regenerator-runtime": "^0.13.2",
     "webpack-dev-server": "3.7.1"
   },
   "scripts": {
@@ -48,7 +48,7 @@
       "node_modules",
       "app/javascript/packs"
     ],
-    "setupTestFrameworkScriptFile": "./node_modules/jest-enzyme/lib/index.js",
+    "setupFilesAfterEnv": ["./node_modules/jest-enzyme/lib/index.js"],
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/test/javascript/__mocks__/fileMock.js",
       "\\.(css|less)$": "<rootDir>/test/javascript/__mocks__/styleMock.js"
