@@ -139,7 +139,7 @@ class Node < ApplicationRecord
       when "valid-fork"
         find_or_create_block_and_ancestors!(chaintip["hash"]) unless chaintip["height"] < self.block.height - 1000
       when "invalid"
-        block = Block.find_by(block_hash: chaintip["hash"])
+        block = Block.find_by(block_hash: chaintip["hash"], coin: self.coin.downcase.to_sym)
         if block
           invalid_block = InvalidBlock.find_or_create_by(node: self, block: block)
           if !invalid_block.notified_at
