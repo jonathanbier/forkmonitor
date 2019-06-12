@@ -27,7 +27,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers BTC block #{ invalid_block.block.height } (#{ invalid_block.block.block_hash }) invalid")
       expect(mail.to).to eq([user.email])
     end
 

@@ -15,7 +15,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{ @invalid_block.node.name_with_version } considers block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
+      subject: "[ForkMonitor] #{ @invalid_block.node.name_with_version } considers #{ @invalid_block.block.coin.upcase } block #{ @invalid_block.block.height } (#{ @invalid_block.block.block_hash }) invalid"
     )
   end
 

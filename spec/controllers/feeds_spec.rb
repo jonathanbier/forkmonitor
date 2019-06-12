@@ -8,13 +8,13 @@ RSpec.describe FeedsController, type: :controller do
       let!(:invalid_block) { create(:invalid_block) }
 
       it "should be rendered" do
-        get :invalid_blocks, format: :rss
+        get :invalid_blocks, params: {coin: "btc"}, format: :rss
         expect(response).to render_template("feeds/invalid_blocks")
-        expect(response.body).to include("Invalid blocks")
+        expect(response.body).to include("Invalid BTC blocks")
       end
 
       it "should contain invalid blocks" do
-        get :invalid_blocks, format: :rss
+        get :invalid_blocks, params: {coin: "btc"}, format: :rss
         expect(response.body).to include(invalid_block.node.name_with_version)
       end
     end

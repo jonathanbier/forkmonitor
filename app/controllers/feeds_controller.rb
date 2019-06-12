@@ -1,10 +1,10 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:orphan_candidates]
+  before_action :set_coin, only: [:invalid_blocks, :orphan_candidates]
 
   def invalid_blocks
     respond_to do |format|
       format.rss do
-        @invalid_blocks = InvalidBlock.all
+        @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin])
       end
     end
   end
