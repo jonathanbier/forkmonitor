@@ -598,6 +598,17 @@ RSpec.describe Node, :type => :model do
         expect(@A.check_if_behind!(@B)).to eq(nil)
       end
 
+      it "should allow 1 extra block for old nodes" do
+        @A.client.mock_version(100300)
+        @A.update version: 100300
+        @A.poll!
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+
+        @B.client.mock_set_height(560178)
+        @B.poll!
+        expect(@A.check_if_behind!(@B)).not_to eq(nil)
+      end
+
       it "should send an email to all users" do
         expect(User).to receive(:all).and_return [user]
         expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
