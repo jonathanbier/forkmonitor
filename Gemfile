@@ -53,17 +53,10 @@ gem 'table_print'
 # ZeroMQ to communicate with libbitcoin
 gem '0mq', '~> 0.5.3'
 
+# Use Postgres as the database for Active Record
+gem 'pg'
+
 group :development, :test do
-  # Use sqlite3 as the database for Active Record
-  gem 'sqlite3'
-end
-
-group :production, :development_pg, :test_pg do
-  # Use Postgres as the database for Active Record
-  gem 'pg'
-end
-
-group :development, :development_pg, :test, :test_pg do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
 
@@ -78,7 +71,7 @@ group :development, :development_pg, :test, :test_pg do
   gem 'dotenv-rails'
 end
 
-group :development, :development_pg do
+group :development do
   gem 'listen', '>= 3.0.5', '< 3.2'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'

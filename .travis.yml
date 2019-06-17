@@ -1,6 +1,6 @@
 language: ruby
 rvm:
-  - 2.6.0
+  - 2.6.3
 bundler_args: --without production:development
 cache:
   - bundler
@@ -16,7 +16,8 @@ before_install:
   - gem install bundler
   - yarn
 script:
-  - bundle exec rake db:migrate RAILS_ENV=test
+  - bundle exec rake db:create RAILS_ENV=test
+  - bundle exec rake db:schema:load RAILS_ENV=test
   - bundle exec rake
   - npm test
   - npm run coveralls

@@ -5,18 +5,14 @@
 #   gem 'sqlite3'
 #
 default: &default
-  adapter: sqlite3
+  adapter: postgresql
+  encoding: unicode
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
   timeout: 5000
 
+# Develop locally with Postgres:
 development:
   <<: *default
-  database: db/development.sqlite3
-
-# Develop locally with Postgres:
-development_pg:
-  adapter: postgresql
-  encoding: unicode
   database: fork_monitor
 
 # Warning: The database defined as "test" will be erased and
@@ -24,16 +20,9 @@ development_pg:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  database: db/test.sqlite3
-
-# Test locally with Postgres:
-test_pg:
-  adapter: postgresql
-  encoding: unicode
   database: fork_monitor_test
 
 production:
-  adapter: postgresql
-  encoding: unicode
+  <<: *default
   url: <%= ENV['DATABASE_URL'] %>
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>

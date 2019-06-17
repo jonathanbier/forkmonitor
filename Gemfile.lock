@@ -246,7 +246,6 @@ GEM
       actionpack (>= 4.0)
       activesupport (>= 4.0)
       sprockets (>= 3.0.0)
-    sqlite3 (1.4.1)
     table_print (1.5.6)
     term-ansicolor (1.7.1)
       tins (~> 1.0)
@@ -304,7 +303,6 @@ DEPENDENCIES
   spring
   spring-watcher-listen (~> 2.0.0)
   sprockets-rails
-  sqlite3
   table_print
   terminal-notifier-guard (~> 1.6.1)
   timecop
