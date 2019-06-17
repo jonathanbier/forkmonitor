@@ -32,12 +32,14 @@ Checks if any of the test nodes fell behind. This doesn't have to be a consensus
 
 ## Development
 
-Install Ruby 2.5.3 through a version manager such as [RVM](https://rvm.io). Install
+Install ZeroMQ (for Libbitcoin), e.g. on macOS: `brew install zeromq`
+
+Install Ruby 2.6.3 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
 the bundler and foreman gems, then run bundler:
 
 ```
 gem install bundler foreman
-bundle install --without production:test_pg
+bundle install --without production:test_pg:development_pg
 ```
 
 You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a package
@@ -45,6 +47,12 @@ manager for NodeJS. Once installed, run:
 
 ```
 yarn
+```
+
+Run `rake secret` and then edit `.env` to add it:
+
+```
+DEVISE_JWT_SECRET_KEY=the_generate_secret
 ```
 
 Now run the server (this can take a while the first time, as well as each time you modify javascript):
