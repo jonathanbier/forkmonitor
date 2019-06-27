@@ -8,7 +8,7 @@ class Chaintip < ApplicationRecord
   validates :status, uniqueness: { scope: :node}
 
   def nodes
-    res = Node.where(block: self.block).to_a # block.node should be the same as the active chaintip for a node
+    res = Node.where(block: self.block).order(client_type: :asc ,name: :asc, version: :desc).to_a # block.node should be the same as the active chaintip for a node
     Chaintip.where(status: "active", parent_chaintip: self).each do |child|
       res.append child.node
     end
