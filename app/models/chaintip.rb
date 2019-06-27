@@ -24,7 +24,9 @@ class Chaintip < ApplicationRecord
     block = Block.find_by(block_hash: chaintip["hash"], coin: node.coin.downcase.to_sym)
     case chaintip["status"]
     when "active"
-      throw "Block missing for active chaintips, did you forget to call poll! ?" unless block.present?
+      # A block may have arrived between when we called getblockchaininfo and getchaintips.
+      # In that case, ignore the new chaintip and get back to it later.
+      return nil unless block.present?
       tip = node.chaintips.find_or_create_by(status: "active", coin: block.coin) # There can only be one
       tip.update block: block, parent_chaintip: nil
       # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:

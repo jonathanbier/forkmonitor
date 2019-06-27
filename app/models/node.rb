@@ -372,6 +372,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!
+    self.reload
     self.bitcoin_core_by_version.each do |node|
       if node.version.present? && node.version >= 100000 # getchaintips was added in v0.10
         node.check_chaintips! unless node.block.nil?
