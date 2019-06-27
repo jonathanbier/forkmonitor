@@ -1,3 +1,5 @@
+MINIMUM_BLOCK_HEIGHT = 560176 # Tests need to be adjusted if this number is increased
+
 class Block < ApplicationRecord
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
   belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
@@ -22,6 +24,50 @@ class Block < ApplicationRecord
     return nil if work.nil?
     Math.log2(work.to_i(16))
   end
+
+  def find_ancestors!(node, until_height = nil)
+    # Prevent new instances from going too far back:
+    block_id = self.id
+    loop do
+      block = Block.find(block_id)
+      return if until_height ? block.height == until_height : block.height <= MINIMUM_BLOCK_HEIGHT
+      parent = block.parent
+      if parent.nil?
+        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+          block_info = node.client.getblockheader(block.block_hash)
+        else
+          block_info = node.client.getblock(block.block_hash)
+        end
+        parent = Block.find_by(block_hash: block_info["previousblockhash"])
+        block.update parent: parent
+      end
+      if parent.present?
+        return if until_height.nil?
+      else
+        # Fetch parent block:
+        break if !self.id
+        puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
+        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+          block_info = node.client.getblockheader(block_info["previousblockhash"])
+        else
+          block_info = node.client.getblock(block_info["previousblockhash"])
+        end
+        parent = Block.create(
+          coin: self.coin,
+          block_hash: block_info["hash"],
+          height: block_info["height"],
+          mediantime: block_info["mediantime"],
+          timestamp: block_info["time"],
+          work: block_info["chainwork"],
+          version: block_info["version"],
+          first_seen_by: node
+        )
+        block.update parent: parent
+      end
+      block_id = parent.id
+    end
+  end
+
 
   def self.check_inflation!
     # Use the latest node for this check
@@ -54,4 +100,39 @@ class Block < ApplicationRecord
 
     # TODO: Send alert if greater than allowed
   end
+
+  def self.find_or_create_block_and_ancestors!(hash, node)
+    # Not atomic and called very frequently, so sometimes it tries to insert
+    # a block that was already inserted. In that case try again, so it updates
+    # the existing block instead.
+    begin
+      block = Block.find_by(block_hash: hash)
+
+      if block.nil?
+        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+          block_info = node.client.getblockheader(hash)
+        else
+          block_info = node.client.getblock(hash)
+        end
+
+        block = Block.create(
+          coin: node.coin.downcase.to_sym,
+          block_hash: block_info["hash"],
+          height: block_info["height"],
+          mediantime: block_info["mediantime"],
+          timestamp: block_info["time"],
+          work: block_info["chainwork"],
+          version: block_info["version"],
+          first_seen_by: node
+        )
+      end
+
+      block.find_ancestors!(node)
+    rescue
+      raise if Rails.env.test?
+      retry
+    end
+    return block
+  end
+
 end

@@ -117,7 +117,7 @@ RSpec.describe Node, :type => :model do
         expect(@node.block).to be_nil
       end
 
-      it "should not fetch parent blocks beyond the oldest block in the database" do
+      it "should not fetch parent blocks older than 560176" do
         # Blocks during IBD are not stored
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
@@ -126,16 +126,10 @@ RSpec.describe Node, :type => :model do
 
         # Exit IBD, fetching all previous blocks would take forever, so don't:
         @node.client.mock_ibd(false)
-        @node.client.mock_set_height(560177)
+        @node.client.mock_set_height(560176)
         @node.poll!
         @node.reload
-        expect(@node.block.height).to equal(560177)
-        expect(@node.block.parent).to be_nil
-
-        # Poll again, same block, so still don't fetch earlier blocks:
-        @node.poll!
-        @node.reload
-        expect(@node.block.height).to equal(560177)
+        expect(@node.block.height).to equal(560176)
         expect(@node.block.parent).to be_nil
 
         # Two blocks later, now it should fetch intermediate blocks:
@@ -328,42 +322,31 @@ RSpec.describe Node, :type => :model do
 
   describe "check_chaintips!" do
     before do
-      @A = build(:node)
+      @A = create(:node)
       @A.client.mock_version(170100)
-      @A.client.mock_set_height(560176)
-      @A.poll!
       @A.client.mock_set_height(560178)
-      @A.poll!
 
-      @B = build(:node)
+      @B = create(:node)
       @B.client.mock_version(160300)
-      @B.client.mock_set_height(560176)
-      @B.poll!
       @B.client.mock_set_height(560178)
-      @B.poll!
     end
 
     describe "one node in IBD" do
       before do
         @A.client.mock_ibd(true)
         @A.poll!
-        @B.client.mock_chaintips([
-          {
-            "height" => 560178,
-            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen" => 0,
-            "status" => "active"
-          }
-        ])
       end
       it "should do nothing" do
         expect(@A.check_chaintips!).to eq(nil)
+      end
+      it "should not have chaintip entries" do
+        expect(@A.chaintips.count).to eq(0)
       end
     end
 
     describe "only an active chaintip" do
       before do
-        @B.client.mock_chaintips([
+        @A.client.mock_chaintips([
           {
             "height" => 560178,
             "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
@@ -371,9 +354,13 @@ RSpec.describe Node, :type => :model do
             "status" => "active"
           }
         ])
+        @A.poll!
       end
-      it "should do nothing" do
-        expect(@B.check_chaintips!).to eq(nil)
+      it "should add a chaintip entry" do
+        expect(@A.chaintips.count).to eq(0)
+        @A.check_chaintips!
+        expect(@A.chaintips.count).to eq(1)
+        expect(@A.chaintips.first.block.height).to eq(560178)
       end
     end
 
@@ -403,13 +390,13 @@ RSpec.describe Node, :type => :model do
         @B.poll!
       end
 
-      it "should return nothing" do
-        expect(@B.check_chaintips!).to eq(nil)
+      it "should add a chaintip entry" do
+        @B.check_chaintips!
+        expect(@B.chaintips.count).to eq(2)
+        expect(@B.chaintips.last.status).to eq("valid-fork")
       end
 
       it "should add the valid fork blocks up to the common ancenstor" do
-        expect(@B.block.parent).not_to be_nil
-
         @B.check_chaintips!
 
         fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
@@ -466,9 +453,11 @@ RSpec.describe Node, :type => :model do
             "status" => "invalid"
           }
         ])
+        @B.poll!
       end
-      it "should do nothing" do
-        expect(@B.check_chaintips!).to eq(nil)
+      it "should add the active entry" do
+        @B.check_chaintips!
+        expect(@B.chaintips.count).to eq(1) # It won't add the invalid entry because it doesn't have the block
       end
     end
 
@@ -493,12 +482,14 @@ RSpec.describe Node, :type => :model do
             "status" => "invalid"
           }
         ])
+        @B.poll!
       end
-      it "should return failing block" do
+      it "should store invalid tip" do
         disputed_block = @A.block
         expect(disputed_block.height).to eq(560179)
         expect(disputed_block.block_hash).to eq("000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc")
-        expect(@B.check_chaintips!).to eq(disputed_block)
+        @B.check_chaintips!
+        expect(@B.chaintips.where(status: "invalid").count).to eq(1)
       end
 
       it "should be nil if the node is unreachable" do
@@ -508,7 +499,8 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should store an InvalidBlock entry" do
-        disputed_block = @B.check_chaintips!
+        @B.check_chaintips!
+        disputed_block = @B.chaintips.last.block
         expect(InvalidBlock.count).to eq(1)
         expect(InvalidBlock.first.block).to eq(disputed_block)
         expect(InvalidBlock.first.node).to eq(@B)
@@ -728,7 +720,8 @@ RSpec.describe Node, :type => :model do
     end
   end
 
-  describe "find_block_ancestors!" do
+  # TODO: move to Block tests
+  describe "blockfind_ancestors!" do
     before do
       @node = build(:node)
       expect(Block.minimum(:height)).to equal(nil)
@@ -736,12 +729,12 @@ RSpec.describe Node, :type => :model do
       @node.poll!
       @node.reload
       expect(@node.block.height).to equal(560179)
-      expect(Block.minimum(:height)).to equal(560179)
+      expect(Block.minimum(:height)).to equal(560176)
     end
 
-    it "should not fetch parents beyond the oldest block" do
-      @node.find_block_ancestors!(@node.block)
-      expect(Block.minimum(:height)).to equal(560179)
+    it "should not fetch parents before height 560176" do
+      @node.block.find_ancestors!(@node)
+      expect(Block.minimum(:height)).to equal(560176)
     end
 
     it "with block argument should fetch parents beyond the oldest block" do
@@ -749,9 +742,9 @@ RSpec.describe Node, :type => :model do
       @node.poll!
       @node.reload
       expect(@node.block.height).to equal(560182)
-      expect(Block.count).to equal(4)
+      expect(Block.count).to equal(7)
 
-      @node.find_block_ancestors!(@node.block, 560176)
+      @node.block.find_ancestors!(@node, 560176)
       expect(Block.count).to equal(7)
       expect(Block.minimum(:height)).to equal(560176)
     end
@@ -861,13 +854,13 @@ RSpec.describe Node, :type => :model do
         @B.poll!
       end
 
-      it "should call find_block_ancestors! against the newest node" do
+      it "should call find_ancestors! with the newest node" do
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|record|
             if record.id == @A.id
-              expect(record).to receive(:find_block_ancestors!)
+              expect(record.block).to receive(:find_ancestors!)
             else
-              expect(record).not_to receive(:find_block_ancestors!)
+              expect(record.block).not_to receive(:find_ancestors!)
             end
           }
         }

@@ -42,7 +42,6 @@ export const NodeList = props => (
             <TextField source="name"/>
             <TextField source="version" />
             <DateField source="unreachable_since" />
-            <NumberField source="best_block.height" />
         </Datagrid>
     </List>
 );

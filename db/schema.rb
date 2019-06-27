@@ -10,7 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_06_12_133722) do
+ActiveRecord::Schema.define(version: 2019_06_17_153641) do
+
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -28,6 +31,19 @@ ActiveRecord::Schema.define(version: 2019_06_12_133722) do
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
+  end
+
+  create_table "chaintips", force: :cascade do |t|
+    t.bigint "node_id"
+    t.bigint "block_id"
+    t.bigint "parent_chaintip_id"
+    t.integer "coin", null: false
+    t.string "status", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_chaintips_on_block_id"
+    t.index ["node_id"], name: "index_chaintips_on_node_id"
+    t.index ["parent_chaintip_id"], name: "index_chaintips_on_parent_chaintip_id"
   end
 
   create_table "invalid_blocks", force: :cascade do |t|
@@ -58,7 +74,6 @@ ActiveRecord::Schema.define(version: 2019_06_12_133722) do
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
-    t.integer "block_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
@@ -70,6 +85,7 @@ ActiveRecord::Schema.define(version: 2019_06_12_133722) do
     t.integer "peer_count"
     t.integer "client_type"
     t.integer "rpcport"
+    t.integer "block_id"
     t.index ["block_id"], name: "index_nodes_on_block_id"
   end
 
@@ -116,4 +132,7 @@ ActiveRecord::Schema.define(version: 2019_06_12_133722) do
     t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
+  add_foreign_key "chaintips", "blocks"
+  add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
+  add_foreign_key "chaintips", "nodes"
 end

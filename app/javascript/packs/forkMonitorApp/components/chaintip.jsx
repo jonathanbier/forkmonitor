@@ -30,19 +30,19 @@ class Chaintip extends React.Component {
         <Row><Col>
           <Breadcrumb>
             <BreadcrumbItem active className="chaintip-hash">
-              Chaintip: { this.state.chaintip.hash }
+              Chaintip: { this.state.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
           <p>
-            Height: <NumberFormat value={ this.state.chaintip.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.state.chaintip.timestamp}</Moment> UTC)
+            Height: <NumberFormat value={ this.state.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.state.chaintip.block.timestamp}</Moment> UTC)
             <br/>
-            Accumulated log2(PoW): <NumberFormat value={this.state.chaintip.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
+            Accumulated log2(PoW): <NumberFormat value={this.state.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
           </p>
           Nodes:
           <ul>
-          {this.state.nodes.filter(o => o.best_block && o.best_block.hash == this.state.chaintip.hash).map(function (node, index) {
+          {this.state.chaintip.nodes.map(function (node, index) {
             return (
-              <Node node={ node } key={node.id} className="pull-left node-info" />
+              <Node node={ node } key={node.id} chaintip={ this.state.chaintip } className="pull-left node-info" />
             )
           }.bind(this))}
           </ul>

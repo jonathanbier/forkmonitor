@@ -1,5 +1,6 @@
 class Node < ApplicationRecord
   belongs_to :block, required: false
+  has_many :chaintips
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
 
@@ -34,7 +35,7 @@ class Node < ApplicationRecord
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword
     end
-    super({ only: fields }.merge(options || {})).merge({best_block: block})
+    super({ only: fields }.merge(options || {})).merge({height: block && block.height})
   end
 
   def client
@@ -104,8 +105,11 @@ class Node < ApplicationRecord
       best_block_hash = client.getblockhash(info["blocks"])
     end
 
-    block = self.ibd ? nil : find_or_create_block_and_ancestors!(best_block_hash)
+    block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
+
     self.update block: block, unreachable_since: nil
+
+    return if block.nil?
   end
 
   # getchaintips returns all known chaintips for a node, which can be:
@@ -134,25 +138,7 @@ class Node < ApplicationRecord
       # Assuming this node doesn't implement it
       return nil
     end
-    chaintips.each do |chaintip|
-      case chaintip["status"]
-      when "valid-fork"
-        find_or_create_block_and_ancestors!(chaintip["hash"]) unless chaintip["height"] < self.block.height - 1000
-      when "invalid"
-        block = Block.find_by(block_hash: chaintip["hash"], coin: self.coin.downcase.to_sym)
-        if block
-          invalid_block = InvalidBlock.find_or_create_by(node: self, block: block)
-          if !invalid_block.notified_at
-            User.all.each do |user|
-              UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
-            end
-            invalid_block.update notified_at: Time.now
-          end
-          return block
-        end
-      end
-    end
-    return nil
+    return Chaintip.process_getchaintips(chaintips, self)
   end
 
   # Should be run after polling all nodes, otherwise it may find false positives
@@ -269,50 +255,6 @@ class Node < ApplicationRecord
         end
         current_alert.update notified_at: Time.now
       end
-    end
-  end
-
-  def find_block_ancestors!(child_block, until_height = nil)
-    # Prevent new instances from going too far back due to Bitcoin Cash fork blocks:
-    oldest_block = [Block.minimum(:height), 560000].max
-    block_id = child_block.id
-    loop do
-      block = Block.find(block_id)
-      return if until_height ? block.height == until_height : block.height == oldest_block
-      parent = block.parent
-      if parent.nil?
-        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
-          block_info = client.getblockheader(block.block_hash)
-        else
-          block_info = client.getblock(block.block_hash)
-        end
-        parent = Block.find_by(block_hash: block_info["previousblockhash"])
-        block.update parent: parent
-      end
-      if parent.present?
-        return if until_height.nil?
-      else
-        # Fetch parent block:
-        break if !self.id
-        puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
-        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
-          block_info = client.getblockheader(block_info["previousblockhash"])
-        else
-          block_info = client.getblock(block_info["previousblockhash"])
-        end
-        parent = Block.create(
-          coin: self.coin.downcase.to_sym,
-          block_hash: block_info["hash"],
-          height: block_info["height"],
-          mediantime: block_info["mediantime"],
-          timestamp: block_info["time"],
-          work: block_info["chainwork"],
-          version: block_info["version"],
-          first_seen_by: self
-        )
-        block.update parent: parent
-      end
-      block_id = parent.id
     end
   end
 
@@ -478,7 +420,7 @@ class Node < ApplicationRecord
   def self.fetch_ancestors!(until_height)
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
-    node.find_block_ancestors!(node.block, until_height)
+    node.block.find_ancestors!(node, until_height)
   end
 
   private
@@ -487,37 +429,4 @@ class Node < ApplicationRecord
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
   end
 
-  def find_or_create_block_and_ancestors!(hash)
-    # Not atomic and called very frequently, so sometimes it tries to insert
-    # a block that was already inserted. In that case try again, so it updates
-    # the existing block instead.
-    begin
-      block = Block.find_by(block_hash: hash)
-
-      if block.nil?
-        if self.client_type.to_sym == :libbitcoin || self.version >= 120000
-          block_info = client.getblockheader(hash)
-        else
-          block_info = client.getblock(hash)
-        end
-
-        block = Block.create(
-          coin: self.coin.downcase.to_sym,
-          block_hash: block_info["hash"],
-          height: block_info["height"],
-          mediantime: block_info["mediantime"],
-          timestamp: block_info["time"],
-          work: block_info["chainwork"],
-          version: block_info["version"],
-          first_seen_by: self
-        )
-      end
-
-      find_block_ancestors!(block)
-    rescue
-      raise if Rails.env.test?
-      retry
-    end
-    return block
-  end
 end

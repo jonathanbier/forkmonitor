@@ -23,8 +23,12 @@ const best_block = {
 }
 
 const mockNodes = [
-  {id: 1, name: "Bitcoin Core", version: 170100, best_block: best_block, unreachable_since: null, ibd: false},
-  {id: 2, name: "Bitcoin Core", version: 160300, best_block: best_block, unreachable_since: null, ibd: false}
+  {id: 1, name: "Bitcoin Core", version: 170100, height: best_block.height, unreachable_since: null, ibd: false},
+  {id: 2, name: "Bitcoin Core", version: 160300, height: best_block.height, unreachable_since: null, ibd: false}
+]
+
+const mockChaintips = [
+  {id: 1, block: best_block, nodes: mockNodes},
 ]
 
 axios.get.mockImplementation(url => {
@@ -34,11 +38,12 @@ axios.get.mockImplementation(url => {
     return Promise.resolve({data: [
       {id: 1, block: {height:582689, timestamp:1558050809, hash: "00000000000000000b6f077cdfc57a62be57c757ec9f8d88d4c2ef8dfc69b141", first_seen_by: {id:3,name:"Bitcoin SV",version:100010000}},"node":{id:21,name:"Bitcoin Unlimited",version:1060000}}
     ]})
+  } else if (url == "/api/v1/chaintips/BTC") {
+     return Promise.resolve({data: mockChaintips})
   } else {
-    throw(false)
+      return Promise.reject({})
   }
-
-})
+});
 
 test('rendered component', async () => {
   const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
@@ -54,12 +59,7 @@ test('can handle node without best block', async () => {
     timestamp: 1,
     work: 86.000001
   }
-  mockNodes[0].best_block = null
-  // const resp = {data: [
-  //   {id: 1, name: "Bitcoin Core", version: 170100, best_block: null, unreachable_since: null, ibd: false},
-  //   {id: 2, name: "Bitcoin Core", version: 160300, best_block: best_block, unreachable_since: null, ibd: false}
-  // ]}
-  // axios.get.mockResolvedValue(resp);
+  mockNodes[0].height = null
 
   const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
   await flushPromises();

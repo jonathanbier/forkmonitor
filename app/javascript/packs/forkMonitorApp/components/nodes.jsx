@@ -20,17 +20,18 @@ class Nodes extends React.Component {
 
     this.state = {
       coin: props.match.params.coin,
-      nodes: [],
       chaintips: [],
       nodesWithoutTip: [],
       invalid_blocks: []
     };
 
+    this.getChaintips = this.getChaintips.bind(this);
     this.getNodes = this.getNodes.bind(this);
     this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
   }
 
   componentDidMount() {
+    this.getChaintips(this.state.coin);
     this.getNodes(this.state.coin);
     this.getInvalidBlocks(this.state.coin);
   }
@@ -41,16 +42,28 @@ class Nodes extends React.Component {
 
     if (currentCoin !== nextCoin) {
       this.setState({
-        nodes: [],
         nodesWithoutTip: [],
         chaintips: [],
         invalid_blocks: []
       });
+      this.getChaintips(nextProps.match.params.coin);
       this.getNodes(nextProps.match.params.coin);
       this.getInvalidBlocks(nextProps.match.params.coin);
     }
 
   }
+
+  getChaintips(coin) {
+    axios.get('/api/v1/chaintips/' + coin).then(function (response) {
+      return response.data;
+    }).then(function (chaintips) {
+      this.setState({
+        chaintips: chaintips
+      });
+      }.bind(this)).catch(function (error) {
+        console.error(error);
+      });
+   }
 
   getNodes(coin) {
     axios.get('/api/v1/nodes/coin/' + coin).then(function (response) {
@@ -58,13 +71,9 @@ class Nodes extends React.Component {
     }).then(function (nodes) {
       var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x && elem && x.hash === elem.hash) == pos)
 
-      var chaintips = unique(nodes.map(node => (node.best_block)));
-
       this.setState({
         coin: coin,
-        nodes: nodes,
-        chaintips: chaintips,
-        nodesWithoutTip: nodes.filter(node => node.best_block == null),
+        nodesWithoutTip: nodes.filter(node => node.ibd || node.height == null),
       });
 
       }.bind(this)).catch(function (error) {
@@ -105,10 +114,10 @@ class Nodes extends React.Component {
           <Container>
               {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
                 return (<Chaintip
-                  key={ chaintip.hash }
+                  key={ chaintip.id }
                   coin={ this.state.coin }
                   chaintip={ chaintip }
-                  nodes={ this.state.nodes }
+                  nodes={ chaintip.nodes }
                   index={ index }
                   last={ index != this.state.chaintips.length - 1 }
                   invalid_blocks={ this.state.invalid_blocks }
