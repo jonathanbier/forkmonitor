@@ -374,17 +374,17 @@ class Node < ApplicationRecord
   def self.check_chaintips!
     self.bitcoin_core_by_version.each do |node|
       if node.version.present? && node.version >= 100000 # getchaintips was added in v0.10
-        node.check_chaintips!
+        node.check_chaintips! unless node.block.nil?
       end
     end
     self.bitcoin_alternative_implementations.each do |node|
-      node.check_chaintips! unless node.client_type.to_sym == :libbitcoin
+      node.check_chaintips! unless node.block.nil? || node.client_type.to_sym == :libbitcoin
     end
     self.bch_by_version.each do |node|
-      node.check_chaintips!
+      node.check_chaintips! unless node.block.nil?
     end
     self.bsv_by_version.each do |node|
-      node.check_chaintips!
+      node.check_chaintips! unless node.block.nil?
     end
 
     # Look for potential orphan blocks, i.e. more than one block at the same height
