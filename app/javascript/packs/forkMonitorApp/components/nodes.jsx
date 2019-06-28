@@ -73,7 +73,7 @@ class Nodes extends React.Component {
 
       this.setState({
         coin: coin,
-        nodesWithoutTip: nodes.filter(node => node.ibd || node.height == null),
+        nodesWithoutTip: nodes.filter(node => node.ibd || node.height == null || node.unreachable_since ),
       });
 
       }.bind(this)).catch(function (error) {

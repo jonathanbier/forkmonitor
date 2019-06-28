@@ -129,8 +129,14 @@ class Node < ApplicationRecord
   #    nodes reject
   # 2. the node has a consensus bug
   def check_chaintips!
-    # Return nil if node is unreachble or in IBD:
-    return nil if self.unreachable_since || self.ibd
+    if self.unreachable_since || self.ibd || self.block.nil?
+      # Remove cached chaintips from db and return nil if node is unreachble or in IBD:
+      Chaintip.where(node: self).destroy_all
+      return nil
+    else
+      # Delete existing chaintip entries, except the active one (which is unique):
+      Chaintip.where(node: self).where.not(status: "active").destroy_all
+    end
 
     begin
       chaintips = client.getchaintips
@@ -329,10 +335,6 @@ class Node < ApplicationRecord
       node.poll!
     end
 
-    self.check_laggards!(options)
-    self.check_chaintips!
-    bitcoin_core_nodes.first.check_versionbits!
-
     self.bch_by_version.each do |node|
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
@@ -343,6 +345,9 @@ class Node < ApplicationRecord
       node.poll!
     end
 
+    self.check_laggards!(options)
+    self.check_chaintips!
+    bitcoin_core_nodes.first.check_versionbits!
   end
 
   def self.poll_repeat!
@@ -375,20 +380,20 @@ class Node < ApplicationRecord
     self.bitcoin_core_by_version.each do |node|
       node.reload
       if node.version.present? && node.version >= 100000 # getchaintips was added in v0.10
-        node.check_chaintips! unless node.block.nil?
+        node.check_chaintips!
       end
     end
     self.bitcoin_alternative_implementations.each do |node|
       node.reload
-      node.check_chaintips! unless node.block.nil? || node.client_type.to_sym == :libbitcoin
+      node.check_chaintips! unless node.client_type.to_sym == :libbitcoin
     end
     self.bch_by_version.each do |node|
       node.reload
-      node.check_chaintips! unless node.block.nil?
+      node.check_chaintips!
     end
     self.bsv_by_version.each do |node|
       node.reload
-      node.check_chaintips! unless node.block.nil?
+      node.check_chaintips!
     end
 
     # Look for potential orphan blocks, i.e. more than one block at the same height

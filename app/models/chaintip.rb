@@ -8,8 +8,8 @@ class Chaintip < ApplicationRecord
   validates :status, uniqueness: { scope: :node}
 
   def nodes
-    res = Node.where(block: self.block).order(client_type: :asc ,name: :asc, version: :desc).to_a # block.node should be the same as the active chaintip for a node
-    Chaintip.where(status: "active", parent_chaintip: self).each do |child|
+    res = Node.joins(:chaintips).where("chaintips.block_id = ?", self.block_id).where("chaintips.status = ?", self.status).order(client_type: :asc ,name: :asc, version: :desc).to_a
+    Chaintip.where(status: self.status, parent_chaintip: self).each do |child|
       res.append child.node
     end
     res
@@ -65,8 +65,6 @@ class Chaintip < ApplicationRecord
   end
 
   def self.process_getchaintips(chaintips, node)
-     # Delete existing chaintip entries, except the active one (which is unique):
-     node.chaintips.where.not(status: "active").delete_all
      chaintips.each do |chaintip|
        process_chaintip_result(chaintip, node)
      end
