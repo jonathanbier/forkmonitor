@@ -136,6 +136,12 @@ class Node < ApplicationRecord
     else
       # Delete existing chaintip entries, except the active one (which is unique):
       Chaintip.where(node: self).where.not(status: "active").destroy_all
+
+      # libbitcoin doesn't implement getchaintips, so we mock it:
+      if self.client_type.to_sym == :libbitcoin
+        Chaintip.create(coin: :btc, node: self, status: "active", block: self.block)
+        return nil
+      end
     end
 
     begin
@@ -385,7 +391,7 @@ class Node < ApplicationRecord
     end
     self.bitcoin_alternative_implementations.each do |node|
       node.reload
-      node.check_chaintips! unless node.client_type.to_sym == :libbitcoin
+      node.check_chaintips!
     end
     self.bch_by_version.each do |node|
       node.reload
