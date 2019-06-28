@@ -142,7 +142,9 @@ class Node < ApplicationRecord
          self.client_type.to_sym == :btcd ||
          (self.client_type.to_sym == :core && self.version.present? && self.version < 100000)
 
-        Chaintip.create(coin: :btc, node: self, status: "active", block: self.block)
+        tip = Chaintip.find_or_create_by(coin: :btc, node: self, status: "active")
+        tip.update block: self.block
+        tip.match_parent!(self.block, self)
         return nil
       end
     end

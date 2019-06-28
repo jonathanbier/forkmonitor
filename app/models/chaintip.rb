@@ -20,6 +20,23 @@ class Chaintip < ApplicationRecord
     super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes})
   end
 
+  def match_parent!(block, node)
+    # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:
+    Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height > ?", block.height).each do |candidate_tip|
+      break if node.chaintips.find_by(block: candidate_tip.block, status: "invalid")
+      # Travers candidate tip down to find our tip
+      parent = candidate_tip.block.parent
+      while parent.present? && parent.height >= block.height
+        if parent == block
+          self.update parent_chaintip: candidate_tip
+          break
+        end
+        parent = parent.parent
+      end
+      break if self.parent_chaintip
+    end
+  end
+
   def self.process_chaintip_result(chaintip, node)
     block = Block.find_by(block_hash: chaintip["hash"], coin: node.coin.downcase.to_sym)
     case chaintip["status"]
@@ -29,20 +46,7 @@ class Chaintip < ApplicationRecord
       return nil unless block.present?
       tip = node.chaintips.find_or_create_by(status: "active", coin: block.coin) # There can only be one
       tip.update block: block, parent_chaintip: nil
-      # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:
-      Chaintip.joins(:block).where(coin: tip.coin, status: "active").where("blocks.height > ?", block.height).each do |candidate_tip|
-        break if node.chaintips.find_by(block: candidate_tip.block, status: "invalid")
-        # Travers candidate tip down to find our tip
-        parent = candidate_tip.block.parent
-        while parent.present? && parent.height >= block.height
-          if parent == block
-            tip.update parent_chaintip: candidate_tip
-            break
-          end
-          parent = parent.parent
-        end
-        break if tip.parent_chaintip
-      end
+      tip.match_parent!(block, node)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - 1000
       block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node)
