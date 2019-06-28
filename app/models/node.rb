@@ -137,8 +137,11 @@ class Node < ApplicationRecord
       # Delete existing chaintip entries, except the active one (which is unique):
       Chaintip.where(node: self).where.not(status: "active").destroy_all
 
-      # libbitcoin doesn't implement getchaintips, so we mock it:
-      if self.client_type.to_sym == :libbitcoin
+      # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
+      if self.client_type.to_sym == :libbitcoin ||
+         self.client_type.to_sym == :btcd ||
+         (self.client_type.to_sym == :core && self.version.present? && self.version < 100000)
+
         Chaintip.create(coin: :btc, node: self, status: "active", block: self.block)
         return nil
       end
@@ -385,9 +388,7 @@ class Node < ApplicationRecord
   def self.check_chaintips!
     self.bitcoin_core_by_version.each do |node|
       node.reload
-      if node.version.present? && node.version >= 100000 # getchaintips was added in v0.10
-        node.check_chaintips!
-      end
+      node.check_chaintips!
     end
     self.bitcoin_alternative_implementations.each do |node|
       node.reload
