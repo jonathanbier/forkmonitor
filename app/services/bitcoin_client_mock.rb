@@ -424,6 +424,10 @@ class BitcoinClientMock
     throw "No mock txoutset for height #{ @height }"
   end
 
+  def getrawtransaction(tx_hash, verbose = false)
+    return {}
+  end
+
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000
     block_hash ||= @block_hashes[height]
     previousblockhash ||= @block_hashes[height - 1]

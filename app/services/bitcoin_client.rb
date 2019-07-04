@@ -180,6 +180,15 @@ class BitcoinClient
     end
   end
 
+  def getrawtransaction(hash, verbose = false)
+    begin
+      return request("getrawtransaction", hash, verbose)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getrawtransaction failed for node #{@id}: " + e.message
+      raise
+    end
+  end
+
   private
 
   def request(*args)
