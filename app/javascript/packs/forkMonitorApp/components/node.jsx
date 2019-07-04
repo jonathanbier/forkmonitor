@@ -9,6 +9,7 @@ import {
 } from 'reactstrap';
 
 import NodeName from './nodeName';
+import NodeBehind from './nodeBehind';
 
 class Node extends React.Component {
   render() {
@@ -26,10 +27,7 @@ class Node extends React.Component {
           <NodeName node={this.props.node} />
           <span> {badge}</span>
         </b>
-        {
-            this.props.chaintip && this.props.node.height && this.props.node.height < this.props.chaintip.block.height &&
-            <span> ({ this.props.chaintip.block.height - this.props.node.height } blocks behind)</span>
-        }
+        <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node }/>
       </li>
     )
   }
