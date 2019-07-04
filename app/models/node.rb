@@ -330,6 +330,14 @@ class Node < ApplicationRecord
     puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
   end
 
+  def get_pool_for_block!(block_hash, block_info = nil)
+    return nil unless self.core? || self.abc? || self.sv?
+    block_info = block_info || self.client.getblock(block_hash)
+    tx_id = block_info["tx"].first
+    coinbase = self.client.getrawtransaction(tx_id, true)
+    return Block.pool_from_coinbase_tx(coinbase)
+  end
+
   def self.poll!(options = {})
     bitcoin_core_nodes = self.bitcoin_core_by_version
     bitcoin_core_nodes.each do |node|

@@ -32,6 +32,8 @@ class BitcoinClientMock
     mock_add_block(560180, 1548498447, "000000000000000000000000000000000000000004dad9e0095d385d3474e479", nil, nil)
     mock_add_block(560181, 1548498742, "000000000000000000000000000000000000000004dadf3a07c1872cebcdf4ee", nil, nil)
     mock_add_block(560182, 1548500251, "000000000000000000000000000000000000000004dae4940625d5fca3270563", nil, nil)
+
+    mock_add_transaction("0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377", "74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085")
   end
 
   def mock_coin(coin)
@@ -444,5 +446,10 @@ class BitcoinClientMock
     }
     @block_headers[block_hash] = header
     @blocks[block_hash] = header
+    @blocks[block_hash]["tx"] = []
+  end
+
+  def mock_add_transaction(block_hash, tx_hash)
+    @blocks[block_hash]["tx"] << tx_hash
   end
 end

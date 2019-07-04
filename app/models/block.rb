@@ -33,7 +33,7 @@ class Block < ApplicationRecord
       return if until_height ? block.height == until_height : block.height <= MINIMUM_BLOCK_HEIGHT
       parent = block.parent
       if parent.nil?
-        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+        if node.client_type.to_sym == :libbitcoin
           block_info = node.client.getblockheader(block.block_hash)
         else
           block_info = node.client.getblock(block.block_hash)
@@ -47,11 +47,15 @@ class Block < ApplicationRecord
         # Fetch parent block:
         break if !self.id
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
-        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+        if node.client_type.to_sym == :libbitcoin
           block_info = node.client.getblockheader(block_info["previousblockhash"])
         else
           block_info = node.client.getblock(block_info["previousblockhash"])
         end
+
+        # Set pool:
+        pool = node.get_pool_for_block!(block_info["hash"], block_info)
+
         parent = Block.create(
           coin: self.coin,
           block_hash: block_info["hash"],
@@ -60,7 +64,8 @@ class Block < ApplicationRecord
           timestamp: block_info["time"],
           work: block_info["chainwork"],
           version: block_info["version"],
-          first_seen_by: node
+          first_seen_by: node,
+          pool: pool
         )
         block.update parent: parent
       end
@@ -144,11 +149,13 @@ class Block < ApplicationRecord
       block = Block.find_by(block_hash: hash)
 
       if block.nil?
-        if node.client_type.to_sym == :libbitcoin || node.version >= 120000
+        if node.client_type.to_sym == :libbitcoin
           block_info = node.client.getblockheader(hash)
         else
           block_info = node.client.getblock(hash)
         end
+
+        pool = node.get_pool_for_block!(block_info["hash"], block_info)
 
         block = Block.create(
           coin: node.coin.downcase.to_sym,
@@ -158,8 +165,10 @@ class Block < ApplicationRecord
           timestamp: block_info["time"],
           work: block_info["chainwork"],
           version: block_info["version"],
-          first_seen_by: node
+          first_seen_by: node,
+          pool: pool
         )
+
       end
 
       block.find_ancestors!(node)

@@ -84,6 +84,7 @@ RSpec.describe Node, :type => :model do
         @node = build(:node)
 
         @node.client.mock_set_height(560177)
+        allow(@node).to receive("get_pool_for_block!").and_return("Antpool")
         @node.poll! # stores the block and node entry
       end
 
@@ -95,6 +96,10 @@ RSpec.describe Node, :type => :model do
       it "should update to the latest block" do
         @node.poll!
         expect(@node.block.height).to equal(560177)
+      end
+
+      it "should store pool for block" do
+        expect(@node.block.pool).to eq("Antpool")
       end
 
       it "should store intermediate blocks" do
@@ -796,6 +801,34 @@ RSpec.describe Node, :type => :model do
       @node.block.find_ancestors!(@node, 560176)
       expect(Block.count).to equal(7)
       expect(Block.minimum(:height)).to equal(560176)
+    end
+  end
+
+  describe "get_pool_for_block!" do
+    before do
+      @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
+      @node = create(:node, coin: "BTC", block: @block)
+    end
+
+    it "should fetch the block" do
+      expect(@node.client).to receive("getblock").and_call_original
+      @node.get_pool_for_block!(@block.block_hash)
+    end
+
+
+    it "should not fetch the block if getblock is cached" do
+      expect(@node.client).not_to receive("getblock")
+      @node.get_pool_for_block!(@block.block_hash, {"tx" => ["0"]})
+    end
+
+    it "should call getrawtransaction on the coinbase" do
+      expect(@node.client).to receive("getrawtransaction").and_call_original
+      @node.get_pool_for_block!(@block.block_hash)
+    end
+
+    it "should pass getrawtransaction output to pool_from_coinbase_tx" do
+      expect(Block).to receive(:pool_from_coinbase_tx)
+      @node.get_pool_for_block!(@block.block_hash)
     end
   end
 
