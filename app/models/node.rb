@@ -186,7 +186,10 @@ class Node < ApplicationRecord
     end
 
     # Allow 1 block extra for 0.10.3 node:
-    return nil if self.client_type == "core" && self.version < 110000 && self.block.height > node.block.height - 2
+    return nil if self.core? && self.version < 110000 && self.block.height > node.block.height - 2
+
+    # Allow 1 block extra for btcd node:
+    return nil if self.btcd? && self.block.height > node.block.height - 2
 
     # Remove entry if no longer behind
     if lag_entry && !behind
