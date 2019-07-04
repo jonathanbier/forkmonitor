@@ -47,7 +47,7 @@ class Node < ApplicationRecord
 
   # Update database with latest info from this node
   def poll!
-    if self.client_type == :libbitcoin || self.client_type == "libbitcoin"
+    if self.libbitcoin?
       block_height = client.getblockheight
       if block_height.nil?
         self.update unreachable_since: self.unreachable_since || DateTime.now
@@ -56,7 +56,7 @@ class Node < ApplicationRecord
       header = client.getblockheader(block_height)
       best_block_hash = header["hash"]
       previousblockhash = header["previousblockhash"]
-    elsif self.client_type == :core && self.version.present? && self.version < 100000
+    elsif self.core? && self.version.present? && self.version < 100000
       begin
         info = client.getinfo
       rescue Bitcoiner::Client::JSONRPCError
