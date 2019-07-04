@@ -624,6 +624,32 @@ RSpec.describe Node, :type => :model do
         expect(@A.check_if_behind!(@B)).not_to eq(nil)
       end
 
+      it "should detect if bcoin node A is behind (core) node B" do
+        @A.client.mock_version("v1.0.2")
+        @A.client.mock_client_type(:bcoin)
+        @A.update version: "v1.0.2"
+        @A.update client_type: :bcoin
+        @A.poll!
+
+        lag = @A.check_if_behind!(@B)
+        expect(lag).not_to be_nil
+        expect(lag.node_a).to eq(@A)
+        expect(lag.node_b).to eq(@B)
+      end
+
+      it "should allow 1 extra block for btcd" do
+        @A.client.mock_version(120000)
+        @A.client.mock_client_type(:btcd)
+        @A.update version: 120000
+        @A.update client_type: :btcd
+        @A.poll!
+        expect(@A.check_if_behind!(@B)).to eq(nil)
+
+        @B.client.mock_set_height(560178)
+        @B.poll!
+        expect(@A.check_if_behind!(@B)).not_to eq(nil)
+      end
+
       it "should send an email to all users" do
         expect(User).to receive(:all).and_return [user]
         expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
