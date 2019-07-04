@@ -4,4 +4,4 @@ We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
   * <%= block.block_hash %>
 <% end %>
 
-For more information, see: <%= nodes_btc_url %>
+For more information, see: <%= nodes_for_coin_url(@orphan_candidate.coin.downcase) %>

@@ -14,6 +14,12 @@ RSpec.describe UserMailer, type: :mailer do
     it "renders the body" do
       expect(mail.body.encoded).to include("https://forkmonitor.info/nodes/btc")
     end
+
+    it "links to the right coin" do
+      lag.node_a.update coin: :bch
+      lag.node_b.update coin: :bch
+      expect(mail.body.encoded).to include("https://forkmonitor.info/nodes/bch")
+    end
   end
 
   describe "invalid block notify" do

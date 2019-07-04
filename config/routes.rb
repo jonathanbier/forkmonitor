@@ -13,7 +13,7 @@ Rails.application.routes.draw do
 
   namespace :api, {format: 'json'} do
     namespace :v1 do
-      match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "nodes_for_coin", :via => :get
+      match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]
       resources :invalid_blocks, only: [:index, :show]
@@ -31,8 +31,6 @@ Rails.application.routes.draw do
     get 'feeds/orphan_candidates/:coin' => 'feeds#orphan_candidates'
   end
 
-  get 'nodes/btc', to: "pages#root"
-  get 'nodes/bch', to: "pages#root"
-  get 'nodes/bsv', to: "pages#root"
+  get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
   get 'admin', to: "pages#root"
 end
