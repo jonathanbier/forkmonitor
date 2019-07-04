@@ -80,82 +80,113 @@ class BitcoinClientMock
 
   def getinfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
-    {
-      80600 => {
-        "version" => 80600,
-        "protocolversion" => 70001,
-        "blocks" => @height,
-        # "difficulty" => 5883988430955.408,
-        "warnings" => "",
-        "errors" => "URGENT: Alert key compromised, upgrade required",
-        "connections" => 8
-      }
-    }[@version]
+    if @coin == "BTC"
+      if @client_type == :core
+        res = {
+          80600 => {
+            "version" => 80600,
+            "protocolversion" => 70001,
+            "blocks" => @height,
+            # "difficulty" => 5883988430955.408,
+            "warnings" => "",
+            "errors" => "URGENT: Alert key compromised, upgrade required",
+            "connections" => 8
+          }
+        }
+      elsif @client_type == :btcd
+        res = {
+          120000 => {
+            "version" => 120000,
+            "protocolversion" => 70002,
+            "blocks" => @height,
+            "timeoffset"=>0,
+            "connections"=>8,
+            "proxy"=>"",
+            # "difficulty"=>7934713219630.606,
+            "testnet"=>false,
+            "relayfee"=>1.0e-05,
+            "errors"=>""
+          }
+        }
+      end
+    end
+
+    throw "No getinfo mock for #{ @client_type }" unless res.present?
+    res[@version]
   end
 
   def getnetworkinfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
-    raise Bitcoiner::Client::JSONRPCError if @coin == "BTC" && @client_type == :core && @version < 100000
     if @coin == "BTC"
-      {
-        100300 => {
-          "version" => 100300,
-          "subversion" => "/Satoshi:0.10.3/",
-          "protocolversion" => 70002,
-          "localservices" => "0000000000000001",
-          "timeoffset" => 0,
-          "connections" => @peer_count,
-          "relayfee"=>5.0e-05,
-        },
-        130000 =>
+      if @client_type == :core
+        raise Bitcoiner::Client::JSONRPCError if @version < 100000
         {
-          "version" => 130000,
-          "subversion" => "/Satoshi:0.13.0/",
-          "protocolversion" => 70014,
-          "localservices" => "0000000000000005",
-          "localrelay" => true,
-          "timeoffset" => 0,
-          "connections" => 8,
-          "networks" => [
-          ],
-          "relayfee" => 0.00001000,
-          "localaddresses" => [],
-          "warnings" => ""
-        },
-        160300 => {
-          "version" => 160300,
-          "subversion" => "/Satoshi:0.16.3/",
-          "protocolversion" => 70015,
-          "localservices" => "0000000000000409",
-          "localrelay" => true,
-          "timeoffset" => -1,
-          "networkactive" => true,
-          "connections" => @peer_count,
-          "warnings" => ""
-        },
-        170100 => {
-          "version" => 170100,
-          "subversion" => "/Satoshi:0.17.1/",
-          "protocolversion" => 70015,
-          "localservices" => "0000000000000409",
-          "localrelay" => true,
-          "timeoffset" => -1,
-          "networkactive" => true,
-          "connections" => @peer_count,
-          "warnings" => ""
-        },
-        "v1.0.2" => {
-          "version" => "v1.0.2",
-          "subversion" => "/bcoin:v1.0.2/",
-          "protocolversion" => 70015,
-          "localservices" => "00000009",
-          "localrelay" => true,
-          "timeoffset" => 0,
-          "networkactive" => true,
-          "connections" => @peer_count,
-          "warnings" => ""
-        },
-      }[@version]
+          100300 => {
+            "version" => 100300,
+            "subversion" => "/Satoshi:0.10.3/",
+            "protocolversion" => 70002,
+            "localservices" => "0000000000000001",
+            "timeoffset" => 0,
+            "connections" => @peer_count,
+            "relayfee"=>5.0e-05,
+          },
+          130000 =>
+          {
+            "version" => 130000,
+            "subversion" => "/Satoshi:0.13.0/",
+            "protocolversion" => 70014,
+            "localservices" => "0000000000000005",
+            "localrelay" => true,
+            "timeoffset" => 0,
+            "connections" => 8,
+            "networks" => [
+            ],
+            "relayfee" => 0.00001000,
+            "localaddresses" => [],
+            "warnings" => ""
+          },
+          160300 => {
+            "version" => 160300,
+            "subversion" => "/Satoshi:0.16.3/",
+            "protocolversion" => 70015,
+            "localservices" => "0000000000000409",
+            "localrelay" => true,
+            "timeoffset" => -1,
+            "networkactive" => true,
+            "connections" => @peer_count,
+            "warnings" => ""
+          },
+          170100 => {
+            "version" => 170100,
+            "subversion" => "/Satoshi:0.17.1/",
+            "protocolversion" => 70015,
+            "localservices" => "0000000000000409",
+            "localrelay" => true,
+            "timeoffset" => -1,
+            "networkactive" => true,
+            "connections" => @peer_count,
+            "warnings" => ""
+          },
+        }[@version]
+      elsif @client_type == :bcoin
+        {
+          "v1.0.2" => {
+            "version" => "v1.0.2",
+            "subversion" => "/bcoin:v1.0.2/",
+            "protocolversion" => 70015,
+            "localservices" => "00000009",
+            "localrelay" => true,
+            "timeoffset" => 0,
+            "networkactive" => true,
+            "connections" => @peer_count,
+            "warnings" => ""
+          },
+        }[@version]
+      elsif @client_type == :btcd
+        raise Bitcoiner::Client::JSONRPCError
+      else
+        throw "No getnetworkinfo mock for #{ @client_type }"
+      end
     elsif @coin == "BCH"
       {
         180500 => {
@@ -192,79 +223,101 @@ class BitcoinClientMock
   def getblockchaininfo
     raise Bitcoiner::Client::JSONRPCError if !@reachable
     if @coin == "BTC"
-      raise Bitcoiner::Client::JSONRPCError if @client_type == :core && @version < 100000
-      {
-        170100 => {
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          # "difficulty" => 5883988430955.408,
-          "mediantime" => 1548515214,
-          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-          "initialblockdownload" => @ibd,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
-          "pruned" => false,
-          "softforks" => [],
-          "bip9_softforks" => {},
-          "warnings" => ""
-        },
-        160300 => {
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          # "difficulty" => 5883988430955.408,
-          "mediantime" => 1548515214,
-          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-          "initialblockdownload" => @ibd,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
-          "pruned" => false,
-          "softforks" => [],
-          "bip9_softforks" => {},
-          "warnings" => ""
-        },
-        130000 => {
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          # "difficulty" => 1,
-          "mediantime" => 1232327230,
-          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-          "pruned" => false,
-          "softforks" => [],
-          "bip9_softforks" => {
+      if @client_type == :core
+        raise Bitcoiner::Client::JSONRPCError if @version < 100000
+        res = {
+          170100 => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            # "difficulty" => 5883988430955.408,
+            "mediantime" => 1548515214,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "initialblockdownload" => @ibd,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+            "pruned" => false,
+            "softforks" => [],
+            "bip9_softforks" => {},
+            "warnings" => ""
+          },
+          160300 => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            # "difficulty" => 5883988430955.408,
+            "mediantime" => 1548515214,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "initialblockdownload" => @ibd,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+            "pruned" => false,
+            "softforks" => [],
+            "bip9_softforks" => {},
+            "warnings" => ""
+          },
+          130000 => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            # "difficulty" => 1,
+            "mediantime" => 1232327230,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "pruned" => false,
+            "softforks" => [],
+            "bip9_softforks" => {
+            }
+          },
+          100300 => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            "verificationprogress" => @ibd ? 0.5 : 1.0,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
+          },
+        }
+      elsif @client_type == :btcd
+        res = {
+          120000 => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            # "difficulty" => 1,
+            "mediantime" => 1232327230,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "pruned" => false,
+            "softforks" => [],
+            "bip9_softforks" => {
+            }
+          },
+        }
+      elsif @client_type == :bcoin
+        res = {
+          "v1.0.2" => {
+            "chain" => "main",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            # "difficulty" => 7934713219630.606,
+            "mediantime" => 1562238877,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "pruned" => true,
+            "softforks" => [],
+            "bip9_softforks" => {},
+            "pruneheight" => @height - 1000
           }
-        },
-        100300 => {
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          "verificationprogress" => @ibd ? 0.5 : 1.0,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
-        },
-        "v1.0.2" => {
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          # "difficulty" => 1,
-          "mediantime" => 1232327230,
-          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-          "pruned" => false,
-          "softforks" => [],
-          "bip9_softforks" => {
-          }
-        },
-      }[@version]
+        }
+      end
     elsif @coin == "BCH"
-      {
+      res = {
         180500 => { # Copied from BTC
           "chain" => "main",
           "blocks" => @height,
@@ -281,9 +334,9 @@ class BitcoinClientMock
           "bip9_softforks" => {},
           "warnings" => ""
         }
-      }[@version]
+      }
     else # BSV
-      {
+      res = {
         180500 => { # Copied from BTC
           "chain" => "main",
           "blocks" => @height,
@@ -300,8 +353,10 @@ class BitcoinClientMock
           "bip9_softforks" => {},
           "warnings" => ""
         }
-      }[@version]
+      }
     end
+    throw "No getblockchaininfo mock for #{ @client_type }" unless res.present?
+    res[@version]
   end
 
   def getblockhash(height)
@@ -329,10 +384,10 @@ class BitcoinClientMock
       raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
       return @block_headers[hash].tap { |b| b.delete("mediantime") && b.delete("time") && b.delete("chainwork") }
     else
-      # Added in v0.12
       throw "Must provide hash" if hash_or_height.is_a?(Numeric)
       hash = hash_or_height
-      raise Bitcoiner::Client::JSONRPCError, hash if @version < 120000
+      # Added in Bitcoin Core v0.12
+      raise Bitcoiner::Client::JSONRPCError, hash if @client_type == :core && @version < 120000
       raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
       return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
     end
