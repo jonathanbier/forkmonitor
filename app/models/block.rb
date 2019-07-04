@@ -163,8 +163,8 @@ class Block < ApplicationRecord
       end
 
       block.find_ancestors!(node)
-    rescue
-      raise if Rails.env.test?
+    rescue PG::UniqueViolation
+      raise unless Rails.env.production?
       retry
     end
     return block
