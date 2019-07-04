@@ -48,4 +48,9 @@ describe('Node', () => {
 
   });
 
+
+  test('should indicate when behind', () => {
+    wrapper.setProps({node: {height: 500000 - 2 }});
+    expect(wrapper.text()).toContain("2 blocks behind");
+  });
 });
