@@ -334,7 +334,11 @@ class Node < ApplicationRecord
     return nil unless self.core? || self.abc? || self.sv?
     block_info = block_info || self.client.getblock(block_hash)
     tx_id = block_info["tx"].first
-    coinbase = self.client.getrawtransaction(tx_id, true)
+    if self.core? && self.version && self.version >= 160000
+      coinbase = self.client.getrawtransaction(tx_id, true, block_hash)
+    else
+      coinbase = self.client.getrawtransaction(tx_id, true)
+    end
     return Block.pool_from_coinbase_tx(coinbase)
   end
 

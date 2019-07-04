@@ -426,7 +426,7 @@ class BitcoinClientMock
     throw "No mock txoutset for height #{ @height }"
   end
 
-  def getrawtransaction(tx_hash, verbose = false)
+  def getrawtransaction(tx_hash, verbose = false, block_hash = nil)
     return {}
   end
 
