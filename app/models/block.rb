@@ -68,6 +68,41 @@ class Block < ApplicationRecord
     end
   end
 
+  def self.pool_from_coinbase_tx(tx)
+    return nil if tx["vin"].nil? || tx["vin"].empty?
+    coinbase = nil
+    tx["vin"].each do |vin|
+      coinbase = vin["coinbase"]
+      break if coinbase.present?
+    end
+    throw "not a coinbase" if coinbase.nil?
+    message = [coinbase].pack('H*')
+
+    pools_ascii = {
+      "AntPool" => "Antpool",
+      "BTC.COM" => "BTC.com",
+      "/slush/" => "SlushPool",
+      "/ViaBTC/" => "ViaBTC",
+      "/BTC.TOP/" => "BTC.TOP",
+      "/Bitfury/" => "BitFury",
+      "/BitClub Network/" => "BitClub",
+      "BitMinter" => "BitMinter",
+      "/pool.bitcoin.com/" => "bitcoin.com",
+    }
+
+    pools_utf8 = {
+        "🐟" => "F2Pool"
+    }
+
+    pools_ascii.each do |match, name|
+      return name if message.include?(match)
+    end
+    message_utf8 = message.force_encoding('UTF-8')
+    pools_utf8.each do |match, name|
+      return name if message_utf8.include?(match)
+    end
+    return nil
+  end
 
   def self.check_inflation!
     # Use the latest node for this check
