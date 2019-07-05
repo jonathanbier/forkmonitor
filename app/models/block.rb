@@ -172,7 +172,7 @@ class Block < ApplicationRecord
       end
 
       block.find_ancestors!(node)
-    rescue PG::UniqueViolation
+    rescue ActiveRecord::RecordNotUnique
       raise unless Rails.env.production?
       retry
     end
