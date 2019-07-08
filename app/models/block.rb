@@ -66,25 +66,29 @@ class Block < ApplicationRecord
           block_info = node.client.getblock(block_info["previousblockhash"])
         end
 
-        # Set pool:
-        pool = node.get_pool_for_block!(block_info["hash"], block_info)
-
-        parent = Block.create(
-          coin: self.coin,
-          block_hash: block_info["hash"],
-          height: block_info["height"],
-          mediantime: block_info["mediantime"],
-          timestamp: block_info["time"],
-          work: block_info["chainwork"],
-          version: block_info["version"],
-          first_seen_by: node,
-          pool: pool
-        )
+        parent = Block.create_with(block_info, node)
         block.update parent: parent
       end
       block_id = parent.id
     end
   end
+
+  def self.create_with(block_info, node)
+    # Set pool:
+    pool = node.get_pool_for_block!(block_info["hash"], block_info)
+
+    Block.create(
+     coin: node.coin.downcase.to_sym,
+     block_hash: block_info["hash"],
+     height: block_info["height"],
+     mediantime: block_info["mediantime"],
+     timestamp: block_info["time"],
+     work: block_info["chainwork"],
+     version: block_info["version"],
+     first_seen_by: node,
+     pool: pool
+   )
+ end
 
   def self.pool_from_coinbase_tx(tx)
     return nil if tx["vin"].nil? || tx["vin"].empty?
@@ -168,20 +172,7 @@ class Block < ApplicationRecord
           block_info = node.client.getblock(hash)
         end
 
-        pool = node.get_pool_for_block!(block_info["hash"], block_info)
-
-        block = Block.create(
-          coin: node.coin.downcase.to_sym,
-          block_hash: block_info["hash"],
-          height: block_info["height"],
-          mediantime: block_info["mediantime"],
-          timestamp: block_info["time"],
-          work: block_info["chainwork"],
-          version: block_info["version"],
-          first_seen_by: node,
-          pool: pool
-        )
-
+        block = Block.create_with(block_info, node)
       end
 
       block.find_ancestors!(node)
