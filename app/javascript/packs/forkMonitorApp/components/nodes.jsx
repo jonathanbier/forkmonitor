@@ -102,9 +102,10 @@ class Nodes extends React.Component {
                 <UncontrolledAlert color="danger" key={invalid_block.id}>
                   <NodeName node={invalid_block.node} /> considers
                   block { invalid_block.block.hash } at height { invalid_block.block.height } invalid.
+                  This block was mined by { invalid_block.block.pool ? invalid_block.block.pool : "an unknown pool" }.
                   { invalid_block.block.first_seen_by &&
                     <span>
-                      { } This block was first seen and accepted as valid by <NodeName node={invalid_block.block.first_seen_by} />.
+                      {} It was first seen and accepted as valid by <NodeName node={invalid_block.block.first_seen_by} />.
                     </span>
                   }
 

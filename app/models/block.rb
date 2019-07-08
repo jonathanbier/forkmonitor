@@ -13,6 +13,7 @@ class Block < ApplicationRecord
       hash: block_hash,
       timestamp: timestamp,
       work: log2_pow,
+      pool: pool,
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
         name: first_seen_by.name,

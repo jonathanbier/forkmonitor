@@ -11,4 +11,9 @@ class NodesMailerPreview < ActionMailer::Preview
     @orphan_candidate = OrphanCandidate.new(height: Block.last.height, coin: :btc)
     UserMailer.with(user: User.first, orphan_candidate: @orphan_candidate).orphan_candidate_email
   end
+
+  def invalid_block_email
+    @invalid_block = InvalidBlock.new(block: Block.last, node: Node.last)
+    UserMailer.with(user: User.first, invalid_block: @invalid_block).invalid_block_email
+  end
 end
