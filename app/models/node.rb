@@ -31,11 +31,11 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :name, :version, :unreachable_since, :ibd, :client_type]
+    fields = [:id, :unreachable_since, :ibd, :client_type]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword
     end
-    super({ only: fields }.merge(options || {})).merge({height: block && block.height})
+    super({ only: fields }.merge(options || {})).merge({height: block && block.height, name_with_version: name_with_version})
   end
 
   def client

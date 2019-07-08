@@ -18,8 +18,7 @@ class Block < ApplicationRecord
       size: size,
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
-        name: first_seen_by.name,
-        version: first_seen_by.version
+        name_with_version: first_seen_by.name_with_version
       } : nil})
   end
 
