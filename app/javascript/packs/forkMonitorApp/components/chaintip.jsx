@@ -13,40 +13,28 @@ import {
 import Node from './node';
 
 class Chaintip extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      coin: props.coin,
-      nodes: props.nodes,
-      chaintip: props.chaintip,
-      index: props.index,
-      last: props.last
-    };
-  }
-
   render() {
     return(
         <Row><Col>
           <Breadcrumb>
             <BreadcrumbItem active className="chaintip-hash">
-              Chaintip: { this.state.chaintip.block.hash }
+              Chaintip: { this.props.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
-          <p>
-            Height: <NumberFormat value={ this.state.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.state.chaintip.block.timestamp}</Moment> UTC)
+          <p className="chaintip-info">
+            Height: <NumberFormat value={ this.props.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.props.chaintip.block.timestamp}</Moment> UTC)
             <br/>
-            Accumulated log2(PoW): <NumberFormat value={this.state.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
+            Accumulated log2(PoW): <NumberFormat value={this.props.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
           </p>
           Nodes:
           <ul>
-          {this.state.chaintip.nodes.map(function (node, index) {
+          {this.props.chaintip.nodes.map(function (node, index) {
             return (
-              <Node node={ node } key={node.id} chaintip={ this.state.chaintip } className="pull-left node-info" />
+              <Node node={ node } key={node.id} chaintip={ this.props.chaintip } className="pull-left node-info" />
             )
           }.bind(this))}
           </ul>
-          {  this.state.last &&
+          {  this.props.last &&
             <hr/>
           }
         </Col>
