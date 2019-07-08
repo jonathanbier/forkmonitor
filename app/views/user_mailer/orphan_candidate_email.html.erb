@@ -2,7 +2,14 @@
   We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
   <ul>
     <% @blocks.each do | block | %>
-      <li><%= block.block_hash %></li>
+      <li>
+        <%= block.block_hash %>
+        <% if block.pool.present? %>
+          (<%= block.pool %>)
+        <% else %>
+          (unknown pool)
+        <% end %>
+      </li>
     <% end %>
   </ul>
 </p>
