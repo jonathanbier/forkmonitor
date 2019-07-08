@@ -17,6 +17,11 @@
 <% end %>
 </ul>
 
+<% if @bit >= 13 %>
+<a href="https://github.com/bitcoin/bips/blob/master/bip-0320.mediawiki">BIP-320</a>
+proposes to make this bit available for generale purpose use.
+<% end %>
+
 <p>
   For more information, see: <%= nodes_for_coin_url(@block.coin.downcase) %>
 </p>
