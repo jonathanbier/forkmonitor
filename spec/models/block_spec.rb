@@ -10,6 +10,18 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "version_bits" do
+    it "should be empty by default" do
+      block = create(:block)
+      expect(block.version_bits).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    end
+
+    it "should detect bit 1" do
+      block = create(:block, version: 0x20000001)
+      expect(block.version_bits).to eq([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+    end
+  end
+
   describe "self.pool_from_coinbase_tx" do
     it "should find Antpool" do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true

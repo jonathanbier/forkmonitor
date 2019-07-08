@@ -5,6 +5,7 @@ FactoryBot.define do
      sequence(:timestamp) { |n| 1500000000 + 60 * 10 * n }
      sequence(:work) { |n| n.to_s(16).rjust(32,"0") }
      coin { :btc }
+     version { 0x20000000 }
    end
 
    factory :block_first_seen_by, parent: :block do

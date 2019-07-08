@@ -236,15 +236,7 @@ class Node < ApplicationRecord
         exit(1)
       end
 
-      # First three bits of field have no meaning in BIP9. nVersion is a little-endian
-      # signed integer that must be greater than 2, which is 0x0010 in binary and 0x02 in hex.
-      # By setting the least significant byte to >= 0x02 this requirement is met
-      # regardless of the next 3 bytes.
-      # This is why nVersion changed from 4 (0x00000004) to 536870912 (0x20000000) for most blocks.
-      # In fact, nVersion 4 (0x00000004) would now indicate signalling for a soft fork on bit 26.
-      #        mask: 0xe0000000 (bit 0-28)
-      # BIP320 mask: 0xe0001fff (loses bit 13-28)
-      versions_window.push(("%.32b" % (block.version & ~0xe0000000)).split("").drop(3).reverse().collect{|s|s.to_i})
+      versions_window.push(block.version_bits)
       break unless block = block.parent
     end
 
