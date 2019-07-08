@@ -1,4 +1,21 @@
-This could either indicate signalling for an unknown new softfork or miner grinding the block version field.
+<p>This could either indicate signalling for an unknown new softfork or miner grinding the block version field.</p>
+
+<p>The following blocks signalled bit <%= @bit %>:</p>
+
+<ul>
+<% block = @block %>
+<% while block.present? && block.height > @block.height - @window %>
+  <% if block.version_bits[@bit - 1] == 1 %>
+    <li>
+      <%= block.height %>
+      <% if block.pool.present? %>
+        (<%= block.pool %>)
+      <% end %>
+    </li>
+  <% end %>
+  <% block = block.parent %>
+<% end %>
+</ul>
 
 <p>
   For more information, see: <%= nodes_for_coin_url(@block.coin.downcase) %>
