@@ -40,7 +40,7 @@ export const NodeList = props => (
             <TextField source="coin" />
             <TextField source="client_type" />
             <TextField source="name"/>
-            <TextField source="version" />
+            <TextField source="version_extra" />
             <DateField source="unreachable_since" />
         </Datagrid>
     </List>
@@ -52,6 +52,7 @@ export const NodeEdit = props => (
             <SelectInput source="coin" choices={ coin_choices } />
             <TextInput source="name" />
             <SelectInput source="client_type" choices={ client_choices } />
+            <TextInput source="version_extra" />
             <TextInput source="rpchost" />
             <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />
@@ -66,6 +67,7 @@ export const NodeCreate = props => (
             <SelectInput source="coin" defaultValue="BTC" choices={ coin_choices } />
             <TextInput source="name" defaultValue="Bitcoin Core" />
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
+            <TextInput source="version_extra" />
             <TextInput source="rpchost" />
             <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />

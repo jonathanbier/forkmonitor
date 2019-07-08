@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_07_08_132128) do
+ActiveRecord::Schema.define(version: 2019_07_08_145802) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -89,6 +89,7 @@ ActiveRecord::Schema.define(version: 2019_07_08_132128) do
     t.integer "client_type"
     t.integer "rpcport"
     t.integer "block_id"
+    t.string "version_extra", default: "", null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
   end
 

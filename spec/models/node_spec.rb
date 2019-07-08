@@ -23,6 +23,12 @@ RSpec.describe Node, :type => :model do
       node = create(:node, version: 170000)
       expect(node.name_with_version).to eq("Bitcoin Core 0.17.0")
     end
+
+    it "should append version_extra" do
+      node = create(:node, version: 170000, version_extra: "rc1")
+      expect(node.name_with_version).to eq("Bitcoin Core 0.17.0rc1")
+    end
+
   end
 
   describe "poll!" do
