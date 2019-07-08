@@ -78,6 +78,10 @@ class Block < ApplicationRecord
     # Set pool:
     pool = node.get_pool_for_block!(block_info["hash"], block_info)
 
+    tx_count = block_info["nTx"].present? ? block_info["nTx"] :
+               block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
+               nil
+
     Block.create(
      coin: node.coin.downcase.to_sym,
      block_hash: block_info["hash"],
@@ -86,7 +90,7 @@ class Block < ApplicationRecord
      timestamp: block_info["time"],
      work: block_info["chainwork"],
      version: block_info["version"],
-     tx_count: block_info["nTx"],
+     tx_count:  tx_count,
      size: block_info["size"],
      first_seen_by: node,
      pool: pool
