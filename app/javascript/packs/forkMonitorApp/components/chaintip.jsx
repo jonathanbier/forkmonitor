@@ -25,6 +25,11 @@ class Chaintip extends React.Component {
             Height: <NumberFormat value={ this.props.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" parse="X">{this.props.chaintip.block.timestamp}</Moment> UTC)
             <br/>
             Accumulated log2(PoW): <NumberFormat value={this.props.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
+            { this.props.chaintip.block.size &&
+                <span><br />Latest blocksize: <NumberFormat value={ this.props.chaintip.block.size / 1000000 } displayType={'text'} thousandSeparator={true} decimalScale={2} fixedDecimalScale={true} /> MB</span>
+            }
+            <br />
+            Latest block transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
           </p>
           Nodes:
           <ul>
