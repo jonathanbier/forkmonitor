@@ -23,7 +23,7 @@ const chaintip = {
     nodes: mockNodes
 }
 
-test('rendered component', () => {
+describe('rendered component', () => {
 
   const wrapper = shallow(<Chaintip
     key={ chaintip.hash }
@@ -32,5 +32,8 @@ test('rendered component', () => {
     index={ 0 }
     last={ true }
   />);
-  expect(wrapper.find('.node-info')).toHaveLength(2);
+
+  test('should contain two nodes', () => {
+    expect(wrapper.find('.node-info')).toHaveLength(2);
+  });
 });
