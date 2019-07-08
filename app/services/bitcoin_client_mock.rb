@@ -391,7 +391,7 @@ class BitcoinClientMock
       # Added in Bitcoin Core v0.12
       raise Bitcoiner::Client::JSONRPCError, hash if @client_type == :core && @version < 120000
       raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
-      return @block_headers[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+      return @block_headers[hash].tap { |b| b.delete("size"); b.delete("mediantime") if @version <= 100300 }
     end
   end
 
@@ -447,9 +447,13 @@ class BitcoinClientMock
     @block_headers[block_hash] = header
     @blocks[block_hash] = header
     @blocks[block_hash]["tx"] = []
+    @blocks[block_hash]["nTx"] = 0
+    @blocks[block_hash]["size"] = 100
   end
 
   def mock_add_transaction(block_hash, tx_hash)
     @blocks[block_hash]["tx"] << tx_hash
+    @blocks[block_hash]["nTx"] = @blocks[block_hash]["nTx"] + 1
+    @blocks[block_hash]["size"] = @blocks[block_hash]["size"] + 150
   end
 end

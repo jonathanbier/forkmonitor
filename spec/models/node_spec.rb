@@ -102,6 +102,13 @@ RSpec.describe Node, :type => :model do
         expect(@node.block.pool).to eq("Antpool")
       end
 
+      it "should store size and number of transactions in block" do
+        @node.client.mock_set_height(560182)
+        @node.poll!
+        expect(@node.block.tx_count).to eq(1)
+        expect(@node.block.size).to eq(250)
+      end
+
       it "should store intermediate blocks" do
         @node.client.mock_set_height(560179)
         @node.poll!

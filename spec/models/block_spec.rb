@@ -22,6 +22,49 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "create_with" do
+    before do
+      @node = build(:node)
+      @block_info = {
+        "hash" => "000000000000000000063d6a38161b2a69ba6bfe84f31272ffc3c36308b55574",
+        "confirmations" => 1,
+        "strippedsize" => 889912,
+        "size" => 1328797,
+        "weight" => 3998533,
+        "height" => 584492,
+        "version" => 536870912,
+        "versionHex" => "20000000",
+        "merkleroot" => "32a561821430a709585266f9642a6dd808de59eea5b198497f577127b4a4e3e8",
+        "tx" => [
+        ],
+        "time" => 1562591342,
+        "mediantime" => 1562589082,
+        "nonce" => 663397958,
+        "bits" => "1723792c",
+        "difficulty" => 7934713219630.606,
+        "chainwork" => "00000000000000000000000000000000000000000714a4cd58e70c3c61429c91",
+        "nTx" => 3024,
+        "previousblockhash" => "00000000000000000005b127b27cc0771e1b0fcb18dcba4c0644f2bb4dc90597"
+      }
+    end
+
+    it "should store the version" do
+      @block = Block.create_with(@block_info, @node)
+      expect(@block.version).to eq(536870912)
+    end
+
+    it "should store number of transactions" do
+      @block = Block.create_with(@block_info, @node)
+      expect(@block.tx_count).to eq(3024)
+    end
+
+    it "should store size" do
+      @block = Block.create_with(@block_info, @node)
+      expect(@block.size).to eq(1328797)
+    end
+
+  end
+
   describe "self.pool_from_coinbase_tx" do
     it "should find Antpool" do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true

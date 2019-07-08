@@ -14,6 +14,8 @@ class Block < ApplicationRecord
       timestamp: timestamp,
       work: log2_pow,
       pool: pool,
+      tx_count: tx_count,
+      size: size,
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
         name: first_seen_by.name,
@@ -85,6 +87,8 @@ class Block < ApplicationRecord
      timestamp: block_info["time"],
      work: block_info["chainwork"],
      version: block_info["version"],
+     tx_count: block_info["nTx"],
+     size: block_info["size"],
      first_seen_by: node,
      pool: pool
    )
