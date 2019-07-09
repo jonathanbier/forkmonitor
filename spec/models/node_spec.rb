@@ -19,6 +19,11 @@ RSpec.describe Node, :type => :model do
       expect(node.name_with_version).to eq("Bitcoin Core 1.0.0")
     end
 
+    it "should handle clients that self identify with four digits" do
+      node = create(:node, version: 1060000, client_type: :bu, name: "Bitcoin Unlimited")
+      expect(node.name_with_version).to eq("Bitcoin Unlimited 1.6.0.0")
+    end
+
     it "should drop the 4th digit if zero" do
       node = create(:node, version: 170000)
       expect(node.name_with_version).to eq("Bitcoin Core 0.17.0")
@@ -27,6 +32,17 @@ RSpec.describe Node, :type => :model do
     it "should append version_extra" do
       node = create(:node, version: 170000, version_extra: "rc1")
       expect(node.name_with_version).to eq("Bitcoin Core 0.17.0rc1")
+    end
+
+    it "should hide version if absent" do
+      node = create(:node, version: nil, client_type: :libbitcoin, name: "Libbitcoin")
+      expect(node.name_with_version).to eq("Libbitcoin")
+    end
+
+    # https://github.com/bitcoin-sv/bitcoin-sv/blob/v0.1.1/src/clientversion.h#L57-L64
+    it "should handle SV version shift" do
+      node = create(:node, version: 100010000, client_type: :sv, name: "Bitcoin SV")
+      expect(node.name_with_version).to eq("Bitcoin SV 0.1.0")
     end
 
   end
