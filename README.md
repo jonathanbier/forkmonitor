@@ -119,3 +119,12 @@ To investigate orphaned blocks (`valid-fork`), use the node id and chaintip hash
 ```rb
 rake blocks:investigate_chaintip[NODE_ID,CHAINTIP_HASH]
 ```
+
+Generate a `VAPID_PUBLIC_KEY` and `VAPID_PRIVATEY_KEY` for push notifications, using `rails console`:
+
+```rb
+require 'webpush'
+vapid_key = Webpush.generate_key
+vapid_key.public_key
+vapid_key.private_key
+```

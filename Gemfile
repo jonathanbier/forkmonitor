@@ -37,6 +37,10 @@ gem 'rack-cors', require: 'rack/cors'
 # Authentication
 gem 'devise-jwt'
 
+# Push notifications
+gem 'serviceworker-rails'
+gem 'webpush'
+
 # Email when something breaks
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
