@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       resources :version_bits, only: [:show]
       resources :orphan_candidates, only: [:index, :show]
       resources :blocks, only: [:index]
+      resources :subscriptions, only: [:create]
     end
   end
 
