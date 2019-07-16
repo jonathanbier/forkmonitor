@@ -128,3 +128,12 @@ vapid_key = Webpush.generate_key
 vapid_key.public_key
 vapid_key.private_key
 ```
+
+Also provide a contact email via `VAPID_CONTACT_EMAIL=`.
+
+To test notifications, open the site in Chrome and give permission, and then:
+
+```rb
+@subscription = Subscription.last
+Webpush.payload_send(endpoint: @subscription.endpoint, message: "tag|title|body", p256dh: @subscription.p256dh, auth: @subscription.auth, vapid: { subject: "mailto:" + ENV['VAPID_CONTACT_EMAIL'], public_key: ENV['VAPID_PUBLIC_KEY'] , private_key: ENV['VAPID_PRIVATE_KEY'] }, ttl: 60 * 60)
+```

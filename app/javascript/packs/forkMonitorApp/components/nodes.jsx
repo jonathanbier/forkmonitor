@@ -2,6 +2,8 @@ import React from 'react';
 
 import axios from 'axios';
 
+import Base64Binary from './base64';
+
 import {
     Container,
     TabPane,
@@ -28,6 +30,59 @@ class Nodes extends React.Component {
     this.getChaintips = this.getChaintips.bind(this);
     this.getNodes = this.getNodes.bind(this);
     this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
+
+    // if (/firefox/i.test(navigator.userAgent)) {
+      // var vapidPublicKey = process.env['VAPID_PUBLIC_KEY'];
+    // } else {
+      var vapidPublicKey = Base64Binary.decode(process.env['VAPID_PUBLIC_KEY']);
+    // }
+
+    function checkNotifs(obj){
+      if (!("Notification" in window)) {
+        return;
+      }
+      // Check whether notification permissions have already been granted
+      if (Notification.permission === "granted") {
+        getKeys();
+        return;
+      }
+      // TODO: move this to button
+      // Ask the user for permission
+      if (Notification.permission !== 'denied') {
+        Notification.requestPermission(function (permission) {
+          // If the user accepts, let's create a notification
+          if (permission === "granted") {
+            getKeys();
+          }
+        });
+      }
+   }
+
+   function getKeys(){
+     navigator.serviceWorker.register('/serviceworker.js', {scope: './'})
+       .then(function(registration) {
+         return registration.pushManager.getSubscription()
+           .then(function(subscription) {
+             if (subscription) {
+               return subscription;
+             }
+             return registration.pushManager.subscribe({
+               userVisibleOnly: true,
+               applicationServerKey: vapidPublicKey
+             }).then(function(subscription) {
+               axios.post('/api/v1/subscriptions', {
+                 subscription: subscription
+               }).then(function (response) {
+                 return response.data;
+               }).catch(function (error) {
+                 console.error(error);
+               });
+             });
+           });
+       });
+     }
+
+     checkNotifs()
   }
 
   componentDidMount() {

@@ -1,0 +1,14 @@
+self.addEventListener("push", function(event) {
+  var components = event.data && event.data.text().split("|");
+  var tag = components[0];
+  var title = components[1];
+  var body = components[2];
+
+  event.waitUntil(
+      self.registration.showNotification(title, {
+          body: body,
+          icon: "<%= asset_path 'favicon/favicon-32x32.png' %>",
+          tag: tag
+      })
+  );
+});
