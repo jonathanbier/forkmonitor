@@ -25,6 +25,8 @@ import {
   LinkContainer
 } from 'react-router-bootstrap'
 
+import withTracker from './withTracker';
+
 import LogoImage from '../assets/images/logo.png'
 
 import classnames from 'classnames';
@@ -73,7 +75,7 @@ class Navigation extends React.Component {
             <TabContent>
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
-                <Route path='/nodes/:coin' component={Nodes} />
+                <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
               </Switch>
             </TabContent>
