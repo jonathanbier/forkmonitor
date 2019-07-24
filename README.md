@@ -1,35 +1,5 @@
 # Fork Monitor [![Build Status](https://travis-ci.org/BitMEXResearch/forkmonitor.svg?branch=master)](https://travis-ci.org/BitMEXResearch/forkmonitor) [![Coverage Status](https://coveralls.io/repos/github/BitMEXResearch/forkmonitor/badge.svg?branch=master)](https://coveralls.io/github/BitMEXResearch/forkmonitor?branch=master)
 
-## RSS feeds
-
-### Invalid Blocks
-
-https://forkmonitor.info/feeds/invalid_blocks/btc.rss (or `bch.rss`, `bsv.rss`)
-
-Fork Monitor stores all valid blocks in its own database, including intermediate blocks between poll moments, and including `valid-fork` entries from `getchaintips`. It then takes the `invalid` chaintip entries from each node and checks if it knows that block. If so then it sends out an alert.
-
-### Orphan block candidates
-
-https://forkmonitor.info/feeds/orphan_candidates/btc.rss (or `bch.rss`, `bsv.rss`)
-
-Creates an alert if there is more than one block at the tip height of the chain.
-E.g. if there are two blocks at height N then one is expected to get orphaned.
-
-This will not create an alert for all orphan blocks, only those that have been
-processed by our nodes.
-
-### Version bit signaling
-
-https://forkmonitor.info/feeds/version_bits.rss
-
-Version bits flagged in the past 100 blocks (currently uses 10 as lower threshold).
-
-### Lagging test nodes
-
-https://forkmonitor.info/feeds/lagging_nodes.rss
-
-Checks if any of the test nodes fell behind. This doesn't have to be a consensus problem, but we filter common reasons like being offline, in initial block download or not having peers.
-
 ## Development
 
 Install ZeroMQ (for Libbitcoin), e.g. on macOS: `brew install zeromq`

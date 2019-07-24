@@ -7,6 +7,8 @@ import {
     TabPane
 } from 'reactstrap';
 
+import RSSFeeds from './RSSFeeds';
+
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
 class NotificationsPage extends React.Component {
@@ -106,6 +108,8 @@ class NotificationsPage extends React.Component {
             { this.state && this.state.webpush == true &&
               <p>Browser push notifications enabled. You can close this page.</p>
             }
+            <br />
+            <RSSFeeds />
           </Container>
         </TabPane>
       );
