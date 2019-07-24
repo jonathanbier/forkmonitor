@@ -14,6 +14,9 @@ import {
     TabContent,
 } from 'reactstrap';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRss } from '@fortawesome/free-solid-svg-icons'
+
 import {
   BrowserRouter as Router,
   Route,
@@ -66,7 +69,7 @@ class Navigation extends React.Component {
               </NavItem>
               <NavItem className="NavItem">
                 <LinkContainer to="/notifications">
-                  <NavLink>Notifications</NavLink>
+                  <NavLink><FontAwesomeIcon icon={faRss} /></NavLink>
                 </LinkContainer>
               </NavItem>
               {
