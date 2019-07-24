@@ -2,8 +2,6 @@ import React from 'react';
 
 import axios from 'axios';
 
-import Base64Binary from './base64';
-
 import {
     Container,
     TabPane,
@@ -31,11 +29,15 @@ class Nodes extends React.Component {
     this.getNodes = this.getNodes.bind(this);
     this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
 
-    // if (/firefox/i.test(navigator.userAgent)) {
-      // var vapidPublicKey = process.env['VAPID_PUBLIC_KEY'];
-    // } else {
-      var vapidPublicKey = Base64Binary.decode(process.env['VAPID_PUBLIC_KEY']);
-    // }
+    function toByteArray(hexString) {
+      var result = [];
+      for (var i = 0; i < hexString.length; i += 2) {
+        result.push(parseInt(hexString.substr(i, 2), 16));
+      }
+      return new Uint8Array(result);
+    }
+
+    var vapidPublicKey = toByteArray(process.env['VAPID_PUBLIC_KEY']);
 
     function checkNotifs(obj){
       if (!("Notification" in window)) {
