@@ -102,6 +102,10 @@ class NotificationsPage extends React.Component {
           <br />
           <Container>
             <h2>Browser push notifications</h2>
+            <p>
+              We currently send browser push notifications for invalid blocks
+              and orphan candidates.
+            </p>
             { this.state && this.state.webpush == false &&
               <p>Browser push notification permission denied</p>
             }

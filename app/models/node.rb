@@ -425,6 +425,10 @@ class Node < ApplicationRecord
             UserMailer.with(user: user, orphan_candidate: @orphan_candidate).orphan_candidate_email.deliver
           end
           @orphan_candidate.update notified_at: Time.now
+          Subscription.blast("orphan-candidate-#{ @orphan_candidate.id }",
+                             "#{ @orphan_candidate.coin.upcase } orphan candidate",
+                             "At height #{ @orphan_candidate.height }"
+          )
         end
       end
     end

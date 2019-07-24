@@ -64,6 +64,10 @@ class Chaintip < ApplicationRecord
           UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
         end
         invalid_block.update notified_at: Time.now
+        Subscription.blast("invalid-block-#{ invalid_block.id }",
+                           "Invalid block",
+                           "#{ invalid_block.node.name_with_version } considers #{ invalid_block.block.coin.upcase } block { @invalid_block.block.height } ({ @invalid_block.block.block_hash }) invalid",
+        )
       end
     end
   end
