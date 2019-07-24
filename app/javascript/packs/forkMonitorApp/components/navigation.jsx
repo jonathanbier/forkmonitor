@@ -33,6 +33,7 @@ import classnames from 'classnames';
 
 import Nodes from './nodes';
 import AdminPage from './adminPage';
+import NotificationsPage from './notificationsPage';
 
 class Navigation extends React.Component {
   constructor(props) {
@@ -63,6 +64,11 @@ class Navigation extends React.Component {
                   <NavLink>Bitcoin SV</NavLink>
                 </LinkContainer>
               </NavItem>
+              <NavItem className="NavItem">
+                <LinkContainer to="/notifications">
+                  <NavLink>Notifications</NavLink>
+                </LinkContainer>
+              </NavItem>
               {
                 window.location.pathname == "/admin" &&
                 <NavItem className="NavItem">
@@ -77,6 +83,7 @@ class Navigation extends React.Component {
                 <Redirect exact path="/" to="/nodes/btc" />
                 <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
+                <Route path='/notifications' component={NotificationsPage} />
               </Switch>
             </TabContent>
           </div>
