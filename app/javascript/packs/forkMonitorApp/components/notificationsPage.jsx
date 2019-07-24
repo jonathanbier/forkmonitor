@@ -86,7 +86,7 @@ class NotificationsPage extends React.Component {
             });
          });
       });
-    });
+    }).catch(console.error);
   }
 
   componentDidMount() {
