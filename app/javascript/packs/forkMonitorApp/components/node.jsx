@@ -9,6 +9,7 @@ import {
 } from 'reactstrap';
 
 import NodeName from './nodeName';
+import NodeInfo from './nodeInfo';
 import NodeBehind from './nodeBehind';
 
 class Node extends React.Component {
@@ -25,6 +26,7 @@ class Node extends React.Component {
       <li>
         <b>
           <NodeName node={this.props.node} />
+          <NodeInfo node={this.props.node} />
           <span> {badge}</span>
         </b>
         <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node }/>
