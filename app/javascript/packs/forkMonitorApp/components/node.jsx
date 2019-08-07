@@ -11,6 +11,7 @@ import {
 import NodeName from './nodeName';
 import NodeInfo from './nodeInfo';
 import NodeBehind from './nodeBehind';
+import NodeBehindBlocks from './nodeBehindBlocks';
 
 class Node extends React.Component {
   render() {
@@ -25,10 +26,11 @@ class Node extends React.Component {
     return(
       <tr>
         <td>
+          <NodeBehindBlocks chaintip={ this.props.chaintip } node={ this.props.node }/>
           <NodeName node={this.props.node} />
-          <NodeInfo node={this.props.node} />
+          <NodeInfo chaintip={ this.props.chaintip } node={this.props.node} />
           <span> {badge}</span>
-          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node }/>
+          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } min={ 2 } />
         </td>
       </tr>
     )

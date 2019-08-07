@@ -1,5 +1,7 @@
 import React from 'react';
 
+import NodeBehind from './nodeBehind';
+
 import { Tooltip } from 'reactstrap';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -32,9 +34,10 @@ class NodeInfo extends React.Component {
           toggle={this.toggle}
           boundariesElement="window"
           modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
-          style={{maxWidth: "100%"}}
+          style={{maxWidth: "100%", textAlign: "left"}}
         >
-          <ul style={{textAlign: "left", paddingLeft: 0, marginBottom: 0}}>
+          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } min={ 1 } verbose={ true } />
+          <ul style={{paddingLeft: 0, marginBottom: 0}}>
             <li>Operating system: { this.props.node.os }</li>
             <li>CPU: { this.props.node.cpu }</li>
             <li>RAM: { this.props.node.ram } GB</li>
