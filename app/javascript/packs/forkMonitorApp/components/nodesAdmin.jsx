@@ -38,9 +38,7 @@ export const NodeList = props => (
         <Datagrid rowClick="edit">
             <NumberField source="id" />
             <TextField source="coin" />
-            <TextField source="client_type" />
-            <TextField source="name"/>
-            <TextField source="version_extra" />
+            <TextField source="name_with_version" />
             <DateField source="unreachable_since" />
         </Datagrid>
     </List>
