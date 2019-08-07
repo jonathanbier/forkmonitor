@@ -47,9 +47,8 @@ export const NodeList = props => (
 export const NodeEdit = props => (
     <Edit {...props}>
         <SimpleForm>
-            <SelectInput source="coin" choices={ coin_choices } />
-            <TextInput source="name" />
-            <SelectInput source="client_type" choices={ client_choices } />
+            <TextField source="coin" />
+            <TextField source="name_with_version" readOnly />
             <TextInput source="version_extra" />
             <TextInput source="rpchost" />
             <NumberInput source="rpcport" />
