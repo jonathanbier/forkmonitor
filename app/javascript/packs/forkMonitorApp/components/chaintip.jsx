@@ -8,7 +8,8 @@ import {
     Row,
     Col,
     BreadcrumbItem,
-    Breadcrumb
+    Breadcrumb,
+    Table
 } from 'reactstrap';
 
 import Node from './node';
@@ -32,14 +33,17 @@ class Chaintip extends React.Component {
             <br />
             Latest block transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
           </p>
-          Nodes:
-          <ul>
-          {this.props.chaintip.nodes.map(function (node, index) {
-            return (
-              <Node node={ node } key={node.id} chaintip={ this.props.chaintip } className="pull-left node-info" />
-            )
-          }.bind(this))}
-          </ul>
+          <small>
+            <Table striped>
+              <tbody>
+                {this.props.chaintip.nodes.map(function (node, index) {
+                  return (
+                    <Node node={ node } key={node.id} chaintip={ this.props.chaintip } className="pull-left node-info" />
+                  )
+                }.bind(this))}
+              </tbody>
+            </Table>
+          </small>
           {  this.props.last &&
             <hr/>
           }

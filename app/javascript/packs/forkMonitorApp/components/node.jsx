@@ -23,14 +23,14 @@ class Node extends React.Component {
       badge = <Badge color="success">Online</Badge>;
     }
     return(
-      <li>
-        <b>
+      <tr>
+        <td>
           <NodeName node={this.props.node} />
           <NodeInfo node={this.props.node} />
           <span> {badge}</span>
-        </b>
-        <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node }/>
-      </li>
+          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node }/>
+        </td>
+      </tr>
     )
   }
 }
