@@ -11,7 +11,9 @@ import {
   SimpleForm,
   NumberInput,
   TextInput,
-  SelectInput
+  SelectInput,
+  BooleanInput,
+  DateInput,
 } from 'react-admin';
 
 const coin_choices = [
@@ -54,6 +56,13 @@ export const NodeEdit = props => (
             <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
+            <BooleanInput source="pruned" />
+            <TextInput source="os" />
+            <TextInput source="cpu" />
+            <NumberInput source="ram" />
+            <TextInput source="storage" />
+            <BooleanInput source="cve_2018_17144" />
+            <DateInput source="released" />
         </SimpleForm>
     </Edit>
 );
@@ -69,6 +78,13 @@ export const NodeCreate = props => (
             <NumberInput source="rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
+            <BooleanInput source="pruned" />
+            <TextInput source="os" />
+            <TextInput source="cpu" />
+            <NumberInput source="ram" />
+            <TextInput source="storage" />
+            <BooleanInput source="cve_2018_17144" />
+            <DateInput source="released" />
         </SimpleForm>
     </Create>
 );
