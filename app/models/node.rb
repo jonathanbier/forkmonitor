@@ -4,6 +4,10 @@ class Node < ApplicationRecord
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
 
+  default_scope { where(enabled: true) }
+
+  scope :admin, -> { unscope(:where) }
+
   scope :bitcoin_core_by_version, -> { where(coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
   scope :bitcoin_core_unknown_version, -> { where(coin: "BTC", client_type: :core).where(version: nil) }
   scope :bitcoin_alternative_implementations, -> { where(coin: "BTC"). where.not(client_type: :core) }
@@ -35,7 +39,7 @@ class Node < ApplicationRecord
   def as_json(options = nil)
     fields = [:id, :unreachable_since, :ibd, :client_type, :pruned, :os, :cpu, :ram, :storage, :cve_2018_17144, :released]
     if options && options[:admin]
-      fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword << :version_extra << :name
+      fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
     super({ only: fields }.merge(options || {})).merge({height: block && block.height, name_with_version: name_with_version})
   end

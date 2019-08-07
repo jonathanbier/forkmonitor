@@ -42,6 +42,7 @@ export const NodeList = props => (
             <TextField source="coin" />
             <TextField source="name_with_version" />
             <DateField source="unreachable_since" />
+            <BooleanField source="enabled" />
         </Datagrid>
     </List>
 );
@@ -63,6 +64,7 @@ export const NodeEdit = props => (
             <TextInput source="storage" />
             <BooleanInput source="cve_2018_17144" />
             <DateInput source="released" />
+            <BooleanInput source="enabled" />
         </SimpleForm>
     </Edit>
 );

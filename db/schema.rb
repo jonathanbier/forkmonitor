@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_07_090722) do
+ActiveRecord::Schema.define(version: 2019_08_07_094519) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -97,6 +97,7 @@ ActiveRecord::Schema.define(version: 2019_08_07_090722) do
     t.string "storage"
     t.boolean "cve_2018_17144", default: false, null: false
     t.date "released"
+    t.boolean "enabled", default: true, null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
   end
 
