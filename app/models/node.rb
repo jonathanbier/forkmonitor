@@ -136,11 +136,11 @@ class Node < ApplicationRecord
   # 2. the node has a consensus bug
   def check_chaintips!
     if self.unreachable_since || self.ibd || self.block.nil?
-      # Remove cached chaintips from db and return nil if node is unreachble or in IBD:
+      # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
       Chaintip.where(node: self).destroy_all
       return nil
     else
-      # Delete existing chaintip entries, except the active one (which is unique):
+      # Delete existing chaintip entries, except the active one (which might be unchanged):
       Chaintip.where(node: self).where.not(status: "active").destroy_all
 
       # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:

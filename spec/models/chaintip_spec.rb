@@ -9,10 +9,16 @@ RSpec.describe Chaintip, type: :model do
     let(:nodeB) { create(:node) }
     let(:chaintip1) { create(:chaintip, block: block2, node: nodeA) }
 
-    it "should reuse chaintip for the same block" do
+    it "should update existing chaintip entry if the block changed" do
+      tip_id = chaintip1.id
+      tip = Chaintip.process_active!(nodeA, block3)
+      expect(tip.id).to eq(tip_id)
+    end
+
+    it "should chreate fresh chaintip for the different node" do
       chaintip1 # ensure it's instantiated before the next line
       tip = Chaintip.process_active!(nodeB, block2)
-      expect(tip).to eq(chaintip1)
+      expect(tip).not_to eq(chaintip1)
     end
 
     it "should match parent block" do
@@ -32,27 +38,25 @@ RSpec.describe Chaintip, type: :model do
     end
   end
 
-  describe "nodes / process_active!" do
+  describe "nodes_for_identical_chaintips / process_active!" do
     let(:block1) { create(:block) }
     let(:block2) { create(:block, parent: block1) }
     let(:nodeA) { create(:node, block: block1) }
     let(:nodeB) { create(:node) }
+    let(:nodeC) { create(:node) }
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
+    let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
 
     it "should only support the active chaintip" do
       chaintip1.update status: "invalid"
-      assert_nil chaintip1.nodes
-    end
-
-    it "should the original node for this active chaintip" do
-      assert_equal chaintip1.nodes, [nodeA]
+      assert_nil chaintip1.nodes_for_identical_chaintips
     end
 
     it "should show all nodes at height of active chaintip" do
       nodeB.update block: block1
       Chaintip.process_active!(nodeB, block1)
-      assert_equal 2, chaintip1.nodes.count
-      assert_equal [nodeA, nodeB], chaintip1.nodes
+      assert_equal 2, chaintip1.nodes_for_identical_chaintips.count
+      assert_equal [nodeB, nodeA], chaintip1.nodes_for_identical_chaintips
     end
 
     it "should include parent blocks in chaintip" do
@@ -60,8 +64,8 @@ RSpec.describe Chaintip, type: :model do
       nodeA.update block: block2
       nodeB.update block: block1
       Chaintip.process_active!(nodeB, block1)
-      assert_equal 2, chaintip1.nodes.count
-      assert_equal [nodeA, nodeB], chaintip1.nodes
+      assert_equal 2, chaintip1.nodes_for_identical_chaintips.count
+      assert_equal [nodeA, nodeB], chaintip1.nodes_for_identical_chaintips
     end
 
   end

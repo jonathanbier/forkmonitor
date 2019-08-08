@@ -8,20 +8,23 @@ class Chaintip < ApplicationRecord
 
   validates :status, uniqueness: { scope: :node}
 
-  def nodes
+  def nodes_for_identical_chaintips
     return nil if status != "active"
-    res = Node.where("block_id = ?", self.block_id).order(client_type: :asc ,name: :asc, version: :desc).to_a
-    self.children.each do |child|
-      Node.where("block_id = ?", child.block_id).order(client_type: :asc ,name: :asc, version: :desc).each do |node_for_child|
-        res.append node_for_child
+    chaintip_nodes = Chaintip.joins(:node).where("chaintips.status = ? AND chaintips.block_id = ?", status, self.block_id).order(client_type: :asc ,name: :asc, version: :desc)
+    res = chaintip_nodes.collect{ | c | c.node }
+    chaintip_nodes.each do |chaintip_node|
+      chaintip_node.children.each do |child|
+        Node.where("block_id = ?", child.block_id).order(client_type: :asc ,name: :asc, version: :desc).each do |node_for_child|
+          res.append node_for_child
+        end
       end
     end
-    res
+    res.uniq
   end
 
   def as_json(options = nil)
     fields = [:id]
-    super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes})
+    super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes_for_identical_chaintips})
   end
 
   def match_parent!(node)
@@ -100,10 +103,16 @@ class Chaintip < ApplicationRecord
      end
    end
 
+   # Update the existing active chaintip or create a fresh one. Then update parents and children.
    def self.process_active!(node, block)
-     tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin, block: block) # We merge all "active" chaintips for each unique block
-     tip.node = node if tip.node.nil? # Associate active chaintip with the first node that finds it
-     tip.parent_chaintip = nil
+     tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: "active")
+     if tip.block != block
+       tip.block = block
+       tip.parent_chaintip = nil
+       tip.children.each do |child|
+         child.parent_chaintip = nil
+       end
+     end
      tip.save
      tip.match_children!(node)
      tip.match_parent!(node)
