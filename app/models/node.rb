@@ -343,16 +343,19 @@ class Node < ApplicationRecord
   def self.poll!(options = {})
     bitcoin_core_nodes = self.bitcoin_core_by_version
     bitcoin_core_nodes.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
 
     self.bitcoin_core_unknown_version.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
       puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
       node.poll!
     end
 
     bitcoin_alternative_implementations.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
       # Skip libbitcoin in repeat poll, due to ZMQ socket errors
       next if options[:repeat] && node.client_type.to_sym == :libbitcoin
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -360,11 +363,13 @@ class Node < ApplicationRecord
     end
 
     self.bch_by_version.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
 
     self.bsv_by_version.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end

@@ -6,9 +6,7 @@ namespace 'nodes' do :env
 
   desc "Update database with latest info from each node, unless this happened recently"
   task :poll_unless_fresh => :environment do
-    if Node.where("updated_at > ?", 5.minutes.ago).count == 0
-      Node.poll!
-    end
+    Node.poll!(unless_fresh: true)
   end
 
   desc "Poll nodes continuously"
