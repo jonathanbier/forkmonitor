@@ -1,9 +1,5 @@
 import React from 'react';
 
-import Moment from 'react-moment';
-import 'moment-timezone'
-import NumberFormat from 'react-number-format';
-
 import {
     Row,
     Col,
@@ -13,6 +9,7 @@ import {
 } from 'reactstrap';
 
 import Node from './node';
+import ChaintipInfo from './chaintipInfo';
 
 class Chaintip extends React.Component {
   render() {
@@ -23,16 +20,7 @@ class Chaintip extends React.Component {
               Chaintip: { this.props.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
-          <p className="chaintip-info">
-            Height: <NumberFormat value={ this.props.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{this.props.chaintip.block.timestamp}</Moment> UTC)
-            <br/>
-            Accumulated log2(PoW): <NumberFormat value={this.props.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
-            { this.props.chaintip.block.size &&
-                <span><br />Latest blocksize: <NumberFormat value={ this.props.chaintip.block.size / 1000000 } displayType={'text'} thousandSeparator={true} decimalScale={2} fixedDecimalScale={true} /> MB</span>
-            }
-            <br />
-            Latest block transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
-          </p>
+          <ChaintipInfo chaintip={ this.props.chaintip }/>
           <small>
             <Table striped>
               <tbody>
