@@ -9,6 +9,7 @@ class Chaintip < ApplicationRecord
   validates :status, uniqueness: { scope: :node}
 
   def nodes
+    return nil if status != "active"
     res = Node.joins(:chaintips).where("chaintips.block_id = ?", self.block_id).where("chaintips.status = ?", self.status).order(client_type: :asc ,name: :asc, version: :desc).to_a
     Chaintip.where(status: self.status, parent_chaintip: self).each do |child|
       res.append child.node
@@ -98,12 +99,12 @@ class Chaintip < ApplicationRecord
    end
 
    def self.process_active!(node, block)
-     tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin) # There can only be one
+     tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin, block: block) # We merge all "active" chaintips for each unique block
      tip.node = node if tip.node.nil? # Associate active chaintip with the first node that finds it
-     tip.block = block
      tip.parent_chaintip = nil
      tip.save
      tip.match_children!(node)
      tip.match_parent!(node)
+     return tip
    end
 end
