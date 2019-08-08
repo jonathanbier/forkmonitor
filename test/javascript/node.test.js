@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import { mount, configure } from 'enzyme';
+import { shallow, configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
@@ -22,39 +22,19 @@ describe('Node', () => {
   let wrapper;
 
   beforeAll(() => {
-    wrapper = mount(<Node
+    wrapper = shallow(<Node
       key={ 0 }
       node={ node }
       chaintip={ chaintip }
     />)
   });
 
-  describe('Status badge', () => {
+  describe('Node', () => {
 
-    test('should indicate when unreachable', () => {
-      wrapper.setProps({node: {unreachable_since: "2019-02-14T17:54:31.959Z"}});
-      expect(wrapper.find("Badge").text()).toEqual("Offline");
-    });
-
-    test('should indicate when online, but syncing', () => {
-      wrapper.setProps({node: {unreachable_since: null, ibd: true}});
-      expect(wrapper.find("Badge").text()).toEqual("Syncing");
-    });
-
-    test('should indicate when online', () => {
-      wrapper.setProps({node: {unreachable_since: null, ibd: false}});
-      expect(wrapper.find("Badge").text()).toEqual("Online");
+    test('should contain the name', () => {
+      expect(wrapper.text()).toContain("<NodeName />");
     });
 
   });
 
-  test('should indicate when behind', () => {
-    wrapper.setProps({node: {height: 500000 - 2 }});
-    expect(wrapper.text()).toContain(" (2 blocks behind)");
-  });
-
-  test('should use singular case when 1 block behind', () => {
-    wrapper.setProps({node: {height: 500000 - 1 }});
-    expect(wrapper.text()).toContain(" (1 block behind)");
-  });
 });
