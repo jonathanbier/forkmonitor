@@ -65,13 +65,7 @@ class Chaintip < ApplicationRecord
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
       # In that case, ignore the new chaintip and get back to it later.
       return nil unless block.present?
-      tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin) # There can only be one
-      tip.node = node if tip.node.nil? # Associate active chaintip with the first node that finds it
-      tip.block = block
-      tip.parent_chaintip = nil
-      tip.save
-      tip.match_children!(node)
-      tip.match_parent!(node)
+      tip = Chaintip.process_active!(node, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - 1000
       block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node)
@@ -101,5 +95,15 @@ class Chaintip < ApplicationRecord
      chaintips.each do |chaintip|
        process_chaintip_result(chaintip, node)
      end
+   end
+
+   def self.process_active!(node, block)
+     tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin) # There can only be one
+     tip.node = node if tip.node.nil? # Associate active chaintip with the first node that finds it
+     tip.block = block
+     tip.parent_chaintip = nil
+     tip.save
+     tip.match_children!(node)
+     tip.match_parent!(node)
    end
 end
