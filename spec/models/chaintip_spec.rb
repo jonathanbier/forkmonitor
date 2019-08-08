@@ -37,10 +37,53 @@ RSpec.describe Chaintip, type: :model do
         chaintip3 = create(:chaintip, block: block2, node: nodeB, status: "invalid")
 
         chaintip2.match_parent!(nodeB)
-        assert_equal(chaintip2.parent_chaintip, nil)
+        assert_nil(chaintip2.parent_chaintip)
+      end
+
+      it "should unmark parent if it later considers it invalid" do
+        chaintip2.update parent_chaintip: chaintip1 # For example via match_children!
+
+        chaintip3 = create(:chaintip, block: block2, node: nodeB, status: "invalid")
+        chaintip2.match_parent!(nodeB)
+        assert_nil(chaintip2.parent_chaintip)
       end
 
     end
 
+  end
+
+  describe "match_children!" do
+    let(:nodeA) { create(:node) }
+    let(:nodeB) { create(:node) }
+    let(:block1) { create(:block) }
+    let(:block2) { create(:block, parent: block1) }
+    let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
+    let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
+
+    it "should do nothing if all nodes are the same height" do
+      chaintip1.match_children!(nodeB)
+      assert_nil chaintip1.parent_chaintip
+    end
+
+    describe "when another chaintip is shorter" do
+      before do
+        chaintip1.update block: block2
+        chaintip2 # lazy load
+      end
+
+      it "should mark itself as the parent" do
+        chaintip1.match_children!(nodeB)
+        chaintip2.reload
+        assert_equal(chaintip2.parent_chaintip, chaintip1)
+      end
+
+      it "should not mark itself as parent if the other node considers it invalid" do
+        # Node B considers block b invalid:
+        chaintip3 = create(:chaintip, block: block2, node: nodeB, status: "invalid")
+        chaintip1.match_children!(nodeB)
+        chaintip2.reload
+        assert_nil(chaintip2.parent_chaintip)
+      end
+    end
   end
 end

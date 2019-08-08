@@ -23,10 +23,13 @@ class Chaintip < ApplicationRecord
   def match_parent!(node)
     # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:
     Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height > ?", block.height).each do |candidate_tip|
-      break if node.chaintips.find_by(block: candidate_tip.block, status: "invalid")
       # Travers candidate tip down to find our tip
-      parent = candidate_tip.block.parent
+      parent = candidate_tip.block
       while parent.present? && parent.height >= block.height
+        if node.chaintips.find_by(block: parent, status: "invalid")
+          self.update parent_chaintip: nil
+          break
+        end
         if parent == block
           self.update parent_chaintip: candidate_tip
           break
@@ -34,6 +37,23 @@ class Chaintip < ApplicationRecord
         parent = parent.parent
       end
       break if self.parent_chaintip
+    end
+  end
+
+  def match_children!(node)
+    # Check if any of the other nodes are behind of us. Mark us their parent chaintip, unless they consider us invalid.
+    Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height < ?", block.height).each do |candidate_tip|
+      # Travers down from ourselfves to find candidate tip
+      parent = self.block
+      while parent.present? && parent.height >= candidate_tip.block.height
+        break if node.chaintips.find_by(block: parent, status: "invalid")
+        if parent == candidate_tip.block
+          candidate_tip.update parent_chaintip: self
+          break
+        end
+        parent = parent.parent
+      end
+      break if candidate_tip.parent_chaintip
     end
   end
 
@@ -49,6 +69,7 @@ class Chaintip < ApplicationRecord
       tip.block = block
       tip.parent_chaintip = nil
       tip.save
+      tip.match_children!(node)
       tip.match_parent!(node)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - 1000
