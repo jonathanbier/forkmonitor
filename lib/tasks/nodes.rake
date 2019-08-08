@@ -4,6 +4,13 @@ namespace 'nodes' do :env
     Node.poll!
   end
 
+  desc "Update database with latest info from each node, unless this happened recently"
+  task :poll_unless_fresh => :environment do
+    if Node.where("updated_at > ?", 5.minutes.ago).count == 0
+      Node.poll!
+    end
+  end
+
   desc "Poll nodes continuously"
   task :poll_repeat => :environment do
     Node.poll_repeat!
