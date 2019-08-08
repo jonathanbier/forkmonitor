@@ -10,7 +10,7 @@ class Chaintip < ApplicationRecord
 
   def nodes
     return nil if status != "active"
-    res = Node.joins(:chaintips).where("chaintips.block_id = ?", self.block_id).where("chaintips.status = ?", self.status).order(client_type: :asc ,name: :asc, version: :desc).to_a
+    res = Node.where("block_id = ?", self.block_id).order(client_type: :asc ,name: :asc, version: :desc).to_a
     Chaintip.where(status: self.status, parent_chaintip: self).each do |child|
       res.append child.node
     end

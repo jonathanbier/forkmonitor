@@ -2,11 +2,11 @@ require 'rails_helper'
 
 RSpec.describe Chaintip, type: :model do
   describe "process_active!" do
-    let(:nodeA) { create(:node) }
-    let(:nodeB) { create(:node) }
     let(:block1) { create(:block) }
     let(:block2) { create(:block, parent: block1) }
     let(:block3) { create(:block, parent: block2) }
+    let(:nodeA) { create(:node) }
+    let(:nodeB) { create(:node) }
     let(:chaintip1) { create(:chaintip, block: block2, node: nodeA) }
 
     it "should reuse chaintip for the same block" do
@@ -33,10 +33,10 @@ RSpec.describe Chaintip, type: :model do
   end
 
   describe "nodes / process_active!" do
-    let(:nodeA) { create(:node) }
-    let(:nodeB) { create(:node) }
     let(:block1) { create(:block) }
     let(:block2) { create(:block, parent: block1) }
+    let(:nodeA) { create(:node, block: block1) }
+    let(:nodeB) { create(:node) }
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
 
     it "should only support the active chaintip" do
@@ -49,13 +49,16 @@ RSpec.describe Chaintip, type: :model do
     end
 
     it "should show all nodes at height of active chaintip" do
+      nodeB.update block: block1
       Chaintip.process_active!(nodeB, block1)
       assert_equal 2, chaintip1.nodes.count
-      assert_equal [nodeB, nodeA], chaintip1.nodes
+      assert_equal [nodeA, nodeB], chaintip1.nodes
     end
 
     it "should include parent blocks in chaintip" do
       chaintip1.update block: block2
+      nodeA.update block: block2
+      nodeB.update block: block1
       Chaintip.process_active!(nodeB, block1)
       assert_equal 2, chaintip1.nodes.count
       assert_equal [nodeA, nodeB], chaintip1.nodes
