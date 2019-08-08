@@ -32,7 +32,6 @@ class NodeInfo extends React.Component {
           isOpen={this.state.tooltipOpen}
           target={`node-${ this.props.node.id }-info`}
           toggle={this.toggle}
-          boundariesElement="window"
           modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
           style={{maxWidth: "100%", textAlign: "left"}}
         >
