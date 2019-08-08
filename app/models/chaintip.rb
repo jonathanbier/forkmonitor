@@ -1,6 +1,6 @@
 class Chaintip < ApplicationRecord
-  belongs_to :block
-  belongs_to :node
+  belongs_to :block, optional: false
+  belongs_to :node, optional: false
   belongs_to :parent_chaintip, class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', optional: true  # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
 
   enum coin: [:btc, :bch, :bsv]
@@ -20,7 +20,7 @@ class Chaintip < ApplicationRecord
     super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes})
   end
 
-  def match_parent!(block, node)
+  def match_parent!(node)
     # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:
     Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height > ?", block.height).each do |candidate_tip|
       break if node.chaintips.find_by(block: candidate_tip.block, status: "invalid")
@@ -44,9 +44,12 @@ class Chaintip < ApplicationRecord
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
       # In that case, ignore the new chaintip and get back to it later.
       return nil unless block.present?
-      tip = node.chaintips.find_or_create_by(status: "active", coin: block.coin) # There can only be one
-      tip.update block: block, parent_chaintip: nil
-      tip.match_parent!(block, node)
+      tip = Chaintip.find_or_initialize_by(status: "active", coin: block.coin) # There can only be one
+      tip.node = node if tip.node.nil? # Associate active chaintip with the first node that finds it
+      tip.block = block
+      tip.parent_chaintip = nil
+      tip.save
+      tip.match_parent!(node)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - 1000
       block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node)

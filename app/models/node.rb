@@ -150,7 +150,7 @@ class Node < ApplicationRecord
 
         tip = Chaintip.find_or_create_by(coin: :btc, node: self, status: "active")
         tip.update block: self.block, parent_chaintip: nil
-        tip.match_parent!(self.block, self)
+        tip.match_parent!(self)
         return nil
       end
     end
