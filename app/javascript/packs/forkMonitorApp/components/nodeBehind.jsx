@@ -8,7 +8,7 @@ class NodeBehind extends React.Component {
     let nodeHeight = this.props.node ? this.props.node.height : null;
     let delta = chaintipHeight && nodeHeight && chaintipHeight - nodeHeight;
 
-    if (delta < this.props.min) {
+    if (delta < 1) {
       return(<span />)
     }
 

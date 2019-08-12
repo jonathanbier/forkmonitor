@@ -35,7 +35,7 @@ class NodeInfo extends React.Component {
           modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
           style={{maxWidth: "100%", textAlign: "left"}}
         >
-          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } min={ 1 } verbose={ true } />
+          <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } verbose={ true } />
           <ul style={{paddingLeft: 0, marginBottom: 0}}>
             <li>Operating system: { this.props.node.os }</li>
             <li>CPU: { this.props.node.cpu }</li>

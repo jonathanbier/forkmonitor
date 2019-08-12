@@ -11,11 +11,14 @@ class NodeBehindBlocks extends React.Component {
     }
 
     if (delta <= 4) {
-      let blocks = [...Array(delta)].map((e) => "←◼️");
+      let blocks = " ";
+      for (let i = 0; i < delta; i++) {
+        blocks += "◻️";
+      }
       return(<span>{ blocks }</span>)
     }
 
-    return(<span>←◼️…←◼️</span>)
+    return(<span> ◻️… ◻️</span>)
   }
 }
 export default NodeBehindBlocks
