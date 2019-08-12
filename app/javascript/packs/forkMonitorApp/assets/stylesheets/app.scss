@@ -1,5 +1,11 @@
+.chaintip-header {
+  ol {
+    background-color: #656769;
+  }
+}
 .chaintip-hash {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  color: white;
 }

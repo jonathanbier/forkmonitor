@@ -15,8 +15,8 @@ class Chaintip extends React.Component {
   render() {
     return(
         <Row><Col>
-          <Breadcrumb>
-            <BreadcrumbItem active className="chaintip-hash">
+          <Breadcrumb className="chaintip-header">
+            <BreadcrumbItem className="chaintip-hash">
               Chaintip: { this.props.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
