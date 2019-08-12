@@ -13,12 +13,12 @@ class NodeBehindBlocks extends React.Component {
     if (delta <= 4) {
       let blocks = " ";
       for (let i = 0; i < delta; i++) {
-        blocks += "◻️";
+        blocks += "□ ";
       }
-      return(<span>{ blocks }</span>)
+      return(<span>{ blocks } </span>)
     }
 
-    return(<span> ◻️… ◻️</span>)
+    return(<span> □… □ </span>)
   }
 }
 export default NodeBehindBlocks
