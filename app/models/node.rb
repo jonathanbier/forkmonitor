@@ -181,6 +181,9 @@ class Node < ApplicationRecord
 
     return nil if self.block.nil? || node.block.nil?
 
+    # Sometimes the work field is missing:
+    return nil if self.block.work.nil? || node.block.work.nil?
+
     # Not behind if at the same block
     if self.block == node.block
       behind = false
