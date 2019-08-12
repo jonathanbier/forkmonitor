@@ -139,6 +139,13 @@ class Block < ApplicationRecord
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
 
+    # Avoid expensive call if we already have this information for the most recent tip:
+    bestblock = Block.find_by(block_hash: node.client.getbestblockhash())
+    if bestblock.present? && bestblock.tx_outset.present?
+      puts "Already checked for current tip" unless Rails.env.test?
+      return
+    end
+
     puts "Get the total UTXO balance at the tip..." unless Rails.env.test?
     txoutsetinfo = node.client.gettxoutsetinfo
 

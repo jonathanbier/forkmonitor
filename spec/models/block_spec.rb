@@ -135,6 +135,12 @@ RSpec.describe Block, :type => :model do
       expect(TxOutset.first.block.height).to eq(560176)
     end
 
+    it "should not call gettxoutsetinfo for block with tx info" do
+      Block.check_inflation!
+      expect(@node.client).not_to receive("gettxoutsetinfo").and_call_original
+      Block.check_inflation!
+    end
+
     it "should not create duplicate TxOutset entries" do
       Block.check_inflation!
       Block.check_inflation!
