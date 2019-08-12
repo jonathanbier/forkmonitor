@@ -128,6 +128,8 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should call gettxoutsetinfo" do
+      expect(@node.client).to receive("gettxoutsetinfo").and_call_original
+
       Block.check_inflation!
       expect(TxOutset.count).to eq(1)
       expect(TxOutset.first.block.height).to eq(560176)
