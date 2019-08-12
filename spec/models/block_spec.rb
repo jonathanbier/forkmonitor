@@ -152,18 +152,37 @@ RSpec.describe Block, :type => :model do
         Block.check_inflation!
 
         @node.client.mock_set_height(560178)
-        Block.check_inflation!
       end
 
       it "should fetch intermediate blocks" do
+        Block.check_inflation!
         expect(Block.maximum(:height)).to eq(560178)
         expect(TxOutset.count).to eq(2)
         expect(TxOutset.last.block.height).to eq(560178)
       end
 
-      it "mock UTXO set should have increase by be 2 x 12.5 BTC" do
-        expect(TxOutset.last.total_amount - TxOutset.first.total_amount).to eq(25.0)
+      describe "with normal inflation" do
+        before do
+          Block.check_inflation!
+        end
+
+        it "mock UTXO set should have increase by be 2 x 12.5 BTC" do
+          expect(TxOutset.last.total_amount - TxOutset.first.total_amount).to eq(25.0)
+        end
+
       end
+
+      describe "with extra inflation" do
+        before do
+          @node.client.mock_set_extra_inflation(1)
+        end
+
+        it "should send an alert" do
+          expect { Block.check_inflation! }.to raise_error
+        end
+
+      end
+
     end
   end
 end

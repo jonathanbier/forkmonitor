@@ -164,9 +164,24 @@ class Block < ApplicationRecord
 
     outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block)
 
-    # TODO: Check that the previous snapshot is a block ancestor, otherwise delete it
+    # Find previous block with txoutsetinfo
+    max_inflation = 0
+    comparison_block = block
+    while true
+      comparison_block = comparison_block.parent
+      max_inflation += 12.5 # TODO: take halvening into account
+      if comparison_block.nil?
+        puts "Unable to check inflation due to missing intermediate block" unless Rails.env.test?
+        return nil
+      end
+      break if comparison_block.tx_outset.present?
+    end
 
-    # TODO: Check that inflation does not exceed 12.5 BTC per block (abort this simlified check after halvening)
+    # Check that inflation does not exceed 12.5 BTC per block
+    inflation = block.tx_outset.total_amount - comparison_block.tx_outset.total_amount
+    if inflation > max_inflation
+      throw "Unexpected #{ inflation - max_inflation } BTC extra inflation between block height #{ comparison_block.height } and #{ block.height }"
+    end
 
     # TODO: Process each block and calculate inflation; compare with snapshot.
 

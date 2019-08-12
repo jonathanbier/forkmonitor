@@ -8,6 +8,7 @@ class BitcoinClientMock
     @coin = "BTC"
     @client_type = :core
     @chaintips = []
+    @extra_inflation = 0
 
     @block_hashes = {
       975 => "00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c",
@@ -70,6 +71,10 @@ class BitcoinClientMock
 
   def mock_chaintips(tips)
     @chaintips = tips
+  end
+
+  def mock_set_extra_inflation(amount)
+    @extra_inflation = amount
   end
 
   def getblockheight
@@ -420,7 +425,7 @@ class BitcoinClientMock
         "bogosize" => 4019083859,
         "hash_serialized_2" => "f970cc0aabb3adff4e18a75460ef58c91eb8a181ec97e0d3d8acb71f55402c0a",
         "disk_size" => 3147778574,
-        "total_amount" => 17650142.32457854
+        "total_amount" => 17650142.32457854 + @extra_inflation * 2
       }
     end
     throw "No mock txoutset for height #{ @height }"
