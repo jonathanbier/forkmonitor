@@ -5,6 +5,7 @@ class Block < ApplicationRecord
   belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
   has_many :invalid_blocks
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
+  has_one :tx_outset
   enum coin: [:btc, :bch, :bsv]
 
   def as_json(options = nil)
