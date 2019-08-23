@@ -198,6 +198,11 @@ class Block < ApplicationRecord
           UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
         end
         inflated_block.update notified_at: Time.now
+        Subscription.blast("inflated-block-#{ inflated_block.id }",
+                           "#{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC inflation",
+                           "Unexpected #{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC extra inflation \
+                           between block height #{ inflated_block.comparison_block.height } and #{ inflated_block.block.height }.",
+        )
       end
     end
     # TODO: Process each block and calculate inflation; compare with snapshot.
