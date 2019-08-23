@@ -209,6 +209,8 @@ RSpec.describe Block, :type => :model do
       end
 
       describe "with extra inflation" do
+        let(:user) { create(:user) }
+
         before do
           @node.client.mock_set_extra_inflation(1)
         end
@@ -223,7 +225,14 @@ RSpec.describe Block, :type => :model do
         end
 
         it "should send an alert" do
-          expect { Block.check_inflation! }.to raise_error(UncaughtThrowError)
+          expect(User).to receive(:all).and_return [user]
+          expect {  Block.check_inflation! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        end
+
+        it "should send email only once" do
+          expect(User).to receive(:all).and_return [user]
+          expect {  Block.check_inflation! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+          expect {  Block.check_inflation! }.to change { ActionMailer::Base.deliveries.count }.by(0)
         end
 
       end

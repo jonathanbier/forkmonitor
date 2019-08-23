@@ -192,13 +192,15 @@ class Block < ApplicationRecord
     # Check that inflation does not exceed 12.5 BTC per block
     inflation = block.tx_outset.total_amount - comparison_block.tx_outset.total_amount
     if inflation > max_inflation
-      block.create_inflated_block(comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
-      throw "Unexpected #{ inflation - max_inflation } BTC extra inflation between block height #{ comparison_block.height } and #{ block.height }"
+      inflated_block = block.inflated_block || block.create_inflated_block(comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
+      if !inflated_block.notified_at
+        User.all.each do |user|
+          UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
+        end
+        inflated_block.update notified_at: Time.now
+      end
     end
-
     # TODO: Process each block and calculate inflation; compare with snapshot.
-
-    # TODO: Send alert if greater than allowed
   end
 
   def self.find_or_create_block_and_ancestors!(hash, node)

@@ -44,4 +44,15 @@ class UserMailer < ApplicationMailer
       subject: "[ForkMonitor] potential #{ @stale_candidate.coin.upcase } stale block at height #{ @stale_candidate.height }"
     )
   end
+
+  def inflated_block_email
+    @user = params[:user]
+    @inflated_block = params[:inflated_block]
+
+    mail(
+      to: @user.email,
+      subject: "[ForkMonitor] too much inflation in #{ @inflated_block.block.coin.upcase } block #{ @inflated_block.block.height } (#{ @inflated_block.block.block_hash })"
+    )
+  end
+
 end

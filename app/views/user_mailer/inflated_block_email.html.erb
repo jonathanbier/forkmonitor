@@ -1,0 +1,14 @@
+<p>
+  Unexpected <%=  @inflated_block.actual_inflation -  @inflated_block.max_inflation %> BTC extra inflation
+  between block height <%=  @inflated_block.comparison_block.height %> and <%= @inflated_block.block.height %>
+</p>
+<% if @inflated_block.block.first_seen_by.present? %>
+<p>
+  This block was first seen and accepted as valid by <%= @inflated_block.block.first_seen_by.name_with_version %>.
+  It was mined by <%= @inflated_block.block.pool ? @inflated_block.block.pool : "an unknown pool" %>.
+</p>
+<% end %>
+
+<p>
+  For more information, see: <%= nodes_for_coin_url(@inflated_block.block.coin.downcase) %>
+</p>
