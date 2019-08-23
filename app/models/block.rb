@@ -80,7 +80,7 @@ class Block < ApplicationRecord
     if size.present?
       result += "#{ (size / 1000.0 / 1000.0).round(2) } MB, "
     end
-    if time
+    if time && timestamp.present?
       result += "#{ Time.at(timestamp).utc.strftime("%H:%M:%S") } by "
     end
     return result + "#{ pool.present? ? pool : "unknown pool" })"
