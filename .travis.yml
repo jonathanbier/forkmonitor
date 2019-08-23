@@ -1,4 +1,6 @@
 language: ruby
+services:
+  - postgresql
 rvm:
   - 2.6.3
 bundler_args: --without production:development
@@ -15,9 +17,10 @@ before_install:
   - gem update --system # travis-ci/travis-ci#8978
   - gem install bundler
   - yarn
-script:
+before_script:
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
+script:
   - bundle exec rake
   - npm test
   - npm run coveralls
