@@ -45,6 +45,9 @@ gem 'webpush'
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
 
+# Generate text versions of email
+gem 'actionmailer-text'
+
 # There is no request timeout mechanism inside of Puma.
 gem "rack-timeout"
 

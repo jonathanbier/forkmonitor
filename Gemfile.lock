@@ -13,6 +13,9 @@ GEM
       activejob (= 5.2.3)
       mail (~> 2.5, >= 2.5.4)
       rails-dom-testing (~> 2.0)
+    actionmailer-text (0.1.1)
+      actionmailer
+      htmlentities
     actionpack (5.2.3)
       actionview (= 5.2.3)
       activesupport (= 5.2.3)
@@ -122,6 +125,7 @@ GEM
       guard-compat (~> 1.1)
       rspec (>= 2.99.0, < 4.0)
     hkdf (0.3.0)
+    htmlentities (4.3.4)
     i18n (1.6.0)
       concurrent-ruby (~> 1.0)
     jbuilder (2.9.1)
@@ -284,6 +288,7 @@ PLATFORMS
 
 DEPENDENCIES
   0mq (~> 0.5.3)
+  actionmailer-text
   bitcoiner
   bootsnap (>= 1.1.0)
   byebug

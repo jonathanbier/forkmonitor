@@ -1,4 +1,6 @@
 class UserMailer < ApplicationMailer
+  include ActionMailer::Text
+
   def lag_email
     @user = params[:user]
     @lag = params[:lag]

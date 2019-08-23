@@ -1,7 +1,0 @@
-We found <%= @blocks.count %> blocks at height <%= @stale_candidate.height %>:
-
-<% @blocks.each do | block | %>
-  * <%= block.summary(time = true) %>
-<% end %>
-
-For more information, see: <%= nodes_for_coin_url(@stale_candidate.coin.downcase) %>
