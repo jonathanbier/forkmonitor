@@ -75,6 +75,10 @@ class Block < ApplicationRecord
     end
   end
 
+  def summary
+    return block_hash + " (#{ pool.present? ? pool : "Unknown pool" })"
+  end
+
   def self.create_with(block_info, node)
     # Set pool:
     pool = node.get_pool_for_block!(block_info["hash"], block_info)

@@ -3,12 +3,7 @@
   <ul>
     <% @blocks.each do | block | %>
       <li>
-        <%= block.block_hash %>
-        <% if block.pool.present? %>
-          (<%= block.pool %>)
-        <% else %>
-          (unknown pool)
-        <% end %>
+        <%= block.summary %>
       </li>
     <% end %>
   </ul>

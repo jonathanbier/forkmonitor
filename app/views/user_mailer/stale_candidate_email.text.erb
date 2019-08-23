@@ -1,12 +1,7 @@
 We found <%= @blocks.count %> blocks at height <%= @stale_candidate.height %>:
 
 <% @blocks.each do | block | %>
-  * <%= block.block_hash %>
-  <% if block.pool.present? %>
-    (<%= block.pool %>)
-  <% else %>
-    (unknown pool)
-  <% end %>
+  * <%= block.summary %>
 <% end %>
 
 For more information, see: <%= nodes_for_coin_url(@stale_candidate.coin.downcase) %>
