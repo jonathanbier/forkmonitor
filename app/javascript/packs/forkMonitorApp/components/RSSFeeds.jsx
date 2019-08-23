@@ -28,6 +28,17 @@ class RSSFeeds extends React.Component {
           out an alert.
         </p>
 
+        <h3>Inflated Blocks</h3>
+
+        <ul>
+          <li>BTC <a href="/feeds/inflated_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
+        <p>
+          Creates an alert if a block increases the total supply by more than 12.5 (later: 6.25, etc) BTC.
+          This is checked using `gettxoutsetinfo`.
+        </p>
+
         <h3>Stale block candidates</h3>
 
         <ul>

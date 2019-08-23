@@ -4,6 +4,22 @@ RSpec.describe FeedsController, type: :controller do
   describe "RSS feed" do
     render_views
 
+    describe "GET inflated_block feed" do
+      let!(:inflated_block) { create(:inflated_block) }
+
+      it "should be rendered" do
+        get :inflated_blocks, params: {coin: "btc"}, format: :rss
+        expect(response).to render_template("feeds/inflated_blocks")
+        expect(response.body).to include("Inflated BTC blocks")
+      end
+
+      it "should contain inflated blocks" do
+        get :inflated_blocks, params: {coin: "btc"}, format: :rss
+        expect(response.body).to include("#{ inflated_block.actual_inflation - inflated_block.max_inflation } BTC")
+      end
+    end
+
+
     describe "GET invalid_block feed" do
       let!(:invalid_block) { create(:invalid_block) }
 

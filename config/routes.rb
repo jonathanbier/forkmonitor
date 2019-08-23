@@ -16,6 +16,7 @@ Rails.application.routes.draw do
       match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]
+      resources :inflated_blocks, only: [:index, :show]
       resources :invalid_blocks, only: [:index, :show]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
@@ -26,6 +27,7 @@ Rails.application.routes.draw do
   end
 
   scope format: true, constraints: { format: /rss/ } do
+    get 'feeds/inflated_blocks/:coin' => 'feeds#inflated_blocks'
     get 'feeds/invalid_blocks/:coin' => 'feeds#invalid_blocks'
     get 'feeds/lagging_nodes' => 'feeds#lagging_nodes'
     get 'feeds/version_bits' => 'feeds#version_bits'

@@ -1,5 +1,13 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:invalid_blocks, :stale_candidates]
+  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates]
+
+  def inflated_blocks
+    respond_to do |format|
+      format.rss do
+        @inflated_blocks = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin])
+      end
+    end
+  end
 
   def invalid_blocks
     respond_to do |format|
