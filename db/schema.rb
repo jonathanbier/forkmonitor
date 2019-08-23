@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_07_094519) do
+ActiveRecord::Schema.define(version: 2019_08_23_143345) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -101,7 +101,7 @@ ActiveRecord::Schema.define(version: 2019_08_07_094519) do
     t.index ["block_id"], name: "index_nodes_on_block_id"
   end
 
-  create_table "orphan_candidates", force: :cascade do |t|
+  create_table "stale_candidates", force: :cascade do |t|
     t.integer "height"
     t.datetime "notified_at"
     t.datetime "created_at", null: false

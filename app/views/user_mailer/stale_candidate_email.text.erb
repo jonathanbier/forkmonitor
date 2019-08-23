@@ -1,4 +1,4 @@
-We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
+We found <%= @blocks.count %> blocks at height <%= @stale_candidate.height %>:
 
 <% @blocks.each do | block | %>
   * <%= block.block_hash %>
@@ -9,4 +9,4 @@ We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
   <% end %>
 <% end %>
 
-For more information, see: <%= nodes_for_coin_url(@orphan_candidate.coin.downcase) %>
+For more information, see: <%= nodes_for_coin_url(@stale_candidate.coin.downcase) %>

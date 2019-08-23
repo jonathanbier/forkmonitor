@@ -424,20 +424,20 @@ class Node < ApplicationRecord
       node.check_chaintips!
     end
 
-    # Look for potential orphan blocks, i.e. more than one block at the same height
+    # Look for potential stale blocks, i.e. more than one block at the same height
     for coin in [:btc, :bch, :bsv] do
       tip_height = Block.where(coin: coin).maximum(:height)
       next if tip_height.nil?
       Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
-        @orphan_candidate = OrphanCandidate.find_or_create_by(coin: coin, height: block.height)
-        if @orphan_candidate.notified_at.nil?
+        @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
+        if @stale_candidate.notified_at.nil?
           User.all.each do |user|
-            UserMailer.with(user: user, orphan_candidate: @orphan_candidate).orphan_candidate_email.deliver
+            UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
           end
-          @orphan_candidate.update notified_at: Time.now
-          Subscription.blast("orphan-candidate-#{ @orphan_candidate.id }",
-                             "#{ @orphan_candidate.coin.upcase } orphan candidate",
-                             "At height #{ @orphan_candidate.height }"
+          @stale_candidate.update notified_at: Time.now
+          Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
+                             "#{ @stale_candidate.coin.upcase } stale candidate",
+                             "At height #{ @stale_candidate.height }"
           )
         end
       end

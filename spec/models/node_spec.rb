@@ -465,7 +465,7 @@ RSpec.describe Node, :type => :model do
         expect(fork_block.parent.parent.height).to eq(560176)
       end
 
-      it "should trigger potential orphan alert" do
+      it "should trigger potential stale block alert" do
         expect(User).to receive(:all).twice.and_return [user]
         expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@A, @B]
 

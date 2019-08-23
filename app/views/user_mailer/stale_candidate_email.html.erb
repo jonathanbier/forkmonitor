@@ -1,5 +1,5 @@
 <p>
-  We found <%= @blocks.count %> blocks at height <%= @orphan_candidate.height %>:
+  We found <%= @blocks.count %> blocks at height <%= @stale_candidate.height %>:
   <ul>
     <% @blocks.each do | block | %>
       <li>
@@ -15,5 +15,5 @@
 </p>
 
 <p>
-  For more information, see: <%= nodes_for_coin_url(@orphan_candidate.coin.downcase) %>
+  For more information, see: <%= nodes_for_coin_url(@stale_candidate.coin.downcase) %>
 </p>

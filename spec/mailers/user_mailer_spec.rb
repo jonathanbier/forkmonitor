@@ -63,18 +63,18 @@ RSpec.describe UserMailer, type: :mailer do
 
   end
 
-  describe "orphan candidate notify" do
+  describe "stale candidate notify" do
     let(:user) { create(:user) }
-    let(:orphan_candidate) { create(:orphan_candidate, coin: :btc, height: 500000) }
+    let(:stale_candidate) { create(:stale_candidate, coin: :btc, height: 500000) }
     before do
       @block1 = create(:block, height: 500000)
       @block2 = create(:block, height: 500000)
     end
 
-    let(:mail) { UserMailer.with(user: user, orphan_candidate: orphan_candidate).orphan_candidate_email }
+    let(:mail) { UserMailer.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
 
     it "renders the headers" do
-      expect(mail.subject).to eq("[ForkMonitor] potential BTC orphan block at height #{ orphan_candidate.height }")
+      expect(mail.subject).to eq("[ForkMonitor] potential BTC stale block at height #{ stale_candidate.height }")
       expect(mail.to).to eq([user.email])
     end
 

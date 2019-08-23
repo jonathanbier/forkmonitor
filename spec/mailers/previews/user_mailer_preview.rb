@@ -7,9 +7,9 @@ class NodesMailerPreview < ActionMailer::Preview
     UserMailer.with(user: User.first, bit: @version_bit.bit, tally: 1, window: VersionBit::WINDOW, block: @block).version_bits_email
   end
 
-  def orphan_candidate_email
-    @orphan_candidate = OrphanCandidate.new(height: Block.last.height, coin: :btc)
-    UserMailer.with(user: User.first, orphan_candidate: @orphan_candidate).orphan_candidate_email
+  def stale_candidate_email
+    @stale_candidate = StaleCandidate.new(height: Block.last.height, coin: :btc)
+    UserMailer.with(user: User.first, stale_candidate: @stale_candidate).stale_candidate_email
   end
 
   def invalid_block_email

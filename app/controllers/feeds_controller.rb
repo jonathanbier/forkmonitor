@@ -1,5 +1,5 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:invalid_blocks, :orphan_candidates]
+  before_action :set_coin, only: [:invalid_blocks, :stale_candidates]
 
   def invalid_blocks
     respond_to do |format|
@@ -25,10 +25,10 @@ class FeedsController < ApplicationController
     end
   end
 
-  def orphan_candidates
+  def stale_candidates
     respond_to do |format|
       format.rss do
-        @orphan_candidates = OrphanCandidate.where(coin: @coin)
+        @stale_candidates = StaleCandidate.where(coin: @coin)
       end
     end
   end

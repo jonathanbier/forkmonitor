@@ -28,19 +28,19 @@ class RSSFeeds extends React.Component {
           out an alert.
         </p>
 
-        <h3>Orphan block candidates</h3>
+        <h3>Stale block candidates</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/orphan_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BCH <a href="/feeds/orphan_candidates/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BSV <a href="/feeds/orphan_candidates/bsv.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC <a href="/feeds/stale_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BCH <a href="/feeds/stale_candidates/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BSV <a href="/feeds/stale_candidates/bsv.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
           Creates an alert if there is more than one block at the tip height of the chain.
-          E.g. if there are two blocks at height N then one is expected to get orphaned.
+          E.g. if there are two blocks at height N then one is expected to become stale.
 
-          This will not create an alert for all orphan blocks, only those that have been
+          This will not create an alert for all stale blocks, only those that have been
           processed by our nodes.
         </p>
 
