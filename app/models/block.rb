@@ -75,13 +75,15 @@ class Block < ApplicationRecord
     end
   end
 
-  def summary
+  def summary(time=false)
     result = block_hash + " ("
     if size.present?
       result += "#{ (size / 1000.0 / 1000.0).round(2) } MB, "
     end
-
-    return result + "#{ pool.present? ? pool : "Unknown pool" })"
+    if time
+      result += "#{ Time.at(timestamp).utc.strftime("%H:%M:%S") } by "
+    end
+    return result + "#{ pool.present? ? pool : "unknown pool" })"
   end
 
   def self.create_with(block_info, node)

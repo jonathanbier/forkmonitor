@@ -3,7 +3,7 @@
   <ul>
     <% @blocks.each do | block | %>
       <li>
-        <%= block.summary %>
+        <%= block.summary(time = true) %>
       </li>
     <% end %>
   </ul>

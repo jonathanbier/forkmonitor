@@ -17,7 +17,7 @@ RSpec.describe Block, :type => :model do
     end
     it "should show 'unknown pool'" do
       block = create(:block, pool: nil)
-      expect(block.summary).to include("Unknown pool")
+      expect(block.summary).to include("unknown pool")
     end
     it "should include the block size in MB" do
       block = create(:block, pool: "Antpool", size: 300000)
@@ -27,11 +27,18 @@ RSpec.describe Block, :type => :model do
       block = create(:block, pool: "Antpool", size: 289999)
       expect(block.summary).to include("0.29 MB")
     end
+    it "should show time of day if requested" do
+      block = create(:block, pool: nil, size: nil, timestamp: 1566575008)
+      expect(block.summary(time: true)).to include("(15:43:28")
+    end
     it "should use interpunction" do
-      block = create(:block, block_hash: "0000000", pool: "Antpool", size: 289999)
-      expect(block.summary).to eq("0000000 (0.29 MB, Antpool)")
+      block = create(:block, block_hash: "0000000", pool: "Antpool", size: 289999, timestamp: 1566575008)
+      expect(block.summary()).to eq("0000000 (0.29 MB, Antpool)")
+      expect(block.summary(time: true)).to eq("0000000 (0.29 MB, 15:43:28 by Antpool)")
+      block.pool = nil
+      expect(block.summary(time: true)).to eq("0000000 (0.29 MB, 15:43:28 by unknown pool)")
       block.size = nil
-      expect(block.summary).to eq("0000000 (Antpool)")
+      expect(block.summary).to eq("0000000 (unknown pool)")
     end
   end
 
