@@ -10,6 +10,31 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "summary" do
+    it "should show the pool" do
+      block = create(:block, pool: "Antpool")
+      expect(block.summary).to include("Antpool")
+    end
+    it "should show 'unknown pool'" do
+      block = create(:block, pool: nil)
+      expect(block.summary).to include("Unknown pool")
+    end
+    it "should include the block size in MB" do
+      block = create(:block, pool: "Antpool", size: 300000)
+      expect(block.summary).to include("0.3 MB")
+    end
+    it "should round the block size to two decimals" do
+      block = create(:block, pool: "Antpool", size: 289999)
+      expect(block.summary).to include("0.29 MB")
+    end
+    it "should use interpunction" do
+      block = create(:block, block_hash: "0000000", pool: "Antpool", size: 289999)
+      expect(block.summary).to eq("0000000 (0.29 MB, Antpool)")
+      block.size = nil
+      expect(block.summary).to eq("0000000 (Antpool)")
+    end
+  end
+
   describe "version_bits" do
     it "should be empty by default" do
       block = create(:block)

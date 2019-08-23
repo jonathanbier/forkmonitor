@@ -76,7 +76,12 @@ class Block < ApplicationRecord
   end
 
   def summary
-    return block_hash + " (#{ pool.present? ? pool : "Unknown pool" })"
+    result = block_hash + " ("
+    if size.present?
+      result += "#{ (size / 1000.0 / 1000.0).round(2) } MB, "
+    end
+
+    return result + "#{ pool.present? ? pool : "Unknown pool" })"
   end
 
   def self.create_with(block_info, node)
