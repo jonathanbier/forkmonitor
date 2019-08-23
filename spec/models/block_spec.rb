@@ -213,8 +213,17 @@ RSpec.describe Block, :type => :model do
           @node.client.mock_set_extra_inflation(1)
         end
 
+        it "should add a InflatedBlock entry" do
+          begin
+            Block.check_inflation!
+          rescue UncaughtThrowError
+            # Ignore error
+          end
+          expect(InflatedBlock.count).to eq(1)
+        end
+
         it "should send an alert" do
-          expect { Block.check_inflation! }.to raise_error
+          expect { Block.check_inflation! }.to raise_error(UncaughtThrowError)
         end
 
       end

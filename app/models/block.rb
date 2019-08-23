@@ -6,6 +6,7 @@ class Block < ApplicationRecord
   has_many :invalid_blocks
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
   has_one :tx_outset
+  has_one :inflated_block
   enum coin: [:btc, :bch, :bsv]
 
   def as_json(options = nil)
@@ -191,6 +192,7 @@ class Block < ApplicationRecord
     # Check that inflation does not exceed 12.5 BTC per block
     inflation = block.tx_outset.total_amount - comparison_block.tx_outset.total_amount
     if inflation > max_inflation
+      block.create_inflated_block(comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
       throw "Unexpected #{ inflation - max_inflation } BTC extra inflation between block height #{ comparison_block.height } and #{ block.height }"
     end
 
