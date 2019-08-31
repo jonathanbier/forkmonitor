@@ -71,7 +71,7 @@ class RSSFeeds extends React.Component {
 
         <p>
           Checks if any of the test nodes fell behind. This doesn't have to be
-          a consensus problem,but we filter common reasons like being offline,
+          a consensus problem, but we filter common reasons like being offline,
           in initial block download or not having peers.
         </p>
       </div>
