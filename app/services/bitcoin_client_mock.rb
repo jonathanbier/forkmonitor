@@ -323,6 +323,27 @@ class BitcoinClientMock
           }
         }
       end
+    elsif @coin == "TBTC" # tesnet
+      if @client_type == :core
+        raise Bitcoiner::Client::JSONRPCError if @version < 100000
+        res = {
+          170100 => {
+            "chain" => "test",
+            "blocks" => @height,
+            "headers" => @height,
+            "bestblockhash" => @block_hashes[@height],
+            "mediantime" => 1548515214,
+            "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
+            "initialblockdownload" => @ibd,
+            "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
+            "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
+            "pruned" => false,
+            "softforks" => [],
+            "bip9_softforks" => {},
+            "warnings" => ""
+          }
+        }
+      end
     elsif @coin == "BCH"
       res = {
         180500 => { # Copied from BTC

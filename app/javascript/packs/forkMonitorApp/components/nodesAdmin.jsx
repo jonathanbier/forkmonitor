@@ -19,7 +19,8 @@ import {
 const coin_choices = [
   { id: "BTC", name: "Bitcoin"},
   { id: "BCH", name: "Bitcoin Cash"},
-  { id: "BSV", name: "Bitcoin SV"}
+  { id: "BSV", name: "Bitcoin SV"},
+  { id: "TBTC", name: "Bitcoin Testnet"}
 ]
 
 const client_choices = [

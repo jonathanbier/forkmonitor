@@ -14,6 +14,7 @@ class Node < ApplicationRecord
 
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu]
 
+  scope :testnet_by_version, -> { where(coin: "TBTC").order(version: :desc) }
   scope :bch_by_version, -> { where(coin: "BCH").order(version: :desc) }
   scope :bsv_by_version, -> { where(coin: "BSV").order(version: :desc) }
 
@@ -362,6 +363,12 @@ class Node < ApplicationRecord
       puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
       node.poll!
     end
+    
+    self.testnet_by_version.each do |node|
+      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+      node.poll!
+    end
 
     self.bch_by_version.each do |node|
       next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
@@ -411,6 +418,10 @@ class Node < ApplicationRecord
       node.reload
       node.check_chaintips!
     end
+    self.testnet_by_version.each do |node|
+      node.reload
+      node.check_chaintips!
+    end
     self.bitcoin_alternative_implementations.each do |node|
       node.reload
       node.check_chaintips!
@@ -425,7 +436,7 @@ class Node < ApplicationRecord
     end
 
     # Look for potential stale blocks, i.e. more than one block at the same height
-    for coin in [:btc, :bch, :bsv] do
+    for coin in [:btc, :tbtc, :bch, :bsv] do
       tip_height = Block.where(coin: coin).maximum(:height)
       next if tip_height.nil?
       Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|

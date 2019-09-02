@@ -376,6 +376,29 @@ RSpec.describe Node, :type => :model do
     end
 
   end
+  
+  describe "Bitcoin Testnet" do
+    before do
+      @node = build(:node, coin: "TBTC")
+      @node.client.mock_coin("BCH")
+      @node.client.mock_version(180500)
+      @node.poll!
+    end
+
+    it "should have correct data" do
+      expect(@node.version).to equal(180500)
+      expect(@node.block.timestamp).to equal(1548498742)
+    end
+
+    it "should store intermediate blocks" do
+      @node.client.mock_set_height(560178) # Mainnet based mock data
+      @node.poll!
+      @node.reload
+      expect(@node.block.height).to equal(560178)
+      expect(@node.block.parent.parent).not_to be_nil
+    end
+
+  end
 
   describe "check_chaintips!" do
     before do

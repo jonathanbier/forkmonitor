@@ -7,7 +7,7 @@ class Block < ApplicationRecord
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
   has_one :tx_outset
   has_one :inflated_block
-  enum coin: [:btc, :bch, :bsv]
+  enum coin: [:btc, :bch, :bsv, :tbtc]
 
   def as_json(options = nil)
     super({ only: [:height, :timestamp] }.merge(options || {})).merge({

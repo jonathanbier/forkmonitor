@@ -16,6 +16,7 @@ class RSSFeeds extends React.Component {
 
         <ul>
           <li>BTC <a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC testnet <a href="/feeds/invalid_blocks/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BCH <a href="/feeds/invalid_blocks/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BSV <a href="/feeds/invalid_blocks/bsv.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
@@ -43,6 +44,7 @@ class RSSFeeds extends React.Component {
 
         <ul>
           <li>BTC <a href="/feeds/stale_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC testnet <a href="/feeds/stale_candidates/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BCH <a href="/feeds/stale_candidates/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BSV <a href="/feeds/stale_candidates/bsv.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>

@@ -1,3 +1,3 @@
 class StaleCandidate < ApplicationRecord
-  enum coin: [:btc, :bch, :bsv]
+  enum coin: [:btc, :bch, :bsv, :tbtc]
 end

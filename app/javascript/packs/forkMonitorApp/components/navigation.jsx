@@ -58,13 +58,18 @@ class Navigation extends React.Component {
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
+                <LinkContainer to="/nodes/tbtc">
+                  <NavLink>Testnet</NavLink>
+                </LinkContainer>
+              </NavItem>
+              <NavItem className="NavItem">
                 <LinkContainer to="/nodes/bch">
-                  <NavLink>Bitcoin Cash</NavLink>
+                  <NavLink>BCH</NavLink>
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
                 <LinkContainer to="/nodes/bsv">
-                  <NavLink>Bitcoin SV</NavLink>
+                  <NavLink>BSV</NavLink>
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
