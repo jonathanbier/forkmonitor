@@ -90,13 +90,13 @@ To investigate stale blocks (`valid-fork`), use the node id and chaintip hash fr
 rake blocks:investigate_chaintip[NODE_ID,CHAINTIP_HASH]
 ```
 
-Generate a `VAPID_PUBLIC_KEY` and `VAPID_PRIVATEY_KEY` for push notifications, using `rails console`:
+## Push notifications
+
+Generate a `VAPID_PUBLIC_KEY` and `VAPID_PRIVATEY_KEY` for push notifications:
 
 ```rb
-require 'webpush'
-vapid_key = Webpush.generate_key
-vapid_key.public_key
-vapid_key.private_key
+npm install -g web-push
+web-push generate-vapid-keys
 ```
 
 Also provide a contact email via `VAPID_CONTACT_EMAIL=`.

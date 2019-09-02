@@ -11,13 +11,33 @@ import RSSFeeds from './RSSFeeds';
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
+/**
+ * urlBase64ToUint8Array
+ * 
+ * @param {string} base64String a public vavid key
+ */
+function urlBase64ToUint8Array(base64String) {
+    var padding = '='.repeat((4 - base64String.length % 4) % 4);
+    var base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+    var rawData = window.atob(base64);
+    var outputArray = new Uint8Array(rawData.length);
+
+    for (var i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 class NotificationsPage extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
       webpush: null,
-      vapidPublicKey: toByteArray(process.env['VAPID_PUBLIC_KEY'])
+      vapidPublicKey: process.env['VAPID_PUBLIC_KEY']
     };
 
     function toByteArray(hexString) {
@@ -75,7 +95,7 @@ class NotificationsPage extends React.Component {
           }
           return registration.pushManager.subscribe({
             userVisibleOnly: true,
-            applicationServerKey: applicationServerKey
+            applicationServerKey: urlBase64ToUint8Array(applicationServerKey)
           }).then(function(subscription) {
             axios.post('/api/v1/subscriptions', {
               subscription: subscription
