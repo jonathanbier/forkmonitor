@@ -6,6 +6,7 @@ rvm:
 bundler_args: --without production:development
 cache:
   - bundler
+  - $HOME/libzmq
 before_install:
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
   - gem update --system # travis-ci/travis-ci#8978
