@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_23_161815) do
+ActiveRecord::Schema.define(version: 2019_09_18_133511) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -22,9 +22,9 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
     t.string "work"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "parent_id"
+    t.bigint "parent_id"
     t.integer "mediantime"
-    t.integer "first_seen_by_id"
+    t.bigint "first_seen_by_id"
     t.integer "version"
     t.integer "coin"
     t.string "pool"
@@ -57,13 +57,15 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "node_id"
     t.index ["block_id"], name: "index_inflated_blocks_on_block_id"
     t.index ["comparison_block_id"], name: "index_inflated_blocks_on_comparison_block_id"
+    t.index ["node_id"], name: "index_inflated_blocks_on_node_id"
   end
 
   create_table "invalid_blocks", force: :cascade do |t|
-    t.integer "block_id"
-    t.integer "node_id"
+    t.bigint "block_id"
+    t.bigint "node_id"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -77,8 +79,8 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
   end
 
   create_table "lags", force: :cascade do |t|
-    t.integer "node_a_id"
-    t.integer "node_b_id"
+    t.bigint "node_a_id"
+    t.bigint "node_b_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "notified_at"
@@ -89,6 +91,7 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
+    t.bigint "block_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
@@ -98,9 +101,9 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
     t.string "rpcpassword"
     t.boolean "ibd"
     t.integer "peer_count"
+    t.integer "client"
     t.integer "client_type"
     t.integer "rpcport"
-    t.integer "block_id"
     t.string "version_extra", default: "", null: false
     t.boolean "pruned", default: false, null: false
     t.string "os"
@@ -130,7 +133,7 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
   end
 
   create_table "tx_outsets", force: :cascade do |t|
-    t.integer "block_id"
+    t.bigint "block_id"
     t.integer "txouts"
     t.decimal "total_amount", precision: 16, scale: 8
     t.datetime "created_at", null: false
@@ -155,8 +158,8 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
 
   create_table "version_bits", force: :cascade do |t|
     t.integer "bit"
-    t.integer "activate_block_id"
-    t.integer "deactivate_block_id"
+    t.bigint "activate_block_id"
+    t.bigint "deactivate_block_id"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -164,9 +167,17 @@ ActiveRecord::Schema.define(version: 2019_08_23_161815) do
     t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
+  add_foreign_key "blocks", "nodes", column: "first_seen_by_id"
   add_foreign_key "chaintips", "blocks"
   add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
   add_foreign_key "chaintips", "nodes"
   add_foreign_key "inflated_blocks", "blocks"
   add_foreign_key "inflated_blocks", "blocks", column: "comparison_block_id"
+  add_foreign_key "inflated_blocks", "nodes"
+  add_foreign_key "invalid_blocks", "blocks"
+  add_foreign_key "invalid_blocks", "nodes"
+  add_foreign_key "nodes", "blocks"
+  add_foreign_key "tx_outsets", "blocks"
+  add_foreign_key "version_bits", "blocks", column: "activate_block_id"
+  add_foreign_key "version_bits", "blocks", column: "deactivate_block_id"
 end

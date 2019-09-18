@@ -18,10 +18,12 @@ class Alerts extends React.Component {
     };
 
     this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
+    this.getInflatedBlocks = this.getInflatedBlocks.bind(this);
   }
   
   componentDidMount() {
     this.getInvalidBlocks(this.props.coin);
+    this.getInflatedBlocks(this.props.coin);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -30,9 +32,11 @@ class Alerts extends React.Component {
     
     if (!this.state.invalid_blocks || currentCoin !== nextCoin) {
       this.setState({
-        invalid_blocks: []
+        invalid_blocks: [],
+        inflated_blocks: []
       });
       this.getInvalidBlocks(nextProps.coin);    
+      this.getInflatedBlocks(nextProps.coin);    
     }
   
   }
@@ -44,6 +48,18 @@ class Alerts extends React.Component {
        this.setState({
          invalid_blocks: invalid_blocks
        });
+    }.bind(this)).catch(function (error) {
+      console.error(error);
+    });
+  }
+  
+  getInflatedBlocks(coin) {
+    axios.get('/api/v1/inflated_blocks?coin=' + coin).then(function (response) {
+      return response.data;
+    }).then(function (inflated_blocks) {
+      this.setState({
+        inflated_blocks: inflated_blocks
+      });
     }.bind(this)).catch(function (error) {
       console.error(error);
     });
@@ -62,6 +78,20 @@ class Alerts extends React.Component {
               { invalid_block.block.first_seen_by &&
                 <span>
                   {} It was first seen and accepted as valid by <NodeName node={invalid_block.block.first_seen_by} />.
+                </span>
+              }
+            </UncontrolledAlert>
+          )
+        }.bind(this))}
+        {(this.state && this.state.inflated_blocks || []).map(function (inflated_block) {
+          return (
+            <UncontrolledAlert color="danger" key={inflated_block.id}>
+              <NodeName node={inflated_block.node} /> detected inflation in
+              block { inflated_block.block.hash } at height { inflated_block.block.height }.
+              This block was mined by { inflated_block.block.pool ? inflated_block.block.pool : "an unknown pool" }.
+              { inflated_block.block.first_seen_by &&
+                <span>
+                  {} It was first seen and accepted as valid by <NodeName node={inflated_block.block.first_seen_by} />.
                 </span>
               }
             </UncontrolledAlert>

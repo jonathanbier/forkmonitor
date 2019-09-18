@@ -3,6 +3,7 @@ class Node < ApplicationRecord
   has_many :chaintips
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
+  has_many :inflated_blocks
 
   default_scope { where(enabled: true) }
 
