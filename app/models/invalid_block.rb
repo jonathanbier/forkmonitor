@@ -6,7 +6,7 @@ class InvalidBlock < ApplicationRecord
     super({ only: [:id] }).merge({block: block, node: {
       id: node.id,
       name: node.name,
-      version: node.version
+      name_with_version: node.name_with_version
     }})
   end
 end

@@ -11,6 +11,7 @@ import {
 import Chaintip from './chaintip';
 import NodesWithoutTip from './nodesWithoutTip';
 import NodeName from './nodeName';
+import Alerts from './alerts';
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
@@ -21,19 +22,16 @@ class Nodes extends React.Component {
     this.state = {
       coin: props.match.params.coin,
       chaintips: [],
-      nodesWithoutTip: [],
-      invalid_blocks: []
+      nodesWithoutTip: []
     };
 
     this.getChaintips = this.getChaintips.bind(this);
     this.getNodes = this.getNodes.bind(this);
-    this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
   }
 
   componentDidMount() {
     this.getChaintips(this.state.coin);
     this.getNodes(this.state.coin);
-    this.getInvalidBlocks(this.state.coin);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -42,13 +40,12 @@ class Nodes extends React.Component {
 
     if (currentCoin !== nextCoin) {
       this.setState({
+        coin: this.props.match.params.coin,
         nodesWithoutTip: [],
-        chaintips: [],
-        invalid_blocks: []
+        chaintips: []
       });
       this.getChaintips(nextProps.match.params.coin);
       this.getNodes(nextProps.match.params.coin);
-      this.getInvalidBlocks(nextProps.match.params.coin);
     }
 
   }
@@ -81,47 +78,19 @@ class Nodes extends React.Component {
       });
    }
 
-   getInvalidBlocks(coin) {
-     axios.get('/api/v1/invalid_blocks?coin=' + coin).then(function (response) {
-       return response.data;
-     }).then(function (invalid_blocks) {
-       this.setState({
-         invalid_blocks: invalid_blocks
-       });
-    }.bind(this)).catch(function (error) {
-      console.error(error);
-    });
-  }
-
   render() {
       return(
         <TabPane align="left" >
-          <br />
-          { (this.state && this.state.invalid_blocks || []).map(function (invalid_block) {
-            return (
-                <UncontrolledAlert color="danger" key={invalid_block.id}>
-                  <NodeName node={invalid_block.node} /> considers
-                  block { invalid_block.block.hash } at height { invalid_block.block.height } invalid.
-                  This block was mined by { invalid_block.block.pool ? invalid_block.block.pool : "an unknown pool" }.
-                  { invalid_block.block.first_seen_by &&
-                    <span>
-                      {} It was first seen and accepted as valid by <NodeName node={invalid_block.block.first_seen_by} />.
-                    </span>
-                  }
-
-                </UncontrolledAlert>
-            )
-          }.bind(this))}
+          <Alerts coin={ this.state.coin } />
           <Container>
               {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
                 return (<Chaintip
                   key={ chaintip.id }
-                  coin={ this.state.coin }
+                  coin={ this.props.match.params.coin }
                   chaintip={ chaintip }
                   nodes={ chaintip.nodes }
                   index={ index }
                   last={ index != this.state.chaintips.length - 1 }
-                  invalid_blocks={ this.state.invalid_blocks }
                 />)
               }.bind(this))}
               { this.state.nodesWithoutTip.length > 0 &&
