@@ -16,4 +16,9 @@ describe "nodes:poll_repeat" do
     expect(Node).to receive(:poll_repeat!)
     subject.invoke
   end
+  
+  it "should call :pollrepeat! on Node with a list of coins" do
+    expect(Node).to receive(:poll_repeat!).with(["BTC", "BCH"])
+    subject.invoke("BTC", "BCH")
+  end
 end

@@ -10,7 +10,8 @@ namespace 'nodes' do :env
   end
 
   desc "Poll nodes continuously"
-  task :poll_repeat => :environment do
-    Node.poll_repeat!
+  task :poll_repeat, [] => :environment do |action, args|
+    Node.poll_repeat!(args.extras)
   end
+
 end

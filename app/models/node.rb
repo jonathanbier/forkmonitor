@@ -344,51 +344,62 @@ class Node < ApplicationRecord
   end
 
   def self.poll!(options = {})
-    bitcoin_core_nodes = self.bitcoin_core_by_version
-    bitcoin_core_nodes.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-      node.poll!
-    end
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+      bitcoin_core_nodes = self.bitcoin_core_by_version
+      bitcoin_core_nodes.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+        node.poll!
+      end
 
-    self.bitcoin_core_unknown_version.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
-      node.poll!
-    end
+      self.bitcoin_core_unknown_version.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
+        node.poll!
+      end
 
-    bitcoin_alternative_implementations.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      # Skip libbitcoin in repeat poll, due to ZMQ socket errors
-      next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-      node.poll!
+      bitcoin_alternative_implementations.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        # Skip libbitcoin in repeat poll, due to ZMQ socket errors
+        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+        node.poll!
+      end
     end
     
-    self.testnet_by_version.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-      node.poll!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC") 
+      self.testnet_by_version.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+        node.poll!
+      end
     end
 
-    self.bch_by_version.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-      node.poll!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH") 
+      self.bch_by_version.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+        node.poll!
+      end
     end
-
-    self.bsv_by_version.each do |node|
-      next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-      puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-      node.poll!
+    
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV") 
+      self.bsv_by_version.each do |node|
+        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+        node.poll!
+      end
     end
 
     self.check_laggards!(options)
-    self.check_chaintips!
-    bitcoin_core_nodes.first.check_versionbits!
+    self.check_chaintips!(options)
+    
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+      bitcoin_core_nodes.first.check_versionbits!
+    end
   end
 
-  def self.poll_repeat!
+  def self.poll_repeat!(coins)
     # Trap ^C
     Signal.trap("INT") {
       puts "\nShutting down gracefully..."
@@ -404,7 +415,7 @@ class Node < ApplicationRecord
     while true
       sleep 5 unless Rails.env.test?
 
-      self.poll!(repeat: true)
+      self.poll!(repeat: true, coins: coins)
 
       if Rails.env.test?
         break
@@ -414,30 +425,41 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.check_chaintips!
-    self.bitcoin_core_by_version.each do |node|
-      node.reload
-      node.check_chaintips!
+  def self.check_chaintips!(options)
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+      self.bitcoin_core_by_version.each do |node|
+        node.reload
+        node.check_chaintips!
+      end
     end
-    self.testnet_by_version.each do |node|
-      node.reload
-      node.check_chaintips!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+      self.bitcoin_alternative_implementations.each do |node|
+        node.reload
+        node.check_chaintips!
+      end
     end
-    self.bitcoin_alternative_implementations.each do |node|
-      node.reload
-      node.check_chaintips!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC") 
+      self.testnet_by_version.each do |node|
+        node.reload
+        node.check_chaintips!
+      end
     end
-    self.bch_by_version.each do |node|
-      node.reload
-      node.check_chaintips!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
+      self.bch_by_version.each do |node|
+        node.reload
+        node.check_chaintips!
+      end
     end
-    self.bsv_by_version.each do |node|
-      node.reload
-      node.check_chaintips!
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
+      self.bsv_by_version.each do |node|
+        node.reload
+        node.check_chaintips!
+      end
     end
-
+      
     # Look for potential stale blocks, i.e. more than one block at the same height
     for coin in [:btc, :tbtc, :bch, :bsv] do
+      next if options[:coins] && !options[:coins].empty? && !options[:coins].include?(coin.to_s.upcase)
       tip_height = Block.where(coin: coin).maximum(:height)
       next if tip_height.nil?
       Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
@@ -457,16 +479,18 @@ class Node < ApplicationRecord
   end
 
   def self.check_laggards!(options = {})
-    core_nodes = self.bitcoin_core_by_version
-    core_nodes.drop(1).each do |node|
-      lag  = node.check_if_behind!(core_nodes.first)
-      puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
-    end
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+      core_nodes = self.bitcoin_core_by_version
+      core_nodes.drop(1).each do |node|
+        lag  = node.check_if_behind!(core_nodes.first)
+        puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
+      end
 
-    self.bitcoin_alternative_implementations.each do |node|
-      next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-      lag  = node.check_if_behind!(core_nodes.first)
-      puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
+      self.bitcoin_alternative_implementations.each do |node|
+        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+        lag  = node.check_if_behind!(core_nodes.first)
+        puts "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }" unless Rails.env.test?
+      end
     end
   end
 

@@ -39,6 +39,13 @@ To check if nodes are reachable:
 rake debug:node_info
 ```
 
+To poll all nodes continuously, or filter by coin:
+
+```sh
+rake nodes:poll_repeat
+rake nodes:poll_repeat[BTC,TBTC]
+```
+
 To manually query a node:
 
 ```rb

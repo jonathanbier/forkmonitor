@@ -493,9 +493,9 @@ RSpec.describe Node, :type => :model do
         expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@A, @B]
 
         # One alert for each height:
-        expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(2)
+        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(2)
         # Just once...
-        expect { Node.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(0)
+        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
       it "should ignore forks more than 1000 blocks ago" do
@@ -923,9 +923,9 @@ RSpec.describe Node, :type => :model do
 
     describe "poll_repeat!" do
       it "should call poll!" do
-        expect(Node).to receive(:poll!).with({repeat: true})
+        expect(Node).to receive(:poll!).with({repeat: true, coins: ["BTC"]})
 
-        Node.poll_repeat!
+        Node.poll_repeat!(["BTC"])
       end
     end
 
@@ -971,7 +971,7 @@ RSpec.describe Node, :type => :model do
               expect(record).to receive(:check_chaintips!)
           }
         }
-        Node.check_chaintips!
+        Node.check_chaintips!(coins: ["BTC"])
       end
     end
 
