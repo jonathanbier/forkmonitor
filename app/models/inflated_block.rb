@@ -5,6 +5,7 @@ class InflatedBlock < ApplicationRecord
   
   def as_json(options = nil)
     super({ only: [:id, :max_inflation, :actual_inflation] }).merge({
+      extra_inflation: actual_inflation - max_inflation,
       block: block, 
       comparison_block: comparison_block,
       node: {

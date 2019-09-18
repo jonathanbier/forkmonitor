@@ -12,10 +12,9 @@ class AlertInflation extends React.Component {
   render() {
     const height = this.props.inflatedBlock.block.height;
     const comparison_height = this.props.inflatedBlock.comparison_block.height;
-    const inflation = this.props.inflatedBlock.actual_inflation - this.props.inflatedBlock.max_inflation;
     return(
       <UncontrolledAlert color="danger">
-        <NodeName node={this.props.inflatedBlock.node} /> detected <NumberFormat value={inflation} displayType={'text'} decimalScale={8} fixedDecimalScale={false} /> BTC extra inflation
+        <NodeName node={this.props.inflatedBlock.node} /> detected <NumberFormat value={ this.props.inflatedBlock.extra_inflation } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC extra inflation
         { (height - comparison_height > 1) &&
           <span> between blocks { this.props.inflatedBlock.comparison_block.hash } at height { comparison_height } and </span>
         }

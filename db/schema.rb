@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_18_133511) do
+ActiveRecord::Schema.define(version: 2019_09_18_151747) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -52,8 +52,8 @@ ActiveRecord::Schema.define(version: 2019_09_18_133511) do
   create_table "inflated_blocks", force: :cascade do |t|
     t.bigint "block_id"
     t.bigint "comparison_block_id"
-    t.integer "max_inflation"
-    t.integer "actual_inflation"
+    t.decimal "max_inflation", precision: 16, scale: 8
+    t.decimal "actual_inflation", precision: 16, scale: 8
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
