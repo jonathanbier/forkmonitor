@@ -5,7 +5,12 @@ rvm:
   - 2.6.3
 bundler_args: --without production:development
 cache:
-  - bundler
+  ccache: true
+  bundler: true
+  npm: true
+  yarn: true
+  directories:
+  - /home/travis/.rvm/
   - $HOME/libzmq
 before_install:
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
