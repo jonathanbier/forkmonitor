@@ -20,3 +20,23 @@ test('should show node name', async () => {
   const wrapper = mount(<AlertInflation inflatedBlock={ inflatedBlock } />);
   expect(wrapper.text()).toContain("Bitcoin Unlimited");
 });
+
+test('should show inflation amount', async () => {
+  const wrapper = mount(<AlertInflation inflatedBlock={ inflatedBlock } />);
+  expect(wrapper.text()).toContain("0.01000000 BTC");
+});
+
+test('should show height range', async () => {
+  const wrapper = mount(<AlertInflation inflatedBlock={ inflatedBlock } />);
+  expect(wrapper.text()).toContain("560180");
+  expect(wrapper.text()).toContain("560182");
+});
+
+test('should show only one height if range is 1 block', async () => {
+  inflatedBlock.comparison_block.height = 560181
+  inflatedBlock.comparison_block.hash = "0000000000000000002641ea2457674fea1b2fc5fcfe6fde416dca2a0e13aec2"
+  const wrapper = mount(<AlertInflation inflatedBlock={ inflatedBlock } />);
+  expect(wrapper.text()).not.toContain("560180");
+  expect(wrapper.text()).not.toContain("560181");
+  expect(wrapper.text()).toContain("560182");
+});
