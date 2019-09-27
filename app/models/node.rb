@@ -38,6 +38,10 @@ class Node < ApplicationRecord
     version_arr = v.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
     return "#{ self.name } #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
   end
+  
+  def mirror_node?
+    return mirror_rpchost.present? && mirror_rpchost != ""
+  end
 
   def as_json(options = nil)
     fields = [:id, :unreachable_since, :ibd, :client_type, :pruned, :os, :cpu, :ram, :storage, :cve_2018_17144, :released]
@@ -52,6 +56,14 @@ class Node < ApplicationRecord
       @client = self.class.client_klass.new(self.client_type.to_sym, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
     end
     return @client
+  end
+  
+  def mirror_client
+    return nil if !self.mirror_rpchost || self.mirror_rpchost == ""
+    if !@mirror_client
+      @mirror_client = self.class.client_klass.new(self.client_type.to_sym, self.mirror_rpchost, self.mirror_rpcport, self.rpcuser, self.rpcpassword)
+    end
+    return @mirror_client
   end
 
   # Update database with latest info from this node
@@ -117,6 +129,24 @@ class Node < ApplicationRecord
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
 
     self.update block: block, unreachable_since: nil
+    
+    # Get most recent block height from mirror node
+    poll_mirror! if mirror_node?
+  end
+  
+  def poll_mirror!
+    return unless self.core?
+    puts "Polling mirror node..." unless Rails.env.test?
+    begin
+      blockchaininfo = mirror_client.getblockchaininfo
+    rescue Bitcoiner::Client::JSONRPCError
+      # Ignore failure
+      return
+    end
+    best_block_hash = blockchaininfo["bestblockhash"]
+    ibd = blockchaininfo["initialblockdownload"]
+    block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
+    self.update mirror_block: block
   end
 
   # getchaintips returns all known chaintips for a node, which can be:

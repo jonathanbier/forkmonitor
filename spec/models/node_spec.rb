@@ -188,6 +188,27 @@ RSpec.describe Node, :type => :model do
         expect(@node.unreachable_since).to be_nil
       end
     end
+    
+    describe "mirror node" do
+      before do
+        @node = build(:node_with_mirror)
+
+        @node.client.mock_set_height(560177)
+        @node.mirror_client.mock_set_height(560177)
+        
+        @node.poll! # stores the block and node entry
+      end
+      
+      it "node without mirror node should not have mirror_client" do
+        n = build(:node)
+        expect(n.mirror_client).to be_nil
+      end
+
+      it "should update to the latest mirror node block" do
+        @node.poll!
+        expect(@node.mirror_block.height).to equal(560177)
+      end
+    end
 
     describe "Bitcoin Core 0.13.0" do
       before do
