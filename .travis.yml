@@ -23,4 +23,4 @@ before_script:
 script:
   - bundle exec rake
   - npm test
-  - npm run coveralls
+  - npm run coveralls || echo "push to coveralls failed"
