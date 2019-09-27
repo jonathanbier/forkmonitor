@@ -58,6 +58,52 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "maximum_inflation" do
+    COIN = 100000000
+
+    it "should be 12.5 for BTC in mid 2019" do
+      @block = build(:block, height: 596808)
+      expect(@block.max_inflation).to eq(12.5 * COIN)
+    end
+    
+    it "should be 50 for BTC in 2009" do
+      @block = build(:block, height: 100)
+      expect(@block.max_inflation).to eq(50 * COIN)
+    end
+    
+    it "should be 12.5 for BTC immediately before the 2020 halving" do
+      @block = build(:block, height: 629999)
+      expect(@block.max_inflation).to eq(12.5 * COIN)
+    end
+    
+    it "should be 6.25 for BTC at the 2020 halving" do
+      @block = build(:block, height: 630000)
+      expect(@block.max_inflation).to eq(6.25 * COIN)
+    end
+    
+    it "should be 0.00000009 for BTC at height 6090000" do
+      @block = build(:block, height: 6090000)
+      expect(@block.max_inflation).to eq(0.00000009 * COIN)
+    end
+    
+    it "should be 0 for BTC as of height 6930000" do
+      @block = build(:block, height: 6930000)
+      expect(@block.max_inflation).to eq(0.00000000 * COIN)
+    end
+    
+    it "should create slightly less than 21 million BTC" do
+       @block = build(:block, height: 0)
+       i=0
+       coins = 0.0
+       while i < 10000000 do
+         @block.height = i
+         coins += 1000 * @block.max_inflation
+         i += 1000
+       end
+       expect(coins).to eq(20999999.9769 * COIN)
+    end
+  end
+
   describe "create_with" do
     before do
       @node = build(:node)

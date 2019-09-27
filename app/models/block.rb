@@ -40,6 +40,13 @@ class Block < ApplicationRecord
     # BIP320 mask: 0xe0001fff (loses bit 13-28)
     ("%.32b" % (self.version & ~0xe0000000)).split("").drop(3).reverse().collect{|s|s.to_i}
   end
+  
+  # https://bitcoin.stackexchange.com/a/9962
+  def max_inflation
+    interval = self.height / 210000
+    reward = 50 * 100000000
+    return reward >> interval # as opposed to (reward / 2**interval)
+  end
 
   def find_ancestors!(node, until_height = nil)
     # Prevent new instances from going too far back:
@@ -180,8 +187,8 @@ class Block < ApplicationRecord
       comparison_block = block
       comparison_tx_outset = nil
       while true
+        max_inflation += comparison_block.max_inflation / 100000000.0
         comparison_block = comparison_block.parent
-        max_inflation += 12.5 # TODO: take halvening into account
         if comparison_block.nil?
           puts "Unable to check inflation due to missing intermediate block" unless Rails.env.test?
           break
@@ -191,7 +198,7 @@ class Block < ApplicationRecord
       end
       next if comparison_block.nil?
 
-      # Check that inflation does not exceed 12.5 BTC per block
+      # Check that inflation does not exceed the maximum permitted miner award per block
       inflation = tx_outset.total_amount - comparison_tx_outset.total_amount
       if inflation > max_inflation
         inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
