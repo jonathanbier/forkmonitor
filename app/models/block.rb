@@ -160,7 +160,13 @@ class Block < ApplicationRecord
       throw "Node in Initial Blockchain Download" if node.ibd
 
       # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
-      best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
+      begin
+        best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
+      rescue Bitcoiner::Client::JSONRPCError
+        # Ignore failure
+        puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
+        next
+      end
       
       if best_mirror_block.present? && TxOutset.find_by(block: best_mirror_block, node: node).present?
         puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
