@@ -117,8 +117,6 @@ class Node < ApplicationRecord
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
 
     self.update block: block, unreachable_since: nil
-
-    return if block.nil?
   end
 
   # getchaintips returns all known chaintips for a node, which can be:
