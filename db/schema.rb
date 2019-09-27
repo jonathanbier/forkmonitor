@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_18_151747) do
+ActiveRecord::Schema.define(version: 2019_09_27_073647) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -113,7 +113,11 @@ ActiveRecord::Schema.define(version: 2019_09_18_151747) do
     t.boolean "cve_2018_17144", default: false, null: false
     t.date "released"
     t.boolean "enabled", default: true, null: false
+    t.string "mirror_rpchost"
+    t.integer "mirror_rpcport"
+    t.bigint "mirror_block_id"
     t.index ["block_id"], name: "index_nodes_on_block_id"
+    t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
   end
 
   create_table "stale_candidates", force: :cascade do |t|

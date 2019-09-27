@@ -55,7 +55,9 @@ export const NodeEdit = props => (
             <TextField source="name_with_version" readOnly />
             <TextInput source="version_extra" />
             <TextInput source="rpchost" />
+            <TextInput source="mirror_rpchost" />
             <NumberInput source="rpcport" />
+            <NumberInput source="mirror_rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />
@@ -78,7 +80,9 @@ export const NodeCreate = props => (
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="version_extra" />
             <TextInput source="rpchost" />
+            <TextInput source="mirror_rpchost" />
             <NumberInput source="rpcport" />
+            <NumberInput source="mirror_rpcport" />
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />

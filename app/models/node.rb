@@ -4,6 +4,7 @@ class Node < ApplicationRecord
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
   has_many :inflated_blocks
+  belongs_to :mirror_block, required: false, class_name: "Block"
 
   default_scope { where(enabled: true) }
 
@@ -41,7 +42,7 @@ class Node < ApplicationRecord
   def as_json(options = nil)
     fields = [:id, :unreachable_since, :ibd, :client_type, :pruned, :os, :cpu, :ram, :storage, :cve_2018_17144, :released]
     if options && options[:admin]
-      fields << :id << :coin << :rpchost << :rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
+      fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
     super({ only: fields }.merge(options || {})).merge({height: block && block.height, name_with_version: name_with_version})
   end
