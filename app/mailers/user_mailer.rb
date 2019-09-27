@@ -51,7 +51,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] too much inflation in #{ @inflated_block.block.coin.upcase } block #{ @inflated_block.block.height } (#{ @inflated_block.block.block_hash })"
+      subject: "[ForkMonitor] #{ @inflated_block.node.name_with_version } detected too much inflation in #{ @inflated_block.block.coin.upcase } block #{ @inflated_block.block.height } (#{ @inflated_block.block.block_hash })"
     )
   end
 

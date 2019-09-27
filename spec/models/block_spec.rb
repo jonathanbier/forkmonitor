@@ -160,8 +160,12 @@ RSpec.describe Block, :type => :model do
       @node.mirror_client.mock_set_height(560176)
       @node.poll!
       @node.reload
+      
+      @node_without_mirror = build(:node, version: 180000)
+      @node_testnet = build(:node, version: 180000, coin: "TBTC")
+      
       expect(Block.maximum(:height)).to eq(560176)
-      allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
+      allow(Node).to receive(:all).and_return [@node_without_mirror, @node, @node_testnet]
     end
 
     it "should call gettxoutsetinfo on mirror node" do

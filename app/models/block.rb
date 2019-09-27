@@ -5,7 +5,7 @@ class Block < ApplicationRecord
   belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
   has_many :invalid_blocks
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
-  has_one :tx_outset
+  has_many :tx_outsets
   has_one :inflated_block
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
@@ -147,63 +147,68 @@ class Block < ApplicationRecord
   end
 
   def self.check_inflation!
-    # Use the latest node for this check
-    node = Node.bitcoin_core_by_version.first
-    return unless node.mirror_node? && node.core?
-    throw "Node in Initial Blockchain Download" if node.ibd
+    Node.all.each do |node|
+      next unless node.mirror_node? && node.coin == "BTC" && node.core?
+      puts "Check inflation for #{ node.name_with_version }..." unless Rails.env.test?
+      throw "Node in Initial Blockchain Download" if node.ibd
 
-    # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
-    best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
-    
-    if best_mirror_block.present? && best_mirror_block.tx_outset.present?
-      puts "Already checked for current mirror tip" unless Rails.env.test?
-      return
-    end
-
-    # Fetch most recent blocks from mirror node if needed
-    node.poll_mirror!
-
-    puts "Get the total UTXO balance at the mirror tip..." unless Rails.env.test?
-    txoutsetinfo = node.mirror_client.gettxoutsetinfo
-
-    # Make sure we have all blocks up to the mirror tip
-    block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
-    if block.nil?
-      throw "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
-    end
-
-    outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block)
-
-    # Find previous block with txoutsetinfo
-    max_inflation = 0
-    comparison_block = block
-    while true
-      comparison_block = comparison_block.parent
-      max_inflation += 12.5 # TODO: take halvening into account
-      if comparison_block.nil?
-        puts "Unable to check inflation due to missing intermediate block" unless Rails.env.test?
-        return nil
+      # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
+      best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
+      
+      if best_mirror_block.present? && TxOutset.find_by(block: best_mirror_block, node: node).present?
+        puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
+        next
       end
-      break if comparison_block.tx_outset.present?
-    end
 
-    # Check that inflation does not exceed 12.5 BTC per block
-    inflation = block.tx_outset.total_amount - comparison_block.tx_outset.total_amount
-    if inflation > max_inflation
-      inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
-      if !inflated_block.notified_at
-        User.all.each do |user|
-          UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
+      # Fetch most recent blocks from mirror node if needed
+      node.poll_mirror!
+
+      puts "Get the total UTXO balance at the mirror tip..." unless Rails.env.test?
+      txoutsetinfo = node.mirror_client.gettxoutsetinfo
+      
+      # Make sure we have all blocks up to the mirror tip
+      block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
+      if block.nil?
+        puts "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
+        next
+      end
+
+      tx_outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block, node: node)
+
+      # Find previous block with txoutsetinfo
+      max_inflation = 0
+      comparison_block = block
+      comparison_tx_outset = nil
+      while true
+        comparison_block = comparison_block.parent
+        max_inflation += 12.5 # TODO: take halvening into account
+        if comparison_block.nil?
+          puts "Unable to check inflation due to missing intermediate block" unless Rails.env.test?
+          break
         end
-        inflated_block.update notified_at: Time.now
-        Subscription.blast("inflated-block-#{ inflated_block.id }",
-                           "#{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC inflation",
-                           "Unexpected #{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC extra inflation \
-                           between block height #{ inflated_block.comparison_block.height } and #{ inflated_block.block.height }.",
-        )
+        comparison_tx_outset = TxOutset.find_by(node: node, block: comparison_block)
+        break if comparison_tx_outset.present?
       end
+      next if comparison_block.nil?
+
+      # Check that inflation does not exceed 12.5 BTC per block
+      inflation = tx_outset.total_amount - comparison_tx_outset.total_amount
+      if inflation > max_inflation
+        inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
+        if !inflated_block.notified_at
+          User.all.each do |user|
+            UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
+          end
+          inflated_block.update notified_at: Time.now
+          Subscription.blast("inflated-block-#{ inflated_block.id }",
+                             "#{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC inflation",
+                             "Unexpected #{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC extra inflation \
+                             between block height #{ inflated_block.comparison_block.height } and #{ inflated_block.block.height } according to #{ node.name_with_version }.",
+          )
+        end
+      end
+      # TODO: Process each block and calculate inflation; compare with snapshot.
     end
-    # TODO: Process each block and calculate inflation; compare with snapshot.
   end
 
   def self.find_or_create_block_and_ancestors!(hash, node)

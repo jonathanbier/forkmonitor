@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_09_27_073647) do
+ActiveRecord::Schema.define(version: 2019_09_27_102026) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -142,7 +142,9 @@ ActiveRecord::Schema.define(version: 2019_09_27_073647) do
     t.decimal "total_amount", precision: 16, scale: 8
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "node_id"
     t.index ["block_id"], name: "index_tx_outsets_on_block_id"
+    t.index ["node_id"], name: "index_tx_outsets_on_node_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -182,6 +184,7 @@ ActiveRecord::Schema.define(version: 2019_09_27_073647) do
   add_foreign_key "invalid_blocks", "nodes"
   add_foreign_key "nodes", "blocks"
   add_foreign_key "tx_outsets", "blocks"
+  add_foreign_key "tx_outsets", "nodes"
   add_foreign_key "version_bits", "blocks", column: "activate_block_id"
   add_foreign_key "version_bits", "blocks", column: "deactivate_block_id"
 end
