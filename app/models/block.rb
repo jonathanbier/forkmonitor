@@ -149,29 +149,27 @@ class Block < ApplicationRecord
   def self.check_inflation!
     # Use the latest node for this check
     node = Node.bitcoin_core_by_version.first
+    return unless node.mirror_node? && node.core?
     throw "Node in Initial Blockchain Download" if node.ibd
 
-    # Avoid expensive call if we already have this information for the most recent tip:
-    bestblock = Block.find_by(block_hash: node.client.getbestblockhash())
-    if bestblock.present? && bestblock.tx_outset.present?
-      puts "Already checked for current tip" unless Rails.env.test?
+    # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
+    best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
+    
+    if best_mirror_block.present? && best_mirror_block.tx_outset.present?
+      puts "Already checked for current mirror tip" unless Rails.env.test?
       return
     end
 
-    puts "Get the total UTXO balance at the tip..." unless Rails.env.test?
-    txoutsetinfo = node.client.gettxoutsetinfo
+    # Fetch most recent blocks from mirror node if needed
+    node.poll_mirror!
 
-    # Make sure we have all blocks up to the tip
+    puts "Get the total UTXO balance at the mirror tip..." unless Rails.env.test?
+    txoutsetinfo = node.mirror_client.gettxoutsetinfo
+
+    # Make sure we have all blocks up to the mirror tip
     block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
     if block.nil?
-      puts "Fetch recent blocks..." unless Rails.env.test?
-      node.poll!
-      # Try again. The tip may move already moved on because gettxoutsetinfo is slow.
-      block = Block.find_by(block_hash: txoutsetinfo["bestblock"])
-
-      if block.nil?
-        throw "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
-      end
+      throw "Latest block #{ txoutsetinfo["bestblock"] } at height #{ txoutsetinfo["height"] } missing in blocks database"
     end
 
     outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block)

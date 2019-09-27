@@ -155,16 +155,17 @@ RSpec.describe Block, :type => :model do
 
   describe "self.check_inflation!" do
     before do
-      @node = build(:node, version: 170001)
+      @node = build(:node_with_mirror, version: 170001)
       @node.client.mock_set_height(560176)
+      @node.mirror_client.mock_set_height(560176)
       @node.poll!
       @node.reload
       expect(Block.maximum(:height)).to eq(560176)
       allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
     end
 
-    it "should call gettxoutsetinfo" do
-      expect(@node.client).to receive("gettxoutsetinfo").and_call_original
+    it "should call gettxoutsetinfo on mirror node" do
+      expect(@node.mirror_client).to receive("gettxoutsetinfo").and_call_original
 
       Block.check_inflation!
       expect(TxOutset.count).to eq(1)
@@ -173,7 +174,7 @@ RSpec.describe Block, :type => :model do
 
     it "should not call gettxoutsetinfo for block with tx info" do
       Block.check_inflation!
-      expect(@node.client).not_to receive("gettxoutsetinfo").and_call_original
+      expect(@node.mirror_client).not_to receive("gettxoutsetinfo").and_call_original
       Block.check_inflation!
     end
 
@@ -183,11 +184,11 @@ RSpec.describe Block, :type => :model do
       expect(TxOutset.count).to eq(1)
     end
 
-    describe "two different blocks" do
+    describe "mirror node has two more blocks" do
       before do
         Block.check_inflation!
 
-        @node.client.mock_set_height(560178)
+        @node.mirror_client.mock_set_height(560178)
       end
 
       it "should fetch intermediate blocks" do
@@ -212,7 +213,7 @@ RSpec.describe Block, :type => :model do
         let(:user) { create(:user) }
 
         before do
-          @node.client.mock_set_extra_inflation(1)
+          @node.mirror_client.mock_set_extra_inflation(1)
         end
 
         it "should add a InflatedBlock entry" do
