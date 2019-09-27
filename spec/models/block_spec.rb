@@ -208,7 +208,12 @@ RSpec.describe Block, :type => :model do
       @node.reload
       
       @node_without_mirror = build(:node, version: 180000)
-      @node_testnet = build(:node, version: 180000, coin: "TBTC")
+
+      @node_testnet = build(:node_with_mirror, version: 180000, coin: "TBTC")
+      @node_testnet.client.mock_set_height(560176)
+      @node_testnet.mirror_client.mock_set_height(560176)
+      @node_testnet.poll!
+      @node_testnet.reload
       
       expect(Block.maximum(:height)).to eq(560176)
       allow(Node).to receive(:all).and_return [@node_without_mirror, @node, @node_testnet]
@@ -216,10 +221,12 @@ RSpec.describe Block, :type => :model do
 
     it "should call gettxoutsetinfo on mirror node" do
       expect(@node.mirror_client).to receive("gettxoutsetinfo").and_call_original
+      expect(@node_testnet.mirror_client).to receive("gettxoutsetinfo").and_call_original
 
       Block.check_inflation!
-      expect(TxOutset.count).to eq(1)
+      expect(TxOutset.count).to eq(2)
       expect(TxOutset.first.block.height).to eq(560176)
+      expect(TxOutset.second.block.height).to eq(560176)
     end
 
     it "should not call gettxoutsetinfo for block with tx info" do
@@ -231,20 +238,20 @@ RSpec.describe Block, :type => :model do
     it "should not create duplicate TxOutset entries" do
       Block.check_inflation!
       Block.check_inflation!
-      expect(TxOutset.count).to eq(1)
+      expect(TxOutset.count).to eq(2)
     end
 
-    describe "mirror node has two more blocks" do
+    describe "BTC mirror node has two more blocks" do
       before do
         Block.check_inflation!
 
         @node.mirror_client.mock_set_height(560178)
       end
 
-      it "should fetch intermediate blocks" do
+      it "should fetch intermediate BTC blocks" do
         Block.check_inflation!
         expect(Block.maximum(:height)).to eq(560178)
-        expect(TxOutset.count).to eq(2)
+        expect(TxOutset.count).to eq(3)
         expect(TxOutset.last.block.height).to eq(560178)
       end
 
@@ -267,6 +274,16 @@ RSpec.describe Block, :type => :model do
         end
 
         it "should add a InflatedBlock entry" do
+          begin
+            Block.check_inflation!
+          rescue UncaughtThrowError
+            # Ignore error
+          end
+          expect(InflatedBlock.count).to eq(1)
+        end
+        
+        it "should add a InflatedBlock entry for testnet inflation" do
+          @node_testnet.mirror_client.mock_set_extra_inflation(1)
           begin
             Block.check_inflation!
           rescue UncaughtThrowError

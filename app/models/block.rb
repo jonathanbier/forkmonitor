@@ -155,8 +155,8 @@ class Block < ApplicationRecord
 
   def self.check_inflation!
     Node.all.each do |node|
-      next unless node.mirror_node? && node.coin == "BTC" && node.core?
-      puts "Check inflation for #{ node.name_with_version }..." unless Rails.env.test?
+      next unless node.mirror_node? && node.core?
+      puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
 
       # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
