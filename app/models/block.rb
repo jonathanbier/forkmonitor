@@ -159,22 +159,21 @@ class Block < ApplicationRecord
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
 
-      # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
       begin
+        # Update mirror node tip and fetch most recent blocks if needed
+        node.poll_mirror!
         best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
       rescue Bitcoiner::Client::JSONRPCError
         # Ignore failure
         puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
         next
       end
-      
+
+      # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
       if best_mirror_block.present? && TxOutset.find_by(block: best_mirror_block, node: node).present?
         puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
         next
       end
-
-      # Fetch most recent blocks from mirror node if needed
-      node.poll_mirror!
 
       puts "Get the total UTXO balance at the mirror tip..." unless Rails.env.test?
       txoutsetinfo = node.mirror_client.gettxoutsetinfo

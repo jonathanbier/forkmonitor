@@ -188,27 +188,6 @@ RSpec.describe Node, :type => :model do
         expect(@node.unreachable_since).to be_nil
       end
     end
-    
-    describe "mirror node" do
-      before do
-        @node = build(:node_with_mirror)
-
-        @node.client.mock_set_height(560177)
-        @node.mirror_client.mock_set_height(560177)
-        
-        @node.poll! # stores the block and node entry
-      end
-      
-      it "node without mirror node should not have mirror_client" do
-        n = build(:node)
-        expect(n.mirror_client).to be_nil
-      end
-
-      it "should update to the latest mirror node block" do
-        @node.poll!
-        expect(@node.mirror_block.height).to equal(560177)
-      end
-    end
 
     describe "Bitcoin Core 0.13.0" do
       before do
@@ -396,6 +375,41 @@ RSpec.describe Node, :type => :model do
       end
     end
 
+  end
+  
+  describe "poll_mirror!" do
+    before do
+      @node = build(:node_with_mirror)
+      @node_without_mirror = build(:node)
+
+      @node.client.mock_set_height(560177)
+      @node_without_mirror.client.mock_set_height(560177)
+      @node.mirror_client.mock_set_height(560177)
+      
+      @node.poll! # stores the block and node entry
+    end
+    
+    it "node without mirror node should not have mirror_client" do
+      n = build(:node)
+      expect(n.mirror_client).to be_nil
+    end
+
+    # Polling the mirror node while it's performing an expensive operation
+    # will slow down the regular polling operation.
+    it "poll! should not poll mirror node" do
+      @node.poll!
+      expect(@node.mirror_block).to be_nil
+    end
+    
+    it "poll_mirror! should poll mirror node" do
+      @node.poll_mirror!
+      expect(@node.mirror_block.height).to equal(560177)
+    end
+    
+    it "poll_mirror! should do nothing if a node doesn't have a mirror" do
+      @node_without_mirror.poll_mirror!
+      expect(@node.mirror_block).to be_nil
+    end
   end
   
   describe "Bitcoin Testnet" do

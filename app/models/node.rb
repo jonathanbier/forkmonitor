@@ -129,13 +129,12 @@ class Node < ApplicationRecord
 
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
 
-    self.update block: block, unreachable_since: nil
-    
-    # Get most recent block height from mirror node
-    poll_mirror! if mirror_node?
+    self.update block: block, unreachable_since: nil    
   end
   
+  # Get most recent block height from mirror node
   def poll_mirror!
+    return unless mirror_node?
     return unless self.core?
     puts "Polling mirror node..." unless Rails.env.test?
     begin
