@@ -1,10 +1,13 @@
 import React from 'react';
 import {
   List,
+  Edit,
+  SimpleForm,
   Datagrid,
   DateField,
   TextField,
-  NumberField
+  NumberField,
+  DateInput
 } from 'react-admin';
 
 import TimestampField from './timestampField';
