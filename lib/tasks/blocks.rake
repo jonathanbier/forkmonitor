@@ -9,7 +9,8 @@ namespace 'blocks' do :env
 
   desc "Check for unwanted inflation"
   task :check_inflation => :environment do |action|
-    Block.check_inflation!
+    Block.check_inflation!(:btc)
+    Block.check_inflation!(:tbtc)
   end
 
   desc "Get chaintips for all nodes"

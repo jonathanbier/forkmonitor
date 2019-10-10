@@ -234,8 +234,8 @@ class Block < ApplicationRecord
     return nil
   end
 
-  def self.check_inflation!
-    Node.all.each do |node|
+  def self.check_inflation!(coin)
+    Node.where(coin: coin.to_s.upcase).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
