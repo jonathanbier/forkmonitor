@@ -3,7 +3,7 @@ class Api::V1::InvalidBlocksController < ApplicationController
   def index
     if params[:coin]
       coin = params[:coin].downcase.to_sym
-      @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[coin])
+      @invalid_blocks = InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin])
     else
       @invalid_blocks = InvalidBlock.all
     end

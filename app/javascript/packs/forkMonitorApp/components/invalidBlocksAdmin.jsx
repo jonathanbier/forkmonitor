@@ -2,6 +2,7 @@ import React from 'react';
 import {
   List,
   Datagrid,
+  DateField,
   TextField,
   NumberField
 } from 'react-admin';
@@ -17,6 +18,7 @@ export const InvalidBlockList = props => (
             <TextField source="node.name_with_version" sortable={false} />
             <TextField source="block.hash" sortable={false} />
             <TimestampField source="block.timestamp" sortable={false} />
+            <DateField source="dismissed_at" showTime sortable={false} />
         </Datagrid>
     </List>
 );

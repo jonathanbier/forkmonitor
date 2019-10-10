@@ -3,7 +3,7 @@ class InvalidBlock < ApplicationRecord
   belongs_to :node
 
   def as_json(options = nil)
-    super({ only: [:id] }).merge({block: block, node: {
+    super({ only: [:id, :dismissed_at] }).merge({block: block, node: {
       id: node.id,
       name: node.name,
       name_with_version: node.name_with_version

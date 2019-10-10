@@ -17,7 +17,7 @@ Rails.application.routes.draw do
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]
       resources :inflated_blocks, only: [:index, :show]
-      resources :invalid_blocks, only: [:index, :show]
+      resources :invalid_blocks, only: [:index]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
       resources :stale_candidates, only: [:index, :show]
