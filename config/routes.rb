@@ -16,7 +16,7 @@ Rails.application.routes.draw do
       match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]
-      resources :inflated_blocks, only: [:index, :show]
+      resources :inflated_blocks, only: [:index, :show, :destroy]
       resources :invalid_blocks, only: [:index, :show, :destroy]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
