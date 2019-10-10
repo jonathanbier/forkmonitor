@@ -1,3 +1,6 @@
+require 'net/http'
+require 'json'
+
 namespace 'blocks' do :env
   desc "Fetch block ancestors down to [height]"
   task :fetch_ancestors, [:height] => :environment do |action, args|
@@ -21,5 +24,15 @@ namespace 'blocks' do :env
   task :investigate_fork, [:node,:chaintip] => :environment do |action, args|
     @node = Node.find(args.node.to_i)
     @node.investigate_chaintip(args.chaintip)
+  end
+  
+  desc "Fetch known pool list"
+  task :fetch_pool_names do |action|
+    puts "Fetching known pool names from blockchain.com..."
+    response = Net::HTTP.get(URI("https://raw.githubusercontent.com/blockchain/Blockchain-Known-Pools/master/pools.json"))
+    pools = JSON.parse(response)
+    pools["coinbase_tags"].sort.each do |key, value|
+      puts "\"#{ key }\" => \"#{ value["name"] }\","
+    end
   end
 end
