@@ -30,5 +30,14 @@ describe('TimestampField', () => {
     />)
     expect(wrapper.text()).toEqual("2019-09-02 17:11");
   });
+  
+  test('should render empty date', () => {
+    wrapper = mount(<TimestampField
+      record={ {timestamp: null} }
+      source="timestamp"
+    />)
+    expect(wrapper.text()).toEqual("");
+  });
+  
 
 });
