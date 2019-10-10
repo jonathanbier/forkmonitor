@@ -1,7 +1,7 @@
 class Api::V1::InvalidBlocksController < ApplicationController
   
   before_action :authenticate_user!, only: [:destroy]
-  before_action :set_invalid_block, only: [:destroy]
+  before_action :set_invalid_block, only: [:show, :destroy]
 
   def index
     if params[:coin]
@@ -12,6 +12,10 @@ class Api::V1::InvalidBlocksController < ApplicationController
     end
     response.headers['Content-Range'] = @invalid_blocks.count
     render json: @invalid_blocks
+  end
+  
+  def show
+    render json: @invalid_block
   end
 
   # Mark as dismissed

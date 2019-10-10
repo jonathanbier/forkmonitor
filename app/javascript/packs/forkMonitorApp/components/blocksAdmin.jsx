@@ -11,6 +11,7 @@ import TimestampField from './timestampField';
 export const BlockList = props => (
     <List {...props}
         sort={{ field: "height"}}
+        bulkActionButtons={false}
         >
         <Datagrid>
             <NumberField source="height" sortable={false} options={{ useGrouping: false }} />

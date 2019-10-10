@@ -37,6 +37,7 @@ const client_choices = [
 export const NodeList = props => (
     <List {...props}
         sort={{ field: "id"}}
+        bulkActionButtons={false}
         >
         <Datagrid rowClick="edit">
             <NumberField source="id" />
