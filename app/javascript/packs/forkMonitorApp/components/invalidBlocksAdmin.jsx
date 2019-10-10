@@ -20,6 +20,7 @@ export const InvalidBlockList = props => (
         bulkActionButtons={false}
         >
         <Datagrid rowClick="edit">
+            <TextField source="coin" sortable={false} />
             <NumberField source="block.height" sortable={false} options={{ useGrouping: false }}  />
             <TextField source="node.name_with_version" sortable={false} />
             <TextField source="block.hash" sortable={false} />
@@ -40,6 +41,7 @@ const InvalidBlockEditToolbar = props => (
 export const InvalidBlockEdit = props => (
     <Edit {...props}>
         <SimpleForm toolbar={<InvalidBlockEditToolbar />}>
+          <TextField source="coin" readOnly />
           <NumberField source="block.height" readOnly />
           <TextField source="node.name_with_version" readOnly />
           <TextField source="block.hash" readOnly />
