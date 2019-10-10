@@ -453,6 +453,33 @@ class Node < ApplicationRecord
       end
     end
   end
+  
+  def self.heavy_checks_repeat!(coins)
+    # Trap ^C
+    Signal.trap("INT") {
+      puts "\nShutting down gracefully..."
+      exit
+    }
+
+    # Trap `Kill `
+    Signal.trap("TERM") {
+      puts "\nShutting down gracefully..."
+      exit
+    }
+
+    while true
+      coins.each do |coin| 
+        Block.check_inflation!(coin.downcase.to_sym)        
+      end
+      
+      if Rails.env.test?
+        break
+      else
+        sleep 0.5
+      end
+
+    end
+  end
 
   def self.check_chaintips!(options)
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 

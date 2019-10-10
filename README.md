@@ -46,6 +46,11 @@ rake nodes:poll_repeat
 rake nodes:poll_repeat[BTC,TBTC]
 ```
 
+To run inflation checks continuously, filtered by coin:
+```
+rake nodes:heavy_checks_repeat[BTC]
+```
+
 To manually query a node:
 
 ```rb

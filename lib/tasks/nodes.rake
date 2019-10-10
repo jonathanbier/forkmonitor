@@ -13,5 +13,10 @@ namespace 'nodes' do :env
   task :poll_repeat, [] => :environment do |action, args|
     Node.poll_repeat!(args.extras)
   end
+  
+  desc "Heavy duty continuous checks"
+  task :heavy_checks_repeat, [] => :environment do |action, args|
+    Node.heavy_checks_repeat!(args.extras)
+  end
 
 end

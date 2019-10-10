@@ -1,4 +1,5 @@
 web: bundle exec puma
 release: rake db:migrate
-worker: bundle exec rake nodes:poll_repeat[BTC]
+worker1: bundle exec rake nodes:poll_repeat[BTC]
 worker2: bundle exec rake nodes:poll_repeat[TBTC,BCH,BSV]
+worker3: bundle exec rake nodes:heavy_checks_repeat[BTC]

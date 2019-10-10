@@ -964,6 +964,14 @@ RSpec.describe Node, :type => :model do
       end
     end
 
+    describe "heavy_checks_repeat!" do
+      it "should call check_inflation!" do
+        expect(Block).to receive(:check_inflation!).with(:btc)
+
+        Node.heavy_checks_repeat!(["BTC"])
+      end
+    end
+
     describe "check_laggards!" do
       before do
         @A = build(:node)

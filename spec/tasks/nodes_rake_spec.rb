@@ -22,3 +22,17 @@ describe "nodes:poll_repeat" do
     subject.invoke("BTC", "BCH")
   end
 end
+
+describe "nodes:heavy_checks_repeat" do
+  include_context "rake"
+
+  it "should call :heavy_checks_repeat! on Node" do
+    expect(Node).to receive(:heavy_checks_repeat!)
+    subject.invoke
+  end
+  
+  it "should call :heavy_checks_repeat! on Node with a list of coins" do
+    expect(Node).to receive(:heavy_checks_repeat!).with(["BTC", "TBTC"])
+    subject.invoke("BTC", "TBTC")
+  end
+end
