@@ -33,6 +33,7 @@ class RSSFeeds extends React.Component {
 
         <ul>
           <li>BTC <a href="/feeds/inflated_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC testnet <a href="/feeds/inflated_blocks/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
