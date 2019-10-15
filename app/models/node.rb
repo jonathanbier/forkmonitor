@@ -1,10 +1,10 @@
 class Node < ApplicationRecord
   belongs_to :block, required: false
-  has_many :chaintips
+  has_many :chaintips, dependent: :destroy
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
   has_many :inflated_blocks
-  has_many :tx_outsets
+  has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
 
   default_scope { where(enabled: true) }
