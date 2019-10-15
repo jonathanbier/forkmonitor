@@ -960,7 +960,7 @@ RSpec.describe Node, :type => :model do
       it "should call poll!" do
         expect(Node).to receive(:poll!).with({repeat: true, coins: ["BTC"]})
 
-        Node.poll_repeat!(["BTC"])
+        Node.poll_repeat!({coins: ["BTC"]})
       end
     end
 
@@ -968,7 +968,7 @@ RSpec.describe Node, :type => :model do
       it "should call check_inflation!" do
         expect(Block).to receive(:check_inflation!).with(:btc)
 
-        Node.heavy_checks_repeat!(["BTC"])
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
     end
 

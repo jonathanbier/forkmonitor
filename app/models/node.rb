@@ -428,7 +428,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.poll_repeat!(coins)
+  def self.poll_repeat!(options = {})
     # Trap ^C
     Signal.trap("INT") {
       puts "\nShutting down gracefully..."
@@ -444,7 +444,7 @@ class Node < ApplicationRecord
     while true
       sleep 5 unless Rails.env.test?
 
-      self.poll!(repeat: true, coins: coins)
+      self.poll!(options.merge({repeat: true}))
 
       if Rails.env.test?
         break
@@ -454,7 +454,7 @@ class Node < ApplicationRecord
     end
   end
   
-  def self.heavy_checks_repeat!(coins)
+  def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
       puts "\nShutting down gracefully..."
@@ -468,7 +468,7 @@ class Node < ApplicationRecord
     }
 
     while true
-      coins.each do |coin| 
+      options[:coins].each do |coin| 
         Block.check_inflation!(coin.downcase.to_sym)        
       end
       

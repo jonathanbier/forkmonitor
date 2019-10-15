@@ -1,7 +1,7 @@
 namespace 'nodes' do :env
   desc "Update database with latest info from each node"
-  task :poll => :environment do
-    Node.poll!
+  task :poll, [] => :environment do |action, args|
+    Node.poll!({coins: args.extras})
   end
 
   desc "Update database with latest info from each node, unless this happened recently"
@@ -11,12 +11,12 @@ namespace 'nodes' do :env
 
   desc "Poll nodes continuously"
   task :poll_repeat, [] => :environment do |action, args|
-    Node.poll_repeat!(args.extras)
+    Node.poll_repeat!({coins: args.extras})
   end
   
   desc "Heavy duty continuous checks"
   task :heavy_checks_repeat, [] => :environment do |action, args|
-    Node.heavy_checks_repeat!(args.extras)
+    Node.heavy_checks_repeat!({coins: args.extras})
   end
 
 end
