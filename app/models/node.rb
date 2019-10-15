@@ -53,7 +53,7 @@ class Node < ApplicationRecord
       height: block && block.height,
       name_with_version: name_with_version,
       tx_outset: self.tx_outset,
-      has_mirror_node: self.mirror_rpchost ? true : false
+      has_mirror_node: self.mirror_rpchost.present?
     })
   end
 
