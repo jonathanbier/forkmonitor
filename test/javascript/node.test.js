@@ -17,7 +17,7 @@ describe('Node', () => {
     }
   }
 
-  const node = {id: 1, name: "Bitcoin Core", version: 170100, height: 500000, unreachable_since: null, ibd: false};
+  const node = {id: 1, name: "Bitcoin Core", version: 170100, height: 500000, unreachable_since: null, ibd: false, has_mirror_node: true};
 
   let wrapper;
 
@@ -33,6 +33,15 @@ describe('Node', () => {
 
     test('should contain the name', () => {
       expect(wrapper.text()).toContain("<NodeName />");
+    });
+    
+    test('should show inflation check', () => {
+      expect(wrapper.text()).toContain("<NodeInflation />");
+    });
+    
+    test('without mirror node, should hide inflation check', () => {
+      wrapper.setProps({node: {has_mirror_node: false}});
+      expect(wrapper.text()).not.toContain("<NodeInflation />");
     });
 
   });

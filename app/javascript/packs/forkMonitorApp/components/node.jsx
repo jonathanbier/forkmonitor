@@ -11,6 +11,7 @@ import NodeName from './nodeName';
 import NodeInfo from './nodeInfo';
 import NodeBehind from './nodeBehind';
 import NodeBehindBlocks from './nodeBehindBlocks';
+import NodeInflation from './nodeInflation';
 import NodeStatusBadge from './nodeStatusBadge';
 
 class Node extends React.Component {
@@ -23,6 +24,11 @@ class Node extends React.Component {
           <NodeInfo chaintip={ this.props.chaintip } node={this.props.node} />
           <NodeStatusBadge node={this.props.node} />
           <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } />
+        </td>
+        <td align="right">
+          { this.props.node.has_mirror_node &&
+            <NodeInflation txOutset={ this.props.node.tx_outset } />
+          }
         </td>
       </tr>
     )
