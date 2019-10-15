@@ -223,8 +223,8 @@ class Node < ApplicationRecord
       behind = true
     end
 
-    # Allow 1 block extra for 0.10.3 node:
-    return nil if self.core? && self.version < 110000 && self.block.height > node.block.height - 2
+    # Allow 1 block extra for 0.16 nodes and older:
+    return nil if self.core? && self.version < 169999 && self.block.height > node.block.height - 2
 
     # Allow 1 block extra for btcd node:
     return nil if self.btcd? && self.block.height > node.block.height - 2
