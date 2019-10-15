@@ -489,12 +489,19 @@ class BitcoinClientMock
     header = @block_headers[block_hash]
     throw "Block #{ block_hash } not found" unless header.present?
     @height = header["height"] - 1
+    @chaintips.push({
+        "height" => header["height"],
+        "hash" => block_hash,
+        "branchlen" => 0,
+        "status" => "invalid"
+    })
   end
   
   def reconsiderblock(block_hash)
     header = @block_headers[block_hash]
     throw "Block #{ block_hash } not found" unless header.present?
     @height = @best_height
+    @chaintips.delete_if { |t| t["hash"] == block_hash }
   end
 
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000

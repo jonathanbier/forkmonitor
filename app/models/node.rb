@@ -463,6 +463,14 @@ class Node < ApplicationRecord
     end
   end
   
+  def restore_mirror
+    mirror_client.setnetworkactive(true)
+    chaintips = mirror_client.getchaintips
+    chaintips.select { |t| t["status"] == "invalid" }.each do |t|
+      mirror_client.reconsiderblock(t["hash"])
+    end
+  end
+  
   def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
@@ -477,7 +485,10 @@ class Node < ApplicationRecord
     }
 
     while true
-      options[:coins].each do |coin| 
+      options[:coins].each do |coin|
+        Node.where(coin: coin).where.not(mirror_rpchost: nil).each do |node|
+          node.restore_mirror
+        end
         Block.check_inflation!(coin.downcase.to_sym)        
       end
       

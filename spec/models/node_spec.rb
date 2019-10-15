@@ -963,8 +963,31 @@ RSpec.describe Node, :type => :model do
         Node.poll_repeat!({coins: ["BTC"]})
       end
     end
+    
+    describe "restore_mirror" do
+      before do
+        @node = build(:node_with_mirror)
+        @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
+      end
+      
+      it "should restore network and reconsider blocks" do
+        expect(@node.mirror_client).to receive("setnetworkactive").with(true)
+        expect(@node.mirror_client).to receive("reconsiderblock").with("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
+        @node.restore_mirror
+      end
+
+    end
 
     describe "heavy_checks_repeat!" do
+      before do
+        @node = create(:node_with_mirror)
+      end
+
+      it "should call restore_mirror" do
+        expect_any_instance_of(Node).to receive(:restore_mirror)
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
+      end
+      
       it "should call check_inflation!" do
         expect(Block).to receive(:check_inflation!).with(:btc)
 
