@@ -238,10 +238,7 @@ class Block < ApplicationRecord
     Node.where(coin: coin.to_s.upcase).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
-      throw "Node in Initial Blockchain Download" if node.ibd
-      
-      puts "Stop p2p networking to prevent the chain from updating underneath us" unless Rails.env.test?
-      node.mirror_client.setnetworkactive(false)
+      throw "Node in Initial Blockchain Download" if node.ibd      
 
       begin
         # If anything goes wrong, re-enable the p2p networking and undo invalidateblock before throwing
@@ -262,6 +259,9 @@ class Block < ApplicationRecord
           puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
           next
         end
+        
+        puts "Stop p2p networking to prevent the chain from updating underneath us" unless Rails.env.test?
+        node.mirror_client.setnetworkactive(false)
         
         # We want to call gettxoutsetinfo at every height since the last check.
         # Roll back the chain using invalidateblock (height + 1) if needed.

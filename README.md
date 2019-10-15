@@ -80,6 +80,12 @@ puts Node.first.client.help
 Node.first.client.request("getblock", ...)
 ```
 
+To communicate with the first Bitcoin Core mirror node:
+
+```
+Node.where(coin:"BTC").where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
+```
+
 To run Rails tests and monitor for changes:
 
 ```sh
