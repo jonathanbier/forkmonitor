@@ -5,7 +5,7 @@ import { mount, configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
-import NodeName from 'forkMonitorApp/components/nodeBehind';
+import NodeBehind from 'forkMonitorApp/components/nodeBehind';
 
 let wrapper;
 
@@ -27,7 +27,7 @@ describe('NodeBehind', () => {
   };
 
   beforeAll(() => {
-    wrapper = mount(<NodeName
+    wrapper = mount(<NodeBehind
       key={ 0 }
       chaintip={ {block: chaintip} }
       node={ node }
