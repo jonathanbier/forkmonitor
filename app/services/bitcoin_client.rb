@@ -192,6 +192,15 @@ class BitcoinClient
       raise
     end
   end
+  
+  def setnetworkactive(status)
+    begin
+      return request("setnetworkactive", status)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "setnetworkactive #{ status } failed for node #{@id}: " + e.message
+      raise
+    end
+  end
 
   private
 

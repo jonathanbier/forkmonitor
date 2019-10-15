@@ -9,6 +9,7 @@ class BitcoinClientMock
     @client_type = :core
     @chaintips = []
     @extra_inflation = 0
+    @networkactive = true
 
     @block_hashes = {
       975 => "00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c",
@@ -159,7 +160,7 @@ class BitcoinClientMock
             "localservices" => "0000000000000409",
             "localrelay" => true,
             "timeoffset" => -1,
-            "networkactive" => true,
+            "networkactive" => @network_active,
             "connections" => @peer_count,
             "warnings" => ""
           },
@@ -170,7 +171,7 @@ class BitcoinClientMock
             "localservices" => "0000000000000409",
             "localrelay" => true,
             "timeoffset" => -1,
-            "networkactive" => true,
+            "networkactive" => @network_active,
             "connections" => @peer_count,
             "warnings" => ""
           },
@@ -184,7 +185,7 @@ class BitcoinClientMock
             "localservices" => "00000009",
             "localrelay" => true,
             "timeoffset" => 0,
-            "networkactive" => true,
+            "networkactive" => @network_active,
             "connections" => @peer_count,
             "warnings" => ""
           },
@@ -203,7 +204,7 @@ class BitcoinClientMock
           "localservices" => "0000000000000024",
           "localrelay"=> true,
           "timeoffset"=> 0,
-          "networkactive"=> true,
+          "networkactive"=> @network_active,
           "connections"=> @peer_count,
           "relayfee" => 1.0e-05,
           "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
@@ -218,13 +219,17 @@ class BitcoinClientMock
           "localservices" => "0000000000000024",
           "localrelay"=> true,
           "timeoffset"=> 0,
-          "networkactive"=> true,
+          "networkactive"=> @network_active,
           "connections"=> @peer_count,
           "relayfee" => 1.0e-05,
           "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
         }
       }[@version]
     end
+  end
+  
+  def setnetworkactive(status)
+    @network_active = status
   end
 
   def getblockchaininfo

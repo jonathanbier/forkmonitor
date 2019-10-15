@@ -54,5 +54,12 @@ describe BitcoinClient do
         @client.gettxoutsetinfo
       end
     end
+    
+    describe "setnetworkactive" do
+      it "should call setnetworkactive rpc method" do
+        expect(@client).to receive(:request).with("setnetworkactive", true)
+        @client.setnetworkactive(true)
+      end
+    end
   end
 end
