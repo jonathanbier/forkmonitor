@@ -123,9 +123,9 @@ class NotificationsPage extends React.Component {
           <Container>
             <h2>Browser push notifications</h2>
             <p>
-              We currently send browser push notifications for invalid blocks,
-              stale candidates and unexpected extra inflation. Tested with Chrome.
-              Safari is currently not supported.
+              We currently send browser push notifications for invalid blocks (all coins),
+              stale candidates (all coins except testnet) and unexpected extra inflation (Bitcoin and testnet).
+              Tested with Chrome. Safari is currently not supported.
             </p>
             { this.state && this.state.webpush == false &&
               <p>Browser push notification permission denied</p>
