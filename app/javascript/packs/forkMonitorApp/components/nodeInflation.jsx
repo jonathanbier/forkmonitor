@@ -12,7 +12,7 @@ import NumberFormat from 'react-number-format';
 class NodeInflation extends React.Component {
   render() {
     return(
-      <span>Coin supply:&nbsp;
+      <span className="font-weight-light">Supply:&nbsp;
         {
           this.props.txOutset == null && (
             <FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
