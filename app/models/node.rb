@@ -522,13 +522,17 @@ class Node < ApplicationRecord
         @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
         if @stale_candidate.notified_at.nil?
           User.all.each do |user|
-            UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
+            if ![:tbtc].include?(coin) # skip email notification for testnet
+              UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
+            end
           end
           @stale_candidate.update notified_at: Time.now
-          Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
-                             "#{ @stale_candidate.coin.upcase } stale candidate",
-                             "At height #{ @stale_candidate.height }"
-          )
+          if ![:tbtc].include?(coin) # skip push notification for testnet
+            Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
+                               "#{ @stale_candidate.coin.upcase } stale candidate",
+                               "At height #{ @stale_candidate.height }"
+            )
+          end
         end
       end
     end
