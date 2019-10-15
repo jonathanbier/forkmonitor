@@ -487,30 +487,32 @@ class Node < ApplicationRecord
         node.reload
         node.check_chaintips!
       end
-    end
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
       self.bitcoin_alternative_implementations.each do |node|
         node.reload
         node.check_chaintips!
       end
+      Node.prune_empty_chaintips!(:btc)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC") 
       self.testnet_by_version.each do |node|
         node.reload
         node.check_chaintips!
       end
+      Node.prune_empty_chaintips!(:tbtc)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
         node.reload
         node.check_chaintips!
       end
+      Node.prune_empty_chaintips!(:bch)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
       self.bsv_by_version.each do |node|
         node.reload
         node.check_chaintips!
       end
+      Node.prune_empty_chaintips!(:bsv)
     end
       
     # Look for potential stale blocks, i.e. more than one block at the same height
@@ -536,6 +538,11 @@ class Node < ApplicationRecord
         end
       end
     end
+  end
+  
+  # Sometimes an empty chaintip is left over
+  def self.prune_empty_chaintips!(coin)
+    Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
   end
 
   def self.check_laggards!(options = {})
