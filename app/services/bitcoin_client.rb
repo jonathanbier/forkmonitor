@@ -201,6 +201,24 @@ class BitcoinClient
       raise
     end
   end
+  
+  def invalidateblock(block_hash)
+    begin
+      return request("invalidateblock", block_hash)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "invalidateblock #{ block_hash } failed for node #{@id}: " + e.message
+      raise
+    end
+  end
+  
+  def reconsiderblock(block_hash)
+    begin
+      return request("reconsiderblock", block_hash)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "reconsiderblock #{ block_hash } failed for node #{@id}: " + e.message
+      raise
+    end
+  end
 
   private
 

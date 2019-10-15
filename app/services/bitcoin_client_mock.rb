@@ -1,6 +1,7 @@
 class BitcoinClientMock
   def initialize(client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
+    @best_height = 560176
     @reachable = true
     @ibd = false
     @peer_count = 100
@@ -52,6 +53,7 @@ class BitcoinClientMock
 
   def mock_set_height(height)
     @height = height
+    @best_height = height
   end
 
   def mock_unreachable
@@ -442,6 +444,17 @@ class BitcoinClientMock
         "disk_size" => 3202897585,
         "total_amount" => 17650117.32457854
       }
+    elsif @height == 560177 # Actually 572023
+      return {
+        "height" => @height, # Actually 572023
+        "bestblock" => @block_hashes[@height],
+        "transactions" => 29221340,
+        "txouts" => 53336961,
+        "bogosize" => 4018808071,
+        "hash_serialized_2" => "9bd2d3a6d6aa32e68f3c48286986a1c8771180f2c46bb316bb0073b194835d6b",
+        "disk_size" => 3202897585,
+        "total_amount" => 17650117.32457854 + 12.5
+      }
     elsif @height == 560178
       return {
         "height" => @height, # Actually 572025,
@@ -453,12 +466,35 @@ class BitcoinClientMock
         "disk_size" => 3147778574,
         "total_amount" => 17650142.32457854 + @extra_inflation * 2
       }
+    elsif @height == 560179
+      return {
+        "height" => @height, # Actually 572025,
+        "bestblock" => @block_hashes[@height],
+        "transactions" => 29222816,
+        "txouts" => 53340690,
+        "bogosize" => 4019083859,
+        "hash_serialized_2" => "f970cc0aabb3adff4e18a75460ef58c91eb8a181ec97e0d3d8acb71f55402c0a",
+        "disk_size" => 3147778574,
+        "total_amount" => 17650142.32457854 + 12.5 + @extra_inflation * 3
+      }
     end
     throw "No mock txoutset for height #{ @height }"
   end
 
   def getrawtransaction(tx_hash, verbose = false, block_hash = nil)
     return {}
+  end
+  
+  def invalidateblock(block_hash)
+    header = @block_headers[block_hash]
+    throw "Block #{ block_hash } not found" unless header.present?
+    @height = header["height"] - 1
+  end
+  
+  def reconsiderblock(block_hash)
+    header = @block_headers[block_hash]
+    throw "Block #{ block_hash } not found" unless header.present?
+    @height = @best_height
   end
 
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000
