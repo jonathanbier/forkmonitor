@@ -16,4 +16,8 @@ class InflatedBlock < ApplicationRecord
       }
     })
   end
+  
+  def tx_outset
+    TxOutset.find_by(block: self.block, node: self.node)
+  end
 end

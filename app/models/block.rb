@@ -287,6 +287,7 @@ class Block < ApplicationRecord
       # Check that inflation does not exceed the maximum permitted miner award per block
       inflation = tx_outset.total_amount - comparison_tx_outset.total_amount
       if inflation > max_inflation
+        tx_outset.update inflated: true
         inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: max_inflation, actual_inflation: inflation)
         if !inflated_block.notified_at
           User.all.each do |user|

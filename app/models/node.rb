@@ -49,7 +49,12 @@ class Node < ApplicationRecord
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
-    super({ only: fields }.merge(options || {})).merge({height: block && block.height, name_with_version: name_with_version})
+    super({ only: fields }.merge(options || {})).merge({
+      height: block && block.height,
+      name_with_version: name_with_version,
+      tx_outset: self.tx_outset,
+      has_mirror_node: self.mirror_rpchost ? true : false
+    })
   end
 
   def client
@@ -65,6 +70,10 @@ class Node < ApplicationRecord
       @mirror_client = self.class.client_klass.new(self.client_type.to_sym, self.mirror_rpchost, self.mirror_rpcport, self.rpcuser, self.rpcpassword)
     end
     return @mirror_client
+  end
+  
+  def tx_outset
+    self.tx_outsets.find_by(block: self.block)
   end
 
   # Update database with latest info from this node

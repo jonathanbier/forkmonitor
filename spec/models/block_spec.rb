@@ -291,6 +291,16 @@ RSpec.describe Block, :type => :model do
           expect(InflatedBlock.count).to eq(1)
         end
         
+        it "should mark txoutset as inflated" do
+          begin
+            Block.check_inflation!(:btc)
+          rescue UncaughtThrowError
+            # Ignore error
+          end
+          tx_outset = InflatedBlock.first.tx_outset
+          expect(InflatedBlock.first.tx_outset.inflated).to eq(true)
+        end
+        
         it "should add a InflatedBlock entry for testnet inflation" do
           @node_testnet.mirror_client.mock_set_extra_inflation(1)
           begin
