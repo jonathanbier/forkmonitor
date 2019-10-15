@@ -486,9 +486,6 @@ class Node < ApplicationRecord
 
     while true
       options[:coins].each do |coin|
-        Node.where(coin: coin).where.not(mirror_rpchost: nil).each do |node|
-          node.restore_mirror
-        end
         Block.check_inflation!(coin.downcase.to_sym)        
       end
       

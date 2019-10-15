@@ -23,6 +23,7 @@ RSpec.describe InflatedBlock, type: :model do
     end
     
     it "should stop p2p networking and restart it after" do
+      expect(@node.mirror_client).to receive("setnetworkactive").with(true) # restore
       expect(@node.mirror_client).to receive("setnetworkactive").with(false)
       expect(@node.mirror_client).to receive("setnetworkactive").with(true)
       Block.check_inflation!(:btc)

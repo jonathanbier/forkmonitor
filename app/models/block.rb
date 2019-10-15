@@ -238,7 +238,10 @@ class Block < ApplicationRecord
     Node.where(coin: coin.to_s.upcase).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
-      throw "Node in Initial Blockchain Download" if node.ibd      
+      throw "Node in Initial Blockchain Download" if node.ibd
+      
+      puts "Restore mirror node to normal state if needed..." unless Rails.env.test?
+      node.restore_mirror
 
       begin
         # If anything goes wrong, re-enable the p2p networking and undo invalidateblock before throwing
