@@ -7,6 +7,7 @@ RSpec.describe InflatedBlock, type: :model do
       @node.client.mock_set_height(560176)
       @node.mirror_client.mock_set_height(560176)
       @node.poll!
+      @node.poll_mirror!
       @node.reload
       
       @node_without_mirror = build(:node, version: 180000)

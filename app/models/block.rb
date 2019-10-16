@@ -250,7 +250,7 @@ class Block < ApplicationRecord
         begin
           # Update mirror node tip and fetch most recent blocks if needed
           node.poll_mirror!
-          best_mirror_block = Block.find_by(block_hash: node.mirror_client.getbestblockhash())
+          node.reload # without this, ancestors of node.block_block are not updated
         rescue Bitcoiner::Client::JSONRPCError
           # Ignore failure
           puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
@@ -258,7 +258,7 @@ class Block < ApplicationRecord
         end
 
         # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
-        if best_mirror_block.present? && TxOutset.find_by(block: best_mirror_block, node: node).present?
+        if TxOutset.find_by(block: node.mirror_block, node: node).present?
           puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
           next
         end
@@ -268,9 +268,9 @@ class Block < ApplicationRecord
         
         # We want to call gettxoutsetinfo at every height since the last check.
         # Roll back the chain using invalidateblock (height + 1) if needed.
-        blocks_to_check = [best_mirror_block]
+        blocks_to_check = [node.mirror_block]
         # Find previous block with txoutsetinfo
-        comparison_block = best_mirror_block
+        comparison_block = node.mirror_block
         comparison_tx_outset = nil
         while true
           comparison_block = comparison_block.parent
@@ -281,12 +281,12 @@ class Block < ApplicationRecord
           comparison_tx_outset = TxOutset.find_by(node: node, block: comparison_block)
           break if comparison_tx_outset.present?
           # Don't try to calculate inflation for more than 10 blocks; it will take too long to catch up
-          break if best_mirror_block.height - comparison_block.height > 10
+          break if node.mirror_block.height - comparison_block.height > 10
           blocks_to_check.unshift(comparison_block)
         end
                 
         blocks_to_check.each do |block|          
-          if block.height != best_mirror_block.height
+          if block.height != node.mirror_block.height
             puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
             block.children.each do |child_block|
               invalidated_block_hashes.append(child_block.block_hash)
