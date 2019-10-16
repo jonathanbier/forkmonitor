@@ -12,8 +12,8 @@ end
 describe "blocks:check_inflation" do
   include_context "rake"
 
-  it "should call :check_inflation! on Block for coin" do
-    expect(Block).to receive(:check_inflation!).with(:btc)
+  it "should call check_inflation! on Block for coin" do
+    expect(InflatedBlock).to receive(:check_inflation!).with(:btc)
     subject.invoke("BTC")
   end
 end
