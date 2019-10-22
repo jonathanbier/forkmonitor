@@ -40,7 +40,7 @@ class Block < ApplicationRecord
     # BIP320 mask: 0xe0001fff (loses bit 13-28)
     ("%.32b" % (self.version & ~0xe0000000)).split("").drop(3).reverse().collect{|s|s.to_i}
   end
-  
+
   # https://bitcoin.stackexchange.com/a/9962
   def max_inflation
     interval = self.height / 210000

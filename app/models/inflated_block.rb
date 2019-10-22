@@ -2,12 +2,12 @@ class InflatedBlock < ApplicationRecord
   belongs_to :block
   belongs_to :node
   belongs_to :comparison_block, class_name: 'Block'
-  
+
   def as_json(options = nil)
     super({ only: [:id, :max_inflation, :actual_inflation, :dismissed_at] }).merge({
       coin: block.coin.upcase,
       extra_inflation: actual_inflation - max_inflation,
-      block: block, 
+      block: block,
       comparison_block: comparison_block,
       node: {
         id: node.id,
@@ -16,17 +16,17 @@ class InflatedBlock < ApplicationRecord
       }
     })
   end
-  
+
   def tx_outset
     TxOutset.find_by(block: self.block, node: self.node)
   end
-  
+
   def self.check_inflation!(coin)
     Node.where(coin: coin.to_s.upcase).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
-      
+
       puts "Restore mirror node to normal state if needed..." unless Rails.env.test?
       node.restore_mirror
 
@@ -49,10 +49,10 @@ class InflatedBlock < ApplicationRecord
           puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
           next
         end
-        
+
         puts "Stop p2p networking to prevent the chain from updating underneath us" unless Rails.env.test?
         node.mirror_client.setnetworkactive(false)
-        
+
         # We want to call gettxoutsetinfo at every height since the last check.
         # Roll back the chain using invalidateblock (height + 1) if needed.
         blocks_to_check = [node.mirror_block]
@@ -71,8 +71,8 @@ class InflatedBlock < ApplicationRecord
           break if node.mirror_block.height - comparison_block.height > 10
           blocks_to_check.unshift(comparison_block)
         end
-                
-        blocks_to_check.each do |block|          
+
+        blocks_to_check.each do |block|
           if block.height != node.mirror_block.height
             puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
             block.children.each do |child_block|
@@ -83,7 +83,7 @@ class InflatedBlock < ApplicationRecord
 
           puts "Get the total UTXO balance at height #{ block.height }..." unless Rails.env.test?
           txoutsetinfo = node.mirror_client.gettxoutsetinfo
-          
+
           unless invalidated_block_hashes.empty?
             puts "Restore chain to tip..." unless Rails.env.test?
             invalidated_block_hashes.each do |block_hash|
@@ -91,12 +91,12 @@ class InflatedBlock < ApplicationRecord
             end
             invalidated_block_hashes = []
           end
-           
+
           # Make sure we got the block we expected
           throw "TxOutset is not for block #{ block.block_hash }" unless txoutsetinfo["bestblock"] == block.block_hash
-          
+
           tx_outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block, node: node)
-                
+
           # Check that inflation does not exceed the maximum permitted miner award per block
           prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
           if prev_tx_outset.nil?
@@ -105,7 +105,7 @@ class InflatedBlock < ApplicationRecord
           end
 
           inflation = tx_outset.total_amount - prev_tx_outset.total_amount
-          
+
           if inflation > block.max_inflation / 100000000.0
             tx_outset.update inflated: true
             inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: block.max_inflation  / 100000000.0, actual_inflation: inflation)
@@ -133,7 +133,7 @@ class InflatedBlock < ApplicationRecord
         end
         puts "Node restored"
         raise # continue throwing error
-      end      
+      end
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
     end

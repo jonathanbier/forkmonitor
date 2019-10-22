@@ -46,7 +46,7 @@ class Node < ApplicationRecord
     version_arr = v.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
     return name + " #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
   end
-  
+
   def mirror_node?
     return mirror_rpchost.present? && mirror_rpchost != ""
   end
@@ -70,7 +70,7 @@ class Node < ApplicationRecord
     end
     return @client
   end
-  
+
   def mirror_client
     return nil if !self.mirror_rpchost || self.mirror_rpchost == ""
     if !@mirror_client
@@ -78,7 +78,7 @@ class Node < ApplicationRecord
     end
     return @mirror_client
   end
-  
+
   def tx_outset
     self.tx_outsets.find_by(block: self.block)
   end
@@ -145,9 +145,9 @@ class Node < ApplicationRecord
 
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
 
-    self.update block: block, unreachable_since: nil    
+    self.update block: block, unreachable_since: nil
   end
-  
+
   # Get most recent block height from mirror node
   def poll_mirror!
     return unless mirror_node?
@@ -389,7 +389,7 @@ class Node < ApplicationRecord
   end
 
   def self.poll!(options = {})
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       bitcoin_core_nodes = self.bitcoin_core_by_version
       bitcoin_core_nodes.each do |node|
         next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
@@ -411,8 +411,8 @@ class Node < ApplicationRecord
         node.poll!
       end
     end
-    
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC") 
+
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
       self.testnet_by_version.each do |node|
         next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
         puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -420,15 +420,15 @@ class Node < ApplicationRecord
       end
     end
 
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH") 
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
         next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
         puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
         node.poll!
       end
     end
-    
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV") 
+
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
       self.bsv_by_version.each do |node|
         next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
         puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -438,8 +438,8 @@ class Node < ApplicationRecord
 
     self.check_laggards!(options)
     self.check_chaintips!(options)
-    
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       bitcoin_core_nodes.first.check_versionbits!
     end
   end
@@ -469,7 +469,7 @@ class Node < ApplicationRecord
       end
     end
   end
-  
+
   def restore_mirror
     mirror_client.setnetworkactive(true)
     chaintips = mirror_client.getchaintips
@@ -477,7 +477,7 @@ class Node < ApplicationRecord
       mirror_client.reconsiderblock(t["hash"])
     end
   end
-  
+
   def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
@@ -493,9 +493,9 @@ class Node < ApplicationRecord
 
     while true
       options[:coins].each do |coin|
-        InflatedBlock.check_inflation!(coin.downcase.to_sym)        
+        InflatedBlock.check_inflation!(coin.downcase.to_sym)
       end
-      
+
       if Rails.env.test?
         break
       else
@@ -506,7 +506,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!(options)
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       self.bitcoin_core_by_version.each do |node|
         node.reload
         node.check_chaintips!
@@ -517,7 +517,7 @@ class Node < ApplicationRecord
       end
       Node.prune_empty_chaintips!(:btc)
     end
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC") 
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
       self.testnet_by_version.each do |node|
         node.reload
         node.check_chaintips!
@@ -538,7 +538,7 @@ class Node < ApplicationRecord
       end
       Node.prune_empty_chaintips!(:bsv)
     end
-      
+
     # Look for potential stale blocks, i.e. more than one block at the same height
     for coin in [:btc, :tbtc, :bch, :bsv] do
       next if options[:coins] && !options[:coins].empty? && !options[:coins].include?(coin.to_s.upcase)
@@ -563,14 +563,14 @@ class Node < ApplicationRecord
       end
     end
   end
-  
+
   # Sometimes an empty chaintip is left over
   def self.prune_empty_chaintips!(coin)
     Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
   end
 
   def self.check_laggards!(options = {})
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC") 
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       core_nodes = self.bitcoin_core_by_version
       core_nodes.drop(1).each do |node|
         lag  = node.check_if_behind!(core_nodes.first)

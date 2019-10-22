@@ -381,7 +381,7 @@ RSpec.describe Node, :type => :model do
     end
 
   end
-  
+
   describe "poll_mirror!" do
     before do
       @node = build(:node_with_mirror)
@@ -390,10 +390,10 @@ RSpec.describe Node, :type => :model do
       @node.client.mock_set_height(560177)
       @node_without_mirror.client.mock_set_height(560177)
       @node.mirror_client.mock_set_height(560177)
-      
+
       @node.poll! # stores the block and node entry
     end
-    
+
     it "node without mirror node should not have mirror_client" do
       n = build(:node)
       expect(n.mirror_client).to be_nil
@@ -405,18 +405,18 @@ RSpec.describe Node, :type => :model do
       @node.poll!
       expect(@node.mirror_block).to be_nil
     end
-    
+
     it "poll_mirror! should poll mirror node" do
       @node.poll_mirror!
       expect(@node.mirror_block.height).to equal(560177)
     end
-    
+
     it "poll_mirror! should do nothing if a node doesn't have a mirror" do
       @node_without_mirror.poll_mirror!
       expect(@node.mirror_block).to be_nil
     end
   end
-  
+
   describe "Bitcoin Testnet" do
     before do
       @node = build(:node, coin: "TBTC")
@@ -968,13 +968,13 @@ RSpec.describe Node, :type => :model do
         Node.poll_repeat!({coins: ["BTC"]})
       end
     end
-    
+
     describe "restore_mirror" do
       before do
         @node = build(:node_with_mirror)
         @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
       end
-      
+
       it "should restore network and reconsider blocks" do
         expect(@node.mirror_client).to receive("setnetworkactive").with(true)
         expect(@node.mirror_client).to receive("reconsiderblock").with("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
@@ -992,7 +992,7 @@ RSpec.describe Node, :type => :model do
         expect_any_instance_of(Node).to receive(:restore_mirror)
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
-      
+
       it "should call check_inflation!" do
         expect(InflatedBlock).to receive(:check_inflation!).with(:btc)
 

@@ -65,32 +65,32 @@ RSpec.describe Block, :type => :model do
       @block = build(:block, height: 596808)
       expect(@block.max_inflation).to eq(12.5 * COIN)
     end
-    
+
     it "should be 50 for BTC in 2009" do
       @block = build(:block, height: 100)
       expect(@block.max_inflation).to eq(50 * COIN)
     end
-    
+
     it "should be 12.5 for BTC immediately before the 2020 halving" do
       @block = build(:block, height: 629999)
       expect(@block.max_inflation).to eq(12.5 * COIN)
     end
-    
+
     it "should be 6.25 for BTC at the 2020 halving" do
       @block = build(:block, height: 630000)
       expect(@block.max_inflation).to eq(6.25 * COIN)
     end
-    
+
     it "should be 0.00000009 for BTC at height 6090000" do
       @block = build(:block, height: 6090000)
       expect(@block.max_inflation).to eq(0.00000009 * COIN)
     end
-    
+
     it "should be 0 for BTC as of height 6930000" do
       @block = build(:block, height: 6930000)
       expect(@block.max_inflation).to eq(0.00000000 * COIN)
     end
-    
+
     it "should create slightly less than 21 million BTC" do
        @block = build(:block, height: 0)
        i=0
