@@ -122,7 +122,9 @@ class Node < ApplicationRecord
       self.update(version: parse_version(info["version"]), peer_count: info["connections"])
     end
 
-    if blockchaininfo.present?
+    if self.libbitcoin?
+      ibd = self.block.nil? || self.block.height < 600546
+    elsif blockchaininfo.present?
       if blockchaininfo["initialblockdownload"].present?
         ibd = blockchaininfo["initialblockdownload"]
       elsif blockchaininfo["verificationprogress"].present?
@@ -131,10 +133,6 @@ class Node < ApplicationRecord
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
       self.update ibd: ibd
-    elsif info.present?
-      # getinfo for v0.8.6 doesn't contain initialblockdownload boolean or verificationprogress.
-      # As long as we also poll newer nodes, we can infer IBD status from how far behind it is.
-      self.update ibd: info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
     end
 
     if blockchaininfo.present?

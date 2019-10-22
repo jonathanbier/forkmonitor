@@ -267,11 +267,6 @@ RSpec.describe Node, :type => :model do
         @node.poll!
       end
 
-      it "should get IBD status by comparing to other nodes" do
-        @node.client.mock_ibd(true)
-        expect(@node.ibd).to eq(false)
-      end
-
       it "should use time from getblock instead of getblockchaininfo" do
         expect(@node.block.timestamp).to equal(1548498742)
       end
