@@ -132,8 +132,8 @@ class Node < ApplicationRecord
       elsif self.coin == "BTC"
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
-      self.update ibd: ibd
     end
+    self.update ibd: ibd
 
     if blockchaininfo.present?
       best_block_hash = blockchaininfo["bestblockhash"]
