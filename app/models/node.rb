@@ -34,10 +34,17 @@ class Node < ApplicationRecord
   end
 
   def name_with_version
-    return self.name if self.version.nil?
+    name = "#{ self.name }"
+    if self.version.nil?
+      if self.version_extra.present?
+        # Allow admin to hardcode version
+        name += " #{ self.version_extra }"
+      end
+      return name
+    end
     v = self.sv? ? self.version  - 100000000 : self.version
     version_arr = v.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
-    return "#{ self.name } #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
+    return name + " #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
   end
   
   def mirror_node?

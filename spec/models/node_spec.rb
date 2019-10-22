@@ -39,6 +39,11 @@ RSpec.describe Node, :type => :model do
       expect(node.name_with_version).to eq("Libbitcoin")
     end
 
+    it "should add version_extra if set while version is absent" do
+      node = create(:node, version: nil, client_type: :libbitcoin, name: "Libbitcoin", version_extra: "3.6.0")
+      expect(node.name_with_version).to eq("Libbitcoin 3.6.0")
+    end
+
     # https://github.com/bitcoin-sv/bitcoin-sv/blob/v0.1.1/src/clientversion.h#L57-L64
     it "should handle SV version shift" do
       node = create(:node, version: 100010000, client_type: :sv, name: "Bitcoin SV")
