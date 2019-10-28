@@ -123,7 +123,7 @@ class Node < ApplicationRecord
     end
 
     if self.libbitcoin?
-      ibd = self.block.nil? || self.block.height < 600546
+      ibd = block_height < 560176
     elsif blockchaininfo.present?
       if blockchaininfo["initialblockdownload"].present?
         ibd = blockchaininfo["initialblockdownload"]
