@@ -79,6 +79,10 @@ class BitcoinClientMock
   def mock_set_extra_inflation(amount)
     @extra_inflation = amount
   end
+  
+  def getblockcount
+    return @height
+  end
 
   def getblockheight
     if @client_type == :libbitcoin

@@ -1,14 +1,12 @@
 class InflatedBlock < ApplicationRecord
   belongs_to :block
   belongs_to :node
-  belongs_to :comparison_block, class_name: 'Block'
 
   def as_json(options = nil)
     super({ only: [:id, :max_inflation, :actual_inflation, :dismissed_at] }).merge({
       coin: block.coin.upcase,
       extra_inflation: actual_inflation - max_inflation,
       block: block,
-      comparison_block: comparison_block,
       node: {
         id: node.id,
         name: node.name,
@@ -21,8 +19,12 @@ class InflatedBlock < ApplicationRecord
     TxOutset.find_by(block: self.block, node: self.node)
   end
 
-  def self.check_inflation!(coin)
-    Node.where(coin: coin.to_s.upcase).each do |node|
+  def self.check_inflation!(options)
+    max = options[:max].present? ? options[:max] : 10
+    max_exceeded = false
+    comparison_block = nil
+
+    Node.where(coin: options[:coin].to_s.upcase).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
@@ -60,22 +62,23 @@ class InflatedBlock < ApplicationRecord
         comparison_block = node.mirror_block
         comparison_tx_outset = nil
         while true
-          comparison_block = comparison_block.parent
-          if comparison_block.nil?
-            puts "Unable to check inflation due to missing intermediate block" unless Rails.env.test?
+          # Don't try to calculate inflation for more than 10 (default) blocks; it will take too long to catch up
+          if node.mirror_block.height - comparison_block.height >= max
+            max_exceeded = true
             break
           end
+          comparison_block = comparison_block.parent
+          throw "Unable to check inflation due to missing intermediate block" if comparison_block.nil?
           comparison_tx_outset = TxOutset.find_by(node: node, block: comparison_block)
           break if comparison_tx_outset.present?
-          # Don't try to calculate inflation for more than 10 blocks; it will take too long to catch up
-          break if node.mirror_block.height - comparison_block.height > 10
           blocks_to_check.unshift(comparison_block)
         end
-
+        
         blocks_to_check.each do |block|
-          if block.height != node.mirror_block.height
+          # Invalidate new blocks, including any forks we don't know of yet
+          while(block.height < node.mirror_client.getblockcount)
             puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
-            block.children.each do |child_block|
+            block.children.each do |child_block| # Invalidate all child blocks we know of
               invalidated_block_hashes.append(child_block.block_hash)
               node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
             end
@@ -108,7 +111,7 @@ class InflatedBlock < ApplicationRecord
 
           if inflation > block.max_inflation / 100000000.0
             tx_outset.update inflated: true
-            inflated_block = block.inflated_block || block.create_inflated_block(node: node,comparison_block: comparison_block, max_inflation: block.max_inflation  / 100000000.0, actual_inflation: inflation)
+            inflated_block = block.inflated_block || block.create_inflated_block(node: node, max_inflation: block.max_inflation  / 100000000.0, actual_inflation: inflation)
             if !inflated_block.notified_at
               User.all.each do |user|
                 UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
@@ -117,11 +120,12 @@ class InflatedBlock < ApplicationRecord
               Subscription.blast("inflated-block-#{ inflated_block.id }",
                                  "#{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC inflation",
                                  "Unexpected #{ inflated_block.actual_inflation -  inflated_block.max_inflation } BTC extra inflation \
-                                 between block height #{ inflated_block.comparison_block.height } and #{ inflated_block.block.height } according to #{ node.name_with_version }.",
+                                 at block height #{ inflated_block.block.height } according to #{ node.name_with_version }.",
               )
             end
           end
         end
+      
       rescue
         puts "Something went wrong, restoring node before bailing out..."
         puts "Resume p2p networking..."
@@ -136,6 +140,10 @@ class InflatedBlock < ApplicationRecord
       end
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
+    end
+    
+    if max_exceeded
+      raise "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
     end
   end
 end

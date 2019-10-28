@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_15_103501) do
+ActiveRecord::Schema.define(version: 2019_10_28_154143) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -51,7 +51,6 @@ ActiveRecord::Schema.define(version: 2019_10_15_103501) do
 
   create_table "inflated_blocks", force: :cascade do |t|
     t.bigint "block_id"
-    t.bigint "comparison_block_id"
     t.decimal "max_inflation", precision: 16, scale: 8
     t.decimal "actual_inflation", precision: 16, scale: 8
     t.datetime "notified_at"
@@ -60,7 +59,6 @@ ActiveRecord::Schema.define(version: 2019_10_15_103501) do
     t.bigint "node_id"
     t.datetime "dismissed_at"
     t.index ["block_id"], name: "index_inflated_blocks_on_block_id"
-    t.index ["comparison_block_id"], name: "index_inflated_blocks_on_comparison_block_id"
     t.index ["node_id"], name: "index_inflated_blocks_on_node_id"
   end
 
@@ -181,7 +179,6 @@ ActiveRecord::Schema.define(version: 2019_10_15_103501) do
   add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
   add_foreign_key "chaintips", "nodes"
   add_foreign_key "inflated_blocks", "blocks"
-  add_foreign_key "inflated_blocks", "blocks", column: "comparison_block_id"
   add_foreign_key "inflated_blocks", "nodes"
   add_foreign_key "invalid_blocks", "blocks"
   add_foreign_key "invalid_blocks", "nodes"

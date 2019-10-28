@@ -56,6 +56,15 @@ class BitcoinClient
       raise
     end
   end
+  
+  def getblockcount
+    begin
+      return request("getblockcount")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      puts "getblockcount failed for node #{@id}: " + e.message
+      raise
+    end
+  end
 
   def getblockheight
     raise "Not implemented" unless @client_type == :libbitcoin

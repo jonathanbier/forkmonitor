@@ -7,9 +7,9 @@ namespace 'blocks' do :env
     Node.fetch_ancestors!(args.height.to_i)
   end
 
-  desc "Check for unwanted inflation for [coin]"
-  task :check_inflation, [:coin] => :environment do |action, args|
-    InflatedBlock.check_inflation!(args.coin.downcase.to_sym)
+  desc "Check for unwanted inflation for [coin] (limit to [max=10])"
+  task :check_inflation, [:coin, :max] => :environment do |action, args|
+    InflatedBlock.check_inflation!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : nil})
   end
 
   desc "Get chaintips for all nodes"

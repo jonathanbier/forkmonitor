@@ -981,6 +981,7 @@ RSpec.describe Node, :type => :model do
     describe "heavy_checks_repeat!" do
       before do
         @node = create(:node_with_mirror)
+        expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       end
 
       it "should call restore_mirror" do
@@ -989,7 +990,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call check_inflation!" do
-        expect(InflatedBlock).to receive(:check_inflation!).with(:btc)
+        expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc})
 
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end

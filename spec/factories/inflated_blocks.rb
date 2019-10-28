@@ -1,7 +1,6 @@
 FactoryBot.define do
    factory :inflated_block do
      association :node, factory: :node_with_block, version: 170100
-     association :comparison_block, factory: :block_first_seen_by
      association :block, factory: :block_first_seen_by
      actual_inflation { 13.5 }
      max_inflation { 12.5 }

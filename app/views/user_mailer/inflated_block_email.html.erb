@@ -1,6 +1,6 @@
 <p>
   <%= @inflated_block.node.name_with_version %> detected an unexpected <%=  @inflated_block.actual_inflation -  @inflated_block.max_inflation %> BTC extra inflation
-  between block height <%=  @inflated_block.comparison_block.height %> and <%= @inflated_block.block.height %>
+  at height <%= @inflated_block.block.height %>
 </p>
 <p>
   It was mined by <%= @inflated_block.block.pool ? @inflated_block.block.pool : "an unknown pool" %>.
