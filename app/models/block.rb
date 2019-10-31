@@ -1,4 +1,5 @@
-MINIMUM_BLOCK_HEIGHT = 560176 # Tests need to be adjusted if this number is increased
+MINIMUM_BLOCK_HEIGHT_MAINNET = 560176 # Tests need to be adjusted if this number is increased
+MINIMUM_BLOCK_HEIGHT_TESTNET = 1500000
 
 class Block < ApplicationRecord
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
@@ -49,11 +50,14 @@ class Block < ApplicationRecord
   end
 
   def find_ancestors!(node, until_height = nil)
-    # Prevent new instances from going too far back:
     block_id = self.id
+    block_ids = []
     loop do
+      block_ids.append(block_id)
       block = Block.find(block_id)
-      return if until_height ? block.height == until_height : block.height <= MINIMUM_BLOCK_HEIGHT
+      # Prevent new instances from going too far back:
+      break if block.height == (block.tbtc? ? MINIMUM_BLOCK_HEIGHT_TESTNET : MINIMUM_BLOCK_HEIGHT_MAINNET)
+      break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
         if node.client_type.to_sym == :libbitcoin
@@ -65,7 +69,7 @@ class Block < ApplicationRecord
         block.update parent: parent
       end
       if parent.present?
-        return if until_height.nil?
+        break if until_height.nil? && parent.connected
       else
         # Fetch parent block:
         break if !self.id
@@ -81,6 +85,9 @@ class Block < ApplicationRecord
       end
       block_id = parent.id
     end
+    # Go back up to the tip to mark blocks as connected
+    return if until_height && !Block.find(block_id).connected
+    Block.where("id in (?)", block_ids).update connected: true
   end
 
   def summary(time=false)
