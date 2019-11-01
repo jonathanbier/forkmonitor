@@ -52,8 +52,15 @@ class BitcoinClientMock
   end
 
   def mock_set_height(height)
+    @chaintips.delete_if { |t| t["status"] == "active" }
     @height = height
     @best_height = height
+    @chaintips.push({
+        "height" => height,
+        "hash" => @block_hashes[@height] ,
+        "branchlen" => 0,
+        "status" => "active"
+    })
   end
 
   def mock_unreachable
@@ -79,7 +86,7 @@ class BitcoinClientMock
   def mock_set_extra_inflation(amount)
     @extra_inflation = amount
   end
-  
+
   def getblockcount
     return @height
   end
@@ -233,7 +240,7 @@ class BitcoinClientMock
       }[@version]
     end
   end
-  
+
   def setnetworkactive(status)
     @network_active = status
   end
@@ -488,24 +495,40 @@ class BitcoinClientMock
   def getrawtransaction(tx_hash, verbose = false, block_hash = nil)
     return {}
   end
-  
+
   def invalidateblock(block_hash)
     header = @block_headers[block_hash]
     throw "Block #{ block_hash } not found" unless header.present?
-    @height = header["height"] - 1
-    @chaintips.push({
-        "height" => header["height"],
-        "hash" => block_hash,
-        "branchlen" => 0,
-        "status" => "invalid"
-    })
+    # Mark the current tip as invalid:
+    throw "No active chaintip" unless @chaintips.find { |t| t["status"] == "active" }
+    @chaintips.map! { |t|
+      if t["status"] == "active"
+        t["status"] = "invalid"
+      end
+      t
+    }
+    # Mark 1 below the invalidated block as the active tip:
+    mock_set_height(header["height"] - 1)
   end
-  
+
   def reconsiderblock(block_hash)
     header = @block_headers[block_hash]
     throw "Block #{ block_hash } not found" unless header.present?
-    @height = @best_height
-    @chaintips.delete_if { |t| t["hash"] == block_hash }
+    # Mark the invalid chaintip (if any) as active
+    activated_block = nil
+    @chaintips.map! { |t|
+      if t["status"] == "invalid" # TODO: disambiguate if there are forks
+        t["status"] = "active"
+        @height = t["height"]
+        @best_height = @height
+        activated_block = t["hash"]
+      end
+      t
+    }
+    if activated_block.present?
+      # Remove previous active tip
+      @chaintips.delete_if { |t| t["status"] == "active" && t["hash"] != activated_block}
+    end
   end
 
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000

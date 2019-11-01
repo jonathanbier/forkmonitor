@@ -970,6 +970,7 @@ RSpec.describe Node, :type => :model do
     describe "restore_mirror" do
       before do
         @node = build(:node_with_mirror)
+        @node.mirror_client.mock_set_height(560178)
         @node.poll_mirror!
         @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
       end
@@ -985,6 +986,8 @@ RSpec.describe Node, :type => :model do
     describe "heavy_checks_repeat!" do
       before do
         @node = create(:node_with_mirror)
+        @node.mirror_client.mock_set_height(560176)
+        allow(Node).to receive(:where).and_return [@node] # Preserve mirror client instance
         expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       end
 

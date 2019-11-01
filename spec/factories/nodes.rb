@@ -8,7 +8,7 @@ FactoryBot.define do
    factory :node_with_block, parent: :node do
      block
    end
-   
+
    factory :node_with_mirror, parent: :node do
      mirror_rpchost { "127.0.0.1" }
      mirror_rpcport { 8336 }

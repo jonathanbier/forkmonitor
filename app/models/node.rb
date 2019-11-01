@@ -484,6 +484,12 @@ class Node < ApplicationRecord
     end
   end
 
+  def get_mirror_active_tip
+    mirror_client.getchaintips.find { |t|
+      t["status"] == "active"
+    }
+  end
+
   def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {

@@ -9,7 +9,7 @@ RSpec.describe InflatedBlock, type: :model do
       @node.poll!
       @node.poll_mirror!
       @node.reload
-      
+
       @node_without_mirror = build(:node, version: 180000)
 
       @node_testnet = build(:node_with_mirror, version: 180000, coin: "TBTC")
@@ -17,26 +17,26 @@ RSpec.describe InflatedBlock, type: :model do
       @node_testnet.mirror_client.mock_set_height(560176)
       @node_testnet.poll!
       @node_testnet.reload
-      
+
       expect(Block.maximum(:height)).to eq(560176)
       allow(Node).to receive(:where).with(coin: "BTC").and_return [@node_without_mirror, @node]
       allow(Node).to receive(:where).with(coin: "TBTC").and_return [@node_testnet]
-      
+
       # throw the first time for lacking a comparison block
       expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       expect(TxOutset.count).to eq(1)
-      @node.mirror_client.mock_set_height(560177)      
-      
+      @node.mirror_client.mock_set_height(560177)
+
       expect { InflatedBlock.check_inflation!({coin: :tbtc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       expect(TxOutset.count).to eq(2)
       @node_testnet.mirror_client.mock_set_height(560177)
     end
-    
+
     it "should stop p2p networking and restart it after" do
       expect(@node.mirror_client).to receive("setnetworkactive").with(true) # restore
       expect(@node.mirror_client).to receive("setnetworkactive").with(false)
       expect(@node.mirror_client).to receive("setnetworkactive").with(true)
-      
+
       InflatedBlock.check_inflation!({coin: :btc, max: 1})
     end
 
@@ -48,7 +48,7 @@ RSpec.describe InflatedBlock, type: :model do
       expect(TxOutset.count).to eq(3)
       expect(TxOutset.last.block.height).to eq(560177)
     end
-    
+
     it "should call gettxoutsetinfo testnet on mirror node" do
       expect(@node_testnet.mirror_client).to receive("gettxoutsetinfo").and_call_original
 
@@ -81,7 +81,7 @@ RSpec.describe InflatedBlock, type: :model do
         expect(Block.find_by(height: 560178)).not_to be_nil
         expect(Block.find_by(height: 560177)).not_to be_nil
       end
-      
+
       it "should invalidate the second block, and later the third block to wind back the tip" do
         expect(@node.mirror_client).to receive("invalidateblock").with("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9").ordered.and_call_original
         expect(@node.mirror_client).to receive("reconsiderblock").with("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9").ordered.and_call_original
@@ -117,7 +117,7 @@ RSpec.describe InflatedBlock, type: :model do
         end
         expect(InflatedBlock.count).to eq(1)
       end
-      
+
       it "should mark txoutset as inflated" do
         begin
           InflatedBlock.check_inflation!({coin: :btc})
@@ -127,7 +127,7 @@ RSpec.describe InflatedBlock, type: :model do
         tx_outset = InflatedBlock.first.tx_outset
         expect(InflatedBlock.first.tx_outset.inflated).to eq(true)
       end
-      
+
       it "should add a InflatedBlock entry for testnet inflation" do
         @node_testnet.mirror_client.mock_set_extra_inflation(1)
         begin

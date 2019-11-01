@@ -28,8 +28,6 @@ class InflatedBlock < ApplicationRecord
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
-
-      puts "Restore mirror node to normal state if needed..." unless Rails.env.test?
       node.restore_mirror
 
       begin
@@ -73,16 +71,19 @@ class InflatedBlock < ApplicationRecord
           break if comparison_tx_outset.present?
           blocks_to_check.unshift(comparison_block)
         end
-        
+
         blocks_to_check.each do |block|
           # Invalidate new blocks, including any forks we don't know of yet
-          while(block.height < node.mirror_client.getblockcount)
+          while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.height < active_tip["height"])
             puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
             block.children.each do |child_block| # Invalidate all child blocks we know of
               invalidated_block_hashes.append(child_block.block_hash)
               node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
             end
           end
+
+          throw "No active tip left after rollback. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
+          throw "Unexpected active tip hash #{ active_tip["hash"] } (#{ active_tip["height"] }) instead of #{ block.block_hash } (#{ block.height })" unless active_tip["hash"] == block.block_hash
 
           puts "Get the total UTXO balance at height #{ block.height }..." unless Rails.env.test?
           txoutsetinfo = node.mirror_client.gettxoutsetinfo
@@ -125,7 +126,7 @@ class InflatedBlock < ApplicationRecord
             end
           end
         end
-      
+
       rescue
         puts "Something went wrong, restoring node before bailing out..."
         puts "Resume p2p networking..."
@@ -141,7 +142,7 @@ class InflatedBlock < ApplicationRecord
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
     end
-    
+
     if max_exceeded
       raise "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
     end
