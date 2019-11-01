@@ -1,5 +1,5 @@
 MINIMUM_BLOCK_HEIGHT_MAINNET = 560176 # Tests need to be adjusted if this number is increased
-MINIMUM_BLOCK_HEIGHT_TESTNET = 1500000
+MINIMUM_BLOCK_HEIGHT_TESTNET = 1600000
 
 class Block < ApplicationRecord
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
