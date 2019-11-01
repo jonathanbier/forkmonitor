@@ -1,5 +1,9 @@
-MINIMUM_BLOCK_HEIGHT_MAINNET = 560176 # Tests need to be adjusted if this number is increased
-MINIMUM_BLOCK_HEIGHT_TESTNET = 1600000
+MINIMUM_BLOCK_HEIGHTS = {
+  btc: 560176, # Tests need to be adjusted if this number is increased
+  tbtc: 1600000,
+  bch: 581000,
+  bsv:606000
+}
 
 class Block < ApplicationRecord
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
@@ -56,7 +60,7 @@ class Block < ApplicationRecord
       block_ids.append(block_id)
       block = Block.find(block_id)
       # Prevent new instances from going too far back:
-      break if block.height == (block.tbtc? ? MINIMUM_BLOCK_HEIGHT_TESTNET : MINIMUM_BLOCK_HEIGHT_MAINNET)
+      break if block.height == MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym]
       break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
