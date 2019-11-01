@@ -56,7 +56,7 @@ class BitcoinClient
       raise
     end
   end
-  
+
   def getblockcount
     begin
       return request("getblockcount")
@@ -201,7 +201,7 @@ class BitcoinClient
       raise
     end
   end
-  
+
   def setnetworkactive(status)
     begin
       return request("setnetworkactive", status)
@@ -210,7 +210,7 @@ class BitcoinClient
       raise
     end
   end
-  
+
   def invalidateblock(block_hash)
     begin
       return request("invalidateblock", block_hash)
@@ -219,11 +219,15 @@ class BitcoinClient
       raise
     end
   end
-  
+
   def reconsiderblock(block_hash)
     begin
       return request("reconsiderblock", block_hash)
     rescue Bitcoiner::Client::JSONRPCError => e
+      if e.message.include?("Block not found")
+        puts "reconsiderblock #{ block_hash } failed for node #{@id}: block not found" unless Rails.env.test?
+        return
+      end
       puts "reconsiderblock #{ block_hash } failed for node #{@id}: " + e.message
       raise
     end

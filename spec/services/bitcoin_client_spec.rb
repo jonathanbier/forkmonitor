@@ -1,6 +1,7 @@
 require 'rails_helper'
 
 describe BitcoinClient do
+
   describe "instance" do
     before do
       @client = described_class.new(:core, "127.0.0.1", "8332", "user", "password")
@@ -54,14 +55,14 @@ describe BitcoinClient do
         @client.gettxoutsetinfo
       end
     end
-    
+
     describe "setnetworkactive" do
       it "should call setnetworkactive rpc method" do
         expect(@client).to receive(:request).with("setnetworkactive", true)
         @client.setnetworkactive(true)
       end
     end
-    
+
     describe "invalidateblock" do
       it "should call invalidateblock rpc method" do
         block_hash = "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
@@ -69,11 +70,18 @@ describe BitcoinClient do
         @client.invalidateblock(block_hash)
       end
     end
-    
+
     describe "reconsiderblock" do
       it "should call reconsiderblock rpc method" do
         block_hash = "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
         expect(@client).to receive(:request).with("reconsiderblock", block_hash)
+        @client.reconsiderblock(block_hash)
+      end
+
+      it "should ignore block not found error" do
+        stub_const("Bitcoiner::Client::JSONRPCError", StandardError)
+        block_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+        expect(@client).to receive(:request).with("reconsiderblock", block_hash).and_raise("Block not found")
         @client.reconsiderblock(block_hash)
       end
     end
