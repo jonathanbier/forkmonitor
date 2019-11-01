@@ -476,10 +476,11 @@ class Node < ApplicationRecord
   def restore_mirror
     mirror_client.setnetworkactive(true)
     return if mirror_block.nil?
-    #  TODO: take into account if this TxOutset is a direct ancestor
-    latest_tx_outset_height = Block.where(coin: self.coin.downcase.to_sym).includes(:tx_outsets).maximum(:height)
+    # Reconsider all invalid chaintips above the currently active one:
     chaintips = mirror_client.getchaintips
-    chaintips.select { |t| t["status"] == "invalid" && t["height"] >= latest_tx_outset_height }.each do |t|
+    active_chaintip = chaintips.find { |t| t["status"] == "active" }
+    throw "#{ coin } mirror node #{  } does not have an active chaintip" if active_chaintip.nil?
+    chaintips.select { |t| t["status"] == "invalid" && t["height"] >= active_chaintip["height"] }.each do |t|
       mirror_client.reconsiderblock(t["hash"])
     end
   end
