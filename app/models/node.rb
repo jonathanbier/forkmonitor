@@ -376,7 +376,12 @@ class Node < ApplicationRecord
 
   def get_pool_for_block!(block_hash, block_info = nil)
     return nil unless self.core? || self.abc? || self.sv?
-    block_info = block_info || self.client.getblock(block_hash)
+    begin
+      block_info = block_info || self.client.getblock(block_hash)
+    rescue Bitcoiner::Client::JSONRPCError
+      puts "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
+      return nil
+    end
     tx_id = block_info["tx"].first
     if self.core? && self.version && self.version >= 160000
       coinbase = self.client.getrawtransaction(tx_id, true, block_hash)
