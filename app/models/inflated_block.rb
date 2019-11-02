@@ -77,18 +77,28 @@ class InflatedBlock < ApplicationRecord
 
         blocks_to_check.each do |block|
           # Invalidate new blocks, including any forks we don't know of yet
+          puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
+          tally = 0
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.height < active_tip["height"])
+            if tally > 100
+              throw "Unable to roll active chaintip to height #{ block.height }"
+            elsif tally > 0
+              # Fetch blocks for any newly activated chaintips
+              node.poll_mirror!
+            end
+            puts "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })" unless Rails.env.test?
             block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
               begin
                 node.mirror_client.getblockheader(child_block.block_hash)
               rescue BitcoinClient::Error
                 puts "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
-                break
+                next
               end
-              puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
               invalidated_block_hashes.append(child_block.block_hash)
+              puts "Invalidate block #{ child_block.block_hash } (#{ block.height })" unless Rails.env.test?
               node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
             end
+
           end
 
           throw "No active tip left after rollback. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
