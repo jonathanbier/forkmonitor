@@ -477,8 +477,13 @@ class Node < ApplicationRecord
     end
   end
 
+  # Returns false if node is not reachable. Returns nil if current mirror_block is missing.
   def restore_mirror
-    mirror_client.setnetworkactive(true)
+    begin
+      mirror_client.setnetworkactive(true)
+    rescue Bitcoiner::Client::JSONRPCError
+      return false
+    end
     return if mirror_block.nil?
     # Reconsider all invalid chaintips above the currently active one:
     chaintips = mirror_client.getchaintips

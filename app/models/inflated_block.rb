@@ -28,7 +28,10 @@ class InflatedBlock < ApplicationRecord
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
-      node.restore_mirror
+      if node.restore_mirror == false
+        puts "Node not reachable, skipping"
+        next
+      end
 
       begin
         # If anything goes wrong, re-enable the p2p networking and undo invalidateblock before throwing
