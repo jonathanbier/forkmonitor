@@ -80,7 +80,7 @@ class InflatedBlock < ApplicationRecord
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.height < active_tip["height"])
             block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
               begin
-                node.mirror_client.getblockhash(child_block.block_hash)
+                node.mirror_client.getblockheader(child_block.block_hash)
               rescue BitcoinClient::Error
                 puts "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
                 break
