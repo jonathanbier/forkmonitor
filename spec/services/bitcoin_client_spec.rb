@@ -79,9 +79,8 @@ describe BitcoinClient do
       end
 
       it "should ignore (block not found) error" do
-        stub_const("Bitcoiner::Client::JSONRPCError", StandardError)
         block_hash = "0000000000000000000000000000000000000000000000000000000000000000"
-        expect(@client).to receive(:request).with("reconsiderblock", block_hash).and_raise("ok")
+        expect(@client).to receive(:request).with("reconsiderblock", block_hash).and_raise(Bitcoiner::Client::JSONRPCError, "ok")
         @client.reconsiderblock(block_hash)
       end
     end

@@ -1,6 +1,10 @@
 require "rails_helper"
 
 RSpec.describe Node, :type => :model do
+  before do
+    stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
+  end
+
   describe "version" do
     it "should be set" do
       node = create(:node_with_block, version: 160300)

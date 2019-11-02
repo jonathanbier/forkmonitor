@@ -1,4 +1,7 @@
 class BitcoinClientMock
+  class Error < StandardError
+  end
+
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
     @best_height = 560176
@@ -97,12 +100,12 @@ class BitcoinClientMock
     if @client_type == :libbitcoin
       return @height
     else
-      raise "Only used by libbitcoin"
+      raise Error, "Only used by libbitcoin"
     end
   end
 
   def getinfo
-    raise Bitcoiner::Client::JSONRPCError if !@reachable
+    raise Error if !@reachable
     if @coin == "BTC"
       if @client_type == :core
         res = {
@@ -139,10 +142,10 @@ class BitcoinClientMock
   end
 
   def getnetworkinfo
-    raise Bitcoiner::Client::JSONRPCError if !@reachable
+    raise Error if !@reachable
     if @coin == "BTC"
       if @client_type == :core
-        raise Bitcoiner::Client::JSONRPCError if @version < 100000
+        raise Error if @version < 100000
         {
           100300 => {
             "version" => 100300,
@@ -206,7 +209,7 @@ class BitcoinClientMock
           },
         }[@version]
       elsif @client_type == :btcd
-        raise Bitcoiner::Client::JSONRPCError
+        raise Error
       else
         throw "No getnetworkinfo mock for #{ @client_type }"
       end
@@ -248,10 +251,10 @@ class BitcoinClientMock
   end
 
   def getblockchaininfo
-    raise Bitcoiner::Client::JSONRPCError if !@reachable
+    raise Error if !@reachable
     if @coin == "BTC"
       if @client_type == :core
-        raise Bitcoiner::Client::JSONRPCError if @version < 100000
+        raise Error if @version < 100000
         res = {
           170100 => {
             "chain" => "main",
@@ -345,7 +348,7 @@ class BitcoinClientMock
       end
     elsif @coin == "TBTC" # tesnet
       if @client_type == :core
-        raise Bitcoiner::Client::JSONRPCError if @version < 100000
+        raise Error if @version < 100000
         res = {
           170100 => {
             "chain" => "test",
@@ -416,27 +419,27 @@ class BitcoinClientMock
   end
 
   def getblock(hash)
-    raise Bitcoiner::Client::JSONRPCError unless @blocks[hash]
+    raise Error unless @blocks[hash]
 
     return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
   end
 
   def getblockheader(hash_or_height)
     if @client_type == :libbitcoin
-      raise "Must provide height or hash" unless hash_or_height.present?
+      raise Error, "Must provide height or hash" unless hash_or_height.present?
       if hash_or_height.is_a?(Numeric)
         hash = @block_hashes[hash_or_height]
       else
         hash = hash_or_height
       end
-      raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
+      raise Error, hash unless @blocks[hash]
       return @block_headers[hash].tap { |b| b.delete("mediantime") && b.delete("time") && b.delete("chainwork") }
     else
       throw "Must provide hash" if hash_or_height.is_a?(Numeric)
       hash = hash_or_height
       # Added in Bitcoin Core v0.12
-      raise Bitcoiner::Client::JSONRPCError, hash if @client_type == :core && @version < 120000
-      raise Bitcoiner::Client::JSONRPCError, hash unless @blocks[hash]
+      raise Error, hash if @client_type == :core && @version < 120000
+      raise Error, hash unless @blocks[hash]
       return @block_headers[hash].tap { |b| b.delete("size"); b.delete("mediantime") if @version <= 100300 }
     end
   end

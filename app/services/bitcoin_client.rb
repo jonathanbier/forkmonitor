@@ -2,6 +2,9 @@ require '0mq'
 require 'digest'
 
 class BitcoinClient
+  class Error < StandardError
+  end
+
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
     if @client_type == :libbitcoin
@@ -54,8 +57,7 @@ class BitcoinClient
     begin
       return request("getnetworkinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -63,13 +65,12 @@ class BitcoinClient
     begin
       return request("getblockcount")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblockcount failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getblockcount failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
   def getblockheight
-    raise "Not implemented" unless @client_type == :libbitcoin
+    raise Error, "Not implemented" unless @client_type == :libbitcoin
     command = 'blockchain.fetch_last_height'
     zmq_connect unless @zmq_connected
     @socket.send_array [command.b, [1].pack("I"), ''.b]
@@ -86,8 +87,7 @@ class BitcoinClient
     begin
       return request("getinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -95,8 +95,7 @@ class BitcoinClient
     begin
       return request("getblockchaininfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblockchaininfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getblockchaininfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -104,8 +103,7 @@ class BitcoinClient
     begin
       return request("getblockhash", height)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblockhash #{ height } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getblockhash #{ height } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -113,8 +111,7 @@ class BitcoinClient
     begin
       return request("getbestblockhash")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -122,8 +119,7 @@ class BitcoinClient
     begin
       return request("getblock", hash)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getblock(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getblock(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -134,8 +130,7 @@ class BitcoinClient
       begin
         return request("getblockheader", hash)
       rescue Bitcoiner::Client::JSONRPCError => e
-        puts "getblockheader(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-        raise
+        raise Error, "getblockheader(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
       end
     else
       command = 'blockchain.fetch_block_header'
@@ -177,8 +172,7 @@ class BitcoinClient
     begin
       return request("getchaintips")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getchaintips failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getchaintips failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -186,8 +180,7 @@ class BitcoinClient
     begin
       return request("gettxoutsetinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -199,8 +192,7 @@ class BitcoinClient
         return request("getrawtransaction", hash, verbose)
       end
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "getrawtransaction failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "getrawtransaction failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -208,8 +200,7 @@ class BitcoinClient
     begin
       return request("setnetworkactive", status)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "setnetworkactive #{ status } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "setnetworkactive #{ status } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -217,8 +208,7 @@ class BitcoinClient
     begin
       return request("invalidateblock", block_hash)
     rescue Bitcoiner::Client::JSONRPCError => e
-      puts "invalidateblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-      raise
+      raise Error, "invalidateblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

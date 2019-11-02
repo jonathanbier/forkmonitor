@@ -41,7 +41,7 @@ class InflatedBlock < ApplicationRecord
           # Update mirror node tip and fetch most recent blocks if needed
           node.poll_mirror!
           node.reload # without this, ancestors of node.block_block are not updated
-        rescue Bitcoiner::Client::JSONRPCError
+        rescue BitcoinClient::Error
           # Ignore failure
           puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
           next

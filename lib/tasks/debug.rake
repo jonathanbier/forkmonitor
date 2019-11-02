@@ -10,7 +10,7 @@ namespace 'debug' do :env
       begin
         networkinfo = node.client.getnetworkinfo
         puts "Reachable"
-      rescue Bitcoiner::Client::JSONRPCError
+      rescue BitcoinClient::Error
         puts "Unreachable"
       end
       puts ""

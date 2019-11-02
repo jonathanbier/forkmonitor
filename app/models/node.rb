@@ -101,7 +101,7 @@ class Node < ApplicationRecord
     elsif self.core? && self.version.present? && self.version < 100000
       begin
         info = client.getinfo
-      rescue Bitcoiner::Client::JSONRPCError
+      rescue BitcoinClient::Error
         self.update unreachable_since: self.unreachable_since || DateTime.now
         return
       end
@@ -109,11 +109,11 @@ class Node < ApplicationRecord
       begin
         blockchaininfo = client.getblockchaininfo
         networkinfo = client.getnetworkinfo
-      rescue Bitcoiner::Client::JSONRPCError
+      rescue BitcoinClient::Error
         # Try getinfo for ancient nodes:
         begin
           info = client.getinfo
-        rescue Bitcoiner::Client::JSONRPCError
+        rescue BitcoinClient::Error
           self.update unreachable_since: self.unreachable_since || DateTime.now
           return
         end
@@ -157,7 +157,7 @@ class Node < ApplicationRecord
     puts "Polling mirror node..." unless Rails.env.test?
     begin
       blockchaininfo = mirror_client.getblockchaininfo
-    rescue Bitcoiner::Client::JSONRPCError
+    rescue BitcoinClient::Error
       # Ignore failure
       return
     end
@@ -204,7 +204,7 @@ class Node < ApplicationRecord
 
     begin
       chaintips = client.getchaintips
-    rescue Bitcoiner::Client::JSONRPCError
+    rescue BitcoinClient::Error
       # Assuming this node doesn't implement it
       return nil
     end
@@ -383,7 +383,7 @@ class Node < ApplicationRecord
     client = use_mirror ? self.mirror_client : self.client
     begin
       block_info = block_info || client.getblock(block_hash)
-    rescue Bitcoiner::Client::JSONRPCError
+    rescue BitcoinClient::Error
       puts "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
       return nil
     end
@@ -482,7 +482,7 @@ class Node < ApplicationRecord
   def restore_mirror
     begin
       mirror_client.setnetworkactive(true)
-    rescue Bitcoiner::Client::JSONRPCError
+    rescue BitcoinClient::Error
       return false
     end
     return if mirror_block.nil?
