@@ -226,11 +226,9 @@ class BitcoinClient
     begin
       return request("reconsiderblock", block_hash)
     rescue Bitcoiner::Client::JSONRPCError => e
-      if e.message.include?("Block not found")
-        puts "reconsiderblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): block not found" unless Rails.env.test?
-        return
-      end
-      raise "reconsiderblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      # TODO: intercept specific error messages (e.g. block not found vs. connection error)
+      puts "reconsiderblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): block not found" unless Rails.env.test?
+      return
     end
   end
 
