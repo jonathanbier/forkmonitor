@@ -74,7 +74,7 @@ class Chaintip < ApplicationRecord
       tip = Chaintip.process_active!(node, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - 1000
-      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node)
+      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false)
       tip = node.chaintips.create(status: "valid-fork", block: block, coin: block.coin) # There can be multiple valid-block chaintips
     when "invalid"
       # Ignore if we don't know this block from a different node: (TODO: add it anyway, so we actively search this block)

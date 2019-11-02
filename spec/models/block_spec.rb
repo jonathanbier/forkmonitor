@@ -131,17 +131,17 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should store the version" do
-      @block = Block.create_with(@block_info, @node)
+      @block = Block.create_with(@block_info, false, @node)
       expect(@block.version).to eq(536870912)
     end
 
     it "should store number of transactions" do
-      @block = Block.create_with(@block_info, @node)
+      @block = Block.create_with(@block_info, false, @node)
       expect(@block.tx_count).to eq(3024)
     end
 
     it "should store size" do
-      @block = Block.create_with(@block_info, @node)
+      @block = Block.create_with(@block_info, false, @node)
       expect(@block.size).to eq(1328797)
     end
 

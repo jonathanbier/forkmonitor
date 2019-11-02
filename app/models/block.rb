@@ -53,9 +53,10 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
-  def find_ancestors!(node, until_height = nil)
+  def find_ancestors!(node, use_mirror, until_height = nil)
     block_id = self.id
     block_ids = []
+    client = use_mirror ? node.mirror_client : node.client
     loop do
       block_ids.append(block_id)
       block = Block.find(block_id)
@@ -65,9 +66,9 @@ class Block < ApplicationRecord
       parent = block.parent
       if parent.nil?
         if node.client_type.to_sym == :libbitcoin
-          block_info = node.client.getblockheader(block.block_hash)
+          block_info = client.getblockheader(block.block_hash)
         else
-          block_info = node.client.getblock(block.block_hash)
+          block_info = client.getblock(block.block_hash)
         end
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
         block.update parent: parent
@@ -79,12 +80,12 @@ class Block < ApplicationRecord
         break if !self.id
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
         if node.client_type.to_sym == :libbitcoin
-          block_info = node.client.getblockheader(block_info["previousblockhash"])
+          block_info = client.getblockheader(block_info["previousblockhash"])
         else
-          block_info = node.client.getblock(block_info["previousblockhash"])
+          block_info = client.getblock(block_info["previousblockhash"])
         end
 
-        parent = Block.create_with(block_info, node)
+        parent = Block.create_with(block_info, use_mirror, node)
         block.update parent: parent
       end
       block_id = parent.id
@@ -105,9 +106,9 @@ class Block < ApplicationRecord
     return result + "#{ pool.present? ? pool : "unknown pool" })"
   end
 
-  def self.create_with(block_info, node)
+  def self.create_with(block_info, use_mirror, node)
     # Set pool:
-    pool = node.get_pool_for_block!(block_info["hash"], block_info)
+    pool = node.get_pool_for_block!(block_info["hash"], use_mirror, block_info)
 
     tx_count = block_info["nTx"].present? ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
@@ -245,24 +246,25 @@ class Block < ApplicationRecord
     return nil
   end
 
-  def self.find_or_create_block_and_ancestors!(hash, node)
+  def self.find_or_create_block_and_ancestors!(hash, node, use_mirror)
     # Not atomic and called very frequently, so sometimes it tries to insert
     # a block that was already inserted. In that case try again, so it updates
     # the existing block instead.
+    client = use_mirror ? node.mirror_client : node.client
     begin
       block = Block.find_by(block_hash: hash)
 
       if block.nil?
         if node.client_type.to_sym == :libbitcoin
-          block_info = node.client.getblockheader(hash)
+          block_info = client.getblockheader(hash)
         else
-          block_info = node.client.getblock(hash)
+          block_info = client.getblock(hash)
         end
 
-        block = Block.create_with(block_info, node)
+        block = Block.create_with(block_info, use_mirror, node)
       end
 
-      block.find_ancestors!(node)
+      block.find_ancestors!(node, use_mirror)
     rescue ActiveRecord::RecordNotUnique
       raise unless Rails.env.production?
       retry

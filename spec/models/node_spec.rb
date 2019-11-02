@@ -877,7 +877,7 @@ RSpec.describe Node, :type => :model do
     end
 
     it "should not fetch parents before height 560176" do
-      @node.block.find_ancestors!(@node)
+      @node.block.find_ancestors!(@node, false)
       expect(Block.minimum(:height)).to equal(560176)
     end
 
@@ -888,7 +888,7 @@ RSpec.describe Node, :type => :model do
       expect(@node.block.height).to equal(560182)
       expect(Block.count).to equal(7)
 
-      @node.block.find_ancestors!(@node, 560176)
+      @node.block.find_ancestors!(@node, false, 560176)
       expect(Block.count).to equal(7)
       expect(Block.minimum(:height)).to equal(560176)
     end
@@ -902,23 +902,23 @@ RSpec.describe Node, :type => :model do
 
     it "should fetch the block" do
       expect(@node.client).to receive("getblock").and_call_original
-      @node.get_pool_for_block!(@block.block_hash)
+      @node.get_pool_for_block!(@block.block_hash, false)
     end
 
 
     it "should not fetch the block if getblock is cached" do
       expect(@node.client).not_to receive("getblock")
-      @node.get_pool_for_block!(@block.block_hash, {"tx" => ["0"]})
+      @node.get_pool_for_block!(@block.block_hash, false, {"tx" => ["0"]})
     end
 
     it "should call getrawtransaction on the coinbase" do
       expect(@node.client).to receive("getrawtransaction").and_call_original
-      @node.get_pool_for_block!(@block.block_hash)
+      @node.get_pool_for_block!(@block.block_hash, false)
     end
 
     it "should pass getrawtransaction output to pool_from_coinbase_tx" do
       expect(Block).to receive(:pool_from_coinbase_tx)
-      @node.get_pool_for_block!(@block.block_hash)
+      @node.get_pool_for_block!(@block.block_hash, false)
     end
   end
 

@@ -145,7 +145,7 @@ class Node < ApplicationRecord
       best_block_hash = client.getblockhash(info["blocks"])
     end
 
-    block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
+    block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false)
 
     self.update block: block, unreachable_since: nil
   end
@@ -163,7 +163,7 @@ class Node < ApplicationRecord
     end
     best_block_hash = blockchaininfo["bestblockhash"]
     ibd = blockchaininfo["initialblockdownload"]
-    block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self)
+    block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, true)
     self.update mirror_block: block
   end
 
@@ -378,19 +378,20 @@ class Node < ApplicationRecord
     puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
   end
 
-  def get_pool_for_block!(block_hash, block_info = nil)
+  def get_pool_for_block!(block_hash, use_mirror, block_info = nil)
     return nil unless self.core? || self.abc? || self.sv?
+    client = use_mirror ? self.mirror_client : self.client
     begin
-      block_info = block_info || self.client.getblock(block_hash)
+      block_info = block_info || client.getblock(block_hash)
     rescue Bitcoiner::Client::JSONRPCError
       puts "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
       return nil
     end
     tx_id = block_info["tx"].first
     if self.core? && self.version && self.version >= 160000
-      coinbase = self.client.getrawtransaction(tx_id, true, block_hash)
+      coinbase = client.getrawtransaction(tx_id, true, block_hash)
     else
-      coinbase = self.client.getrawtransaction(tx_id, true)
+      coinbase = client.getrawtransaction(tx_id, true)
     end
     return Block.pool_from_coinbase_tx(coinbase)
   end
@@ -610,7 +611,7 @@ class Node < ApplicationRecord
   def self.fetch_ancestors!(until_height)
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
-    node.block.find_ancestors!(node, until_height)
+    node.block.find_ancestors!(node, false, until_height)
   end
 
   private
