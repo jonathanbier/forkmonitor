@@ -1,5 +1,5 @@
 class BitcoinClientMock
-  def initialize(client_type, rpchost, rpcport, rpcuser, rpcpassword)
+  def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
     @best_height = 560176
     @reachable = true
@@ -11,6 +11,8 @@ class BitcoinClientMock
     @chaintips = []
     @extra_inflation = 0
     @networkactive = true
+    @node_id = node_id
+    @name_with_version = name_with_version
 
     @block_hashes = {
       975 => "00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c",
