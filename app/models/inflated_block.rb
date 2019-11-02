@@ -24,7 +24,7 @@ class InflatedBlock < ApplicationRecord
     max_exceeded = false
     comparison_block = nil
 
-    Node.where(coin: options[:coin].to_s.upcase).each do |node|
+    Node.coin_by_version(options[:coin]).each do |node|
       next unless node.mirror_node? && node.core?
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd

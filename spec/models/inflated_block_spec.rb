@@ -19,8 +19,8 @@ RSpec.describe InflatedBlock, type: :model do
       @node_testnet.reload
 
       expect(Block.maximum(:height)).to eq(560176)
-      allow(Node).to receive(:where).with(coin: "BTC").and_return [@node_without_mirror, @node]
-      allow(Node).to receive(:where).with(coin: "TBTC").and_return [@node_testnet]
+      allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node_without_mirror, @node]
+      allow(Node).to receive(:coin_by_version).with(:tbtc).and_return [@node_testnet]
 
       # throw the first time for lacking a comparison block
       expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")

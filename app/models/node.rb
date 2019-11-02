@@ -21,6 +21,10 @@ class Node < ApplicationRecord
   scope :bch_by_version, -> { where(coin: "BCH").order(version: :desc) }
   scope :bsv_by_version, -> { where(coin: "BSV").order(version: :desc) }
 
+  def self.coin_by_version(coin)
+    where(coin: coin.to_s.upcase).order(version: :desc)
+  end
+
   def parse_version(v)
     return if v.nil?
     if v[0] == "v"
