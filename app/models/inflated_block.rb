@@ -98,7 +98,7 @@ class InflatedBlock < ApplicationRecord
               puts "Invalidate block #{ child_block.block_hash } (#{ block.height })" unless Rails.env.test?
               node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
             end
-
+            tally += 1
           end
 
           throw "No active tip left after rollback. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
