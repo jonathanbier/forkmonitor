@@ -4,7 +4,7 @@ class FeedsController < ApplicationController
   def inflated_blocks
     respond_to do |format|
       format.rss do
-        @inflated_blocks = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin])
+        @inflated_blocks = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
       end
     end
   end
@@ -12,7 +12,7 @@ class FeedsController < ApplicationController
   def invalid_blocks
     respond_to do |format|
       format.rss do
-        @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin])
+        @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
       end
     end
   end
@@ -20,7 +20,7 @@ class FeedsController < ApplicationController
   def lagging_nodes
     respond_to do |format|
       format.rss do
-        @lagging_nodes = Lag.all
+        @lagging_nodes = Lag.all.order(created_at: :desc)
       end
     end
   end
@@ -28,7 +28,7 @@ class FeedsController < ApplicationController
   def version_bits
     respond_to do |format|
       format.rss do
-        @version_bits = VersionBit.all
+        @version_bits = VersionBit.all.order(created_at: :desc)
       end
     end
   end
@@ -36,7 +36,7 @@ class FeedsController < ApplicationController
   def stale_candidates
     respond_to do |format|
       format.rss do
-        @stale_candidates = StaleCandidate.where(coin: @coin)
+        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc)
       end
     end
   end
