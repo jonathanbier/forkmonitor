@@ -77,9 +77,9 @@ class InflatedBlock < ApplicationRecord
 
         blocks_to_check.each do |block|
           # Invalidate new blocks, including any forks we don't know of yet
-          puts "Roll back the chain to #{ block.height }..." unless Rails.env.test?
+          puts "Roll back the chain to #{ block.block_hash } (#{ block.height })..." unless Rails.env.test?
           tally = 0
-          while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.height < active_tip["height"])
+          while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
             if tally > 100
               throw "Unable to roll active chaintip to height #{ block.height }"
             elsif tally > 0
