@@ -81,7 +81,7 @@ class InflatedBlock < ApplicationRecord
           tally = 0
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
             if tally > 100
-              throw "Unable to roll active chaintip to height #{ block.height }"
+              throw "Unable to roll active chaintip to #{ block.block_hash } (#{ block.height })"
             elsif tally > 0
               # Fetch blocks for any newly activated chaintips
               node.poll_mirror!
