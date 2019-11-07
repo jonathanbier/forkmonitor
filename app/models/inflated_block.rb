@@ -90,7 +90,8 @@ class InflatedBlock < ApplicationRecord
             blocks_to_invalidate = []
             if block.height == active_tip["height"]
               # Invalidate tip to jump to another fork
-              blocks_to_invalidate.append(block)
+              tip_block = Block.find_by(block_hash: active_tip["hash"])
+              blocks_to_invalidate.append(tip_block)
             else
               block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
                 begin
