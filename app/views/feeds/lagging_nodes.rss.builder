@@ -8,7 +8,7 @@ xml.rss :version => "2.0" do
 
     @lagging_nodes.each do |lagging_node|
       xml.item do
-        xml.title "#{ lagging_node.node_a.name_with_version } is #{ lagging_node.node_b.block.height - lagging_node.node_a.block.height } blocks behind #{ lagging_node.node_b.version }"
+        xml.title "#{ lagging_node.node_a.name_with_version } is #{ lagging_node.node_b.block.height - lagging_node.node_a.block.height } blocks behind #{ lagging_node.node_b.name_with_version }"
         xml.pubDate lagging_node.created_at.to_s(:rfc822)
         xml.link api_v1_lagging_node_url(lagging_node)
         xml.guid api_v1_lagging_node_url(lagging_node)

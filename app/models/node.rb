@@ -4,6 +4,8 @@ class Node < ApplicationRecord
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
   has_many :invalid_blocks
   has_many :inflated_blocks
+  has_many :lag_a, class_name: "Lag", foreign_key: "node_a_id", dependent: :destroy
+  has_many :lag_b, class_name: "Lag", foreign_key: "node_b_id", dependent: :destroy
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
 
