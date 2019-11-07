@@ -4,6 +4,7 @@ class BitcoinClientMock
 
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
+    @block_hash = "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab"
     @best_height = 560176
     @reachable = true
     @ibd = false
@@ -82,10 +83,11 @@ class BitcoinClientMock
     end
     @chaintips.delete_if { |t| t["status"] == "active" }
     @height = height
+    @block_hash = @block_hashes[@height]
     @best_height = height
     @chaintips.push({
         "height" => height,
-        "hash" => @block_hashes[@height] ,
+        "hash" => @block_hash,
         "branchlen" => 0,
         "status" => "active"
     })
@@ -283,7 +285,7 @@ class BitcoinClientMock
             "chain" => "main",
             "blocks" => @height,
             "headers" => @height,
-            "bestblockhash" => @block_hashes[@height],
+            "bestblockhash" => @block_hash,
             # "difficulty" => 5883988430955.408,
             "mediantime" => 1548515214,
             "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
@@ -299,7 +301,7 @@ class BitcoinClientMock
             "chain" => "main",
             "blocks" => @height,
             "headers" => @height,
-            "bestblockhash" => @block_hashes[@height],
+            "bestblockhash" => @block_hash,
             # "difficulty" => 5883988430955.408,
             "mediantime" => 1548515214,
             "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
@@ -315,7 +317,7 @@ class BitcoinClientMock
             "chain" => "main",
             "blocks" => @height,
             "headers" => @height,
-            "bestblockhash" => @block_hashes[@height],
+            "bestblockhash" => @block_hash,
             # "difficulty" => 1,
             "mediantime" => 1232327230,
             "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
@@ -329,7 +331,7 @@ class BitcoinClientMock
             "chain" => "main",
             "blocks" => @height,
             "headers" => @height,
-            "bestblockhash" => @block_hashes[@height],
+            "bestblockhash" => @block_hash,
             "verificationprogress" => @ibd ? 0.5 : 1.0,
             "chainwork" => @blocks[@block_hashes[@height]]["chainwork"]
           },
@@ -377,7 +379,7 @@ class BitcoinClientMock
             "chain" => "test",
             "blocks" => @height,
             "headers" => @height,
-            "bestblockhash" => @block_hashes[@height],
+            "bestblockhash" => @block_hash,
             "mediantime" => 1548515214,
             "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
             "initialblockdownload" => @ibd,
@@ -433,12 +435,12 @@ class BitcoinClientMock
     res[@version]
   end
 
-  def getblockhash(height)
+  def getblockhash(height) # does not take forks into account
     @block_hashes[height]
   end
 
   def getbestblockhash
-    @block_hashes[@height]
+    @block_hash
   end
 
   def getblock(hash)
@@ -447,7 +449,7 @@ class BitcoinClientMock
     return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
   end
 
-  def getblockheader(hash_or_height)
+  def getblockheader(hash_or_height) # height argument does not take fork into account
     if @client_type == :libbitcoin
       raise Error, "Must provide height or hash" unless hash_or_height.present?
       if hash_or_height.is_a?(Numeric)
@@ -471,7 +473,7 @@ class BitcoinClientMock
     @chaintips
   end
 
-  def gettxoutsetinfo
+  def gettxoutsetinfo # does not take forks into account
     if @height == 560176
       return {
         "height" => @height, # Actually 572023
@@ -553,6 +555,7 @@ class BitcoinClientMock
           end
           t
         }
+        @block_hash = fork["hash"]
       end
     end
   end

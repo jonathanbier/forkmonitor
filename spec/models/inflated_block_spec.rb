@@ -122,7 +122,6 @@ RSpec.describe InflatedBlock, type: :model do
       end
 
       it "should fetch the fork block" do
-        skip # fails with: Unexpected active tip hash 0000000000000000000000000000000000000000000000000000000000560177 (560177) instead of 00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef (560177)
         InflatedBlock.check_inflation!({coin: :btc})
         expect(Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560177")).not_to be_nil
       end
