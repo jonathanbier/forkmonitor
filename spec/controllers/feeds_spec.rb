@@ -82,6 +82,11 @@ RSpec.describe FeedsController, type: :controller do
         get :stale_candidates, params: {coin: "btc"}, format: :rss
         expect(response.body).to include(@block1.block_hash)
       end
+
+      it "should be paginated" do
+        get :stale_candidates, params: {coin: "btc", page: 2}, format: :rss
+        expect(response.body).not_to include(@block1.block_hash)
+      end
     end
 
   end

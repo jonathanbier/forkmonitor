@@ -36,7 +36,10 @@ class FeedsController < ApplicationController
   def stale_candidates
     respond_to do |format|
       format.rss do
-        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc)
+        @page = params[:page].present? ? params[:page].to_i : nil
+        @per_page = 10
+        @page_count = (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
+        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).paginate(page: @page || 1, per_page: @per_page)
       end
     end
   end
