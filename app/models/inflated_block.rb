@@ -95,7 +95,7 @@ class InflatedBlock < ApplicationRecord
                 next
               end
               invalidated_block_hashes.append(child_block.block_hash)
-              puts "Invalidate block #{ child_block.block_hash } (#{ block.height })" unless Rails.env.test?
+              puts "Invalidate block #{ child_block.block_hash } (#{ child_block.height })" unless Rails.env.test?
               node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
             end
             tally += 1
