@@ -80,23 +80,34 @@ class InflatedBlock < ApplicationRecord
           puts "Roll back the chain to #{ block.block_hash } (#{ block.height })..." unless Rails.env.test?
           tally = 0
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
-            if tally > 100
+            if tally > (Rails.env.test? ? 1 : 100)
               throw "Unable to roll active chaintip to #{ block.block_hash } (#{ block.height })"
             elsif tally > 0
               # Fetch blocks for any newly activated chaintips
               node.poll_mirror!
             end
             puts "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })" unless Rails.env.test?
-            block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
-              begin
-                node.mirror_client.getblockheader(child_block.block_hash)
-              rescue BitcoinClient::Error
-                puts "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
-                next
+            blocks_to_invalidate = []
+            if block.height == active_tip["height"]
+              # Invalidate tip to jump to another fork
+              blocks_to_invalidate.append(block)
+            else
+              block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
+                begin
+                  node.mirror_client.getblockheader(child_block.block_hash)
+                rescue BitcoinClient::Error
+                  puts "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
+                  next
+                end
+                unless invalidated_block_hashes.include?(child_block.block_hash)
+                  blocks_to_invalidate.append(child_block)
+                end
               end
-              invalidated_block_hashes.append(child_block.block_hash)
-              puts "Invalidate block #{ child_block.block_hash } (#{ child_block.height })" unless Rails.env.test?
-              node.mirror_client.invalidateblock(child_block.block_hash) # This is a blocking call
+            end
+            blocks_to_invalidate.each do |block|
+              invalidated_block_hashes.append(block.block_hash)
+              puts "Invalidate block #{ block.block_hash } (#{ block.height })" unless Rails.env.test?
+              node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
             end
             tally += 1
           end

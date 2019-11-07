@@ -881,7 +881,7 @@ RSpec.describe Node, :type => :model do
     end
 
     it "should not fetch parents before height 560176" do
-      @node.block.find_ancestors!(@node, false)
+      @node.block.find_ancestors!(@node, nil, false)
       expect(Block.minimum(:height)).to equal(560176)
     end
 
@@ -892,7 +892,7 @@ RSpec.describe Node, :type => :model do
       expect(@node.block.height).to equal(560182)
       expect(Block.count).to equal(7)
 
-      @node.block.find_ancestors!(@node, false, 560176)
+      @node.block.find_ancestors!(@node, nil, false, 560176)
       expect(Block.count).to equal(7)
       expect(Block.minimum(:height)).to equal(560176)
     end
