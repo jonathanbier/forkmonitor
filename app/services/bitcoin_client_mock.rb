@@ -35,12 +35,10 @@ class BitcoinClientMock
     }
     @fork_block_info = {
         "0000000000000000000000000000000000000000000000000000000000560177" => {
-            mediantime: 1548500252,
             chainwork: "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a",
             previousblockhash: nil # connected to main chain
         },
         "0000000000000000000000000000000000000000000000000000000000560178" => {
-            mediantime: 1548500251,
             chainwork: "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f",
             previousblockhash: "0000000000000000000000000000000000000000000000000000000000560177"
         }
@@ -73,6 +71,15 @@ class BitcoinClientMock
   end
 
   def mock_set_height(height)
+    # If a mock fork exists at previous height, add it as a valid-fork
+    if @blocks[@fork_block_hashes[height - 1]].present?
+      @chaintips.push({
+          "height" => height - 1,
+          "hash" => @fork_block_hashes[height - 1],
+          "branchlen" => 1,
+          "status" => "valid-fork"
+      })
+    end
     @chaintips.delete_if { |t| t["status"] == "active" }
     @height = height
     @best_height = height
@@ -528,8 +535,26 @@ class BitcoinClientMock
       end
       t
     }
-    # Mark 1 below the invalidated block as the active tip:
+    # Determine the new active chaintip. This is 1 below the previously active
+    # tip, unless there is a valid fork to jump to.
     mock_set_height(header["height"] - 1)
+    fork = @chaintips.find { |t| t["status"] == "valid-fork" && t["height"] == header["height"] - 1}
+    if fork.present?
+      # If valid-fork is older (real world nodes check block was seen earlier, not the mediantime),
+      # switch to it. Otherwise stay on the main chain.
+      if @block_headers[fork["hash"]]["mediantime"] < @block_headers[@block_hashes[header["height"] - 1]]["mediantime"]
+        @chaintips.map! { |t|
+          if t["status"] == "active"
+            t["status"] = "valid-fork"
+            t["branchlen"] = 1
+          elsif t["status"] == "valid-fork"
+            t["status"] = "active"
+            t["branchlen"] = 0
+          end
+          t
+        }
+      end
+    end
   end
 
   def reconsiderblock(block_hash)
@@ -573,9 +598,9 @@ class BitcoinClientMock
     @blocks[block_hash]["size"] = 100
   end
 
-  def mock_add_fork_block(height)
+  def mock_add_fork_block(height, relative_time = 1)
       block_hash = @fork_block_hashes[height]
-      mock_add_block(height, @fork_block_info[block_hash][:mediantime], @fork_block_info[block_hash][:chainwork], block_hash, @fork_block_info[block_hash][:previousblockhash])
+      mock_add_block(height, @block_headers[@block_hashes[height]]["mediantime"] + relative_time, @fork_block_info[block_hash][:chainwork], block_hash, @fork_block_info[block_hash][:previousblockhash])
   end
 
   def mock_add_transaction(block_hash, tx_hash)

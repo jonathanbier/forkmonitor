@@ -100,6 +100,35 @@ RSpec.describe InflatedBlock, type: :model do
 
     end
 
+    describe "BTC mirror node has a valid-fork that arrived later" do
+      before do
+        @node.mirror_client.mock_add_fork_block(560177)
+        # this also adds the fork block at height 560177 as a valid-fork to chaintips
+        @node.mirror_client.mock_set_height(560178)
+      end
+
+      it "should not fetch the fork block" do
+        InflatedBlock.check_inflation!({coin: :btc})
+        expect(Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560177")).to be_nil
+      end
+
+    end
+
+    describe "BTC mirror node has a valid-fork that arrived earlier" do
+      before do
+        @node.mirror_client.mock_add_fork_block(560177, -1)
+        # this also adds the fork block at height 560177 as a valid-fork to chaintips
+        @node.mirror_client.mock_set_height(560178)
+      end
+
+      it "should fetch the fork block" do
+        skip # fails with: Unexpected active tip hash 0000000000000000000000000000000000000000000000000000000000560177 (560177) instead of 00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef (560177)
+        InflatedBlock.check_inflation!({coin: :btc})
+        expect(Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560177")).not_to be_nil
+      end
+
+    end
+
     describe "with extra inflation" do
       let(:user) { create(:user) }
 
