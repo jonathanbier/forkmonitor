@@ -611,7 +611,7 @@ class Node < ApplicationRecord
   def self.fetch_ancestors!(until_height)
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
-    node.block.find_ancestors!(node, nil, false, until_height)
+    node.block.find_ancestors!(node, false, until_height)
   end
 
   private

@@ -53,7 +53,7 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
-  def find_ancestors!(node, previousblockhash, use_mirror, until_height = nil)
+  def find_ancestors!(node, use_mirror, until_height = nil)
     block_id = self.id
     block_ids = []
     client = use_mirror ? node.mirror_client : node.client
@@ -65,16 +65,12 @@ class Block < ApplicationRecord
       break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
-        if previousblockhash.nil?
-          if node.client_type.to_sym == :libbitcoin
-            block_info = client.getblockheader(block.block_hash)
-          else
-            block_info = client.getblock(block.block_hash)
-          end
-          previousblockhash = block_info["previousblockhash"]
+        if node.client_type.to_sym == :libbitcoin
+          block_info = client.getblockheader(block.block_hash)
+        else
+          block_info = client.getblock(block.block_hash)
         end
-        throw "Unexpeted previousblockhash=nil" if previousblockhash.nil?
-        parent = Block.find_by(block_hash: previousblockhash)
+        parent = Block.find_by(block_hash: block_info["previousblockhash"])
         block.update parent: parent
       end
       if parent.present?
@@ -84,16 +80,15 @@ class Block < ApplicationRecord
         break if !self.id
         puts "Fetch intermediate block at height #{ block.height - 1 }" unless Rails.env.test?
         if node.client_type.to_sym == :libbitcoin
-          block_info = client.getblockheader(previousblockhash)
+          block_info = client.getblockheader(block_info["previousblockhash"])
         else
-          block_info = client.getblock(previousblockhash)
+          block_info = client.getblock(block_info["previousblockhash"])
         end
 
         parent = Block.create_with(block_info, use_mirror, node)
         block.update parent: parent
       end
       block_id = parent.id
-      previousblockhash = parent.parent.present? ? parent.parent.block_hash : nil
     end
     # Go back up to the tip to mark blocks as connected
     return if until_height && !Block.find(block_id).connected
@@ -258,7 +253,6 @@ class Block < ApplicationRecord
     client = use_mirror ? node.mirror_client : node.client
     begin
       block = Block.find_by(block_hash: hash)
-      previousblockhash = nil
 
       if block.nil?
         if node.client_type.to_sym == :libbitcoin
@@ -266,11 +260,10 @@ class Block < ApplicationRecord
         else
           block_info = client.getblock(hash)
         end
-        previousblockhash = block_info["previousblockhash"]
         block = Block.create_with(block_info, use_mirror, node)
       end
 
-      block.find_ancestors!(node, previousblockhash, use_mirror)
+      block.find_ancestors!(node, use_mirror)
     rescue ActiveRecord::RecordNotUnique
       raise unless Rails.env.production?
       retry
