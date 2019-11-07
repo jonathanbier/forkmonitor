@@ -4,10 +4,10 @@ xml.rss :version => "2.0" do
   xml.channel do
     xml.title "Fork Monitor - #{ @coin.upcase } stale block candidates"
     xml.description "When there are multiple blocks at the tip height, one will become stale"
-    xml.link feeds_stale_candidate_url(@coin) + (@page.present? ? "?page=#{@page}" : ""), rel: "self"
+    xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page}", rel: "self"
     xml.link feeds_stale_candidate_url(@coin) + "?page=1", rel: "first"
-    xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page || 0 + 1}", rel: "next" if @page.nil? || @page < @page_count
-    xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page || 0 - 1}", rel: "previous" if @page.present? && @page > 1
+    xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page + 1}", rel: "next" if @page < @page_count
+    xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page - 1}", rel: "previous" if @page > 1
     xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page_count}", rel: "last"
 
     xml.lastBuildDate StaleCandidate.maximum(:updated_at).iso8601

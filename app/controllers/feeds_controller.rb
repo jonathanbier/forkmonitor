@@ -34,12 +34,13 @@ class FeedsController < ApplicationController
   end
 
   def stale_candidates
+    @page = (params[:page] || 1).to_i
+    @per_page = Rails.env.production? ? 10 : 2
+    @page_count = (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
+
     respond_to do |format|
       format.rss do
-        @page = params[:page].present? ? params[:page].to_i : nil
-        @per_page = 10
-        @page_count = (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
-        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).paginate(page: @page || 1, per_page: @per_page)
+        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).offset(@page).limit(@per_page)
       end
     end
   end
