@@ -27,7 +27,23 @@ class BitcoinClientMock
       560179 => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
       560180 => "0000000000000000002d802cf5fdbbfa94926be7f03b40be75eb6c3c13cbc8e4",
       560181 => "0000000000000000002641ea2457674fea1b2fc5fcfe6fde416dca2a0e13aec2",
-      560182 => "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
+      560182 =>   "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
+    }
+    @fork_block_hashes = {
+      560177 => "0000000000000000000000000000000000000000000000000000000000560177",
+      560178 => "0000000000000000000000000000000000000000000000000000000000560178"
+    }
+    @fork_block_info = {
+        "0000000000000000000000000000000000000000000000000000000000560177" => {
+            mediantime: 1548500252,
+            chainwork: "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a",
+            previousblockhash: nil # connected to main chain
+        },
+        "0000000000000000000000000000000000000000000000000000000000560178" => {
+            mediantime: 1548500251,
+            chainwork: "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f",
+            previousblockhash: "0000000000000000000000000000000000000000000000000000000000560177"
+        }
     }
     @blocks = {}
     @block_headers = {}
@@ -555,6 +571,11 @@ class BitcoinClientMock
     @blocks[block_hash]["tx"] = []
     @blocks[block_hash]["nTx"] = 0
     @blocks[block_hash]["size"] = 100
+  end
+
+  def mock_add_fork_block(height)
+      block_hash = @fork_block_hashes[height]
+      mock_add_block(height, @fork_block_info[block_hash][:mediantime], @fork_block_info[block_hash][:chainwork], block_hash, @fork_block_info[block_hash][:previousblockhash])
   end
 
   def mock_add_transaction(block_hash, tx_hash)
