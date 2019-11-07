@@ -27,12 +27,14 @@ Rails.application.routes.draw do
   end
 
   scope format: true, constraints: { format: /rss/ } do
-    get 'feeds/inflated_blocks/:coin' => 'feeds#inflated_blocks'
-    get 'feeds/invalid_blocks/:coin' => 'feeds#invalid_blocks'
-    get 'feeds/lagging_nodes' => 'feeds#lagging_nodes'
-    get 'feeds/version_bits' => 'feeds#version_bits'
-    get 'feeds/stale_candidates/:coin' => 'feeds#stale_candidates'
-    get 'feeds/orphan_candidates/:coin' => 'feeds#stale_candidates' # deprecated alias
+    namespace :feeds do
+      get 'inflated_blocks/:coin', :action => :inflated_blocks
+      get 'invalid_blocks/:coin', :action => :invalid_blocks
+      get 'lagging_nodes'
+      get 'version_bits'
+      get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
+      get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias
+    end
   end
 
   get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
