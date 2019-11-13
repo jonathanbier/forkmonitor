@@ -46,6 +46,10 @@ class BitcoinClientMock
     }
     @blocks = {}
     @block_headers = {}
+    @raw_blocks = {
+      "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab" => "mock_raw_block_560176",
+      "00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef" => "mock_raw_block_560177"
+    }
 
     mock_add_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1", nil, nil)
     mock_add_block(560176, 1548498742, "000000000000000000000000000000000000000004dac4780fcbfd1e5710a2a5", nil, nil)
@@ -443,10 +447,15 @@ class BitcoinClientMock
     @block_hash
   end
 
-  def getblock(hash)
-    raise Error unless @blocks[hash]
+  def getblock(hash, verbosity = 1)
 
-    return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+    if verbosity == 0
+      raise Error unless @raw_blocks[hash]
+      return @raw_blocks[hash]
+    elsif verbosity == 1
+      raise Error unless @blocks[hash]
+      return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+    end
   end
 
   def getblockheader(hash_or_height) # height argument does not take fork into account

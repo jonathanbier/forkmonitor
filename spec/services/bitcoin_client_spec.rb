@@ -37,7 +37,7 @@ describe BitcoinClient do
 
     describe "getblock" do
       it "should getblock rpc method with hash" do
-        expect(@client).to receive(:request).with("getblock", "hash")
+        expect(@client).to receive(:request).with("getblock", "hash", 1)
         @client.getblock("hash")
       end
     end

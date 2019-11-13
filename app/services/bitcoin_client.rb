@@ -117,7 +117,7 @@ class BitcoinClient
 
   def getblock(hash, verbosity = 1)
     begin
-      return request("getblock", hash)
+      return request("getblock", hash, verbosity)
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getblock(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

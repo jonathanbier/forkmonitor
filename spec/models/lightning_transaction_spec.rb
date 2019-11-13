@@ -30,4 +30,15 @@ RSpec.describe LightningTransaction, type: :model do
 
   end
 
+  describe "check_penalties!" do
+    before do
+      @block = Block.find_by(height: 560177)
+    end
+
+    it "should fetch the raw block" do
+      expect(@node.client).to receive(:getblock).with(@block.block_hash, 0)
+      LightningTransaction.check_penalties!(@block, @node)
+    end
+
+  end
 end

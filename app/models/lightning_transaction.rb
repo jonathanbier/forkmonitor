@@ -32,6 +32,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def self.check_penalties!(block, node)
+    raw_block = node.client.getblock(block.block_hash, 0)
   end
 
 end
