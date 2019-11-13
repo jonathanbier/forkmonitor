@@ -246,8 +246,8 @@ class Node < ApplicationRecord
     # Allow 1 block extra for 0.16 nodes and older:
     return nil if self.core? && self.version < 169999 && self.block.height > node.block.height - 2
 
-    # Allow 1 block extra for btcd node:
-    return nil if self.btcd? && self.block.height > node.block.height - 2
+    # Allow 1 block extra for btcd and Knots nodes:
+    return nil if (self.btcd? || self.knots?) && self.block.height > node.block.height - 2
 
     # Remove entry if no longer behind
     if lag_entry && !behind
