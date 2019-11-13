@@ -10,6 +10,8 @@ RSpec.describe LightningTransaction, type: :model do
     expect(Block.maximum(:height)).to eq(560176)
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
 
+    allow(LightningTransaction).to receive(:check_penalties!).and_return nil
+
     # throw the first time for lacking a comparison block
     expect { LightningTransaction.check!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for lightning checks, please manually check blocks before 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab)")
     @node.client.mock_set_height(560177)
@@ -17,14 +19,25 @@ RSpec.describe LightningTransaction, type: :model do
     @node.reload
   end
 
-  describe "InflatedBlock.check_inflation!" do
+  describe "InflatedBlock.check!" do
+
+    before do
+      @block = Block.find_by(height: 560177)
+    end
 
     it "should mark lightning checks complete on each block" do
       expect(Block.find_by(height: 560176).checked_lightning).to eq(true)
     end
 
-    it "should call check_penalties! on each block" do
-      expect(LightningTransaction).to receive(:check_penalties!).with(Block.find_by(height: 560177), @node)
+    it "should fetch the raw block" do
+      expect(@node.client).to receive(:getblock).with(@block.block_hash, 0).and_call_original
+      LightningTransaction.check!(coin: :btc, max: 1)
+    end
+
+    it "should call check_penalties! with the parsed block" do
+      raw_block = @node.client.getblock(@block.block_hash, 0)
+      parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
+      expect(LightningTransaction).to receive(:check_penalties!).with(parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 
@@ -32,12 +45,14 @@ RSpec.describe LightningTransaction, type: :model do
 
   describe "check_penalties!" do
     before do
+      allow(LightningTransaction).to receive(:check_penalties!).and_call_original
       @block = Block.find_by(height: 560177)
+      raw_block = @node.client.getblock(@block.block_hash, 0)
+      @parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
     end
 
-    it "should fetch the raw block" do
-      expect(@node.client).to receive(:getblock).with(@block.block_hash, 0)
-      LightningTransaction.check_penalties!(@block, @node)
+    it "should ..." do
+      LightningTransaction.check_penalties!(@parsed_block)
     end
 
   end

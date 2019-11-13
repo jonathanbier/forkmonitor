@@ -32,6 +32,9 @@ gem 'bootsnap', '>= 1.1.0', require: false
 # Ruby interface to the 'bitcoind' JSON-RPC API
 gem 'bitcoiner'
 
+# Ruby Bitcoin utilities
+gem 'bitcoin-ruby', require: 'bitcoin'
+
 gem 'rack-cors', require: 'rack/cors'
 
 # Authentication

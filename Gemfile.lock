@@ -51,6 +51,10 @@ GEM
       public_suffix (>= 2.0.2, < 4.0)
     arel (9.0.0)
     bcrypt (3.1.13)
+    bitcoin-ruby (0.0.19)
+      eventmachine
+      ffi
+      scrypt
     bitcoiner (0.1.4)
       addressable
       typhoeus (~> 1.3.0)
@@ -95,6 +99,7 @@ GEM
     erubi (1.9.0)
     ethon (0.12.0)
       ffi (>= 1.3.0)
+    eventmachine (1.2.7)
     exception_notification (4.2.2)
       actionmailer (>= 4.0, < 6)
       activesupport (>= 4.0, < 6)
@@ -105,6 +110,9 @@ GEM
       activesupport (>= 4.2.0)
     ffaker (2.11.0)
     ffi (1.11.1)
+    ffi-compiler (1.0.1)
+      ffi (>= 1.0.0)
+      rake
     ffi-rzmq-core (1.0.7)
       ffi
     formatador (0.2.5)
@@ -233,6 +241,8 @@ GEM
     rspec-support (3.8.2)
     ruby_dep (1.5.0)
     rubyzip (1.3.0)
+    scrypt (3.0.6)
+      ffi-compiler (>= 1.0, < 2.0)
     serviceworker-rails (0.6.0)
       railties (>= 3.1)
     shellany (0.0.1)
@@ -289,6 +299,7 @@ PLATFORMS
 DEPENDENCIES
   0mq (~> 0.5.3)
   actionmailer-text
+  bitcoin-ruby
   bitcoiner
   bootsnap (>= 1.1.0)
   byebug
