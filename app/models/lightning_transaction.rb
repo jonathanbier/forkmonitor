@@ -24,7 +24,8 @@ class LightningTransaction < ApplicationRecord
     blocks_to_check.each do |block|
       raw_block = node.client.getblock(block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-      self.check_penalties!(parsed_block)
+      puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
+      self.check_penalties!(block, parsed_block)
       block.update checked_lightning: true
     end
 
@@ -33,12 +34,50 @@ class LightningTransaction < ApplicationRecord
     end
   end
 
-  def self.check_penalties!(block)
-    block.transactions.each do |tx|
+  def self.check_penalties!(block, parsed_block)
+    # Based on: https://github.com/alexbosworth/bolt03/blob/master/breaches/is_remedy_witness.js
+    parsed_block.transactions.each do |tx|
       tx.in.each do |tx_in|
-        if !tx_in.script_witness.empty?
-          # TODO: check if this is a penalty transaction
-        end
+        # Must have a witness
+        break if tx_in.script_witness.empty?
+        # Witness must have the correct number of elements
+        break unless tx_in.script_witness.stack.length == 3
+        signature, flag, toLocalScript = tx_in.script_witness.stack
+        # Signature must be DER encoded
+        break unless Bitcoin::Script.is_der_signature?(signature)
+        # Script path must be one of justice (non zero switches to OP_IF)
+        break unless flag.unpack('H*')[0] == "01"
+
+        script = Bitcoin::Script.new(toLocalScript)
+        # Witness script must match expected pattern (BOLT #3)
+        chunks = script.chunks
+        break unless chunks.length == 9
+        # OP_IF
+        break unless chunks.shift() == Bitcoin::Script::OP_IF
+        #  <revocationpubkey>
+        break unless Bitcoin::Script.check_pubkey_encoding?(chunks.shift())
+        #  OP_ELSE
+        break unless chunks.shift() == Bitcoin::Script::OP_ELSE
+        #      `to_self_delay`
+        break if chunks.shift().instance_of? Bitcoin::Script
+        #      OP_CHECKSEQUENCEVERIFY
+        break unless chunks.shift() == Bitcoin::Script::OP_NOP3
+        #      OP_DROP
+        break unless chunks.shift() == Bitcoin::Script::OP_DROP
+        #      <local_delayedpubkey>
+        break unless Bitcoin::Script.check_pubkey_encoding?(chunks.shift())
+        #  OP_ENDIF
+        break unless chunks.shift() == Bitcoin::Script::OP_ENDIF
+        #  OP_CHECKSIG
+        break unless chunks.shift() == Bitcoin::Script::OP_CHECKSIG
+
+        puts "Penalty: #{ tx.hash }" unless Rails.env.test?
+
+        block.lightning_transactions.create(
+          tx_id: tx.hash,
+          raw_tx: tx.payload.unpack('H*')[0]
+        )
+        # TODO: set amount based on output of previous transaction
       end
     end
   end
