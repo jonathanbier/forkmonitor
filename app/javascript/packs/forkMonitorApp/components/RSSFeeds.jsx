@@ -77,6 +77,16 @@ class RSSFeeds extends React.Component {
           a consensus problem, but we filter common reasons like being offline,
           in initial block download or not having peers.
         </p>
+
+        <h3>Lightning penalty transactions</h3>
+
+        <ul>
+          <li>BTC <a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
+        <p>
+          See <a href="https://blog.bitmex.com/lightning-network-justice/">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
+        </p>
       </div>
     )
   }

@@ -1,5 +1,5 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates]
+  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties]
 
   def inflated_blocks
     respond_to do |format|
@@ -41,6 +41,17 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).offset((@page - 1) * @per_page).limit(@per_page)
+      end
+    end
+  end
+
+  def ln_penalties
+    respond_to do |format|
+      format.rss do
+        @ln_penalties = []
+        if @coin == :btc
+          @ln_penalties = LightningTransaction.order(created_at: :desc)
+        end
       end
     end
   end

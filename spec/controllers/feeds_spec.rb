@@ -89,5 +89,20 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
+    describe "GET lightning penalty feed" do
+      let!(:lightning_transaction) { create(:lightning_transaction) }
+
+      it "should be rendered" do
+        get :ln_penalties, params: {coin: "btc"}, format: :rss
+        expect(response).to render_template("feeds/ln_penalties")
+        expect(response.body).to include("Lightning penalty transactions")
+      end
+
+      it "should contain penalty transactions" do
+        get :ln_penalties, params: {coin: "btc"}, format: :rss
+        expect(response.body).to include("c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6")
+      end
+    end
+
   end
 end

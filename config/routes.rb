@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
       resources :stale_candidates, only: [:index, :show]
+      resources :ln_penalties, only: [:index, :show]
       resources :blocks, only: [:index]
       resources :subscriptions, only: [:create]
     end
@@ -34,6 +35,7 @@ Rails.application.routes.draw do
       get 'version_bits'
       get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
       get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias
+      get 'ln_penalties/:coin', :action => :ln_penalties
     end
   end
 
