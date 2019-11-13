@@ -25,7 +25,7 @@ namespace 'blocks' do :env
     @node = Node.find(args.node.to_i)
     @node.investigate_chaintip(args.chaintip)
   end
-  
+
   desc "Fetch known pool list"
   task :fetch_pool_names do |action|
     puts "Fetching known pool names from blockchain.com..."
@@ -34,5 +34,10 @@ namespace 'blocks' do :env
     pools["coinbase_tags"].sort.each do |key, value|
       puts "\"#{ key }\" => \"#{ value["name"] }\","
     end
+  end
+
+  desc "Perform lightning related checks for [coin] (limit to [max=10])"
+  task :check_lightning, [:coin, :max] => :environment do |action, args|
+    LightningTransaction.check!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : nil})
   end
 end

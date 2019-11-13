@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_10_31_142526) do
+ActiveRecord::Schema.define(version: 2019_11_13_100149) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -31,6 +31,7 @@ ActiveRecord::Schema.define(version: 2019_10_31_142526) do
     t.integer "tx_count"
     t.integer "size"
     t.boolean "connected", default: false
+    t.boolean "checked_lightning", default: false
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
@@ -87,6 +88,16 @@ ActiveRecord::Schema.define(version: 2019_10_31_142526) do
     t.datetime "notified_at"
     t.index ["node_a_id"], name: "index_lags_on_node_a_id"
     t.index ["node_b_id"], name: "index_lags_on_node_b_id"
+  end
+
+  create_table "lightning_transactions", force: :cascade do |t|
+    t.bigint "block_id"
+    t.string "tx_id"
+    t.string "raw_tx"
+    t.decimal "amount", precision: 16, scale: 8
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_lightning_transactions_on_block_id"
   end
 
   create_table "nodes", force: :cascade do |t|
@@ -183,6 +194,7 @@ ActiveRecord::Schema.define(version: 2019_10_31_142526) do
   add_foreign_key "inflated_blocks", "nodes"
   add_foreign_key "invalid_blocks", "blocks"
   add_foreign_key "invalid_blocks", "nodes"
+  add_foreign_key "lightning_transactions", "blocks"
   add_foreign_key "nodes", "blocks"
   add_foreign_key "tx_outsets", "blocks"
   add_foreign_key "tx_outsets", "nodes"

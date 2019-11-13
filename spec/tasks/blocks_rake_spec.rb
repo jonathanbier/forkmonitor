@@ -17,3 +17,12 @@ describe "blocks:check_inflation" do
     subject.invoke("BTC")
   end
 end
+
+describe "blocks:check_lightning" do
+  include_context "rake"
+
+  it "should call check! for a given coin" do
+    expect(LightningTransaction).to receive(:check!).with({coin: :btc, :max=>nil})
+    subject.invoke("BTC")
+  end
+end

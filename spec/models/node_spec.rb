@@ -992,18 +992,21 @@ RSpec.describe Node, :type => :model do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560176)
         allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
-        expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
-      end
-
-      it "should call restore_mirror" do
-        expect_any_instance_of(Node).to receive(:restore_mirror)
-        Node.heavy_checks_repeat!({coins: ["BTC"]})
+        allow(InflatedBlock).to receive(:check_inflation!).and_return true
+        allow(LightningTransaction).to receive(:check!).and_return true
       end
 
       it "should call check_inflation!" do
         expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 1000})
 
         Node.heavy_checks_repeat!({coins: ["BTC"]})
+      end
+
+      it "should run Lightning checks, on BTC only" do
+        expect(LightningTransaction).to receive(:check!).with({coin: :btc, max: 1000})
+        expect(LightningTransaction).not_to receive(:check!).with({coin: :tbtc, max: 1000})
+
+        Node.heavy_checks_repeat!({coins: ["BTC", "TBTC"]})
       end
     end
 

@@ -519,6 +519,7 @@ class Node < ApplicationRecord
     while true
       options[:coins].each do |coin|
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 1000})
+        LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
       end
 
       if Rails.env.test?
