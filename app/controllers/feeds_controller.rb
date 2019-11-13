@@ -40,7 +40,7 @@ class FeedsController < ApplicationController
 
     respond_to do |format|
       format.rss do
-        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).offset(@page).limit(@per_page)
+        @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).offset((@page - 1) * @per_page).limit(@per_page)
       end
     end
   end
