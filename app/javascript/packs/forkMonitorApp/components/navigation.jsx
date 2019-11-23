@@ -16,6 +16,7 @@ import {
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faRss } from '@fortawesome/free-solid-svg-icons'
+import { faBolt } from '@fortawesome/free-solid-svg-icons'
 
 import {
   BrowserRouter as Router,
@@ -34,6 +35,7 @@ import LogoImage from '../assets/images/logo.png'
 
 import classnames from 'classnames';
 
+import Lightning from './lightning';
 import Nodes from './nodes';
 import AdminPage from './adminPage';
 import NotificationsPage from './notificationsPage';
@@ -55,6 +57,11 @@ class Navigation extends React.Component {
               <NavItem className="NavItem">
                 <LinkContainer to="/nodes/btc">
                   <NavLink>Bitcoin</NavLink>
+                </LinkContainer>
+              </NavItem>
+              <NavItem className="NavItem">
+                <LinkContainer to="/lightning">
+                  <NavLink><FontAwesomeIcon icon={faBolt} /></NavLink>
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
@@ -90,6 +97,7 @@ class Navigation extends React.Component {
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
                 <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ } )} />
+                <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
                 <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />
               </Switch>

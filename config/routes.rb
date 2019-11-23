@@ -39,6 +39,7 @@ Rails.application.routes.draw do
     end
   end
 
+  get 'lightning', to: "pages#root"
   get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
   get 'admin', to: "pages#root"
   get 'notifications', to: "pages#root"

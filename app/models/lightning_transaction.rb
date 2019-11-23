@@ -1,6 +1,13 @@
 class LightningTransaction < ApplicationRecord
   belongs_to :block
 
+  def as_json(options = nil)
+    fields = [:id, :tx_id, :amount]
+    super({ only: fields }.merge(options || {})).merge({
+      block: block
+    })
+  end
+
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
     max = options[:max].present? ? options[:max] : 10
