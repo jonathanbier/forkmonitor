@@ -9,8 +9,6 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
 
-  before_destroy :check_for_notifications
-
   scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
   scope :bitcoin_alternative_implementations, -> { where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
