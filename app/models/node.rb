@@ -9,6 +9,8 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
 
+  before_destroy :check_for_notifications
+
   default_scope { where(enabled: true) }
 
   scope :admin, -> { unscope(:where) }
@@ -618,6 +620,19 @@ class Node < ApplicationRecord
   end
 
   private
+
+  def check_for_notifications
+    if invalid_blocks.count > 0
+     errors.add_to_base("cannot delete node while invalid blocks exist")
+     return false
+   end
+   if inflated_blocks.count > 0
+    errors.add_to_base("cannot delete node while inflated blocks exist")
+    return false
+  end
+
+  end
+
 
   def self.client_klass
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
