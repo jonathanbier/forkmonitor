@@ -11,7 +11,7 @@ class Api::V1::NodesController < ApplicationController
 
   # Authenticated list of nodes, for all coins
   def index
-    @nodes = Node.admin
+    @nodes = Node.all
     response.headers['Content-Range'] = @nodes.count
     render json: @nodes.reorder(id: :asc).as_json(admin: true)
   end
@@ -52,7 +52,7 @@ class Api::V1::NodesController < ApplicationController
   private
 
   def set_node
-    @node = Node.admin.find(params[:id])
+    @node = Node.find(params[:id])
   end
 
   def node_params
