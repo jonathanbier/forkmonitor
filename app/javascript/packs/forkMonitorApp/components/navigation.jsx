@@ -91,7 +91,7 @@ class Navigation extends React.Component {
                 <Redirect exact path="/" to="/nodes/btc" />
                 <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
-                <Route path='/notifications' component={NotificationsPage} />
+                <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />
               </Switch>
             </TabContent>
           </div>
