@@ -2,8 +2,8 @@ class Node < ApplicationRecord
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
-  has_many :invalid_blocks
-  has_many :inflated_blocks
+  has_many :invalid_blocks, :dependent => :restrict_with_exception
+  has_many :inflated_blocks, :dependent => :restrict_with_exception
   has_many :lag_a, class_name: "Lag", foreign_key: "node_a_id", dependent: :destroy
   has_many :lag_b, class_name: "Lag", foreign_key: "node_b_id", dependent: :destroy
   has_many :tx_outsets, dependent: :destroy
@@ -620,19 +620,6 @@ class Node < ApplicationRecord
   end
 
   private
-
-  def check_for_notifications
-    if invalid_blocks.count > 0
-     errors.add_to_base("cannot delete node while invalid blocks exist")
-     return false
-   end
-   if inflated_blocks.count > 0
-    errors.add_to_base("cannot delete node while inflated blocks exist")
-    return false
-  end
-
-  end
-
 
   def self.client_klass
     Rails.env.test? ? BitcoinClientMock : BitcoinClient

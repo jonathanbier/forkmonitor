@@ -639,6 +639,16 @@ RSpec.describe Node, :type => :model do
         expect { @B.check_chaintips! }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
+      it "node should have invalid blocks" do
+        @B.check_chaintips!
+        expect(@B.invalid_blocks.count).to eq(1)
+      end
+
+      it "can not be deleleted" do
+        @B.check_chaintips!
+        expect { @B.destroy }.to raise_error ActiveRecord::DeleteRestrictionError
+      end
+
     end
   end
 
