@@ -11,22 +11,18 @@ class Node < ApplicationRecord
 
   before_destroy :check_for_notifications
 
-  default_scope { where(enabled: true) }
-
-  scope :admin, -> { unscope(:where) }
-
-  scope :bitcoin_core_by_version, -> { where(coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
-  scope :bitcoin_core_unknown_version, -> { where(coin: "BTC", client_type: :core).where(version: nil) }
-  scope :bitcoin_alternative_implementations, -> { where(coin: "BTC"). where.not(client_type: :core) }
+  scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
+  scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
+  scope :bitcoin_alternative_implementations, -> { where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
 
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu]
 
-  scope :testnet_by_version, -> { where(coin: "TBTC").order(version: :desc) }
-  scope :bch_by_version, -> { where(coin: "BCH").order(version: :desc) }
-  scope :bsv_by_version, -> { where(coin: "BSV").order(version: :desc) }
+  scope :testnet_by_version, -> { where(enabled: true, coin: "TBTC").order(version: :desc) }
+  scope :bch_by_version, -> { where(enabled: true, coin: "BCH").order(version: :desc) }
+  scope :bsv_by_version, -> { where(enabled: true, coin: "BSV").order(version: :desc) }
 
   def self.coin_by_version(coin)
-    where(coin: coin.to_s.upcase).order(version: :desc)
+    where(enabled: true, coin: coin.to_s.upcase).order(version: :desc)
   end
 
   def parse_version(v)
