@@ -17,6 +17,7 @@ gem 'jbuilder', '~> 2.5'
 
 # Rails asset pipeline
 gem 'sprockets-rails'
+gem 'sprockets', '~> 3.7.2' # probably easier to drop Sprockets then to upgrade
 
 gem 'rails_real_favicon'
 
