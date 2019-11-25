@@ -116,6 +116,9 @@ class BitcoinClient
   end
 
   def getblock(hash, verbosity = 1)
+    if verbosity > 0 && @client_type == :btcd
+      verbosity = true
+    end
     begin
       return request("getblock", hash, verbosity)
     rescue Bitcoiner::Client::JSONRPCError => e
