@@ -63,5 +63,10 @@ RSpec.describe LightningTransaction, type: :model do
       expect(LightningTransaction.first.raw_tx).to eq(@raw_tx)
     end
 
+    it "should set the amount based on the output" do
+      LightningTransaction.check_penalties!(@block, @parsed_block)
+      expect(LightningTransaction.first.amount).to eq(390478)
+    end
+
   end
 end

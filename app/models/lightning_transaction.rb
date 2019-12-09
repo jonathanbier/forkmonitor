@@ -82,7 +82,8 @@ class LightningTransaction < ApplicationRecord
 
         block.lightning_transactions.create(
           tx_id: tx.hash,
-          raw_tx: tx.payload.unpack('H*')[0]
+          raw_tx: tx.payload.unpack('H*')[0],
+          amount: tx.out.count == 1 ? tx.out[0].value : 0
         )
         # TODO: set amount based on output of previous transaction
       end
