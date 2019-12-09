@@ -57,15 +57,19 @@ class Lightning extends React.Component {
               <p>
                 See <a href="https://blog.bitmex.com/lightning-network-justice/" target="_blank">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
               </p>
-              <Table striped>
+              <Table striped responsive size="sm" className="lightning">
+                <thead>
+                  <tr align="left">
+                    <th>Date</th>
+                    <th>Block</th>
+                    <th>BTC</th>
+                    <th>Transaction</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {(this.state && this.state.penalties || []).map(function (penalty, index) {
                     return (
-                      <tr className="pullLeft" key={penalty.id}>
-                        <td>
-                          <Penalty penalty={ penalty }/>
-                        </td>
-                      </tr>
+                      <Penalty penalty={ penalty } key={penalty.id}/>
                     )
                   }.bind(this))}
                 </tbody>
