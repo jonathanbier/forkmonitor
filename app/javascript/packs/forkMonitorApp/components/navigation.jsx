@@ -61,7 +61,7 @@ class Navigation extends React.Component {
               </NavItem>
               <NavItem className="NavItem">
                 <LinkContainer to="/lightning">
-                  <NavLink><FontAwesomeIcon icon={faBolt} /></NavLink>
+                  <NavLink><FontAwesomeIcon icon={faBolt} color="orange" /></NavLink>
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
