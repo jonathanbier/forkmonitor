@@ -62,6 +62,7 @@ export const NodeEdit = props => (
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />
+            <BooleanInput source="txindex" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
@@ -87,6 +88,7 @@ export const NodeCreate = props => (
             <TextInput source="rpcuser" />
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />
+            <BooleanInput source="txindex" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
