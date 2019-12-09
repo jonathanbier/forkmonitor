@@ -41,12 +41,12 @@ describe('component', () => {
   });
 
   test('should show amount',() => {
-    expect(wrapper.text()).toContain("0.0361 BTC");
+    expect(wrapper.text()).toContain("0.0361");
   });
 
   test('should not show amount if absent',() => {
     wrapper.setProps({penalty: mockPenaltyNoAmount});
-    expect(wrapper.text()).not.toContain("BTC");
+    expect(wrapper.text()).not.toContain("0.0361");
   });
 
 })
