@@ -936,6 +936,25 @@ RSpec.describe Node, :type => :model do
     end
   end
 
+  describe "getrawtransaction" do
+    before do
+      @tx_id = "74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085"
+      @node = build(:node, txindex: true)
+      @node.client.mock_version(170100)
+      @node.client.mock_set_height(560178)
+      @node.poll!
+    end
+
+    it "should call getrawtransaction" do
+      expect(@node.getrawtransaction(@tx_id)).to eq("010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff5303368c081a4d696e656420627920416e74506f6f6c633e007902205c4c4eadfabe6d6dd1950c951397395896a26405b01c17c50070f4a287b029b377eae4148bc9133f04000000000000005201000079650000ffffffff03478b704b000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed8d4ee584d2bd2483c525df85654a2fcfa9125638dd6fe56405a0590b3da0347800000000000000002952534b424c4f434b3ac6695c75ffa1f93f9237c6997abd16c988a3b442545478f81fd49d9af1b2ce9a0120000000000000000000000000000000000000000000000000000000000000000000000000")
+    end
+
+    it "should handle tx not found" do
+      expect { @node.getrawtransaction(@tx_id.reverse) }.to raise_error Node::TxNotFoundError
+    end
+
+  end
+
   describe "class" do
     describe "poll!" do
       it "should call poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!" do
@@ -1091,6 +1110,51 @@ RSpec.describe Node, :type => :model do
         }
         Node.fetch_ancestors!(560176)
       end
+    end
+
+    describe "first_with_txindex" do
+      before do
+        @A = build(:node)
+        @A.client.mock_version(170100)
+        @A.client.mock_set_height(560178)
+        @A.poll!
+
+        @B = build(:node, txindex: true)
+        @B.client.mock_version(100300)
+        @B.client.mock_set_height(560178)
+        @B.poll!
+      end
+
+      it "should be called with an known coin" do
+        expect { Node.first_with_txindex(:bbbbbbtc) }.to raise_error Node::InvalidCoinError
+      end
+
+      it "should throw if no node has txindex" do
+        @B.update txindex: false
+        expect { Node.first_with_txindex(:btc) }.to raise_error Node::NoTxIndexError
+      end
+
+      it "should return node" do
+        expect(Node.first_with_txindex(:btc)).to eq(@B)
+      end
+
+    end
+
+    describe "getrawtransaction" do
+      before do
+        @tx_id = "74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085"
+        @A = build(:node, txindex: true)
+        @A.client.mock_version(170100)
+        @A.client.mock_set_height(560178)
+        @A.poll!
+      end
+
+      it "should call getrawtransaction on a node with txindex" do
+        expect(Node).to receive(:first_with_txindex).with(:btc).and_return @A
+        expect(@A).to receive(:getrawtransaction).with(@tx_id, false, nil)
+        Node.getrawtransaction(@tx_id, :btc)
+      end
+
     end
   end
 end

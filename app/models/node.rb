@@ -1,4 +1,11 @@
 class Node < ApplicationRecord
+  SUPPORTED_COINS=[:btc, :tbtc, :bch, :bsv]
+
+  class Error < StandardError; end
+  class InvalidCoinError < Error; end
+  class NoTxIndexError < Error; end
+  class TxNotFoundError < Error; end
+
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
   has_many :blocks_first_seen, class_name: "Block", foreign_key: "first_seen_by_id", dependent: :nullify
@@ -386,11 +393,7 @@ class Node < ApplicationRecord
       return nil
     end
     tx_id = block_info["tx"].first
-    if self.core? && self.version && self.version >= 160000
-      coinbase = client.getrawtransaction(tx_id, true, block_hash)
-    else
-      coinbase = client.getrawtransaction(tx_id, true)
-    end
+    coinbase = getrawtransaction(tx_id, true, block_hash)
     return Block.pool_from_coinbase_tx(coinbase)
   end
 
@@ -499,6 +502,19 @@ class Node < ApplicationRecord
     }
   end
 
+  def getrawtransaction(tx_id, verbose = false, block_hash = nil)
+    begin
+      if self.core? && self.version && self.version >= 160000
+        return client.getrawtransaction(tx_id, verbose, block_hash)
+      else
+        return client.getrawtransaction(tx_id, verbose)
+      end
+    rescue BitcoinClient::Error
+      # TODO: check error more precisely
+      raise TxNotFoundError
+    end
+  end
+
   def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
@@ -562,7 +578,7 @@ class Node < ApplicationRecord
     end
 
     # Look for potential stale blocks, i.e. more than one block at the same height
-    for coin in [:btc, :tbtc, :bch, :bsv] do
+    for coin in SUPPORTED_COINS do
       next if options[:coins] && !options[:coins].empty? && !options[:coins].include?(coin.to_s.upcase)
       tip_height = Block.where(coin: coin).maximum(:height)
       next if tip_height.nil?
@@ -611,6 +627,15 @@ class Node < ApplicationRecord
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
     node.block.find_ancestors!(node, false, until_height)
+  end
+
+  def self.first_with_txindex(coin, client_type = :core)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type).first or raise NoTxIndexError
+  end
+
+  def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
+    first_with_txindex(coin).getrawtransaction(tx_id, verbose, block_hash)
   end
 
   private
