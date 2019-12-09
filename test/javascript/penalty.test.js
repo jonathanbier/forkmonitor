@@ -22,6 +22,9 @@ const mockPenalty = {
   "block":{"height":602649,"timestamp":1573082683,"id":161737,"hash":"00000000000000000008647bf3adffc88909838e32b9543d77086fb8dc6e40a5","work":91.3044362323286,"pool":"Poolin","tx_count":2563,"size":1075431,"first_seen_by":{"id":19,"name_with_version":"Bitcoin Core 0.19."}}
 }
 
+const mockPenaltyNoAmount = Object.assign({}, mockPenalty);
+mockPenaltyNoAmount.amount = null
+
 describe('component', () => {
   const wrapper = mount(<Penalty penalty={ mockPenalty } />);
 
@@ -35,6 +38,15 @@ describe('component', () => {
 
   test('should show date and time',() => {
     expect(wrapper.text()).toContain("2019-11-06 23:24:43 UTC");
+  });
+
+  test('should show amount',() => {
+    expect(wrapper.text()).toContain("0.0361 BTC");
+  });
+
+  test('should not show amount if absent',() => {
+    wrapper.setProps({penalty: mockPenaltyNoAmount});
+    expect(wrapper.text()).not.toContain("BTC");
   });
 
 })
