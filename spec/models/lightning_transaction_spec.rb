@@ -46,6 +46,7 @@ RSpec.describe LightningTransaction, type: :model do
   describe "check_penalties!" do
     before do
       allow(LightningTransaction).to receive(:check_penalties!).and_call_original
+      allow_any_instance_of(LightningTransaction).to receive(:get_opening_tx_id!).and_return nil
       @block = Block.find_by(height: 560177)
       raw_block = @node.client.getblock(@block.block_hash, 0)
       @parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
@@ -66,6 +67,10 @@ RSpec.describe LightningTransaction, type: :model do
     it "should set the amount based on the output" do
       LightningTransaction.check_penalties!(@block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(390478)
+    end
+
+    it "should find opening transaction" do
+      skip()
     end
 
   end

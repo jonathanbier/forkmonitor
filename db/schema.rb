@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_12_09_123108) do
+ActiveRecord::Schema.define(version: 2019_12_09_140740) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -97,6 +97,7 @@ ActiveRecord::Schema.define(version: 2019_12_09_123108) do
     t.decimal "amount", precision: 16, scale: 8
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "opening_tx_id"
     t.index ["block_id"], name: "index_lightning_transactions_on_block_id"
   end
 

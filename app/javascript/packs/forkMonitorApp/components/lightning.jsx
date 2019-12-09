@@ -63,6 +63,7 @@ class Lightning extends React.Component {
                     <th>Date</th>
                     <th>Block</th>
                     <th>BTC</th>
+                    <th>Channel</th>
                     <th>Transaction</th>
                   </tr>
                 </thead>

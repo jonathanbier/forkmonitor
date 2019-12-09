@@ -2,10 +2,23 @@ class LightningTransaction < ApplicationRecord
   belongs_to :block
 
   def as_json(options = nil)
-    fields = [:id, :tx_id, :amount]
+    fields = [:id, :tx_id, :amount, :opening_tx_id]
     super({ only: fields }.merge(options || {})).merge({
       block: block
     })
+  end
+
+  def get_opening_tx_id!()
+    justice_tx = Bitcoin::Protocol::Tx.new([self.raw_tx].pack('H*'))
+    throw "Unexpected input count #{ justice_tx.in.count } for justice transaction" if justice_tx.in.count != 1
+    close_tx_id = justice_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
+    close_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(close_tx_id)
+    close_tx = Bitcoin::Protocol::Tx.new([close_tx_raw].pack('H*'))
+    throw "Unexpected input count #{ justice_tx.in.count } for closing transaction" if close_tx.in.count != 1
+    opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
+    # Sanity check, raw transction is unused:
+    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id)
+    return opening_tx_id
   end
 
   def self.check!(options)
@@ -80,11 +93,13 @@ class LightningTransaction < ApplicationRecord
 
         puts "Penalty: #{ tx.hash }" unless Rails.env.test?
 
-        block.lightning_transactions.create(
+        ln = block.lightning_transactions.build(
           tx_id: tx.hash,
           raw_tx: tx.payload.unpack('H*')[0],
-          amount: tx.out.count == 1 ? tx.out[0].value : 0
+          amount: tx.out.count == 1 ? tx.out[0].value : 0,
         )
+        ln.opening_tx_id = ln.get_opening_tx_id!
+        ln.save        
         # TODO: set amount based on output of previous transaction
       end
     end

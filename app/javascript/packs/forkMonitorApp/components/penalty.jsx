@@ -22,6 +22,9 @@ class Penalty extends React.Component {
           }
         </td>
         <td>
+          <a href={"https://blockstream.info/tx/" + this.props.penalty.opening_tx_id} target="_blank">Opening</a>
+        </td>
+        <td>
           <span className="lightning-tx">
             <a href={"https://blockstream.info/tx/" + this.props.penalty.tx_id} target="_blank">{ this.props.penalty.tx_id }</a>
           </span>
