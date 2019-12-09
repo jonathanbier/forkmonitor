@@ -9,13 +9,10 @@ import {
     Container,
     Row,
     Table,
-    TabPane,
-    UncontrolledAlert
+    TabPane
 } from 'reactstrap';
 
-import Moment from 'react-moment';
-import 'moment-timezone'
-import NumberFormat from 'react-number-format';
+import Penalty from './penalty'
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
@@ -66,9 +63,7 @@ class Lightning extends React.Component {
                     return (
                       <tr className="pullLeft" key={penalty.id}>
                         <td>
-                          <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{penalty.block.timestamp}</Moment> UTC
-                          in block <NumberFormat value={ penalty.block.height } displayType={'text'} thousandSeparator={true} />:&nbsp;
-                          <small><a href={"https://blockstream.info/tx/" + penalty.tx_id} target="_blank">{ penalty.tx_id }</a></small>
+                          <Penalty penalty={ penalty }/>
                         </td>
                       </tr>
                     )
