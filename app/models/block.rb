@@ -1,5 +1,5 @@
 MINIMUM_BLOCK_HEIGHTS = {
-  btc: 560176, # Tests need to be adjusted if this number is increased
+  btc: 500000, # Mid December 2017, around Lightning network launch
   tbtc: 1600000,
   bch: 581000,
   bsv:606000
