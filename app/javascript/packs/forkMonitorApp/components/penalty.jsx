@@ -22,11 +22,13 @@ class Penalty extends React.Component {
           }
         </td>
         <td>
-          <a href={"https://blockstream.info/tx/" + this.props.penalty.opening_tx_id} target="_blank">Opening</a>
+          <a href={"https://blockstream.info/tx/" + this.props.penalty.opening_tx_id} target="_blank"><img src="https://blog.bitmex.com/wp-content/uploads/2019/12/blockstream.png" alt="Blockstream.info" width="16" height="16"></a>&nbsp;-&nbsp;
+          <a href={"https://btc.com/" + this.props.penalty.opening_tx_id} target="_blank"><img src="https://blog.bitmex.com/wp-content/uploads/2019/12/btc.jpg" alt="BTC.com" width="16" height="16"></a>
         </td>
         <td>
           <span className="lightning-tx">
-            <a href={"https://blockstream.info/tx/" + this.props.penalty.tx_id} target="_blank">{ this.props.penalty.tx_id }</a>
+            <a href={"https://blockstream.info/tx/" + this.props.penalty.tx_id} target="_blank"><img src="https://blog.bitmex.com/wp-content/uploads/2019/12/blockstream.png" alt="Blockstream.info" width="16" height="16"></a>&nbsp;-&nbsp;
+            <a href={"https://btc.com/" + this.props.penalty.tx_id} target="_blank"><img src="https://blog.bitmex.com/wp-content/uploads/2019/12/btc.jpg" alt="BTC.com" width="16" height="16"></a>
           </span>
         </td>
       </tr>
