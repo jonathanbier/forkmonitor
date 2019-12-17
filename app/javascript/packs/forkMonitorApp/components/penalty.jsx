@@ -24,7 +24,7 @@ class Penalty extends React.Component {
           }
         </td>
         <td>
-          Opening tx: <Explorer blockstream tx={ this.props.penalty.opening_tx_id }/>&nbsp;
+          <Explorer blockstream tx={ this.props.penalty.opening_tx_id }/>&nbsp;
           <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>
         </td>
         <td>
