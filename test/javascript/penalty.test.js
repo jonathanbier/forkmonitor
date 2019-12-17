@@ -18,7 +18,7 @@ function flushPromises() {
 const mockPenalty = {
   "id":1,
   "tx_id":"c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6",
-  "amount":"3608648.0",
+  "amount":"0.03608648",
   "opening_tx_id": "b4d8a795c033d60105c347347620fa0bd780f6a30cfd5dca7ce4df4102bd4cff",
   "block":{"height":602649,"timestamp":1573082683,"id":161737,"hash":"00000000000000000008647bf3adffc88909838e32b9543d77086fb8dc6e40a5","work":91.3044362323286,"pool":"Poolin","tx_count":2563,"size":1075431,"first_seen_by":{"id":19,"name_with_version":"Bitcoin Core 0.19."}}
 }
@@ -42,12 +42,12 @@ describe('component', () => {
   });
 
   test('should show amount',() => {
-    expect(wrapper.text()).toContain("0.0361");
+    expect(wrapper.text()).toContain("0.0360");
   });
 
   test('should not show amount if absent',() => {
     wrapper.setProps({penalty: mockPenaltyNoAmount});
-    expect(wrapper.text()).not.toContain("0.0361");
+    expect(wrapper.text()).not.toContain("0.0360");
   });
 
   test('should link to channel info',() => {

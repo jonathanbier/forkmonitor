@@ -107,7 +107,7 @@ class LightningTransaction < ApplicationRecord
         ln = block.lightning_transactions.build(
           tx_id: tx.hash,
           raw_tx: tx.payload.unpack('H*')[0],
-          amount: tx.out.count == 1 ? tx.out[0].value : 0,
+          amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0,
         )
         ln.opening_tx_id = ln.get_opening_tx_id!
         ln.save

@@ -66,7 +66,7 @@ RSpec.describe LightningTransaction, type: :model do
 
     it "should set the amount based on the output" do
       LightningTransaction.check_penalties!(@block, @parsed_block)
-      expect(LightningTransaction.first.amount).to eq(390478)
+      expect(LightningTransaction.first.amount).to eq(0.00390478)
     end
 
     it "should find opening transaction" do

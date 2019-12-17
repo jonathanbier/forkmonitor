@@ -17,7 +17,7 @@ class Penalty extends React.Component {
         <td>
           { this.props.penalty.amount &&
             <span>
-              <NumberFormat value={ this.props.penalty.amount / 100000000.0 } displayType={'text'} decimalScale={4} fixedDecimalScale={true} />
+              <NumberFormat value={ this.props.penalty.amount } displayType={'text'} decimalScale={4} fixedDecimalScale={true} />
             </span>
           }
         </td>
