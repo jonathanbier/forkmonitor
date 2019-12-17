@@ -29,10 +29,6 @@ mockPenaltyNoAmount.amount = null
 describe('component', () => {
   const wrapper = mount(<Penalty penalty={ mockPenalty } />);
 
-  test('should show tx id',() => {
-    expect(wrapper.find("a").at(1).props().href).toContain("c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6");
-  });
-
   test('should show block height',() => {
     expect(wrapper.text()).toContain("602,649");
   });
