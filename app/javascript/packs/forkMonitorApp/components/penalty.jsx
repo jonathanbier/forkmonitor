@@ -4,6 +4,8 @@ import Moment from 'react-moment';
 import 'moment-timezone'
 import NumberFormat from 'react-number-format';
 
+import Explorer from './explorer';
+
 class Penalty extends React.Component {
   render() {
     return(
@@ -22,12 +24,12 @@ class Penalty extends React.Component {
           }
         </td>
         <td>
-          <a href={"https://blockstream.info/tx/" + this.props.penalty.opening_tx_id} target="_blank">Opening</a>
+          Opening tx: <Explorer blockstream tx={ this.props.penalty.opening_tx_id }/>&nbsp;
+          <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>
         </td>
         <td>
-          <span className="lightning-tx">
-            <a href={"https://blockstream.info/tx/" + this.props.penalty.tx_id} target="_blank">{ this.props.penalty.tx_id }</a>
-          </span>
+          <Explorer blockstream tx={ this.props.penalty.tx_id }/>&nbsp;
+          <Explorer btcCom tx={ this.props.penalty.tx_id }/>
         </td>
       </tr>
     );
