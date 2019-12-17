@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       resources :version_bits, only: [:show]
       resources :stale_candidates, only: [:index, :show]
       resources :ln_penalties, only: [:index, :show]
+      resources :ln_stats, only: [:index]
       resources :blocks, only: [:index]
       resources :subscriptions, only: [:create]
     end

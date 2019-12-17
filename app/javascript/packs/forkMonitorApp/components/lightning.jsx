@@ -13,6 +13,7 @@ import {
 } from 'reactstrap';
 
 import Penalty from './penalty'
+import LightingStats from './lightningStats'
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
@@ -51,7 +52,8 @@ class Lightning extends React.Component {
             <Row><Col>
               <Breadcrumb  className="chaintip-header">
                 <BreadcrumbItem className="chaintip-hash">
-                  Lightning penalty transactions
+                  Lightning penalties&nbsp;
+                  <LightingStats />
                 </BreadcrumbItem>
               </Breadcrumb>
               <p>
