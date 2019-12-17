@@ -24,21 +24,28 @@ class LightningTransaction < ApplicationRecord
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
     max = options[:max].present? ? options[:max] : 10
+    throw "Parameter :max should be at least 1" if max < 1
     node = Node.bitcoin_core_by_version.first
-    puts "Scan blocks for relevant Lightning transactions using #{ node.name_with_version }..." unless Rails.env.test?
 
-    blocks_to_check = [node.block]
+    blocks_to_check = []
     block = node.block
     while true
+      if block.nil?
+        missing_block = true
+        break
+      end
+      break if block.checked_lightning
       # Don't perform lightning checks for more than 10 (default) blocks; it will take too long to catch up
       if blocks_to_check.count > max
         max_exceeded = true
         break
       end
-      throw "Unable to perform lightning checks due to missing intermediate block" if block.parent.nil?
-      block = block.parent
-      break if block.checked_lightning
       blocks_to_check.unshift(block)
+      block = block.parent
+    end
+
+    if blocks_to_check.count > 0 and !Rails.env.test?
+      puts "Scan blocks for relevant Lightning transactions using #{ node.name_with_version }..."
     end
 
     blocks_to_check.each do |block|
@@ -47,6 +54,10 @@ class LightningTransaction < ApplicationRecord
       puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
       self.check_penalties!(block, parsed_block)
       block.update checked_lightning: true
+    end
+
+    if missing_block
+      raise "Unable to perform lightning checks due to missing intermediate block"
     end
 
     if max_exceeded
@@ -99,7 +110,7 @@ class LightningTransaction < ApplicationRecord
           amount: tx.out.count == 1 ? tx.out[0].value : 0,
         )
         ln.opening_tx_id = ln.get_opening_tx_id!
-        ln.save        
+        ln.save
         # TODO: set amount based on output of previous transaction
       end
     end

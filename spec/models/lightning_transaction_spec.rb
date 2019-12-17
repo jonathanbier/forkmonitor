@@ -12,8 +12,8 @@ RSpec.describe LightningTransaction, type: :model do
 
     allow(LightningTransaction).to receive(:check_penalties!).and_return nil
 
-    # throw the first time for lacking a comparison block
-    expect { LightningTransaction.check!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for lightning checks, please manually check blocks before 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab)")
+    # throw the first time for lacking a previously checked block
+    expect{ LightningTransaction.check!({coin: :btc, max: 1}) }.to raise_error("Unable to perform lightning checks due to missing intermediate block")
     @node.client.mock_set_height(560177)
     @node.poll!
     @node.reload
