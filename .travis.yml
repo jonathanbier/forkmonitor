@@ -15,7 +15,6 @@ cache:
 before_install:
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
   - gem update --system # travis-ci/travis-ci#8978
-  - gem install bundler
   - yarn
 before_script:
   - bundle exec rake db:create RAILS_ENV=test
