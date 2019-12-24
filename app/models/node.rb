@@ -396,8 +396,12 @@ class Node < ApplicationRecord
       return nil
     end
     tx_id = block_info["tx"].first
-    coinbase = getrawtransaction(tx_id, true, block_hash)
-    return Block.pool_from_coinbase_tx(coinbase)
+    begin
+      coinbase = getrawtransaction(tx_id, true, block_hash)
+      return Block.pool_from_coinbase_tx(coinbase)
+    rescue TxNotFoundError
+      return nil
+    end
   end
 
   def self.poll!(options = {})
