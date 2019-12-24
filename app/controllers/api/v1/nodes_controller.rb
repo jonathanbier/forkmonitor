@@ -4,7 +4,7 @@ class Api::V1::NodesController < ApplicationController
 
   # Unauthenticated list of nodes, per coin:
   def index_coin
-    latest = Node.where(coin: params[:coin].upcase).order(updated_at: :desc).first
+    latest = Node.last_updated_cached(params[:coin].upcase)
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
       @nodes = Node.where(enabled: true, coin: params[:coin].upcase).order(client_type: :asc ,name: :asc, version: :desc)
       render json: @nodes

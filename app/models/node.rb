@@ -1,6 +1,9 @@
 class Node < ApplicationRecord
   SUPPORTED_COINS=[:btc, :tbtc, :bch, :bsv]
 
+  after_save    :expire_cache
+  after_destroy :expire_cache
+
   class Error < StandardError; end
   class InvalidCoinError < Error; end
   class NoTxIndexError < Error; end
@@ -18,7 +21,7 @@ class Node < ApplicationRecord
 
   scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
-  scope :bitcoin_alternative_implementations, -> { where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
+  scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
 
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu]
 
@@ -643,6 +646,16 @@ class Node < ApplicationRecord
 
   def self.client_klass
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
+  end
+
+  def self.last_updated_cached(coin)
+      Rails.cache.fetch("Node.last_updated('#{ coin }')") { where(coin: coin).order(updated_at: :desc).first }
+  end
+
+  def expire_cache
+    Block.coins.keys.each do |coin|
+      Rails.cache.delete_matched("Node.*")
+    end
   end
 
 end

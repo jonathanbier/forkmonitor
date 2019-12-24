@@ -85,6 +85,8 @@ group :development, :test do
   gem 'dotenv-rails'
 
   gem 'webmock'
+
+  gem 'redis-rails'
 end
 
 group :development do

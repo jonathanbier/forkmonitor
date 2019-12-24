@@ -46,15 +46,17 @@ class FeedsController < ApplicationController
   end
 
   def stale_candidates
-    latest = StaleCandidate.where(coin: @coin).order(updated_at: :desc).first
+    latest = StaleCandidate.last_updated_cached(params[:coin])
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
       @page = (params[:page] || 1).to_i
       @per_page = Rails.env.production? ? 10 : 2
-      @page_count = (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
+      @page_count = Rails.cache.fetch "StaleCandidate.count(#{@coin})" do
+        (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
+      end
 
       respond_to do |format|
         format.rss do
-          @stale_candidates = StaleCandidate.where(coin: @coin).order(created_at: :desc).offset((@page - 1) * @per_page).limit(@per_page)
+          @stale_candidates = StaleCandidate.page_cached(@coin, @per_page, @page)
         end
       end
     end
@@ -63,11 +65,11 @@ class FeedsController < ApplicationController
   def ln_penalties
     respond_to do |format|
       format.rss do
-        latest = LightningTransaction.order(updated_at: :desc).first
+        latest = LightningTransaction.last_updated_cached
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_penalties = []
           if @coin == :btc
-            @ln_penalties = LightningTransaction.order(created_at: :desc)
+            @ln_penalties = LightningTransaction.all_with_block_cached
           end
         end
       end

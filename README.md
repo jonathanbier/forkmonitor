@@ -6,6 +6,8 @@ Install ZeroMQ (for Libbitcoin), e.g. on macOS: `brew install zeromq`
 
 Install Postgres, e.g. on macOS: `brew install postgresql`
 
+Install Redis, e.g. on macOS: `brew install redis` and see [instructions](https://medium.com/@petehouston/install-and-config-redis-on-mac-os-x-via-homebrew-eb8df9a4f298).
+
 Install Ruby 2.6.3 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
 the bundler and foreman gems, then run bundler:
 

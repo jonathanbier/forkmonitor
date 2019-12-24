@@ -1,4 +1,7 @@
 class LightningTransaction < ApplicationRecord
+  after_save    :expire_cache
+  after_destroy :expire_cache
+
   belongs_to :block
 
   def as_json(options = nil)
@@ -133,6 +136,21 @@ class LightningTransaction < ApplicationRecord
         tx.update channel_is_public: false
       end
     end
+  end
+
+  private
+
+  def self.last_updated_cached
+    Rails.cache.fetch('LightningTransaction.last_updated') { order(updated_at: :desc).first }
+  end
+
+  def self.all_with_block_cached
+    Rails.cache.fetch('LightningTransaction.all_with_block') { joins(:block).order(height: :desc).to_a }
+  end
+
+  def expire_cache
+    Rails.cache.delete_matched('LightningTransaction.*')
+    Rails.cache.delete('api/v1/ln_penalties.json')
   end
 
 end
