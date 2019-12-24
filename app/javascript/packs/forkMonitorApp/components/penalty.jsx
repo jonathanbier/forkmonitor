@@ -4,6 +4,9 @@ import Moment from 'react-moment';
 import 'moment-timezone'
 import NumberFormat from 'react-number-format';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+
 import Explorer from './explorer';
 
 class Penalty extends React.Component {
@@ -28,6 +31,9 @@ class Penalty extends React.Component {
           <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>&nbsp;
           { this.props.penalty.channel_is_public == true &&
             <Explorer oneML channelId={ this.props.penalty.channel_id_1ml }/>
+          }
+          { this.props.penalty.channel_is_public == null &&
+            <FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
           }
         </td>
         <td>
