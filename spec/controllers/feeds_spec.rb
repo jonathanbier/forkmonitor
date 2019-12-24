@@ -90,7 +90,7 @@ RSpec.describe FeedsController, type: :controller do
     end
 
     describe "GET lightning penalty feed" do
-      let!(:lightning_transaction) { create(:lightning_transaction) }
+      let!(:lightning_transaction) { create(:penalty_transaction_public) }
 
       it "should be rendered" do
         get :ln_penalties, params: {coin: "btc"}, format: :rss

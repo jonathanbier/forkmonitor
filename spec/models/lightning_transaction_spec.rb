@@ -74,4 +74,39 @@ RSpec.describe LightningTransaction, type: :model do
     end
 
   end
+
+  describe "check_public_channels!" do
+    let(:penalty_tx_public) { create(:penalty_transaction_public) }
+    let(:penalty_tx_private) { create(:penalty_transaction_private) }
+
+    before do
+      stub_request(:post, "https://1ml.com/search").with(
+        body: "q=b4d8a795c033d60105c347347620fa0bd780f6a30cfd5dca7ce4df4102bd4cff"
+      ).to_return(
+        :status => 302,
+        :headers => { 'Location' => "/channel/578407987470532609" }
+      )
+      stub_request(:post, "https://1ml.com/search").with(
+        body: "q=1b9c2e929fa2dc3b29fe725841804563bb327437f0fad640010088467ef2870a"
+      ).to_return(
+        :status => 200
+      )
+      expect(penalty_tx_public.channel_is_public).to eq(nil)
+      expect(penalty_tx_private.channel_is_public).to eq(nil)
+      LightningTransaction.check_public_channels!
+      penalty_tx_public.reload
+      penalty_tx_private.reload
+    end
+
+    it "should mark public channels as such" do
+      expect(penalty_tx_public.channel_is_public).to eq(true)
+      expect(penalty_tx_public.channel_id_1ml).to eq(578407987470532609)
+    end
+
+    it "should mark private channels as such" do
+      expect(penalty_tx_private.channel_is_public).to eq(false)
+      expect(penalty_tx_private.channel_id_1ml).to be_nil
+    end
+
+  end
 end

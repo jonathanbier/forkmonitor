@@ -1023,6 +1023,7 @@ RSpec.describe Node, :type => :model do
         allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
         allow(InflatedBlock).to receive(:check_inflation!).and_return true
         allow(LightningTransaction).to receive(:check!).and_return true
+        allow(LightningTransaction).to receive(:check_public_channels!).and_return true
       end
 
       it "should call check_inflation!" do
@@ -1036,6 +1037,11 @@ RSpec.describe Node, :type => :model do
         expect(LightningTransaction).not_to receive(:check!).with({coin: :tbtc, max: 1000})
 
         Node.heavy_checks_repeat!({coins: ["BTC", "TBTC"]})
+      end
+
+      it "should call check_public_channels!" do
+        expect(LightningTransaction).to receive(:check_public_channels!)
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
     end
 

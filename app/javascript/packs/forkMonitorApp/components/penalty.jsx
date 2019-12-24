@@ -25,7 +25,10 @@ class Penalty extends React.Component {
         </td>
         <td>
           <Explorer blockstream tx={ this.props.penalty.opening_tx_id }/>&nbsp;
-          <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>
+          <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>&nbsp;
+          { this.props.penalty.channel_is_public == true &&
+            <Explorer oneML channelId={ this.props.penalty.channel_id_1ml }/>
+          }
         </td>
         <td>
           <Explorer blockstream tx={ this.props.penalty.tx_id }/>&nbsp;

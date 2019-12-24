@@ -17,6 +17,8 @@
 require 'coveralls'
 Coveralls.wear!
 
+require 'webmock/rspec'
+
 require 'helpers/controller_spec_helpers.rb'
 
 RSpec.configure do |config|

@@ -2,9 +2,10 @@ class LightningTransaction < ApplicationRecord
   belongs_to :block
 
   def as_json(options = nil)
-    fields = [:id, :tx_id, :amount, :opening_tx_id]
+    fields = [:id, :tx_id, :amount, :opening_tx_id, :channel_is_public]
     super({ only: fields }.merge(options || {})).merge({
-      block: block
+      block: block,
+      channel_id_1ml: channel_id_1ml.present? ? channel_id_1ml.to_s : nil
     })
   end
 
@@ -23,7 +24,7 @@ class LightningTransaction < ApplicationRecord
 
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
-    throw "Must specifiy :max" unless options[:max].present? 
+    throw "Must specifiy :max" unless options[:max].present?
     throw "Parameter :max should be at least 1" if options[:max] < 1
     node = Node.bitcoin_core_by_version.first
 
@@ -112,6 +113,24 @@ class LightningTransaction < ApplicationRecord
         ln.opening_tx_id = ln.get_opening_tx_id!
         ln.save
         # TODO: set amount based on output of previous transaction
+      end
+    end
+  end
+
+  def self.check_public_channels!
+    LightningTransaction.where(channel_is_public: nil).each do |tx|
+      uri = URI.parse("https://1ml.com/search")
+      begin
+        response = Net::HTTP.post_form(uri, {"q" => tx.opening_tx_id})
+      rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
+        Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
+        puts "1ml search for #{ tx.opening_tx_id } returned error #{ e }, try again later"
+        sleep 10
+      end
+      if response.code.to_i == 302 && response["location"] =~ /\/channel\/(\d+)/
+         tx.update(channel_is_public: true, channel_id_1ml: $1.to_i)
+      else
+        tx.update channel_is_public: false
       end
     end
   end

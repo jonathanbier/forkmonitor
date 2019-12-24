@@ -80,6 +80,8 @@ group :development, :test do
 
   # Shim to load environment variables from .env into ENV
   gem 'dotenv-rails'
+
+  gem 'webmock'
 end
 
 group :development do

@@ -2,6 +2,7 @@ import React from 'react';
 
 import ImageBlockstream from '../assets/images/blockstream.png'
 import ImageBtcCom from '../assets/images/btc.png'
+import ImageOneML from '../assets/images/1ml.png'
 
 class Explorer extends React.Component {
   render() {
@@ -13,6 +14,9 @@ class Explorer extends React.Component {
     } else if (this.props.btcCom) {
       url = "https://btc.com/" + this.props.tx
       image = ImageBtcCom
+    } else if (this.props.oneML) {
+      url = "https://1ml.com/channel/" + this.props.channelId
+      image = ImageOneML
     } else {
       console.error("Must specify explorer")
     }
