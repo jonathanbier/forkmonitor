@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe Api::V1::LnStatsController, type: :controller do
-  let!(:ln_penalty) { create(:lightning_transaction) }
+  let!(:ln_penalty) { create(:penalty_transaction_public) }
 
-  describe "GET /api/v1/inflated_blocks" do
+  describe "GET /api/v1/ln_stats" do
 
     before do
       get :index, format: :json
