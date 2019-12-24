@@ -42,7 +42,7 @@ class NodeInfo extends React.Component {
             <li>RAM: { this.props.node.ram } GB</li>
             <li>Storage: { this.props.node.storage }</li>
             <li>Pruned: { this.props.node.pruned ? "Yes" : "No" }</li>
-            <li>Transaction index: { this.props.node.pruned ? "Yes" : "No" }</li>
+            <li>Transaction index: { this.props.node.txindex ? "Yes" : "No" }</li>
             <li>CVE-2018-17144 Inflation Exposure: { this.props.node.cve_2018_17144 ? "Yes" : "No" }</li>
             <li>Client release date: { this.props.node.released }</li>
           </ul>
