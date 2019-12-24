@@ -128,7 +128,7 @@ class Chaintip < ApplicationRecord
   private
 
   def expire_cache
-    Rails.cache.delete_matched("Chaintip.#{self.coin}.*")
+    Rails.cache.delete("Chaintip.#{self.coin}.index.json")
   end
 
 end

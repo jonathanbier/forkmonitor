@@ -149,7 +149,8 @@ class LightningTransaction < ApplicationRecord
   end
 
   def expire_cache
-    Rails.cache.delete_matched('LightningTransaction.*')
+    Rails.cache.delete('LightningTransaction.last_updated')
+    Rails.cache.delete('LightningTransaction.all_with_block')
     Rails.cache.delete('api/v1/ln_penalties.json')
   end
 

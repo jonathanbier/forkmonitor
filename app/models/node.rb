@@ -653,9 +653,7 @@ class Node < ApplicationRecord
   end
 
   def expire_cache
-    Block.coins.keys.each do |coin|
-      Rails.cache.delete_matched("Node.*")
-    end
+      Rails.cache.delete("Node.last_updated(#{self.coin})")
   end
 
 end

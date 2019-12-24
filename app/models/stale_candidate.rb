@@ -19,6 +19,8 @@ class StaleCandidate < ApplicationRecord
   end
 
   def expire_cache
-    Rails.cache.delete_matched("StaleCandidate*")
+    Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
+    Rails.cache.delete("StaleCandidate.for_coin(#{self.coin})")
+    Rails.cache.delete("StaleCandidate.count(#{self.coin})")
   end
 end
