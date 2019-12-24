@@ -5,14 +5,19 @@ class Api::V1::InflatedBlocksController < ApplicationController
   def index
     if params[:coin]
       coin = params[:coin].downcase.to_sym
-      @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin])
+      latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[coin]).order(updated_at: :desc).first
+      if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin])
+        response.headers['Content-Range'] = @inflated_blocks.count
+        render json: @inflated_blocks
+      end
     else
       @inflated_blocks = InflatedBlock.all
+      response.headers['Content-Range'] = @inflated_blocks.count
+      render json: @inflated_blocks
     end
-    response.headers['Content-Range'] = @inflated_blocks.count
-    render json: @inflated_blocks
   end
-  
+
   def show
     render json: @inflated_block
   end
@@ -22,13 +27,13 @@ class Api::V1::InflatedBlocksController < ApplicationController
     @inflated_block.update dismissed_at: Time.now
     head :no_content
   end
-  
+
   private
 
   def set_inflated_block
     @inflated_block = InflatedBlock.find(params[:id])
   end
-  
+
   def inflated_block_params
     params.require(:inflated_block)
   end
