@@ -514,7 +514,7 @@ class Node < ApplicationRecord
       end
     rescue BitcoinClient::Error
       # TODO: check error more precisely
-      raise TxNotFoundError
+      raise TxNotFoundError, "Transaction #{ tx_id } #{ block_hash.present? ? "in block #{ block_hash }" : "" } not found on node #{id} (#{name_with_version})"
     end
   end
 
