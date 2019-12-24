@@ -67,6 +67,9 @@ gem '0mq', '~> 0.5.3'
 # Use Postgres as the database for Active Record
 gem 'pg'
 
+# Memcachier
+gem 'dalli'
+
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug', platforms: [:mri, :mingw, :x64_mingw]
