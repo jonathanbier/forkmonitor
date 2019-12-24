@@ -36,8 +36,8 @@ namespace 'blocks' do :env
     end
   end
 
-  desc "Perform lightning related checks for [coin] (limit to [max=10])"
+  desc "Perform lightning related checks for [coin] (limit to [max=10000])"
   task :check_lightning, [:coin, :max] => :environment do |action, args|
-    LightningTransaction.check!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : nil})
+    LightningTransaction.check!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : 10000})
   end
 end

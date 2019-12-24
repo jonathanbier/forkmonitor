@@ -22,7 +22,7 @@ describe "blocks:check_lightning" do
   include_context "rake"
 
   it "should call check! for a given coin" do
-    expect(LightningTransaction).to receive(:check!).with({coin: :btc, :max=>nil})
+    expect(LightningTransaction).to receive(:check!).with({coin: :btc, :max=>10000})
     subject.invoke("BTC")
   end
 end

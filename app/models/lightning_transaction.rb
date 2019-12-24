@@ -23,8 +23,8 @@ class LightningTransaction < ApplicationRecord
 
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
-    max = options[:max].present? ? options[:max] : 10
-    throw "Parameter :max should be at least 1" if max < 1
+    throw "Must specifiy :max" unless options[:max].present? 
+    throw "Parameter :max should be at least 1" if options[:max] < 1
     node = Node.bitcoin_core_by_version.first
 
     blocks_to_check = []
@@ -36,7 +36,7 @@ class LightningTransaction < ApplicationRecord
       end
       break if block.checked_lightning
       # Don't perform lightning checks for more than 10 (default) blocks; it will take too long to catch up
-      if blocks_to_check.count > max
+      if blocks_to_check.count > options[:max]
         max_exceeded = true
         break
       end
@@ -61,7 +61,7 @@ class LightningTransaction < ApplicationRecord
     end
 
     if max_exceeded
-      raise "More than #{ max } blocks behind for lightning checks, please manually check blocks before #{ blocks_to_check.first.height } (#{ blocks_to_check.first.block_hash })"
+      raise "More than #{ options[:max] } blocks behind for lightning checks, please manually check blocks before #{ blocks_to_check.first.height } (#{ blocks_to_check.first.block_hash })"
     end
   end
 
