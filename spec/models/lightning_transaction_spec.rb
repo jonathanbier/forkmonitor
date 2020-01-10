@@ -19,7 +19,7 @@ RSpec.describe LightningTransaction, type: :model do
     @node.reload
   end
 
-  describe "InflatedBlock.check!" do
+  describe "LightningTransaction.check!" do
 
     before do
       @block = Block.find_by(height: 560177)
