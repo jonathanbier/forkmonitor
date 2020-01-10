@@ -81,7 +81,7 @@ class InflatedBlock < ApplicationRecord
           tally = 0
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
             if tally > (Rails.env.test? ? 2 : 100)
-              throw "Unable to roll active chaintip to #{ block.block_hash } (#{ block.height })"
+              throw_unable_to_roll_back!(block)
             elsif tally > 0
               # Fetch blocks for any newly activated chaintips
               node.poll_mirror!
@@ -107,7 +107,7 @@ class InflatedBlock < ApplicationRecord
             end
             # Stop if there are no new blocks to invalidate
             if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
-                throw "Unable to roll active chaintip to #{ block.block_hash } (#{ block.height })"
+              throw_unable_to_roll_back!(block, blocks_to_invalidate)
             end
             blocks_to_invalidate.each do |block|
               invalidated_block_hashes.append(block.block_hash)
@@ -181,5 +181,13 @@ class InflatedBlock < ApplicationRecord
     if max_exceeded
       raise "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
     end
+  end
+
+  def self.throw_unable_to_roll_back!(block, blocks_to_invalidate = nil)
+    error = "Unable to roll active chaintip to #{ block.block_hash } (#{ block.height })"
+    if blocks_to_invalidate.present?
+      error += "Invalidated blocks: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
+    end
+    throw error
   end
 end
