@@ -652,7 +652,7 @@ class Node < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-      Rails.cache.fetch("Node.last_updated('#{ coin }')") { where(coin: coin).order(updated_at: :desc).first }
+      Rails.cache.fetch("Node.last_updated(#{ coin })") { where(coin: coin).order(updated_at: :desc).first }
   end
 
   def expire_cache
