@@ -26,6 +26,7 @@ class InflatedBlock < ApplicationRecord
 
     Node.coin_by_version(options[:coin]).each do |node|
       next unless node.mirror_node? && node.core?
+      next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.now
       puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
       throw "Node in Initial Blockchain Download" if node.ibd
       if node.restore_mirror == false
@@ -172,10 +173,14 @@ class InflatedBlock < ApplicationRecord
           node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
         end
         puts "Node restored"
+        # Give node some time to catch up:
+        node.update mirror_rest_until: 60.seconds.from_now
         raise # continue throwing error
       end
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
+      # Leave node alone for a bit:
+      node.update mirror_rest_until: 15.seconds.from_now
     end
 
     if max_exceeded

@@ -25,10 +25,14 @@ RSpec.describe InflatedBlock, type: :model do
       # throw the first time for lacking a comparison block
       expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       expect(TxOutset.count).to eq(1)
+      expect(@node.mirror_rest_until).not_to be_nil
+      @node.update mirror_rest_until: nil
       @node.mirror_client.mock_set_height(560177)
 
       expect { InflatedBlock.check_inflation!({coin: :tbtc, max: 0}) }.to raise_error("More than 0 blocks behind for inflation check, please manually check 560176 (0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab) and earlier")
       expect(TxOutset.count).to eq(2)
+      expect(@node_testnet.mirror_rest_until).not_to be_nil
+      @node_testnet.update mirror_rest_until: nil
       @node_testnet.mirror_client.mock_set_height(560177)
     end
 
@@ -133,6 +137,8 @@ RSpec.describe InflatedBlock, type: :model do
 
       before do
         InflatedBlock.check_inflation!({coin: :btc})
+        expect(@node.mirror_rest_until).not_to be_nil
+        @node.update mirror_rest_until: nil
         @node.mirror_client.mock_set_height(560178)
         @node.mirror_client.mock_set_extra_inflation(1)
       end
