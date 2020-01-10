@@ -34,18 +34,28 @@ RSpec.describe LightningTransaction, type: :model do
       LightningTransaction.check!(coin: :btc, max: 1)
     end
 
-    it "should call check! with the parsed block" do
+    it "should call PenaltyTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@block, parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 
+    it "should call MaybeUncoopTransaction.check! with the parsed block" do
+      raw_block = @node.client.getblock(@block.block_hash, 0)
+      parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
+      expect(MaybeUncoopTransaction).to receive(:check!).with(@block, parsed_block)
+      LightningTransaction.check!({coin: :btc, max: 1})
+    end
+
   end
 
   describe "check_public_channels!" do
-    let(:penalty_tx_public) { create(:penalty_transaction_public) }
+    let(:block1) { create(:lightning_block) }
+    let(:penalty_tx_public) { create(:penalty_transaction_public, block: block1) }
     let(:penalty_tx_private) { create(:penalty_transaction_private) }
+    let(:uncoop_tx) { create(:maybe_uncoop_transaction, block: block1) }
+
 
     before do
       stub_request(:post, "https://1ml.com/search").with(
@@ -61,14 +71,20 @@ RSpec.describe LightningTransaction, type: :model do
       )
       expect(penalty_tx_public.channel_is_public).to eq(nil)
       expect(penalty_tx_private.channel_is_public).to eq(nil)
+      expect(uncoop_tx.channel_is_public).to eq(nil)
+
       LightningTransaction.check_public_channels!
       penalty_tx_public.reload
       penalty_tx_private.reload
+      uncoop_tx.reload
     end
 
     it "should mark public channels as such" do
       expect(penalty_tx_public.channel_is_public).to eq(true)
       expect(penalty_tx_public.channel_id_1ml).to eq(578407987470532609)
+
+      expect(uncoop_tx.channel_is_public).to eq(true)
+      expect(uncoop_tx.channel_id_1ml).to eq(578407987470532609)
     end
 
     it "should mark private channels as such" do

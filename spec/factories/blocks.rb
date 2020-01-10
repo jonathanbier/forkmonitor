@@ -12,4 +12,9 @@ FactoryBot.define do
      association :first_seen_by, factory: :node_with_block, version: 160100
    end
 
+   factory :lightning_block, parent: :block do
+      block_hash { "00000000000000000008647bf3adffc88909838e32b9543d77086fb8dc6e40a5" }
+      height { 602649 }
+   end
+
  end
