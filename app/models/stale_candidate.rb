@@ -1,8 +1,7 @@
 class StaleCandidate < ApplicationRecord
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
-  after_save    :expire_cache
-  after_destroy :expire_cache
+  after_commit :expire_cache
 
   private
 

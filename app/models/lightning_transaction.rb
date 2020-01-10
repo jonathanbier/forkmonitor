@@ -1,6 +1,5 @@
 class LightningTransaction < ApplicationRecord
-  after_save    :expire_cache
-  after_destroy :expire_cache
+  after_commit :expire_cache
 
   belongs_to :block
 

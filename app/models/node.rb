@@ -1,8 +1,7 @@
 class Node < ApplicationRecord
   SUPPORTED_COINS=[:btc, :tbtc, :bch, :bsv]
 
-  after_save    :expire_cache
-  after_destroy :expire_cache
+  after_commit :expire_cache
 
   class Error < StandardError; end
   class InvalidCoinError < Error; end
