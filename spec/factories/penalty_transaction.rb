@@ -1,8 +1,8 @@
 FactoryBot.define do
-   factory :lightning_transaction do
+   factory :penalty_transaction do
    end
 
-   factory :penalty_transaction_public, parent: :lightning_transaction do
+   factory :penalty_transaction_public, parent: :penalty_transaction do
      association :block, factory: :block, block_hash: "00000000000000000008647bf3adffc88909838e32b9543d77086fb8dc6e40a5", height: 602649
      tx_id { "c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6" }
      opening_tx_id { "b4d8a795c033d60105c347347620fa0bd780f6a30cfd5dca7ce4df4102bd4cff" }
@@ -10,7 +10,7 @@ FactoryBot.define do
      amount { 1.33874639 }
    end
 
-   factory :penalty_transaction_private, parent: :lightning_transaction do
+   factory :penalty_transaction_private, parent: :penalty_transaction do
      association :block, factory: :block, block_hash: "0000000000000000000039464d9af0ba90e917e1d3f36eddef67ca54a2eb9cb4", height: 603483
      tx_id { "3e27208a91c1696fd63736f907dd26b55b68e1b2e8479d571974a0034b083808" }
      opening_tx_id { "1b9c2e929fa2dc3b29fe725841804563bb327437f0fad640010088467ef2870a" }

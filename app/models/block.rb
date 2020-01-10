@@ -12,7 +12,7 @@ class Block < ApplicationRecord
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
   has_many :tx_outsets
   has_one :inflated_block
-  has_many :lightning_transactions
+  has_many :penalty_transactions
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   def as_json(options = nil)

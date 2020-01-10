@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_10_030455) do
+ActiveRecord::Schema.define(version: 2020_01_10_105158) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -100,7 +100,9 @@ ActiveRecord::Schema.define(version: 2020_01_10_030455) do
     t.string "opening_tx_id"
     t.boolean "channel_is_public"
     t.bigint "channel_id_1ml"
+    t.integer "type", null: false
     t.index ["block_id"], name: "index_lightning_transactions_on_block_id"
+    t.index ["type"], name: "index_lightning_transactions_on_type"
   end
 
   create_table "nodes", force: :cascade do |t|
