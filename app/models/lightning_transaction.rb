@@ -4,6 +4,8 @@ class LightningTransaction < ApplicationRecord
   after_commit :expire_cache
 
   belongs_to :block
+  belongs_to :parent, class_name: 'LightningTransaction', foreign_key: 'parent_id', optional: true
+  has_one :child, class_name: 'LightningTransaction', foreign_key: 'parent_id'
 
   def as_json(options = nil)
     fields = [:id, :tx_id, :amount, :opening_tx_id, :channel_is_public]
