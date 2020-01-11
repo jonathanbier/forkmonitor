@@ -4,7 +4,11 @@ xml.rss :version => "2.0" do
   xml.channel do
     xml.title "Fork Monitor - Lightning sweep transactions"
     xml.description "When a channel is closed uncooperatively, the closing party can sweep the funds after a delay (BOLT-3)."
-    xml.link root_url
+    xml.link feeds_ln_sweeps_url(@coin) + "?page=#{@page}", rel: "self"
+    xml.link feeds_ln_sweeps_url(@coin) + "?page=1", rel: "first"
+    xml.link feeds_ln_sweeps_url(@coin) + "?page=#{@page + 1}", rel: "next" if @page < @page_count
+    xml.link feeds_ln_sweeps_url(@coin) + "?page=#{@page - 1}", rel: "previous" if @page > 1
+    xml.link feeds_ln_sweeps_url(@coin) + "?page=#{@page_count}", rel: "last"
 
     xml.lastBuildDate SweepTransaction.last_updated_cached.updated_at.iso8601
     xml.updated SweepTransaction.last_updated_cached.updated_at.iso8601

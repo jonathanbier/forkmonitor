@@ -39,7 +39,7 @@ Rails.application.routes.draw do
       get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
       get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias
       get 'ln_penalties/:coin', :action => :ln_penalties
-      get 'ln_sweeps/:coin', :action => :ln_sweeps
+      get 'ln_sweeps/:coin', :action => :ln_sweeps, as: "ln_sweeps"
       get 'ln_uncoops/:coin', :action => :ln_uncoops
     end
   end

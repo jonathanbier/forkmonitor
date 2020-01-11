@@ -82,13 +82,16 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_sweeps = []
           if @coin == :btc
-            @ln_sweeps = SweepTransaction.all_with_block_cached
+            @page = (params[:page] || 1).to_i
+            @page_count = Rails.cache.fetch "SweepTransaction.count" do
+              (SweepTransaction.count / SweepTransaction::PER_PAGE.to_f).ceil
+            end
+            @ln_sweeps = SweepTransaction.page_with_block_cached(@page)
           end
         end
       end
     end
   end
-
 
   def ln_uncoops
     respond_to do |format|

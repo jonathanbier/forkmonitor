@@ -1,4 +1,6 @@
 class LightningTransaction < ApplicationRecord
+  PER_PAGE = Rails.env.production? ? 100 : 2
+
   enum type: [:PenaltyTransaction, :MaybeUncoopTransaction, :SweepTransaction]
 
   after_commit :expire_cache
@@ -95,9 +97,19 @@ class LightningTransaction < ApplicationRecord
     Rails.cache.fetch("#{self.name}.all_with_block") { joins(:block).order(height: :desc).to_a }
   end
 
+  def self.page_with_block_cached(page)
+    Rails.cache.fetch("#{self.name}.page_with_block_cached(#{page})") {
+      joins(:block).order(height: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+    }
+  end
+
   def expire_cache
     Rails.cache.delete("#{self.class.name}.last_updated")
     Rails.cache.delete("#{self.class.name}.all_with_block")
+    for page in 1..(self.class.count / PER_PAGE + 1) do
+      Rails.cache.delete("#{self.class.name}.page_with_block_cached(#{page})")
+    end
+    Rails.cache.delete("#{self.class.name}.count")
   end
 
 end
