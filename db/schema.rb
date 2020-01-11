@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_01_10_113455) do
+ActiveRecord::Schema.define(version: 2020_01_11_061042) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -102,6 +102,7 @@ ActiveRecord::Schema.define(version: 2020_01_10_113455) do
     t.bigint "channel_id_1ml"
     t.integer "type", null: false
     t.bigint "parent_id"
+    t.integer "input", null: false
     t.index ["block_id"], name: "index_lightning_transactions_on_block_id"
     t.index ["parent_id"], name: "index_lightning_transactions_on_parent_id"
     t.index ["type"], name: "index_lightning_transactions_on_type"

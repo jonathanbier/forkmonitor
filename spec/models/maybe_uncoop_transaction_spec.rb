@@ -37,6 +37,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
       MaybeUncoopTransaction.check!(@block, @parsed_block)
       expect(MaybeUncoopTransaction.count).to eq(1)
       expect(MaybeUncoopTransaction.first.tx_id).to eq(@uncoop_tx.hash)
+      expect(MaybeUncoopTransaction.first.input).to eq(0)
       expect(MaybeUncoopTransaction.first.raw_tx).to eq(@raw_tx)
     end
 

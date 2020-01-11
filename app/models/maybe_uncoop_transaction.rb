@@ -14,7 +14,7 @@ class MaybeUncoopTransaction < LightningTransaction
     parsed_block.transactions.each do |tx|
       # Must have one input
       break if tx.in.count != 1
-      tx.in.each do |tx_in|
+      tx.in.each_with_index do |tx_in, input|
         # Must have a witness
         break if tx_in.script_witness.empty?
         # Witness must have the correct number of elements
@@ -43,6 +43,7 @@ class MaybeUncoopTransaction < LightningTransaction
 
         ln = block.maybe_uncoop_transactions.build(
           tx_id: tx.hash,
+          input: input,
           raw_tx: tx.payload.unpack('H*')[0],
           amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0,
         )
