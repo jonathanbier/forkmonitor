@@ -104,5 +104,20 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
+    describe "GET lightning sweep feed" do
+      let!(:lightning_transaction) { create(:sweep_transaction_public) }
+
+      it "should be rendered" do
+        get :ln_sweeps, params: {coin: "btc"}, format: :rss
+        expect(response).to render_template("feeds/ln_sweeps")
+        expect(response.body).to include("Lightning sweep transactions")
+      end
+
+      it "should contain sweep transactions" do
+        get :ln_sweeps, params: {coin: "btc"}, format: :rss
+        expect(response.body).to include("a08e6620d21b8f451c63dfe8d0164f0ba1b2dc781ea163c7990634747b57282c")
+      end
+    end
+
   end
 end

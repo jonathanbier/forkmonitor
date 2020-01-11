@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       resources :version_bits, only: [:show]
       resources :stale_candidates, only: [:index, :show]
       resources :ln_penalties, only: [:index, :show]
+      resources :ln_sweeps, only: [:show]
       resources :ln_stats, only: [:index]
       resources :blocks, only: [:index]
       resources :subscriptions, only: [:create]
@@ -37,6 +38,7 @@ Rails.application.routes.draw do
       get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
       get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias
       get 'ln_penalties/:coin', :action => :ln_penalties
+      get 'ln_sweeps/:coin', :action => :ln_sweeps
     end
   end
 

@@ -78,15 +78,26 @@ class RSSFeeds extends React.Component {
           in initial block download or not having peers.
         </p>
 
-        <h3>Lightning penalty transactions</h3>
+        <h3>Lightning transactions</h3>
+
+        <p>
+          See <a href="https://blog.bitmex.com/lightning-network-justice/">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
+        </p>
+
+        <b>Penalties</b>
 
         <ul>
           <li>BTC <a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
-        <p>
-          See <a href="https://blog.bitmex.com/lightning-network-justice/">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
-        </p>
+
+        <b>Delayed sweeps</b>
+
+        <ul>
+          <li>BTC <a href="/feeds/ln_sweeps/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
+
       </div>
     )
   }

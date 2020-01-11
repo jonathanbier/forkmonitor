@@ -1,5 +1,5 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties]
+  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps]
 
   def inflated_blocks
     respond_to do |format|
@@ -70,6 +70,20 @@ class FeedsController < ApplicationController
           @ln_penalties = []
           if @coin == :btc
             @ln_penalties = PenaltyTransaction.all_with_block_cached
+          end
+        end
+      end
+    end
+  end
+
+  def ln_sweeps
+    respond_to do |format|
+      format.rss do
+        latest = LightningTransaction.last_updated_cached
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+          @ln_sweeps = []
+          if @coin == :btc
+            @ln_sweeps = SweepTransaction.all_with_block_cached
           end
         end
       end
