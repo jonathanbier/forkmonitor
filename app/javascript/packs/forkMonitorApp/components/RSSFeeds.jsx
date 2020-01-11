@@ -90,18 +90,10 @@ class RSSFeeds extends React.Component {
           <li>BTC <a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
-
         <b>Delayed sweeps</b>
 
         <ul>
           <li>BTC <a href="/feeds/ln_sweeps/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-        </ul>
-
-
-        <b>Potential uncooperative closes</b>
-
-        <ul>
-          <li>BTC <a href="/feeds/ln_uncoops/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
       </div>
