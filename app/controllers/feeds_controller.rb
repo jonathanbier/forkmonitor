@@ -49,14 +49,13 @@ class FeedsController < ApplicationController
     latest = StaleCandidate.last_updated_cached(params[:coin])
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
       @page = (params[:page] || 1).to_i
-      @per_page = Rails.env.production? ? 10 : 2
       @page_count = Rails.cache.fetch "StaleCandidate.count(#{@coin})" do
-        (StaleCandidate.where(coin: @coin).count / @per_page.to_f).ceil
+        (StaleCandidate.where(coin: @coin).count / StaleCandidate::PER_PAGE.to_f).ceil
       end
 
       respond_to do |format|
         format.rss do
-          @stale_candidates = StaleCandidate.page_cached(@coin, @per_page, @page)
+          @stale_candidates = StaleCandidate.page_cached(@coin, @page)
         end
       end
     end
