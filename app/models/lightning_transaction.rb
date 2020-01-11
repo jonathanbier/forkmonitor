@@ -1,5 +1,5 @@
 class LightningTransaction < ApplicationRecord
-  enum type: [:PenaltyTransaction, :MaybeUncoopTransaction]
+  enum type: [:PenaltyTransaction, :MaybeUncoopTransaction, :SweepTransaction]
 
   after_commit :expire_cache
 
@@ -46,8 +46,9 @@ class LightningTransaction < ApplicationRecord
       raw_block = node.client.getblock(block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
-      PenaltyTransaction.check!(block, parsed_block)
       MaybeUncoopTransaction.check!(block, parsed_block)
+      PenaltyTransaction.check!(block, parsed_block)
+      SweepTransaction.check!(block, parsed_block)
       block.update checked_lightning: true
     end
 

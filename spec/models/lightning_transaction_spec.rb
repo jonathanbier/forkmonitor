@@ -11,6 +11,7 @@ RSpec.describe LightningTransaction, type: :model do
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
 
     allow(PenaltyTransaction).to receive(:check!).and_return nil
+    allow(SweepTransaction).to receive(:check!).and_return nil
 
     # throw the first time for lacking a previously checked block
     expect{ LightningTransaction.check!({coin: :btc, max: 1}) }.to raise_error("Unable to perform lightning checks due to missing intermediate block")
@@ -38,6 +39,13 @@ RSpec.describe LightningTransaction, type: :model do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@block, parsed_block)
+      LightningTransaction.check!({coin: :btc, max: 1})
+    end
+
+    it "should call SweepTransaction.check! with the parsed block" do
+      raw_block = @node.client.getblock(@block.block_hash, 0)
+      parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
+      expect(SweepTransaction).to receive(:check!).with(@block, parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 

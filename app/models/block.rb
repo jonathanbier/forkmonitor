@@ -14,6 +14,7 @@ class Block < ApplicationRecord
   has_one :inflated_block
   has_many :maybe_uncoop_transactions
   has_many :penalty_transactions
+  has_many :sweep_transactions
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   def as_json(options = nil)
