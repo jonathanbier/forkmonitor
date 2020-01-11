@@ -100,7 +100,11 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_uncoops = []
           if @coin == :btc
-            @ln_uncoops = MaybeUncoopTransaction.all_with_block_cached
+            @page = (params[:page] || 1).to_i
+            @page_count = Rails.cache.fetch "MaybeUncoopTransaction.count" do
+              (MaybeUncoopTransaction.count / MaybeUncoopTransaction::PER_PAGE.to_f).ceil
+            end
+            @ln_uncoops = MaybeUncoopTransaction.page_with_block_cached(@page)
           end
         end
       end
