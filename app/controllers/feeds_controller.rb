@@ -1,5 +1,5 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps]
+  before_action :set_coin, only: [:inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps, :ln_uncoops]
 
   def inflated_blocks
     respond_to do |format|
@@ -84,6 +84,21 @@ class FeedsController < ApplicationController
           @ln_sweeps = []
           if @coin == :btc
             @ln_sweeps = SweepTransaction.all_with_block_cached
+          end
+        end
+      end
+    end
+  end
+
+
+  def ln_uncoops
+    respond_to do |format|
+      format.rss do
+        latest = MaybeUncoopTransaction.last_updated_cached
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+          @ln_uncoops = []
+          if @coin == :btc
+            @ln_uncoops = MaybeUncoopTransaction.all_with_block_cached
           end
         end
       end

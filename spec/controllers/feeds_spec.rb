@@ -119,5 +119,20 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
+    describe "GET lightning potential close feed" do
+      let!(:lightning_transaction) { create(:maybe_uncoop_transaction) }
+
+      it "should be rendered" do
+        get :ln_uncoops, params: {coin: "btc"}, format: :rss
+        expect(response).to render_template("feeds/ln_uncoops")
+        expect(response.body).to include("uncooperative")
+      end
+
+      it "should contain potential uncooperative close transactions" do
+        get :ln_uncoops, params: {coin: "btc"}, format: :rss
+        expect(response.body).to include("5cc28d4a2deeb4e6079c649645e36a1e2813605f65fdea242afb70d7677c1e03")
+      end
+    end
+
   end
 end

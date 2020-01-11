@@ -98,6 +98,12 @@ class RSSFeeds extends React.Component {
         </ul>
 
 
+        <b>Potential uncooperative closes</b>
+
+        <ul>
+          <li>BTC <a href="/feeds/ln_uncoops/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
       </div>
     )
   }
