@@ -65,7 +65,7 @@ class FeedsController < ApplicationController
   def ln_penalties
     respond_to do |format|
       format.rss do
-        latest = LightningTransaction.last_updated_cached
+        latest = PenaltyTransaction.last_updated_cached
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_penalties = []
           if @coin == :btc
@@ -79,7 +79,7 @@ class FeedsController < ApplicationController
   def ln_sweeps
     respond_to do |format|
       format.rss do
-        latest = LightningTransaction.last_updated_cached
+        latest = SweepTransaction.last_updated_cached
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_sweeps = []
           if @coin == :btc

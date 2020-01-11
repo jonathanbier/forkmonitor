@@ -6,8 +6,8 @@ xml.rss :version => "2.0" do
     xml.description "When a revoked commitment is used, the other party can claim all the funds (BOLT-3)."
     xml.link root_url
 
-    xml.lastBuildDate LightningTransaction.last_updated_cached.updated_at.iso8601
-    xml.updated LightningTransaction.last_updated_cached.updated_at.iso8601
+    xml.lastBuildDate PenaltyTransaction.last_updated_cached.updated_at.iso8601
+    xml.updated PenaltyTransaction.last_updated_cached.updated_at.iso8601
 
     cache @ln_penalties do
       @ln_penalties.each do |penalty|

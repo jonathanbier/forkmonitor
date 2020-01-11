@@ -62,4 +62,11 @@ class PenaltyTransaction < LightningTransaction
       end
     end
   end
+
+  private
+
+  def expire_cache
+    super
+    Rails.cache.delete("api/v1/ln_penalties.json")
+  end
 end

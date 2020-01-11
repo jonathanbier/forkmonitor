@@ -53,4 +53,11 @@ class MaybeUncoopTransaction < LightningTransaction
       end
     end
   end
+
+  private
+
+  def expire_cache
+    super
+    Rails.cache.delete("api/v1/ln_uncoops.json")
+  end
 end

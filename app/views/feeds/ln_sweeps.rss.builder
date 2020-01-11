@@ -6,8 +6,8 @@ xml.rss :version => "2.0" do
     xml.description "When a channel is closed uncooperatively, the closing party can sweep the funds after a delay (BOLT-3)."
     xml.link root_url
 
-    xml.lastBuildDate LightningTransaction.last_updated_cached.updated_at.iso8601
-    xml.updated LightningTransaction.last_updated_cached.updated_at.iso8601
+    xml.lastBuildDate SweepTransaction.last_updated_cached.updated_at.iso8601
+    xml.updated SweepTransaction.last_updated_cached.updated_at.iso8601
 
     cache @ln_sweeps do
       @ln_sweeps.each do |sweep|

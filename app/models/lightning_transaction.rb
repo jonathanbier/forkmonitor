@@ -82,17 +82,16 @@ class LightningTransaction < ApplicationRecord
   private
 
   def self.last_updated_cached
-    Rails.cache.fetch('LightningTransaction.last_updated') { order(updated_at: :desc).first }
+    Rails.cache.fetch("#{self.name}.last_updated") { order(updated_at: :desc).first }
   end
 
   def self.all_with_block_cached
-    Rails.cache.fetch('LightningTransaction.all_with_block') { joins(:block).order(height: :desc).to_a }
+    Rails.cache.fetch("#{self.name}.all_with_block") { joins(:block).order(height: :desc).to_a }
   end
 
   def expire_cache
-    Rails.cache.delete('LightningTransaction.last_updated')
-    Rails.cache.delete('LightningTransaction.all_with_block')
-    Rails.cache.delete('api/v1/ln_penalties.json')
+    Rails.cache.delete("#{self.class.name}.last_updated")
+    Rails.cache.delete("#{self.class.name}.all_with_block")
   end
 
 end
