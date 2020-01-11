@@ -69,7 +69,7 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
           @ln_penalties = []
           if @coin == :btc
-            @ln_penalties = LightningTransaction.all_with_block_cached
+            @ln_penalties = PenaltyTransaction.all_with_block_cached
           end
         end
       end
