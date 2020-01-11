@@ -43,6 +43,12 @@ class LightningTransaction < ApplicationRecord
     end
 
     blocks_to_check.each do |block|
+      # libbitcoin doesn't return timestamps, so fetch those if needed
+      if block.timestamp.nil?
+        block_info = node.client.getblockheader(block.block_hash)
+        block.update timestamp: block_info["time"], mediantime: block_info["mediantime"]
+      end
+
       raw_block = node.client.getblock(block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
