@@ -11,7 +11,7 @@ class SweepTransaction < LightningTransaction
     return opening_tx_id
   end
 
-  def self.check!(block, parsed_block)
+  def self.check!(node, block, parsed_block)
     # Based on: https://github.com/alexbosworth/bolt03/blob/master/breaches/is_remedy_witness.js
     parsed_block.transactions.each do |tx|
       tx.in.each_with_index do |tx_in, input|
@@ -53,11 +53,10 @@ class SweepTransaction < LightningTransaction
           tx_id: tx.hash,
           input: input,
           raw_tx: tx.payload.unpack('H*')[0],
-          amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0,
+          amount: get_input_amount(node, tx, input)
         )
         ln.opening_tx_id = ln.get_opening_tx_id!
         ln.save
-        # TODO: set amount based on output of previous transaction
       end
     end
   end

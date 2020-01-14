@@ -8,7 +8,7 @@ class MaybeUncoopTransaction < LightningTransaction
     return opening_tx_id
   end
 
-  def self.check!(block, parsed_block)
+  def self.check!(node, block, parsed_block)
     # An uncooperative channel closing looks just like spending a regular 2-of-2
     # multisig, so this will match false positives.
     parsed_block.transactions.each do |tx|
@@ -45,11 +45,10 @@ class MaybeUncoopTransaction < LightningTransaction
           tx_id: tx.hash,
           input: input,
           raw_tx: tx.payload.unpack('H*')[0],
-          amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0,
+          amount: get_input_amount(node, tx, input)
         )
         ln.opening_tx_id = ln.get_opening_tx_id!
         ln.save
-        # TODO: set amount based on output of previous transaction
       end
     end
   end

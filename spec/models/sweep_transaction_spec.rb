@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe SweepTransaction, type: :model do
   before do
-    @node = build(:node, version: 170001)
+    @node = build(:node, version: 170001, txindex: true)
     @node.client.mock_set_height(560176)
     @node.poll!
     @node.reload
@@ -34,7 +34,7 @@ RSpec.describe SweepTransaction, type: :model do
     end
 
     it "should find sweep transactions" do
-      SweepTransaction.check!(@block, @parsed_block)
+      SweepTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.count).to eq(2)
       expect(LightningTransaction.first.tx_id).to eq(@sweep_tx.hash)
       expect(LightningTransaction.first.input).to eq(0)
@@ -44,10 +44,9 @@ RSpec.describe SweepTransaction, type: :model do
     end
 
     it "should set the amount based on the output" do
-      SweepTransaction.check!(@block, @parsed_block)
-      # TODO: use inputs to determine individual amounts
-      expect(LightningTransaction.first.amount).to eq(0.00000543)
-      expect(LightningTransaction.second.amount).to eq(0.00000543)
+      SweepTransaction.check!(@node, @block, @parsed_block)
+      expect(LightningTransaction.first.amount).to eq(0.00001002)
+      expect(LightningTransaction.second.amount).to eq(0.00001001)
     end
 
     it "should find opening transaction" do

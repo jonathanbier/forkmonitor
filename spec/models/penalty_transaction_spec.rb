@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe PenaltyTransaction, type: :model do
   before do
-    @node = build(:node, version: 170001)
+    @node = build(:node, version: 170001, txindex: true)
     @node.client.mock_set_height(560176)
     @node.poll!
     @node.reload
@@ -34,15 +34,15 @@ RSpec.describe PenaltyTransaction, type: :model do
     end
 
     it "should find penalty transactions" do
-      PenaltyTransaction.check!(@block, @parsed_block)
+      PenaltyTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.count).to eq(1)
       expect(LightningTransaction.first.tx_id).to eq(@penalty_tx.hash)
       expect(LightningTransaction.first.raw_tx).to eq(@raw_tx)
     end
 
     it "should set the amount based on the output" do
-      PenaltyTransaction.check!(@block, @parsed_block)
-      expect(LightningTransaction.first.amount).to eq(0.00390478)
+      PenaltyTransaction.check!(@node, @block, @parsed_block)
+      expect(LightningTransaction.first.amount).to eq(0.00396375)
     end
 
     it "should find opening transaction" do

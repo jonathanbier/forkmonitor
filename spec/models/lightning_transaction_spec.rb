@@ -2,13 +2,13 @@ require 'rails_helper'
 
 RSpec.describe LightningTransaction, type: :model do
   before do
-    @node = build(:node, version: 170001)
+    @node = build(:node, version: 170001, txindex: true)
     @node.client.mock_set_height(560176)
     @node.poll!
     @node.reload
 
     expect(Block.maximum(:height)).to eq(560176)
-    allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
+    allow(Node).to receive(:first_with_txindex).and_return @node
 
     allow(PenaltyTransaction).to receive(:check!).and_return nil
     allow(SweepTransaction).to receive(:check!).and_return nil
@@ -38,21 +38,21 @@ RSpec.describe LightningTransaction, type: :model do
     it "should call PenaltyTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-      expect(PenaltyTransaction).to receive(:check!).with(@block, parsed_block)
+      expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 
     it "should call SweepTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-      expect(SweepTransaction).to receive(:check!).with(@block, parsed_block)
+      expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 
     it "should call MaybeUncoopTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-      expect(MaybeUncoopTransaction).to receive(:check!).with(@block, parsed_block)
+      expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
       LightningTransaction.check!({coin: :btc, max: 1})
     end
 

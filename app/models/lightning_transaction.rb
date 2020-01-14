@@ -21,7 +21,7 @@ class LightningTransaction < ApplicationRecord
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
     throw "Must specifiy :max" unless options[:max].present?
     throw "Parameter :max should be at least 1" if options[:max] < 1
-    node = Node.bitcoin_core_by_version.first
+    node = Node.first_with_txindex(:btc, :core)
 
     blocks_to_check = []
     block = node.block
@@ -54,9 +54,9 @@ class LightningTransaction < ApplicationRecord
       raw_block = node.client.getblock(block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
-      MaybeUncoopTransaction.check!(block, parsed_block)
-      PenaltyTransaction.check!(block, parsed_block)
-      SweepTransaction.check!(block, parsed_block)
+      MaybeUncoopTransaction.check!(node, block, parsed_block)
+      PenaltyTransaction.check!(node, block, parsed_block)
+      SweepTransaction.check!(node, block, parsed_block)
       block.update checked_lightning: true
     end
 
@@ -88,6 +88,14 @@ class LightningTransaction < ApplicationRecord
   end
 
   private
+
+  def self.get_input_amount(node, tx, input)
+    input_transaction = tx.inputs[input]
+    tx_id = input_transaction.prev_out_hash.reverse.unpack('H*')[0]
+    raw_tx = node.client.getrawtransaction(tx_id)
+    parsed_tx = Bitcoin::Protocol::Tx.new([raw_tx].pack('H*'))
+    parsed_tx.out[input_transaction.prev_out_index].value / 100000000.0
+  end
 
   def self.last_updated_cached
     Rails.cache.fetch("#{self.name}.last_updated") { order(updated_at: :desc).first }

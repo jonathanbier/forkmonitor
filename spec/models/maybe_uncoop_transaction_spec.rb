@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe MaybeUncoopTransaction, type: :model do
   before do
-    @node = build(:node, version: 170001)
+    @node = build(:node, version: 170001, txindex: true)
     @node.client.mock_set_height(560176)
     @node.poll!
     @node.reload
@@ -34,7 +34,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
     end
 
     it "should find uncooperative closing transactions" do
-      MaybeUncoopTransaction.check!(@block, @parsed_block)
+      MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
       expect(MaybeUncoopTransaction.count).to eq(1)
       expect(MaybeUncoopTransaction.first.tx_id).to eq(@uncoop_tx.hash)
       expect(MaybeUncoopTransaction.first.input).to eq(0)
@@ -42,8 +42,8 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
     end
 
     it "should set the amount based on the output" do
-      MaybeUncoopTransaction.check!(@block, @parsed_block)
-      expect(MaybeUncoopTransaction.first.amount).to eq(0.00396375)
+      MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
+      expect(MaybeUncoopTransaction.first.amount).to eq(0.004)
     end
 
     it "should find opening transaction" do
