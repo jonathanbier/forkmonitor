@@ -53,11 +53,11 @@ class Lightning extends React.Component {
               <Breadcrumb  className="chaintip-header">
                 <BreadcrumbItem className="chaintip-hash">
                   Lightning penalties&nbsp;
-                  <LightingStats />
+                  <LightingStats penalties />
                 </BreadcrumbItem>
               </Breadcrumb>
               <p>
-                See <a href="https://blog.bitmex.com/lightning-network-justice/" target="_blank">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
+                See <a href="https://blog.bitmex.com/lightning-network-justice/" target="_blank">Lightning Network (Part 3) – Where Is The Justice?</a> for background. <LightingStats sweeps />
               </p>
               <Table striped responsive size="sm" className="lightning">
                 <thead>

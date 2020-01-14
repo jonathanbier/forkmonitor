@@ -16,8 +16,10 @@ function flushPromises() {
 }
 
 const mockStats = {
-  "count":2,
-  "total": 1.33874639 // avoid 2 to keep test simple
+  "penalty_count":2,
+  "penalty_total": 1.33874639, // avoid 2 to keep test simple
+  "sweep_count":3,
+  "sweep_total": 0.383833
 }
 
 axios.get.mockImplementation(url => {
@@ -29,18 +31,28 @@ axios.get.mockImplementation(url => {
 });
 
 describe('LightningStats', () => {
-  let wrapper;
+  let wrapper1, wrapper2;
 
   beforeAll(() => {
-    wrapper = mount(<LightningStats />);
+    wrapper1 = mount(<LightningStats penalties />);
+    wrapper2 = mount(<LightningStats sweeps />);
+
   });
 
-  test('should show count', () => {
-    expect(wrapper.text()).toContain("2");
+  test('should show penalty count', () => {
+    expect(wrapper1.text()).toContain("2");
   });
 
-  test('should show total', () => {
-    expect(wrapper.text()).toContain("1.339");
+  test('should show penalty total', () => {
+    expect(wrapper1.text()).toContain("1.339");
+  });
+
+  test('should show sweep count', () => {
+    expect(wrapper2.text()).toContain("3");
+  });
+
+  test('should show sweep total', () => {
+    expect(wrapper2.text()).toContain("0.384");
   });
 
 });

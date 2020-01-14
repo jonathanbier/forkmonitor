@@ -34,17 +34,31 @@ class LightningStats extends React.Component {
   }
 
   render() {
-    return(
-      <span>
-        { this.state.stats &&
-          <span>
-          (
-            <NumberFormat value={ this.state.stats.total } displayType={'text'} decimalScale={3} fixedDecimalScale={true} />&nbsp;
-            BTC total in { this.state.stats.count } transactions)
-          </span>
-        }
-      </span>
-    );
+    if (this.props.penalties) {
+      return(
+        <span>
+          { this.state.stats &&
+            <span>
+            (
+              <NumberFormat value={ this.state.stats.penalty_total } displayType={'text'} decimalScale={3} fixedDecimalScale={true} />&nbsp;
+              BTC total in { this.state.stats.penalty_count } transactions)
+            </span>
+          }
+        </span>
+      );
+    } else {
+      return(
+        <span>
+          { this.state.stats &&
+            <span>
+              <NumberFormat value={ this.state.stats.sweep_total } displayType={'text'} decimalScale={3} fixedDecimalScale={true} />&nbsp;
+              BTC total in { this.state.stats.sweep_count } regular sweep transactions not shown.
+            </span>
+          }
+        </span>
+      );
+
+    }
   }
 }
 export default LightningStats
