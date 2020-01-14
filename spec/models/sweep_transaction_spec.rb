@@ -19,7 +19,7 @@ RSpec.describe SweepTransaction, type: :model do
     @node.reload
   end
 
-  describe "check!" do
+  describe "self.check!" do
     before do
       allow(SweepTransaction).to receive(:check!).and_call_original
       allow_any_instance_of(SweepTransaction).to receive(:get_opening_tx_id!).and_return nil

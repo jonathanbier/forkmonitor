@@ -19,7 +19,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
     @node.reload
   end
 
-  describe "check!" do
+  describe "self.check!" do
     before do
       allow(MaybeUncoopTransaction).to receive(:check!).and_call_original
       allow_any_instance_of(MaybeUncoopTransaction).to receive(:get_opening_tx_id!).and_return nil

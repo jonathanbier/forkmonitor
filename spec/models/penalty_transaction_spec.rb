@@ -19,7 +19,7 @@ RSpec.describe PenaltyTransaction, type: :model do
     @node.reload
   end
 
-  describe "check!" do
+  describe "self.check!" do
     before do
       allow(PenaltyTransaction).to receive(:check!).and_call_original
       allow_any_instance_of(PenaltyTransaction).to receive(:get_opening_tx_id!).and_return nil
