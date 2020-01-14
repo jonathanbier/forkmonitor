@@ -1,12 +1,4 @@
 class MaybeUncoopTransaction < LightningTransaction
-  def get_opening_tx_id!()
-    close_tx = Bitcoin::Protocol::Tx.new([self.raw_tx].pack('H*'))
-    throw "Unexpected input count #{ close_tx.in.count } for closing transaction" if close_tx.in.count != 1
-    opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
-    # Sanity check, raw transction is unused:
-    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id)
-    return opening_tx_id
-  end
 
   def self.check!(node, block, parsed_block)
     # An uncooperative channel closing looks just like spending a regular 2-of-2
@@ -23,7 +15,16 @@ class MaybeUncoopTransaction < LightningTransaction
         break unless [20, 32].include? script.chunks[1].length
       end
 
-      tx.in.each_with_index do |tx_in, input|
+      prev_out_hash = nil
+      first_input = nil
+      next unless tx.in.each_with_index do |tx_in, input|
+        # All inputs must refer to the same transaction id
+        first_input = input unless first_input.present?
+        break if prev_out_hash.present? && tx_in.prev_out_hash != prev_out_hash
+        prev_out_hash = tx_in.prev_out_hash
+
+        # All inputs should spending from a multisig output
+
         # Must have a witness
         break if tx_in.script_witness.empty?
         # Witness must have the correct number of elements
@@ -50,17 +51,20 @@ class MaybeUncoopTransaction < LightningTransaction
 
         break unless MaybeUncoopTransaction.where(tx_id: tx.hash, input: input).count == 0
 
-        puts "Force-close candidate: #{ tx.hash }" unless Rails.env.test?
-
-        ln = block.maybe_uncoop_transactions.build(
-          tx_id: tx.hash,
-          input: input,
-          raw_tx: tx.payload.unpack('H*')[0],
-          amount: get_input_amount(node, tx, input)
-        )
-        ln.opening_tx_id = ln.get_opening_tx_id!
-        ln.save
       end
+
+      puts "Force-close candidate: #{ tx.hash }" unless Rails.env.test?
+
+      ln = block.maybe_uncoop_transactions.build(
+        tx_id: tx.hash,
+        input: first_input,
+        raw_tx: tx.payload.unpack('H*')[0],
+        amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0
+      )
+      ln.opening_tx_id = ln.get_opening_tx_id!(tx)
+      ln.save
+
+
     end
   end
 

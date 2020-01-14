@@ -17,6 +17,20 @@ class LightningTransaction < ApplicationRecord
     })
   end
 
+  def get_opening_tx_id!(close_tx)
+    prev_out_hash = nil
+    close_tx.in.each do |tx_in|
+      if prev_out_hash.present? && tx_in.prev_out_hash != prev_out_hash
+        throw "Unexpected reference to multiple transactions for closing transaction #{ self.tx_id }"
+      end
+      prev_out_hash = tx_in.prev_out_hash
+    end
+    opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
+    # Sanity check, raw transction is unused:
+    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id)
+    return opening_tx_id
+  end
+
   def find_parent!
     tx = Bitcoin::Protocol::Tx.new([self.raw_tx].pack('H*'))
     parent_tx_id = tx.in[self.input].prev_out_hash.reverse.unpack("H*")[0]

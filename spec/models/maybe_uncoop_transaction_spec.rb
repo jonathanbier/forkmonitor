@@ -43,7 +43,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
 
     it "should set the amount based on the output" do
       MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
-      expect(MaybeUncoopTransaction.first.amount).to eq(0.004)
+      expect(MaybeUncoopTransaction.first.amount).to eq(0.00396375)
     end
 
     it "should find opening transaction" do

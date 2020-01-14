@@ -4,11 +4,7 @@ class PenaltyTransaction < LightningTransaction
     close_tx_id = justice_tx.in[self.input].prev_out_hash.reverse.unpack("H*")[0]
     close_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(close_tx_id)
     close_tx = Bitcoin::Protocol::Tx.new([close_tx_raw].pack('H*'))
-    throw "Unexpected input count #{ justice_tx.in.count } for closing transaction" if close_tx.in.count != 1
-    opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
-    # Sanity check, raw transction is unused:
-    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id)
-    return opening_tx_id
+    super(close_tx)
   end
 
   def self.check!(node, block, parsed_block)
