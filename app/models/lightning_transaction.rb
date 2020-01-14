@@ -1,3 +1,5 @@
+require 'csv'
+
 class LightningTransaction < ApplicationRecord
   PER_PAGE = Rails.env.production? ? 100 : 2
 
@@ -112,6 +114,26 @@ class LightningTransaction < ApplicationRecord
     end
   end
 
+  def block_height
+    block.try :height
+  end
+
+  def date
+    Time.at(block.timestamp).to_datetime.iso8601
+  end
+
+  def self.to_csv
+    attributes = %w{id block_height date tx_id input amount }
+
+    CSV.generate(headers: true) do |csv|
+      csv << attributes
+
+      all.each do |user|
+        csv << attributes.map{ |attr| user.send(attr) }
+      end
+    end
+  end
+
   private
 
   def self.get_input_amount(node, tx, input)
@@ -130,6 +152,10 @@ class LightningTransaction < ApplicationRecord
     Rails.cache.fetch("#{self.name}.all_with_block") { joins(:block).order(height: :desc).to_a }
   end
 
+  def self.csv_cached
+    Rails.cache.fetch("#{self.name}.csv") { joins(:block).order(height: :desc).to_csv }
+  end
+
   def self.page_with_block_cached(page)
     Rails.cache.fetch("#{self.name}.page_with_block_cached(#{page})") {
       joins(:block).order(height: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
@@ -137,6 +163,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def expire_cache
+    Rails.cache.delete("#{self.class.name}.csv")
     Rails.cache.delete("#{self.class.name}.last_updated")
     Rails.cache.delete("#{self.class.name}.all_with_block")
     for page in 1..(self.class.count / PER_PAGE + 1) do
