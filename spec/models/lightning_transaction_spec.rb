@@ -20,6 +20,16 @@ RSpec.describe LightningTransaction, type: :model do
     @node.reload
   end
 
+  describe "find_parent!" do
+    let(:penalty_tx) { create(:penalty_transaction_public) }
+
+    it "should find parent if available" do
+      expect(penalty_tx.find_parent!).to be_nil
+      parent = create(:parent_of_penalty)
+      expect(penalty_tx.find_parent!).to eq(parent)
+    end
+  end
+
   describe "self.check!" do
 
     before do

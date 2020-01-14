@@ -17,6 +17,17 @@ class LightningTransaction < ApplicationRecord
     })
   end
 
+  def find_parent!
+    tx = Bitcoin::Protocol::Tx.new([self.raw_tx].pack('H*'))
+    parent_tx_id = tx.in[self.input].prev_out_hash.reverse.unpack("H*")[0]
+    parent_tx_vout = tx.in[self.input].prev_out_index
+    LightningTransaction.where(tx_id: parent_tx_id).each do |candidate|
+      self.update parent: candidate, parent_tx_vout: parent_tx_vout
+      return parent
+    end
+    return nil
+  end
+
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
     throw "Must specifiy :max" unless options[:max].present?

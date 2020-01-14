@@ -59,6 +59,8 @@ class SweepTransaction < LightningTransaction
         )
         ln.opening_tx_id = ln.get_opening_tx_id!
         ln.save
+
+        ln.find_parent!
       end
     end
   end
