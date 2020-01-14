@@ -12,8 +12,17 @@ class MaybeUncoopTransaction < LightningTransaction
     # An uncooperative channel closing looks just like spending a regular 2-of-2
     # multisig, so this will match false positives.
     parsed_block.transactions.each do |tx|
-      # Must have one input
-      break if tx.in.count != 1
+      next unless tx.out.each do |tx_out|
+        # Should be a witness script or public key hash, i.e.:
+        # 00 PUSH_20 KEY_HASH; or
+        # 00 PUSH_32 SCRIPT_HASH
+        break unless [22,34].include?(tx_out.pk_script_length)
+        script = Bitcoin::Script.new(tx_out.pk_script)
+        break unless script.chunks.length == 2
+        break if script.chunks[0] != Bitcoin::Script::OP_0
+        break unless [20, 32].include? script.chunks[1].length
+      end
+
       tx.in.each_with_index do |tx_in, input|
         # Must have a witness
         break if tx_in.script_witness.empty?
