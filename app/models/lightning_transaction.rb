@@ -128,8 +128,8 @@ class LightningTransaction < ApplicationRecord
     CSV.generate(headers: true) do |csv|
       csv << attributes
 
-      all.each do |user|
-        csv << attributes.map{ |attr| user.send(attr) }
+      all.each do |tx|
+        csv << attributes.map{ |attr| tx.send(attr) }
       end
     end
   end
@@ -153,7 +153,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def self.csv_cached
-    Rails.cache.fetch("#{self.name}.csv") { joins(:block).order(height: :desc).to_csv }
+    Rails.cache.fetch("#{self.name}.csv") { joins(:block).preload(:block).order(height: :desc).to_csv }
   end
 
   def self.page_with_block_cached(page)
