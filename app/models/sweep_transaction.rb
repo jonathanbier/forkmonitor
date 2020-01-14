@@ -47,6 +47,8 @@ class SweepTransaction < LightningTransaction
         #  OP_CHECKSIG
         break unless chunks.shift() == Bitcoin::Script::OP_CHECKSIG
 
+        break unless SweepTransaction.where(tx_id: tx.hash, input: input).count == 0
+
         puts "Sweep: #{ tx.hash }" unless Rails.env.test?
 
         ln = block.sweep_transactions.build(

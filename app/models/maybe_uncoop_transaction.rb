@@ -39,6 +39,8 @@ class MaybeUncoopTransaction < LightningTransaction
         #  OP_CHECKMULTISIG
         break unless chunks.shift() == Bitcoin::Script::OP_CHECKMULTISIG
 
+        break unless MaybeUncoopTransaction.where(tx_id: tx.hash, input: input).count == 0
+
         puts "Force-close candidate: #{ tx.hash }" unless Rails.env.test?
 
         ln = block.maybe_uncoop_transactions.build(

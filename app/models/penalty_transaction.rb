@@ -48,6 +48,8 @@ class PenaltyTransaction < LightningTransaction
         #  OP_CHECKSIG
         break unless chunks.shift() == Bitcoin::Script::OP_CHECKSIG
 
+        break unless PenaltyTransaction.where(tx_id: tx.hash, input: input).count == 0
+
         puts "Penalty: #{ tx.hash }" unless Rails.env.test?
 
         ln = block.penalty_transactions.build(
