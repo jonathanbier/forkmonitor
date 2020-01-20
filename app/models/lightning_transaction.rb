@@ -122,8 +122,12 @@ class LightningTransaction < ApplicationRecord
     Time.at(block.timestamp).to_datetime.iso8601
   end
 
+  def parent_tx_id
+    parent.try :tx_id
+  end
+
   def self.to_csv
-    attributes = %w{id block_height date tx_id input amount channel_is_public }
+    attributes = %w{id block_height date tx_id input amount channel_is_public parent_tx_id }
 
     CSV.generate(headers: true) do |csv|
       csv << attributes
