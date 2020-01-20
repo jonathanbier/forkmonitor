@@ -123,7 +123,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def self.to_csv
-    attributes = %w{id block_height date tx_id input amount }
+    attributes = %w{id block_height date tx_id input amount channel_is_public }
 
     CSV.generate(headers: true) do |csv|
       csv << attributes
