@@ -89,12 +89,25 @@ class InflatedBlock < ApplicationRecord
             end
             puts "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })" unless Rails.env.test?
             blocks_to_invalidate = []
+            active_tip_block = Block.find_by(block_hash: active_tip["hash"])
             if block.height == active_tip["height"]
               # Invalidate tip to jump to another fork
-              tip_block = Block.find_by(block_hash: active_tip["hash"])
-              blocks_to_invalidate.append(tip_block)
+              blocks_to_invalidate.append(active_tip_block)
             else
-              block.children.each do |child_block| # Invalidate all child blocks we know of, if the node knows them
+              # Check if active chaintip descends from target block, otherwise invalidate it
+              ancestor = nil
+              active_tip_ancestor = active_tip_block
+              while ancestor.nil? do
+                if active_tip_ancestor.parent.height == block.height
+                  ancestor = active_tip_ancestor.parent == block
+                end
+                if ancestor == false && active_tip_ancestor.parent.children.count > 1
+                  blocks_to_invalidate.append(active_tip_ancestor)
+                end
+                active_tip_ancestor = active_tip_block.parent
+              end
+              # Invalidate all child blocks we know of, if the node knows them
+              block.children.each do |child_block|
                 begin
                   node.mirror_client.getblockheader(child_block.block_hash)
                 rescue BitcoinClient::Error
