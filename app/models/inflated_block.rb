@@ -97,9 +97,9 @@ class InflatedBlock < ApplicationRecord
               # Check if active chaintip descends from target block, otherwise invalidate it
               active_tip_ancestor = active_tip_block
               if block.height < active_tip["height"]
-                puts "Target block height is below active tip height"
+                puts "Target block height is below active tip height" unless  Rails.env.test?
                 ancestor = nil
-                while !ancestor do
+                while !ancestor && active_tip_ancestor.present? do
                   if active_tip_ancestor.parent.height == block.height
                     ancestor = active_tip_ancestor.parent == block
                   end
@@ -107,7 +107,7 @@ class InflatedBlock < ApplicationRecord
                     blocks_to_invalidate.append(active_tip_ancestor)
                     break
                   end
-                  active_tip_ancestor = active_tip_block.parent
+                  active_tip_ancestor = active_tip_ancestor.parent
                 end
               end
               # Invalidate all child blocks we know of, if the node knows them
