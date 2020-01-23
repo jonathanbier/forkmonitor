@@ -156,10 +156,6 @@ class LightningTransaction < ApplicationRecord
     Rails.cache.fetch("#{self.name}.all_with_block") { joins(:block).order(height: :desc).to_a }
   end
 
-  def self.csv_cached
-    Rails.cache.fetch("#{self.name}.csv") { joins(:block).preload(:block).eager_load(:parent).order(height: :desc).to_csv }
-  end
-
   def self.page_with_block_cached(page)
     Rails.cache.fetch("#{self.name}.page_with_block_cached(#{page})") {
       joins(:block).order(height: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
