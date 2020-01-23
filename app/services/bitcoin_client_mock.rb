@@ -86,10 +86,17 @@ class BitcoinClientMock
 
   def mock_set_height(height)
     # If a mock fork exists at previous height, add it as a valid-fork
-    if @blocks[@fork_block_hashes[height - 1]].present?
+    fork_block_height = height - 1
+    fork_block = @fork_block_hashes[fork_block_height]
+    # Find the fork tip
+    while @fork_block_hashes[fork_block_height + 1].present? && @blocks[@fork_block_hashes[fork_block_height + 1]].present?
+      fork_block_height += 1
+      fork_block = @fork_block_hashes[fork_block_height]
+    end
+    if @blocks[fork_block].present?
       @chaintips.push({
-          "height" => height - 1,
-          "hash" => @fork_block_hashes[height - 1],
+          "height" => fork_block_height,
+          "hash" => fork_block,
           "branchlen" => 1,
           "status" => "valid-fork"
       })
@@ -567,6 +574,7 @@ class BitcoinClientMock
     # tip, unless:
     # 1. there is a valid fork to jump to at the original height
     # 2. there is a valid fork at height - 1 AND it was seen earlier
+    # TODO: this only allows for one mock fork, because we don't actually check the ancestory
     fork = @chaintips.find { |t| t["status"] == "valid-fork" && t["height"] == header["height"]}
     if fork.present?
       @chaintips.map! { |t|
@@ -577,6 +585,17 @@ class BitcoinClientMock
         t
       }
       @block_hash = fork["hash"]
+
+      # Add parent of invalidated block as a valid-fork
+      @chaintips.push({
+          "height" => header["height"] - 1,
+          "hash" => @block_hashes[header["height"] - 1],
+          "branchlen" => 1,
+          "status" => "valid-fork"
+      })
+
+      @height = header["height"]
+      @best_height = @height
     else
       mock_set_height(header["height"] - 1)
       fork = @chaintips.find { |t| t["status"] == "valid-fork" && t["height"] == header["height"] - 1}
@@ -601,16 +620,27 @@ class BitcoinClientMock
   end
 
   def reconsiderblock(block_hash)
+    # Do nothing if it's a fork
+    return if @fork_block_hashes.include?(block_hash)
+
+    active_chaintip = @chaintips.find { |t|
+      t["status"] == "active"
+    }
+
     header = @block_headers[block_hash]
     throw "Block #{ block_hash } not found" unless header.present?
-    # Mark the invalid chaintip (if any) as active
+    # Mark the invalid chaintip (if any) as active, unless the current chaintip is higher
     activated_block = nil
     @chaintips.map! { |t|
-      if t["status"] == "invalid" # TODO: disambiguate if there are forks
-        t["status"] = "active"
-        @height = t["height"]
-        @best_height = @height
-        activated_block = t["hash"]
+      if t["status"] == "invalid"
+        if active_chaintip && active_chaintip["height"] >= t["height"]
+          t["status"] = "valid-fork"
+        else
+          t["status"] = "active"
+          @height = t["height"]
+          @best_height = @height
+          activated_block = t["hash"]
+        end
       end
       t
     }

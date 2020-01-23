@@ -78,7 +78,7 @@ class InflatedBlock < ApplicationRecord
 
         blocks_to_check.each do |block|
           # Invalidate new blocks, including any forks we don't know of yet
-          puts "Roll back the chain to #{ block.block_hash } (#{ block.height })..." unless Rails.env.test?
+          puts "Roll back the chain to #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }..." unless Rails.env.test?
           tally = 0
           while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
             if tally > (Rails.env.test? ? 2 : 100)
@@ -91,20 +91,24 @@ class InflatedBlock < ApplicationRecord
             blocks_to_invalidate = []
             active_tip_block = Block.find_by(block_hash: active_tip["hash"])
             if block.height == active_tip["height"]
-              # Invalidate tip to jump to another fork
+              puts "Invalidate tip to jump to another fork" unless Rails.env.test?
               blocks_to_invalidate.append(active_tip_block)
             else
               # Check if active chaintip descends from target block, otherwise invalidate it
-              ancestor = nil
               active_tip_ancestor = active_tip_block
-              while ancestor.nil? do
-                if active_tip_ancestor.parent.height == block.height
-                  ancestor = active_tip_ancestor.parent == block
+              if block.height < active_tip["height"]
+                puts "Target block height is below active tip height"
+                ancestor = nil
+                while !ancestor do
+                  if active_tip_ancestor.parent.height == block.height
+                    ancestor = active_tip_ancestor.parent == block
+                  end
+                  if ancestor == false && active_tip_ancestor.parent.children.count > 1
+                    blocks_to_invalidate.append(active_tip_ancestor)
+                    break
+                  end
+                  active_tip_ancestor = active_tip_block.parent
                 end
-                if ancestor == false && active_tip_ancestor.parent.children.count > 1
-                  blocks_to_invalidate.append(active_tip_ancestor)
-                end
-                active_tip_ancestor = active_tip_block.parent
               end
               # Invalidate all child blocks we know of, if the node knows them
               block.children.each do |child_block|
@@ -121,6 +125,7 @@ class InflatedBlock < ApplicationRecord
             end
             # Stop if there are no new blocks to invalidate
             if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
+              puts "Nothing to invalidate" unless Rails.env.test?
               throw_unable_to_roll_back!(node, block, blocks_to_invalidate)
             end
             blocks_to_invalidate.each do |block|
@@ -140,13 +145,14 @@ class InflatedBlock < ApplicationRecord
           unless invalidated_block_hashes.empty?
             puts "Restore chain to tip..." unless Rails.env.test?
             invalidated_block_hashes.each do |block_hash|
+              puts "Reconsider block #{ block_hash }" unless Rails.env.test?
               node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
             end
             invalidated_block_hashes = []
           end
 
           # Make sure we got the block we expected
-          throw "TxOutset is not for block #{ block.block_hash }" unless txoutsetinfo["bestblock"] == block.block_hash
+          throw "TxOutset #{ txoutsetinfo["bestblock"] } is not for block #{ block.block_hash }" unless txoutsetinfo["bestblock"] == block.block_hash
 
           tx_outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block, node: node)
 

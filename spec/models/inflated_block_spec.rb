@@ -132,6 +132,23 @@ RSpec.describe InflatedBlock, type: :model do
 
     end
 
+    # Intractable to mock this behavior
+    # describe "BTC mirror node has a longer valid-fork that arrived earlier" do
+    #   before do
+    #     @node.mirror_client.mock_add_fork_block(560177, -1)
+    #     @node.mirror_client.mock_add_fork_block(560178, -1)
+    #     @node.mirror_client.mock_set_height(560179)
+    #   end
+    #
+    #   it "should fetch the fork block and ancenstors" do
+    #     puts "Check inflation!"
+    #     InflatedBlock.check_inflation!({coin: :btc})
+    #     expect(Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")).not_to be_nil
+    #     expect(Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560177")).not_to be_nil
+    #   end
+    #
+    # end
+
     describe "with extra inflation" do
       let(:user) { create(:user) }
 
