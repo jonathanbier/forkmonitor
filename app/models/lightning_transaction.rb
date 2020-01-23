@@ -157,7 +157,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def self.csv_cached
-    Rails.cache.fetch("#{self.name}.csv") { joins(:block).preload(:block).order(height: :desc).to_csv }
+    Rails.cache.fetch("#{self.name}.csv") { joins(:block).preload(:block).eager_load(:parent).order(height: :desc).to_csv }
   end
 
   def self.page_with_block_cached(page)
