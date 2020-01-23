@@ -132,7 +132,7 @@ class LightningTransaction < ApplicationRecord
     CSV.generate(headers: true) do |csv|
       csv << attributes
 
-      all.each do |tx|
+      eager_load(:block, :parent).order(height: :desc).each do |tx|
         csv << attributes.map{ |attr| tx.send(attr) }
       end
     end

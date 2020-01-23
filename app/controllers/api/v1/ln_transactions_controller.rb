@@ -10,9 +10,7 @@ class Api::V1::LnTransactionsController < ApplicationController
           }
         }
         format.csv {
-          send_data Rails.cache.fetch("api/v1/#{self.controller_name}.csv") {
-             resource_class.eager_load(:block, :parent).order(height: :desc).to_csv
-          }, filename: "#{self.controller_name}.csv"
+          send_data resource_class.to_csv, filename: "#{self.controller_name}.csv"
         }
       end
     end
