@@ -28,7 +28,7 @@ class FeedsController < ApplicationController
       format.rss do
         latest = Lag.order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
-          @lagging_nodes = Lag.all.order(created_at: :desc)
+          @lagging_nodes = Lag.where(publish: true).order(created_at: :desc)
         end
       end
     end

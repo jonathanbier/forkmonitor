@@ -268,11 +268,16 @@ class Node < ApplicationRecord
     # Return false if behind but still in grace period:
     return false if lag_entry && ((Time.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60).to_i)
 
-    # Send email after grace period
-    if lag_entry && !lag_entry.notified_at
-      lag_entry.update notified_at: Time.now
-      User.all.each do |user|
-        UserMailer.with(user: user, lag: lag_entry).lag_email.deliver
+    if lag_entry
+      # Mark as ready to publish on RSS
+      lag_entry.update publish: true
+
+      # Send email after grace period
+      if !lag_entry.notified_at
+        lag_entry.update notified_at: Time.now
+        User.all.each do |user|
+          UserMailer.with(user: user, lag: lag_entry).lag_email.deliver
+        end
       end
     end
 
