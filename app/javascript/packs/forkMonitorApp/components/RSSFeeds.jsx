@@ -66,14 +66,14 @@ class RSSFeeds extends React.Component {
 
         <p>Version bits flagged in the past 100 blocks (currently uses 10 as lower threshold).</p>
 
-        <h3>Lagging test nodes</h3>
+        <h3>Lagging nodes</h3>
 
         <ul>
           <li>BTC <a href="/feeds/lagging_nodes.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
-          Checks if any of the test nodes fell behind. This doesn't have to be
+          Checks if any of the nodes fell behind. This doesn't have to be
           a consensus problem, but we filter common reasons like being offline,
           in initial block download or not having peers.
         </p>
