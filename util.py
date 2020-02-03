@@ -21,7 +21,7 @@ class TestWrapper(BitcoinTestFramework):
         pass
 
     def setup(self,
-              bitcoind=os.path.abspath(SOURCE_DIRECTORY + "/src/bitcoind"),
+              bitcoind=None,
               bitcoincli=None,
               setup_clean_chain=True,
               num_nodes=1,

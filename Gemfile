@@ -87,6 +87,9 @@ group :development, :test do
   gem 'webmock'
 
   gem 'redis-rails'
+
+  # Call Python, e.g. Bitcoin Core test framework
+  gem 'pycall'
 end
 
 group :development do
