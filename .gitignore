@@ -16,6 +16,7 @@
 /tmp/*
 !/log/.keep
 !/tmp/.keep
+__pycache__/
 
 # Ignore uploaded files in development
 /storage/*
