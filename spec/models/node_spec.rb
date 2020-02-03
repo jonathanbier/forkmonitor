@@ -1,14 +1,31 @@
 require "rails_helper"
+require 'pycall/import'
+include PyCall::Import
+pyimport :sys
+sys.path.insert(0, ".")
+pyfrom :util, import: :TestWrapper
 
 RSpec.describe Node, :type => :model do
+  let(:test) { TestWrapper.new() }
+
   before do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
   end
 
   describe "version" do
+    before do
+      test.setup()
+    end
+
+    after do
+      test.shutdown()
+    end
+
     it "should be set" do
-      node = create(:node_with_block, version: 160300)
-      expect(node.version).to eq(160300)
+      node = create(:node_python)
+      node.client.set_python_node(test.nodes[0])
+      node.poll!
+      expect(node.version).to be >=190100
     end
   end
 

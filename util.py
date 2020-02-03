@@ -33,7 +33,7 @@ class TestWrapper(BitcoinTestFramework):
               noshutdown=False,
               cachedir=os.path.abspath(SOURCE_DIRECTORY + "/test/cache"),
               tmpdir=None,
-              loglevel='INFO',
+              loglevel='ERROR',
               trace_rpc=False,
               port_seed=os.getpid(),
               coveragedir=None,

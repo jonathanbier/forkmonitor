@@ -77,7 +77,11 @@ class Node < ApplicationRecord
 
   def client
     if !@client
-      @client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
+      if self.python
+        @client = BitcoinClientPython.new(self.id, self.name_with_version, self.client_type.to_sym)
+      else
+        @client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
+      end
     end
     return @client
   end
