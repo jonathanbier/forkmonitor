@@ -1,7 +1,9 @@
-require 'pycall/import'
-include PyCall::Import
-pyimport :sys
-sys.path.insert(0, ".")
+if Rails.env.test? || Rails.env.development?
+  require 'pycall/import'
+  include PyCall::Import
+  pyimport :sys
+  sys.path.insert(0, ".")
+end
 
 namespace 'debug' do :env
   desc "Print basic info from each node"
@@ -24,6 +26,7 @@ namespace 'debug' do :env
 
   desc "Spin up and query Bitcoin Core test node"
   task :bitcoind => :environment do
+    raise "Not supported on production" if Rails.env.production?
     pyfrom :util, import: :TestWrapper
     test = TestWrapper.new()
 
