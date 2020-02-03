@@ -1,3 +1,8 @@
+require 'pycall/import'
+include PyCall::Import
+pyimport :sys
+sys.path.insert(0, ".")
+
 namespace 'debug' do :env
   desc "Print basic info from each node"
   task :node_info => :environment do
@@ -15,5 +20,15 @@ namespace 'debug' do :env
       end
       puts ""
     end
+  end
+
+  desc "Spin up and query Bitcoin Core test node"
+  task :bitcoind => :environment do
+    pyfrom :util, import: :TestWrapper
+    test = TestWrapper.new()
+
+    test.setup({loglevel: 'DEBUG'})
+    puts test.nodes[0].getnetworkinfo()
+    test.shutdown()
   end
 end
