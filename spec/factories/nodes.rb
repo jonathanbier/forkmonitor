@@ -13,4 +13,8 @@ FactoryBot.define do
      mirror_rpchost { "127.0.0.1" }
      mirror_rpcport { 8336 }
    end
+
+   factory :node_python, parent: :node do
+     python { true }
+   end
  end
