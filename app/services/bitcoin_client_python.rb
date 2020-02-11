@@ -26,7 +26,7 @@ class BitcoinClientPython
     raise Error, "Set Python node" unless @node != nil
     begin
       return @node.getblockchaininfo()
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise Error, "getblockchaininfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -35,7 +35,9 @@ class BitcoinClientPython
     raise Error, "Set Python node" unless @node != nil
     begin
       return @node.getinfo()
-    rescue Error => e
+    rescue NoMethodError => e
+      raise Error, "getinfo undefined for #{@name_with_version} (id=#{@node_id}): " + e.message
+    rescue PyCall::PyError => e
       raise Error, "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end

@@ -71,6 +71,7 @@ RSpec.describe Node, :type => :model do
         end
 
         before do
+          stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
           test.setup()
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
@@ -124,11 +125,17 @@ RSpec.describe Node, :type => :model do
 
     describe "on subsequent runs" do
       before do
-        @node = build(:node)
-
-        @node.client.mock_set_height(560177)
+        stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
+        test.setup()
+        @node = create(:node_python)
+        @node.client.set_python_node(test.nodes[0])
+        @node.client.generate(2)
         allow(@node).to receive("get_pool_for_block!").and_return("Antpool")
         @node.poll! # stores the block and node entry
+      end
+
+      after do
+        test.shutdown()
       end
 
       it "should get IBD status" do
@@ -138,7 +145,7 @@ RSpec.describe Node, :type => :model do
 
       it "should update to the latest block" do
         @node.poll!
-        expect(@node.block.height).to equal(560177)
+        expect(@node.block.height).to equal(2)
       end
 
       it "should store pool for block" do
@@ -146,65 +153,62 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should store size and number of transactions in block" do
-        @node.client.mock_set_height(560182)
+        @node.client.generate(1)
         @node.poll!
         expect(@node.block.tx_count).to eq(1)
-        expect(@node.block.size).to eq(250)
+        expect(@node.block.size).to eq(249)
       end
 
       it "should store intermediate blocks" do
-        @node.client.mock_set_height(560179)
+        @node.client.generate(2)
         @node.poll!
         @node.reload
-        expect(@node.block.height).to equal(560179)
+        expect(@node.block.height).to equal(4)
         expect(@node.block.parent).not_to be_nil
-        expect(@node.block.parent.height).to equal(560178)
+        expect(@node.block.parent.height).to equal(3)
         expect(@node.block.parent.first_seen_by).to eq(@node)
         expect(@node.block.parent.parent).not_to be_nil
-        expect(@node.block.parent.parent.height).to equal(560177)
+        expect(@node.block.parent.parent.height).to equal(2)
       end
 
       it "should not store blocks during initial blockchain download" do
-        @node.client.mock_ibd(true)
-        @node.client.mock_set_height(976)
+        @node.client.generate(2)
+        allow(@node).to receive("ibd").and_return(true)
         @node.poll!
         @node.reload
         expect(@node.block).to be_nil
       end
 
-      it "should not fetch parent blocks older than 560176" do
-        # Blocks during IBD are not stored
-        @node.client.mock_ibd(true)
-        @node.client.mock_set_height(976)
-        @node.poll!
-        expect(@node.block).to be_nil
-
+      it "should not fetch parent blocks older than MINIMUM_BLOCK_HEIGHTS" do
         # Exit IBD, fetching all previous blocks would take forever, so don't:
-        @node.client.mock_ibd(false)
-        @node.client.mock_set_height(560176)
+        @node.client.generate(2)
+        before = MINIMUM_BLOCK_HEIGHTS[:btc]
+        MINIMUM_BLOCK_HEIGHTS[:btc] = 4
         @node.poll!
+        MINIMUM_BLOCK_HEIGHTS[:btc] = before
         @node.reload
-        expect(@node.block.height).to equal(560176)
+        expect(@node.block.height).to equal(4)
         expect(@node.block.parent).to be_nil
 
+        @node.client.generate(2)
+
         # Two blocks later, now it should fetch intermediate blocks:
-        @node.client.mock_set_height(560179)
         @node.poll!
         @node.reload
-        expect(@node.block.height).to equal(560179)
-        expect(@node.block.parent.height).to equal(560178)
+        expect(@node.block.height).to equal(6)
+        expect(@node.block.parent.height).to equal(5)
       end
 
       it "should detect when node becomes unreachable" do
-        @node.client.mock_unreachable
+        test.shutdown()
         @node.poll!
+        test.setup()
         expect(@node.unreachable_since).not_to be_nil
       end
 
       it "should detect when node becomes reachable" do
-        @node.client.mock_unreachable
-        @node.poll!
-        @node.client.mock_reachable
+        @node.update unreachable_since: Time.now
+        expect(@node.unreachable_since).not_to be_nil
         @node.poll!
         expect(@node.unreachable_since).to be_nil
       end
