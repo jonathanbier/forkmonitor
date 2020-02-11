@@ -64,7 +64,7 @@ class Block < ApplicationRecord
       block_ids.append(block_id)
       block = Block.find(block_id)
       # Prevent new instances from going too far back:
-      break if block.height == MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym]
+      break if block.height == MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym] || block.height == 0
       break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
@@ -133,7 +133,7 @@ class Block < ApplicationRecord
  end
 
   def self.pool_from_coinbase_tx(tx)
-    return nil if tx["vin"].nil? || tx["vin"].empty?
+    return nil if tx["vin"].nil? || tx["vin"].blank?
     coinbase = nil
     tx["vin"].each do |vin|
       coinbase = vin["coinbase"]
