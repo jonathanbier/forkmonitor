@@ -18,6 +18,8 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
 
+  before_save :clear_chaintips, if: :will_save_change_to_enabled?
+
   scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
   scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
@@ -666,6 +668,11 @@ class Node < ApplicationRecord
 
   def expire_cache
       Rails.cache.delete("Node.last_updated(#{self.coin})")
+  end
+
+  def clear_chaintips
+    return if self.enabled
+    Chaintip.where(node: self).destroy_all
   end
 
 end
