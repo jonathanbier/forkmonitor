@@ -13,19 +13,9 @@ RSpec.describe Node, :type => :model do
   end
 
   describe "version" do
-    before do
-      test.setup()
-    end
-
-    after do
-      test.shutdown()
-    end
-
     it "should be set" do
-      node = create(:node_python)
-      node.client.set_python_node(test.nodes[0])
-      node.poll!
-      expect(node.version).to be >=190100
+      node = create(:node_with_block, version: 160300)
+      expect(node.version).to eq(160300)
     end
   end
 
@@ -75,55 +65,60 @@ RSpec.describe Node, :type => :model do
 
   describe "poll!" do
     describe "on first run" do
-      before do
-        @node = build(:node)
-        @node.client.mock_ibd(true)
+      describe "Bitcoin Core" do
+        after do
+          test.shutdown()
+        end
+
+        before do
+          test.setup()
+          @node = create(:node_python)
+          @node.client.set_python_node(test.nodes[0])
+          @node.client.generate(2)
+        end
+
+        it "should save the node" do
+          @node.poll!
+          expect(@node.id).not_to be_nil
+        end
+
+        it "should store the node version" do
+          @node.poll!
+          expect(@node.version).to be >=190100
+        end
+
+        it "should get IBD status" do
+          @node.poll!
+          expect(@node.ibd).to eq(false)
+        end
+
+        it "should not store the latest block if in IBD" do
+          allow(@node).to receive("ibd").and_return(true)
+          @node.poll!
+          expect(@node.block).to be_nil
+        end
+
+        it "should store the latest block if not in IBD" do
+          @node.poll!
+          expect(@node.block).not_to be_nil
+          expect(@node.block.height).to eq(2)
+          expect(@node.block.first_seen_by).to eq(@node)
+        end
+
       end
 
-      it "should save the node" do
-        @node.poll!
-        expect(@node.id).not_to be_nil
-      end
+      describe "other clients" do
+        before do
+          @node = build(:node)
+          @node.client.mock_ibd(true)
+        end
 
-      it "should store the node version" do
-        @node.poll!
-        expect(@node.version).to eq(170100)
-      end
-
-      it "should parse v1.0.2 variant (e.g. Bcoin)" do
-        @node.client.mock_version("v1.0.2")
-        @node.client.mock_client_type(:bcoin)
-        @node.poll!
-        expect(@node.version).to eq(1000200)
-      end
-
-      it "should not store the latest block if in IBD" do
-        @node.poll!
-        expect(@node.block).to be_nil
-      end
-
-      it "should store the latest block if not in IBD" do
-        @node.client.mock_ibd(false)
-        @node.poll!
-        expect(@node.block).not_to be_nil
-        expect(@node.block.height).to equal(560176)
-        expect(@node.block.first_seen_by).to eq(@node)
-      end
-
-      it "should get IBD status, if true" do
-        @node.client.mock_ibd(true)
-        @node.client.mock_set_height(976)
-
-        @node.poll!
-        expect(@node.ibd).to eq(true)
-      end
-
-      it "should get IBD status, if false" do
-        @node.client.mock_ibd(false)
-        @node.client.mock_set_height(560179)
-
-        @node.poll!
-        expect(@node.ibd).to eq(false)
+        it "should parse v1.0.2 variant (e.g. Bcoin)" do
+          @node.client.mock_version("v1.0.2")
+          @node.client.mock_client_type(:bcoin)
+          @node.poll!
+          expect(@node.version).to eq(1000200)
+        end
       end
     end
 

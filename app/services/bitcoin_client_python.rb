@@ -12,6 +12,16 @@ class BitcoinClientPython
     @node = node
   end
 
+  def getblock(block_hash, verbosity = 1)
+    raise Error, "Set Python node" unless @node != nil
+    raise Error, "Specify block hash" unless block_hash.present?
+    begin
+      return @node.getblock(blockhash=block_hash, verbosity=verbosity)
+    rescue Error => e
+      raise Error, "getblock(#{ block_hash }, #{ verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getblockchaininfo
     raise Error, "Set Python node" unless @node != nil
     begin
@@ -39,4 +49,26 @@ class BitcoinClientPython
     end
   end
 
+  def generate(n)
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      return @node.generatetoaddress(n, "bcrt1qqxm98uduexxmn7f2xxdhvx7u7pkvmpupcl6vys")
+    rescue Error => e
+      raise Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getrawtransaction(hash, verbose = false, block_hash = nil)
+    raise Error, "Set Python node" unless @node != nil
+    raise Error, "Specify transaction hash" unless hash.present?
+    begin
+      if block_hash.present?
+        return @node.getrawtransaction(hash, verbose, block_hash)
+      else
+        return @node.getrawtransaction(hash, verbose)
+      end
+    rescue Error => e
+      raise Error, "getrawtransaction(#{ hash }, #{ verbose}, #{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
 end
