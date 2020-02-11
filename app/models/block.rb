@@ -2,7 +2,7 @@ MINIMUM_BLOCK_HEIGHTS = {
   btc: Rails.env.test? ? 560176 : 500000, # Mid December 2017, around Lightning network launch
   tbtc: 1600000,
   bch: 581000,
-  bsv:606000
+  bsv: Rails.env.production? ? 606000 : 621500 # February 2019 for development
 }
 
 class Block < ApplicationRecord
