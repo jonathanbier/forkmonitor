@@ -203,4 +203,216 @@ RSpec.describe Chaintip, type: :model do
       end
     end
   end
+
+  describe "check!" do
+    before do
+      @A = create(:node)
+      @A.client.mock_version(170100)
+      @A.client.mock_set_height(560178)
+
+      @B = create(:node)
+      @B.client.mock_version(160300)
+      @B.client.mock_set_height(560178)
+    end
+
+    describe "one node in IBD" do
+      before do
+        @A.client.mock_ibd(true)
+        @A.poll!
+      end
+      it "should do nothing" do
+        expect(Chaintip.check!(@A)).to eq(nil)
+      end
+      it "should not have chaintip entries" do
+        expect(@A.chaintips.count).to eq(0)
+      end
+    end
+
+    describe "only an active chaintip" do
+      before do
+        @A.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }
+        ])
+        @A.poll!
+      end
+      it "should add a chaintip entry" do
+        expect(@A.chaintips.count).to eq(0)
+        Chaintip.check!(@A)
+        expect(@A.chaintips.count).to eq(1)
+        expect(@A.chaintips.first.block.height).to eq(560178)
+      end
+    end
+
+    describe "one active and one valid-fork chaintip" do
+      let(:user) { create(:user) }
+
+      before do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }, {
+            "height" => 560178,
+            "hash" => "0000000000000000000000000000000000000000000000000000000000560178",
+            "branchlen" => 2,
+            "status" => "valid-fork"
+          }
+        ])
+        # Add intermediate fork block 560177, same work, created slight later
+        @B.client.mock_add_fork_block(560177)
+
+        # Add valid-fork block 560178, same work, created slight later
+        @B.client.mock_add_fork_block(560178)
+
+        @B.poll!
+      end
+
+      it "should add a chaintip entry" do
+        Chaintip.check!(@B)
+        expect(@B.chaintips.count).to eq(2)
+        expect(@B.chaintips.last.status).to eq("valid-fork")
+      end
+
+      it "should add the valid fork blocks up to the common ancenstor" do
+        Chaintip.check!(@B)
+
+        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
+        expect(fork_block).not_to be_nil
+        expect(fork_block.parent).not_to be_nil
+        expect(fork_block.parent.height).to eq(560177)
+        expect(fork_block.parent.block_hash).to eq("0000000000000000000000000000000000000000000000000000000000560177")
+        expect(fork_block.parent.parent).not_to be_nil
+        expect(fork_block.parent.parent.height).to eq(560176)
+      end
+
+      it "should trigger potential stale block alert" do
+        expect(User).to receive(:all).twice.and_return [user]
+        expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@A, @B]
+
+        # One alert for each height:
+        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(2)
+        # Just once...
+        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "should ignore forks more than 1000 blocks ago" do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }, {
+            "height" => 400000,
+            "hash" => "00000000000000000000000000000000000000000000000000000000004000000",
+            "branchlen" => 1,
+            "status" => "valid-fork"
+          }
+        ])
+        Chaintip.check!(@B)
+        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
+        expect(fork_block).to be_nil
+      end
+    end
+
+    describe "one active and one invalid chaintip, not in our db" do
+      before do
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          }, {
+            "height" => 560179,
+            "hash" => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
+            "branchlen" => 0,
+            "status" => "invalid"
+          }
+        ])
+        @B.poll!
+      end
+      it "should add the active entry" do
+        Chaintip.check!(@B)
+        expect(@B.chaintips.count).to eq(1) # It won't add the invalid entry because it doesn't have the block
+      end
+    end
+
+    describe "one active and one invalid chaintip in our db" do
+      let(:user) { create(:user) }
+
+      before do
+        # Make node A accept the block:
+        @A.client.mock_set_height(560179)
+        @A.poll!
+        @B.client.mock_chaintips([
+          {
+            "height" => 560178,
+            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
+            "branchlen" => 0,
+            "status" => "active"
+          },
+          {
+            "height" => 560179,
+            "hash" => "000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc",
+            "branchlen" => 0,
+            "status" => "invalid"
+          }
+        ])
+        @B.poll!
+      end
+
+      it "should store invalid tip" do
+        disputed_block = @A.block
+        expect(disputed_block.height).to eq(560179)
+        expect(disputed_block.block_hash).to eq("000000000000000000017b592e9ecd6ce8ab9b5a2f391e21ee2e80b022a7dafc")
+        Chaintip.check!(@B)
+        expect(@B.chaintips.where(status: "invalid").count).to eq(1)
+      end
+
+      it "should be nil if the node is unreachable" do
+        stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
+        @B.client.mock_unreachable
+        @B.poll!
+        expect(Chaintip.check!(@B)).to eq(nil)
+      end
+
+      it "should store an InvalidBlock entry" do
+        Chaintip.check!(@B)
+        disputed_block = @B.chaintips.last.block
+        expect(InvalidBlock.count).to eq(1)
+        expect(InvalidBlock.first.block).to eq(disputed_block)
+        expect(InvalidBlock.first.node).to eq(@B)
+      end
+
+      it "should send an email to all users" do
+        expect(User).to receive(:all).and_return [user]
+        expect { Chaintip.check!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      end
+
+      it "should send email only once" do
+        expect(User).to receive(:all).and_return [user]
+        expect { Chaintip.check!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { Chaintip.check!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "node should have invalid blocks" do
+        Chaintip.check!(@B)
+        expect(@B.invalid_blocks.count).to eq(1)
+      end
+
+      it "can not be deleleted" do
+        Chaintip.check!(@B)
+        expect { @B.destroy }.to raise_error ActiveRecord::DeleteRestrictionError
+      end
+
+    end
+  end
 end

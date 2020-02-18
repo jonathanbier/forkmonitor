@@ -124,6 +124,50 @@ class Chaintip < ApplicationRecord
      return tip
    end
 
+# getchaintips returns all known chaintips for a node, which can be:
+  # * active: the current chaintip, added to our database with poll!
+  # * valid-fork: valid chain, but not the most proof-of-work
+  # * valid-headers: potentially valid chain, but not fully checked due to insufficient proof-of-work
+  # * headers-only: same as valid-header, but even less checking done
+  # * invalid: checked and found invalid, we want to make sure other nodes don't follow this, because:
+  #   1) the other nodes haven't seen it all; or
+  #   2) the other nodes did see it and also consider it invalid; or
+  #   3) the other nodes haven't bothered to check because it doesn't have enough proof-of-work
+
+  # We check all invalid chaintips against the database, to see if at any point in time
+  # any of our other nodes saw this block, found it to have enough proof of work
+  # and considered it valid. This can normally happen under two circumstances:
+  # 1. the node is unaware of a soft-fork and initially accepts a block that newer
+  #    nodes reject
+  # 2. the node has a consensus bug
+  def self.check!(node)
+    if node.unreachable_since || node.ibd || node.block.nil?
+      # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
+      Chaintip.where(node: node).destroy_all
+      return nil
+    else
+      # Delete existing chaintip entries, except the active one (which might be unchanged):
+      Chaintip.where(node: node).where.not(status: "active").destroy_all
+
+      # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
+      if node.client_type.to_sym == :libbitcoin ||
+         node.client_type.to_sym == :btcd ||
+         (node.client_type.to_sym == :core && node.version.present? && node.version < 100000)
+
+        Chaintip.process_active!(node, block)
+        return nil
+      end
+    end
+
+    begin
+      chaintips = node.client.getchaintips
+    rescue BitcoinClient::Error
+      # Assuming this node doesn't implement it
+      return nil
+    end
+    return Chaintip.process_getchaintips(chaintips, node)
+  end
+
   private
 
   def expire_cache

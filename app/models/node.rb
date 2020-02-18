@@ -182,50 +182,6 @@ class Node < ApplicationRecord
     self.update mirror_block: block
   end
 
-  # getchaintips returns all known chaintips for a node, which can be:
-  # * active: the current chaintip, added to our database with poll!
-  # * valid-fork: valid chain, but not the most proof-of-work
-  # * valid-headers: potentially valid chain, but not fully checked due to insufficient proof-of-work
-  # * headers-only: same as valid-header, but even less checking done
-  # * invalid: checked and found invalid, we want to make sure other nodes don't follow this, because:
-  #   1) the other nodes haven't seen it all; or
-  #   2) the other nodes did see it and also consider it invalid; or
-  #   3) the other nodes haven't bothered to check because it doesn't have enough proof-of-work
-
-  # We check all invalid chaintips against the database, to see if at any point in time
-  # any of our other nodes saw this block, found it to have enough proof of work
-  # and considered it valid. This can normally happen under two circumstances:
-  # 1. the node is unaware of a soft-fork and initially accepts a block that newer
-  #    nodes reject
-  # 2. the node has a consensus bug
-  def check_chaintips!
-    if self.unreachable_since || self.ibd || self.block.nil?
-      # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
-      Chaintip.where(node: self).destroy_all
-      return nil
-    else
-      # Delete existing chaintip entries, except the active one (which might be unchanged):
-      Chaintip.where(node: self).where.not(status: "active").destroy_all
-
-      # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
-      if self.client_type.to_sym == :libbitcoin ||
-         self.client_type.to_sym == :btcd ||
-         (self.client_type.to_sym == :core && self.version.present? && self.version < 100000)
-
-        Chaintip.process_active!(self, block)
-        return nil
-      end
-    end
-
-    begin
-      chaintips = client.getchaintips
-    rescue BitcoinClient::Error
-      # Assuming this node doesn't implement it
-      return nil
-    end
-    return Chaintip.process_getchaintips(chaintips, self)
-  end
-
   # Should be run after polling all nodes, otherwise it may find false positives
   def check_if_behind!(node)
     # Return nil if other node is in IBD:
@@ -579,32 +535,32 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       self.bitcoin_core_by_version.each do |node|
         node.reload
-        node.check_chaintips!
+        Chaintip.check!(node)
       end
       self.bitcoin_alternative_implementations.each do |node|
         node.reload
-        node.check_chaintips!
+        Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:btc)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
       self.testnet_by_version.each do |node|
         node.reload
-        node.check_chaintips!
+        Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:tbtc)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
         node.reload
-        node.check_chaintips!
+        Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:bch)
     end
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
       self.bsv_by_version.each do |node|
         node.reload
-        node.check_chaintips!
+        Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:bsv)
     end
