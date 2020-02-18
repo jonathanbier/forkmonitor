@@ -152,7 +152,7 @@ RSpec.describe Node, :type => :model do
         @node.client.generate(1)
         @node.poll!
         expect(@node.block.tx_count).to eq(1)
-        expect(@node.block.size).to eq(249)
+        expect(@node.block.size).to be_between(249, 250).inclusive
       end
 
       it "should store intermediate blocks" do
