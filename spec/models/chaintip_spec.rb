@@ -217,34 +217,27 @@ RSpec.describe Chaintip, type: :model do
 
     describe "one node in IBD" do
       before do
-        @A.client.mock_ibd(true)
-        @A.poll!
+        setup_python_nodes()
       end
       it "should do nothing" do
-        expect(Chaintip.check!(@A)).to eq(nil)
+        @nodeA.ibd = true
+        expect(Chaintip.check!(@nodeA)).to eq(nil)
       end
       it "should not have chaintip entries" do
-        expect(@A.chaintips.count).to eq(0)
+        expect(@nodeA.chaintips.count).to eq(0)
       end
     end
 
     describe "only an active chaintip" do
       before do
-        @A.client.mock_chaintips([
-          {
-            "height" => 560178,
-            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen" => 0,
-            "status" => "active"
-          }
-        ])
+        setup_python_nodes()
         @A.poll!
       end
       it "should add a chaintip entry" do
-        expect(@A.chaintips.count).to eq(0)
-        Chaintip.check!(@A)
-        expect(@A.chaintips.count).to eq(1)
-        expect(@A.chaintips.first.block.height).to eq(560178)
+        expect(@nodeA.chaintips.count).to eq(0)
+        Chaintip.check!(@nodeA)
+        expect(@nodeA.chaintips.count).to eq(1)
+        expect(@nodeA.chaintips.first.block.height).to eq(2)
       end
     end
 
@@ -252,49 +245,38 @@ RSpec.describe Chaintip, type: :model do
       let(:user) { create(:user) }
 
       before do
-        @B.client.mock_chaintips([
-          {
-            "height" => 560178,
-            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen" => 0,
-            "status" => "active"
-          }, {
-            "height" => 560178,
-            "hash" => "0000000000000000000000000000000000000000000000000000000000560178",
-            "branchlen" => 2,
-            "status" => "valid-fork"
-          }
-        ])
-        # Add intermediate fork block 560177, same work, created slight later
-        @B.client.mock_add_fork_block(560177)
+        setup_python_nodes()
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
 
-        # Add valid-fork block 560178, same work, created slight later
-        @B.client.mock_add_fork_block(560178)
-
-        @B.poll!
+        @nodeA.client.generate(2) # this will be a valid-fork after reorg
+        @nodeB.client.generate(3) # reorg to this upon reconnect
+        @nodeA.poll!
+        @nodeB.poll!
+        test.connect_nodes(@nodeA.client, 1)
       end
 
-      it "should add a chaintip entry" do
-        Chaintip.check!(@B)
-        expect(@B.chaintips.count).to eq(2)
-        expect(@B.chaintips.last.status).to eq("valid-fork")
+      it "should add chaintip entries" do
+        Chaintip.check!(@nodeA)
+        expect(@nodeA.chaintips.count).to eq(2)
+        expect(@nodeA.chaintips.last.status).to eq("valid-fork")
       end
 
       it "should add the valid fork blocks up to the common ancenstor" do
-        Chaintip.check!(@B)
-
-        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
-        expect(fork_block).not_to be_nil
-        expect(fork_block.parent).not_to be_nil
-        expect(fork_block.parent.height).to eq(560177)
-        expect(fork_block.parent.block_hash).to eq("0000000000000000000000000000000000000000000000000000000000560177")
-        expect(fork_block.parent.parent).not_to be_nil
-        expect(fork_block.parent.parent.height).to eq(560176)
+        Chaintip.check!(@nodeA)
+        @nodeA.reload
+        split_block = Block.find_by(height: 2)
+        fork_tip = @nodeA.block
+        expect(fork_tip.height).to eq(4)
+        expect(fork_tip).not_to be_nil
+        expect(fork_tip.parent).not_to be_nil
+        expect(fork_tip.parent.height).to eq(3)
+        expect(fork_tip.parent.parent).to eq(split_block)
       end
 
       it "should trigger potential stale block alert" do
         expect(User).to receive(:all).twice.and_return [user]
-        expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@A, @B]
+        expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@nodeA, @nodeB]
 
         # One alert for each height:
         expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(2)
@@ -303,22 +285,18 @@ RSpec.describe Chaintip, type: :model do
       end
 
       it "should ignore forks more than 1000 blocks ago" do
-        @B.client.mock_chaintips([
-          {
-            "height" => 560178,
-            "hash" => "00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9",
-            "branchlen" => 0,
-            "status" => "active"
-          }, {
-            "height" => 400000,
-            "hash" => "00000000000000000000000000000000000000000000000000000000004000000",
-            "branchlen" => 1,
-            "status" => "valid-fork"
-          }
-        ])
-        Chaintip.check!(@B)
-        fork_block = Block.find_by(block_hash: "0000000000000000000000000000000000000000000000000000000000560178")
-        expect(fork_block).to be_nil
+        # 10 on regtest
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
+
+        @nodeA.client.generate(11) # this will be a valid-fork after reorg
+        @nodeB.client.generate(12) # reorg to this upon reconnect
+        @nodeA.poll!
+        @nodeB.poll!
+        test.connect_nodes(@nodeA.client, 1)
+
+        Chaintip.check!(@nodeA)
+        expect(@nodeA.chaintips.count).to eq(2)
       end
     end
 

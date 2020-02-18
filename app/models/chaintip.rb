@@ -78,7 +78,7 @@ class Chaintip < ApplicationRecord
       return nil unless block.present?
       tip = Chaintip.process_active!(node, block)
     when "valid-fork"
-      return nil if chaintip["height"] < node.block.height - 1000
+      return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
       block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false)
       tip = node.chaintips.create(status: "valid-fork", block: block, coin: block.coin) # There can be multiple valid-block chaintips
     when "invalid"
