@@ -12,6 +12,35 @@ class BitcoinClientPython
     @node = node
   end
 
+ def addnode(node, command)
+   raise Error, "Set Python node" unless @node != nil
+   begin
+     throw "Specify node and node_id" if node.nil? || command.nil?
+     return @node.addnode(node, command)
+   rescue Error => e
+     raise Error, "addnode(#{ node }, #{ command}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+   end
+ end
+
+  # TODO: add address, node_id params, this can only be called from Python atm
+  def disconnectnode(params)
+    address = params["address"]
+    node_id = params["nodeid"]
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      throw "Specify address or node_id" if address.nil? && node_id.nil?
+      if address.nil?
+        return @node.disconnectnode(nodeid: node_id)
+      elsif node_id.nil?
+        return @node.disconnectnode(address: address)
+      else
+        return @node.disconnectnode(address: address, nodeid: node_id)
+      end
+    rescue Error => e
+      raise Error, "disconnectnode(#{ address }, #{ node_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getblock(block_hash, verbosity)
     raise Error, "Set Python node" unless @node != nil
     raise Error, "Specify block hash" unless block_hash.present?
@@ -42,6 +71,15 @@ class BitcoinClientPython
     end
   end
 
+  def getpeerinfo
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      return @node.getpeerinfo()
+    rescue PyCall::PyError => e
+      raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getnetworkinfo
     raise Error, "Set Python node" unless @node != nil
     begin
@@ -54,9 +92,30 @@ class BitcoinClientPython
   def generate(n)
     raise Error, "Set Python node" unless @node != nil
     begin
-      return @node.generatetoaddress(n, "bcrt1qqxm98uduexxmn7f2xxdhvx7u7pkvmpupcl6vys")
+      n.times do
+        coinbase_dest = @node.getnewaddress()
+        @node.generatetoaddress(1, coinbase_dest)
+      end
     rescue Error => e
       raise Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getchaintips
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      return @node.getchaintips()
+    rescue Error => e
+      raise Error, "getchaintips failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getpeerinfo
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      return @node.getpeerinfo()
+    rescue Error => e
+      raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -71,6 +130,36 @@ class BitcoinClientPython
       end
     rescue Error => e
       raise Error, "getrawtransaction(#{ hash }, #{ verbose}, #{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def invalidateblock(block_hash)
+    raise Error, "Set Python node" unless @node != nil
+    raise Error, "Specify block hash" unless block_hash.present?
+    begin
+      return @node.invalidateblock(blockhash=block_hash)
+    rescue Error => e
+      raise Error, "invalidateblock(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def reconsiderblock(block_hash)
+    raise Error, "Set Python node" unless @node != nil
+    raise Error, "Specify block hash" unless block_hash.present?
+    begin
+      return @node.reconsiderblock(blockhash=block_hash)
+    rescue Error => e
+      raise Error, "reconsiderblock(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def setnetworkactive(state)
+    raise Error, "Set Python node" unless @node != nil
+    raise Error, "Set state to false or true" unless [false, true].include?(state)
+    begin
+      return @node.setnetworkactive(state)
+    rescue Error => e
+      raise Error, "setnetworkactive(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 end

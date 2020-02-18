@@ -7,6 +7,11 @@ VENDOR_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor"
 
 sys.path.append(VENDOR_DIRECTORY + "/bitcoin/test/functional")
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    disconnect_nodes,
+    connect_nodes,
+)
+
 
 class TestWrapper(BitcoinTestFramework):
     """Wrapper Class for BitcoinTestFramework.
@@ -76,6 +81,12 @@ class TestWrapper(BitcoinTestFramework):
             binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli")] * self.num_nodes,
         )
         self.start_nodes()
+
+    def connect_nodes(self, a, b):
+        connect_nodes(a, b)
+
+    def disconnect_nodes(self, a, b):
+        disconnect_nodes(a, b)
 
     def shutdown(self):
         super().shutdown()
