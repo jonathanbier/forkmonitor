@@ -1,13 +1,13 @@
 class Api::V1::InflatedBlocksController < ApplicationController
   before_action :authenticate_user!, only: [:destroy]
   before_action :set_inflated_block, only: [:show, :destroy]
+  before_action :set_coin_optional
 
   def index
-    if params[:coin]
-      coin = params[:coin].downcase.to_sym
-      latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[coin]).order(updated_at: :desc).first
+    if @coin.present?
+      latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
       if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
-        @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin])
+        @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[@coin])
         response.headers['Content-Range'] = @inflated_blocks.count
         render json: @inflated_blocks
       end

@@ -1,12 +1,13 @@
 class Api::V1::NodesController < ApplicationController
   before_action :authenticate_user!, except: [:index_coin]
   before_action :set_node, only: [:show, :update, :destroy]
+  before_action :set_coin, only: :index_coin
 
   # Unauthenticated list of nodes, per coin:
   def index_coin
-    latest = Node.last_updated_cached(params[:coin].upcase)
+    latest = Node.last_updated_cached(@coin.upcase)
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
-      @nodes = Node.where(enabled: true, coin: params[:coin].upcase).order(client_type: :asc ,name: :asc, version: :desc)
+      @nodes = Node.where(enabled: true, coin: @coin.upcase).order(client_type: :asc ,name: :asc, version: :desc)
       render json: @nodes
     end
   end

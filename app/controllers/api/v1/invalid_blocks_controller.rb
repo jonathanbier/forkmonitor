@@ -2,13 +2,13 @@ class Api::V1::InvalidBlocksController < ApplicationController
 
   before_action :authenticate_user!, only: [:destroy]
   before_action :set_invalid_block, only: [:show, :destroy]
+  before_action :set_coin_optional
 
   def index
-    if params[:coin]
-      coin = params[:coin].downcase.to_sym
-      latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[coin]).order(updated_at: :desc).first
+    if @coin.present?
+      latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
       if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
-        @invalid_blocks = InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin])
+        @invalid_blocks = InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[@coin])
         response.headers['Content-Range'] = @invalid_blocks.count
         render json: @invalid_blocks
       end
