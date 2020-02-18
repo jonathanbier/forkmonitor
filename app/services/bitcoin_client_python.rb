@@ -12,7 +12,7 @@ class BitcoinClientPython
     @node = node
   end
 
-  def getblock(block_hash, verbosity = 1)
+  def getblock(block_hash, verbosity)
     raise Error, "Set Python node" unless @node != nil
     raise Error, "Specify block hash" unless block_hash.present?
     begin

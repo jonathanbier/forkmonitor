@@ -927,7 +927,7 @@ RSpec.describe Node, :type => :model do
   describe "get_pool_for_block!" do
     before do
       @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
-      @node = create(:node, coin: "BTC", block: @block)
+      @node = create(:node, coin: "BTC", block: @block, version: 170100)
     end
 
     it "should fetch the block" do

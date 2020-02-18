@@ -3,16 +3,16 @@ require 'rails_helper'
 RSpec.describe InflatedBlock, type: :model do
   describe "InflatedBlock.check_inflation!" do
     before do
-      @node = build(:node_with_mirror, version: 170001)
+      @node = build(:node_with_mirror, version: 170100)
       @node.client.mock_set_height(560176)
       @node.mirror_client.mock_set_height(560176)
       @node.poll!
       @node.poll_mirror!
       @node.reload
 
-      @node_without_mirror = build(:node, version: 180000)
+      @node_without_mirror = build(:node, version: 170100)
 
-      @node_testnet = build(:node_with_mirror, version: 180000, coin: "TBTC")
+      @node_testnet = build(:node_with_mirror, version: 170100, coin: "TBTC")
       @node_testnet.client.mock_set_height(560176)
       @node_testnet.mirror_client.mock_set_height(560176)
       @node_testnet.poll!

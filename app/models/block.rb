@@ -71,8 +71,9 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block.block_hash)
         else
-          block_info = client.getblock(block.block_hash)
+          block_info = client.getblock(block.block_hash, 1)
         end
+        throw "block_info unexpectedly empty" unless block_info.present?
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
         block.update parent: parent
       end
@@ -85,7 +86,7 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block_info["previousblockhash"])
         else
-          block_info = client.getblock(block_info["previousblockhash"])
+          block_info = client.getblock(block_info["previousblockhash"], 1)
         end
 
         parent = Block.create_with(block_info, use_mirror, node)
@@ -250,6 +251,7 @@ class Block < ApplicationRecord
   end
 
   def self.find_or_create_block_and_ancestors!(hash, node, use_mirror)
+    raise "block hash missing" unless hash.present?
     # Not atomic and called very frequently, so sometimes it tries to insert
     # a block that was already inserted. In that case try again, so it updates
     # the existing block instead.
@@ -261,7 +263,7 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(hash)
         else
-          block_info = client.getblock(hash)
+          block_info = client.getblock(hash, 1)
         end
         block = Block.create_with(block_info, use_mirror, node)
       end

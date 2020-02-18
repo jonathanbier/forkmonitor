@@ -158,6 +158,8 @@ class Node < ApplicationRecord
       best_block_hash = client.getblockhash(info["blocks"])
     end
 
+    raise "Best block hash unexpectedly nil" unless best_block_hash.present?
+
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false)
 
     self.update block: block, unreachable_since: nil
@@ -360,7 +362,7 @@ class Node < ApplicationRecord
     fork_len.times do
       header = client.getblockheader(block_hash)
       puts "Processing fork block at height #{ header["height"] }"
-      block = client.getblock(block_hash, 1)
+      block = getblock(block_hash, 1)
       fork_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
     end
@@ -371,7 +373,7 @@ class Node < ApplicationRecord
     fork_len.times do
       header = client.getblockheader(block_hash)
       puts "Processing main chain block at height #{ header["height"] }"
-      block = client.getblock(block_hash, 1)
+      block = getblock(block_hash, 1)
       main_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
     end
@@ -382,7 +384,7 @@ class Node < ApplicationRecord
     while true do
       header = client.getblockheader(block_hash)
       puts "Processing main chain block at height #{ header["height"] }"
-      block = client.getblock(block_hash, 1)
+      block = getblock(block_hash, 1)
       main_tip_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
       break if header["height"] == fork_max_height + 1
@@ -400,8 +402,8 @@ class Node < ApplicationRecord
     return nil unless self.core? || self.abc? || self.sv?
     client = use_mirror ? self.mirror_client : self.client
     begin
-      block_info = block_info || client.getblock(block_hash)
-    rescue BitcoinClient::Error
+      block_info = block_info || getblock(block_hash, 1)
+    rescue BitcoinClient::Error => e
       puts "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
       return nil
     end
@@ -413,6 +415,16 @@ class Node < ApplicationRecord
     rescue TxNotFoundError
       return nil
     end
+  end
+
+  def getblock(block_hash, verbosity)
+    # https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.0.md#low-level-rpc-changes
+    # * argument verbosity was called "verbose" in older versions, but we use a positional argument
+    # * verbose was a boolean until Bitcoin Core 0.15.0
+    if verbosity > 0 && (client_type == :btcd || (client_type == :core && @client_version <= 149999))
+      verbosity = true
+    end
+    client.getblock(block_hash, verbosity)
   end
 
   def self.poll!(options = {})

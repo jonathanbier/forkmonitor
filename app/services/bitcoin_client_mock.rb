@@ -463,13 +463,14 @@ class BitcoinClientMock
     @block_hash
   end
 
-  def getblock(hash, verbosity = 1)
+  def getblock(hash, verbosity)
+    raise Error, "getblock requires block hash" unless hash.present?
 
     if verbosity == 0
-      raise Error unless @raw_blocks[hash]
+      raise Error, "Raw block #{ hash }  not found" unless @raw_blocks[hash]
       return @raw_blocks[hash]
-    elsif verbosity == 1
-      raise Error unless @blocks[hash]
+    elsif verbosity # true or 1
+      raise Error, "Block #{ hash }  not found" unless @blocks[hash]
       return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
     else
       raise Error, "Unexpected verbosity=#{ verbosity }"
