@@ -70,13 +70,11 @@ class TestWrapper(BitcoinTestFramework):
         super().setup()
 
     def setup_nodes(self):
-        self.add_nodes(self.num_nodes, versions=[
-            190001,
-        ], binary=[
-            os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoind"),
-        ], binary_cli=[
-            os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli"),
-        ])
+        self.add_nodes(self.num_nodes,
+            versions=[190001] * self.num_nodes,
+            binary=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoind")] * self.num_nodes,
+            binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli")] * self.num_nodes,
+        )
         self.start_nodes()
 
     def shutdown(self):
