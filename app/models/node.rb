@@ -417,7 +417,8 @@ class Node < ApplicationRecord
     end
   end
 
-  def getblock(block_hash, verbosity)
+  def getblock(block_hash, verbosity, use_mirror = false)
+    client = use_mirror ? self.mirror_client : self.client
     # https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.0.md#low-level-rpc-changes
     # * argument verbosity was called "verbose" in older versions, but we use a positional argument
     # * verbose was a boolean until Bitcoin Core 0.15.0

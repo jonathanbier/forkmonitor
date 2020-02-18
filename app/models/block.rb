@@ -71,7 +71,7 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block.block_hash)
         else
-          block_info = client.getblock(block.block_hash, 1)
+          block_info = node.getblock(block.block_hash, 1, use_mirror)
         end
         throw "block_info unexpectedly empty" unless block_info.present?
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
@@ -86,7 +86,7 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block_info["previousblockhash"])
         else
-          block_info = client.getblock(block_info["previousblockhash"], 1)
+          block_info = node.getblock(block_info["previousblockhash"], 1, use_mirror)
         end
 
         parent = Block.create_with(block_info, use_mirror, node)
@@ -263,7 +263,7 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(hash)
         else
-          block_info = client.getblock(hash, 1)
+          block_info = node.getblock(hash, 1, use_mirror)
         end
         block = Block.create_with(block_info, use_mirror, node)
       end
