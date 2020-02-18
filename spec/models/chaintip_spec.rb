@@ -1,40 +1,86 @@
 require 'rails_helper'
+require "bitcoind_helper"
+
+def setup_python_nodes
+  @use_python_nodes = true
+
+  stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
+  test.setup(num_nodes: 2)
+  @nodeA = create(:node_python)
+  @nodeA.client.set_python_node(test.nodes[0])
+  @nodeB = create(:node_python)
+  @nodeB.client.set_python_node(test.nodes[1])
+
+  @nodeA.client.generate(2)
+  test.sync_blocks()
+
+  @nodeA.poll!
+  @nodeA.reload
+  assert_equal(@nodeA.block.height, 2)
+  assert_equal(@nodeA.block.parent.height, 1)
+  assert_equal(Chaintip.count, 0)
+
+  @nodeB.poll!
+  @nodeB.reload
+  assert_equal(@nodeB.block.height, 2)
+  assert_equal(@nodeB.block.parent.height, 1)
+  assert_equal(Chaintip.count, 0)
+end
 
 RSpec.describe Chaintip, type: :model do
+  let(:test) { TestWrapper.new() }
+
+  after do
+    if @use_python_nodes
+      test.shutdown()
+    end
+  end
+
   describe "process_active!" do
-    let(:block1) { create(:block) }
-    let(:block2) { create(:block, parent: block1) }
-    let(:block3) { create(:block, parent: block2) }
-    let(:nodeA) { create(:node) }
-    let(:nodeB) { create(:node) }
-    let(:chaintip1) { create(:chaintip, block: block2, node: nodeA) }
+    before do
+      setup_python_nodes()
+    end
+
+    it "should chreate fresh chaintip for a new node" do
+      tip = Chaintip.process_active!(@nodeA, @nodeA.block)
+      expect(tip.id).not_to be_nil
+    end
+
+    it "should not update existing chaintip entry if the block unchanged" do
+      tip_before = Chaintip.process_active!(@nodeA, @nodeA.block)
+      @nodeA.poll!
+      tip_after = Chaintip.process_active!(@nodeA, @nodeA.block)
+      expect(tip_before).to eq(tip_after)
+    end
 
     it "should update existing chaintip entry if the block changed" do
-      tip_id = chaintip1.id
-      tip = Chaintip.process_active!(nodeA, block3)
-      expect(tip.id).to eq(tip_id)
+      tip_before = Chaintip.process_active!(@nodeA, @nodeA.block)
+      @nodeA.client.generate(1)
+      @nodeA.poll!
+      tip_after = Chaintip.process_active!(@nodeA, @nodeA.block)
+      expect(tip_before.id).to eq(tip_after.id)
+      expect(tip_after.block).to eq(@nodeA.block)
     end
 
     it "should chreate fresh chaintip for the different node" do
-      chaintip1 # ensure it's instantiated before the next line
-      tip = Chaintip.process_active!(nodeB, block2)
-      expect(tip).not_to eq(chaintip1)
+      tip_A = Chaintip.process_active!(@nodeA, @nodeA.block)
+      tip_B = Chaintip.process_active!(@nodeB, @nodeB.block)
+      expect(tip_A).not_to eq(tip_B)
     end
 
     it "should match parent block" do
-      chaintip1
-      tip = Chaintip.process_active!(nodeB, block1)
-      expect(tip).not_to be(chaintip1)
-      expect(tip.parent_chaintip).to eq(chaintip1)
+      tip_A = Chaintip.process_active!(@nodeA, @nodeA.block)
+      tip_B = Chaintip.process_active!(@nodeB, @nodeB.block.parent)
+      expect(tip_A).not_to be(tip_B)
+      expect(tip_B.parent_chaintip).to eq(tip_A)
     end
 
     it "should match child block" do
-      chaintip1
-      # Feed node B a chaintip that's more recent than the chaintip for node A
-      tip = Chaintip.process_active!(nodeB, block3)
-      expect(tip).not_to be(chaintip1)
-      chaintip1.reload
-      expect(chaintip1.parent_chaintip).to eq(tip)
+      tip_A = Chaintip.process_active!(@nodeA, @nodeA.block.parent)
+      tip_B = Chaintip.process_active!(@nodeB, @nodeB.block)
+      tip_A.reload
+      expect(tip_A).not_to be(tip_B)
+      expect(tip_A.parent_chaintip).to eq(tip_B)
     end
   end
 
@@ -47,16 +93,18 @@ RSpec.describe Chaintip, type: :model do
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
     let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
 
+    it "should show all nodes at height of active chaintip" do
+      setup_python_nodes()
+      @tipA = Chaintip.process_active!(@nodeA, @nodeA.block)
+      @tipB = Chaintip.process_active!(@nodeB, @nodeB.block)
+      assert_equal 2, @tipA.nodes_for_identical_chaintips.count
+      assert_equal [@nodeA, @nodeB], @tipA.nodes_for_identical_chaintips
+    end
+
     it "should only support the active chaintip" do
       chaintip1.update status: "invalid"
       assert_nil chaintip1.nodes_for_identical_chaintips
-    end
-
-    it "should show all nodes at height of active chaintip" do
-      nodeB.update block: block1
-      Chaintip.process_active!(nodeB, block1)
-      assert_equal 2, chaintip1.nodes_for_identical_chaintips.count
-      assert_equal [nodeB, nodeA], chaintip1.nodes_for_identical_chaintips
+      assert_nil chaintip1.nodes_for_identical_chaintips
     end
 
     it "should include parent blocks in chaintip" do
