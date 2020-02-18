@@ -154,7 +154,7 @@ class Chaintip < ApplicationRecord
          node.client_type.to_sym == :btcd ||
          (node.client_type.to_sym == :core && node.version.present? && node.version < 100000)
 
-        Chaintip.process_active!(node, block)
+        Chaintip.process_active!(node, node.block)
         return nil
       end
     end
