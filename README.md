@@ -110,6 +110,14 @@ guard
 <hit enter>
 ```
 
+To run Rails tests in parallel (optionally set `PARALLEL_TEST_PROCESSORS`):
+
+```sh
+rake parallel:create
+rake parallel:prepare
+rake parallel:spec
+```
+
 To run Javascript tests and monitor for changes:
 
 ```sh

@@ -90,6 +90,8 @@ group :development, :test do
 
   # Call Python, e.g. Bitcoin Core test framework
   gem 'pycall'
+
+  gem 'parallel_tests'
 end
 
 group :development do
