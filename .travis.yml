@@ -3,8 +3,6 @@ services:
   - postgresql
 rvm:
   - 2.6.3
-env:
-  - BITCOIN_VERSION=0.19.1rc1 BITCOIND=$TRAVIS_BUILD_DIR/vendor/bitcoin-$BITCOIN_VERSION/bin/bitcoind
 bundler_args: --without production:development
 cache:
   ccache: true
@@ -15,15 +13,14 @@ cache:
   - /home/travis/.rvm/
   - $HOME/libzmq
 before_install:
+  - cp $TRAVIS_BUILD_DIR/vendor/bitcoin-config.ini $TRAVIS_BUILD_DIR/vendor/bitcoin/test/config.ini
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
-  - $TRAVIS_BUILD_DIR/install_bitcoind.sh
+  - cd $TRAVIS_BUILD_DIR/vendor/bitcoin && contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
   - yarn
 before_script:
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
 script:
-  - $BITCOIND --version
-  - bundle exec rake debug:bitcoind
   - bundle exec rake
   - npm test
   - npm run coveralls || echo "push to coveralls failed"

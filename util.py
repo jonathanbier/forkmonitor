@@ -3,9 +3,9 @@ import os
 import sys
 import importlib.util
 
-SOURCE_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor/bitcoin" or os.environ['BITCOIN_SOURCE']
+VENDOR_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor"
 
-sys.path.append(SOURCE_DIRECTORY + "/test/functional")
+sys.path.append(VENDOR_DIRECTORY + "/bitcoin/test/functional")
 from test_framework.test_framework import BitcoinTestFramework
 
 class TestWrapper(BitcoinTestFramework):
@@ -21,8 +21,6 @@ class TestWrapper(BitcoinTestFramework):
         pass
 
     def setup(self,
-              bitcoind=None,
-              bitcoincli=None,
               setup_clean_chain=True,
               num_nodes=1,
               network_thread=None,
@@ -31,13 +29,13 @@ class TestWrapper(BitcoinTestFramework):
               bind_to_localhost_only=True,
               nocleanup=False,
               noshutdown=False,
-              cachedir=os.path.abspath(SOURCE_DIRECTORY + "/test/cache"),
+              cachedir=os.path.abspath(VENDOR_DIRECTORY + "/bitcoin/test/cache"),
               tmpdir=None,
               loglevel='ERROR',
               trace_rpc=False,
               port_seed=os.getpid(),
               coveragedir=None,
-              configfile=os.path.abspath(SOURCE_DIRECTORY + "/test/config.ini"),
+              configfile=os.path.abspath(VENDOR_DIRECTORY + "/bitcoin/test/config.ini"),
               pdbonfailure=False,
               usecli=False,
               perf=False,
@@ -66,10 +64,20 @@ class TestWrapper(BitcoinTestFramework):
         self.options.randomseed = randomseed
         self.options.valgrind = False
 
-        self.options.bitcoind = bitcoind
-        self.options.bitcoincli = bitcoincli
+        self.options.bitcoind = None
+        self.options.bitcoincli = None
 
         super().setup()
+
+    def setup_nodes(self):
+        self.add_nodes(self.num_nodes, versions=[
+            190001,
+        ], binary=[
+            os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoind"),
+        ], binary_cli=[
+            os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli"),
+        ])
+        self.start_nodes()
 
     def shutdown(self):
         super().shutdown()

@@ -90,6 +90,19 @@ To communicate with the first Bitcoin Core mirror node:
 Node.where(coin:"BTC").where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
 ```
 
+## Test suite
+
+Some of the tests require (a specific version of) Bitcoin Core. To install:
+
+```
+cd vendor/bitcoin
+cp bitcoin-config.ini bitcoin/test/config.ini
+contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
+```
+
+Edit `bitcoin/test/config.ini` and replace `$TRAVIS_BUILD_DIR` with the root path
+of this project.
+
 To run Rails tests and monitor for changes:
 
 ```sh
