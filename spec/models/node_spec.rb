@@ -1,9 +1,5 @@
 require "rails_helper"
-require 'pycall/import'
-include PyCall::Import
-pyimport :sys
-sys.path.insert(0, ".")
-pyfrom :util, import: :TestWrapper
+require "bitcoind_helper"
 
 RSpec.describe Node, :type => :model do
   let(:test) { TestWrapper.new() }
