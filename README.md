@@ -96,7 +96,7 @@ Some of the tests require (a specific version of) Bitcoin Core. To install:
 
 ```
 cd vendor/bitcoin
-cp bitcoin-config.ini bitcoin/test/config.ini
+cp ../bitcoin-config.ini test/config.ini
 contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
 ```
 

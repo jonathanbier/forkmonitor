@@ -378,7 +378,7 @@ class Node < ApplicationRecord
     # https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.0.md#low-level-rpc-changes
     # * argument verbosity was called "verbose" in older versions, but we use a positional argument
     # * verbose was a boolean until Bitcoin Core 0.15.0
-    if verbosity > 0 && (client_type == :btcd || (client_type == :core && @client_version <= 149999))
+    if verbosity > 0 && (client_type == :btcd || (client_type == :core && version <= 149999))
       verbosity = true
     end
     client.getblock(block_hash, verbosity)
