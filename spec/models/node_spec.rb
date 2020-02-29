@@ -804,7 +804,7 @@ RSpec.describe Node, :type => :model do
 
     describe "restore_mirror" do
       before do
-        @node = build(:node_with_mirror)
+        @node = build(:node_with_mirror, version: 170100)
         @node.mirror_client.mock_set_height(560178)
         @node.poll_mirror!
         @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
