@@ -178,7 +178,7 @@ GEM
       coderay (~> 1.1.0)
       method_source (~> 0.9.0)
     public_suffix (4.0.1)
-    puma (3.12.2)
+    puma (3.12.3)
     pycall (1.3.0)
     rack (2.0.8)
     rack-cors (1.1.0)
@@ -347,7 +347,7 @@ DEPENDENCIES
   listen (>= 3.0.5, < 3.2)
   parallel_tests
   pg
-  puma (~> 3.12.2)
+  puma (~> 3.12.3)
   pycall
   rack-cors
   rack-timeout
