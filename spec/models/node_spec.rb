@@ -59,6 +59,26 @@ RSpec.describe Node, :type => :model do
 
   end
 
+  describe "getblock" do
+    after do
+      test.shutdown()
+    end
+
+    before do
+      stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
+      test.setup()
+      @node = create(:node_python)
+      @node.client.set_python_node(test.nodes[0])
+      @node.client.generate(2)
+      @block_hash = @node.client.getbestblockhash()
+    end
+
+    it "should call getblock on the client" do
+      expect(@node.client).to receive("getblock").and_call_original()
+      @node.getblock(@block_hash, 1)
+    end
+  end
+
   describe "poll!" do
     describe "on first run" do
       describe "Bitcoin Core" do

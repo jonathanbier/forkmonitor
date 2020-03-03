@@ -1,6 +1,5 @@
 class BitcoinClientPython
-  class Error < StandardError
-  end
+  class Error < StandardError; end
 
   def initialize(node_id, name_with_version, client_type)
     @client_type = client_type
@@ -116,6 +115,15 @@ class BitcoinClientPython
       return @node.getpeerinfo()
     rescue Error => e
       raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getbestblockhash
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      return @node.getbestblockhash()
+    rescue Error => e
+      raise Error, "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

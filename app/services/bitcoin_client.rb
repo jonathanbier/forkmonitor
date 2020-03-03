@@ -2,8 +2,7 @@ require '0mq'
 require 'digest'
 
 class BitcoinClient
-  class Error < StandardError
-  end
+  class Error < StandardError; end
 
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
