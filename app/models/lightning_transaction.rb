@@ -79,7 +79,15 @@ class LightningTransaction < ApplicationRecord
       end
 
       begin
+        retries ||= 0
         raw_block = node.getblock(block.block_hash, 0)
+      rescue Node::PartialFileError
+        if (retries += 1) < 2
+          sleep 10 unless Rails.env.test?
+          retry
+        else
+          raise
+        end
       rescue Node::ConnectionError
         # The node probably crashed or temporarly ran out of RPC slots. Mark node
         # as unreachable and gracefull exit

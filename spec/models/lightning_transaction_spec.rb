@@ -41,26 +41,26 @@ RSpec.describe LightningTransaction, type: :model do
     end
 
     it "should fetch the raw block" do
-      expect(@node.client).to receive(:getblock).with(@block.block_hash, 0).and_call_original
+      expect(@node).to receive(:getblock).with(@block.block_hash, 0).and_call_original
       expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call PenaltyTransaction.check! with the parsed block" do
-      raw_block = @node.client.getblock(@block.block_hash, 0)
+      raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
       expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call SweepTransaction.check! with the parsed block" do
-      raw_block = @node.client.getblock(@block.block_hash, 0)
+      raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
       expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call MaybeUncoopTransaction.check! with the parsed block" do
-      raw_block = @node.client.getblock(@block.block_hash, 0)
+      raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
       expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
@@ -73,6 +73,16 @@ RSpec.describe LightningTransaction, type: :model do
       expect(@node.unreachable_since).not_to be_nil
     end
 
+    it "should retry if a partial result is returned" do
+      expect(@node).to receive(:getblock).ordered.and_raise(Node::PartialFileError)
+      expect(@node).to receive(:getblock).ordered.and_call_original
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+    end
+
+    it "should give up if a partial result is returned twice" do
+      expect(@node).to receive(:getblock).twice.and_raise(Node::PartialFileError)
+      expect { LightningTransaction.check!(coin: :btc, max: 1) }.to raise_error(Node::PartialFileError)
+    end
   end
 
   describe "check_public_channels!" do
