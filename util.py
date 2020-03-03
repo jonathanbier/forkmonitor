@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import importlib.util
+from pathlib import Path
 
 VENDOR_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor"
 
@@ -76,9 +77,11 @@ class TestWrapper(BitcoinTestFramework):
 
     def setup_nodes(self):
         self.add_nodes(self.num_nodes,
-            versions=[190001] * self.num_nodes,
-            binary=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoind")] * self.num_nodes,
-            binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli")] * self.num_nodes,
+            versions=[199900] * self.num_nodes,
+            # binary=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoind")] * self.num_nodes,
+            # binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli")] * self.num_nodes,
+            binary=[str(Path.home()) + "/bin/bitcoind"] * self.num_nodes,
+            binary_cli=[str(Path.home()) + "/bin/bitcoin-cli"] * self.num_nodes,
         )
         self.start_nodes()
 

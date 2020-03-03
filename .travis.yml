@@ -12,10 +12,16 @@ cache:
   directories:
   - /home/travis/.rvm/
   - $HOME/libzmq
+  - $HOME/bin
+  - $HOME/include
+  - $HOME/lib
+  - $HOME/share
 before_install:
-  - cp $TRAVIS_BUILD_DIR/vendor/bitcoin-config.ini $TRAVIS_BUILD_DIR/vendor/bitcoin/test/config.ini
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
-  - cd $TRAVIS_BUILD_DIR/vendor/bitcoin && contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
+  - cp $TRAVIS_BUILD_DIR/vendor/bitcoin-config.ini $TRAVIS_BUILD_DIR/vendor/bitcoin/test/config.ini
+  - sudo apt-get install --no-install-recommends --no-upgrade -y build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 libevent-dev libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-test-dev libboost-thread-dev libdb-dev libdb++-dev
+  - # cd $TRAVIS_BUILD_DIR/vendor/bitcoin && contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
+  - $TRAVIS_BUILD_DIR/bitcoind.sh
   - yarn
 before_script:
   - bundle exec rake db:create RAILS_ENV=test
