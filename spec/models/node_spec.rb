@@ -302,7 +302,7 @@ RSpec.describe Node, :type => :model do
 
     describe "libbitcoin" do
       before do
-        @node = build(:node, client_type: :libbitcoin)
+        @node = build(:node, client_type: :libbitcoin, version: nil)
         @node.client.mock_client_type(:libbitcoin)
         @node.client.mock_version(nil)
         @node.poll!
@@ -713,7 +713,7 @@ RSpec.describe Node, :type => :model do
   describe "get_pool_for_block!" do
     before do
       @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
-      @node = create(:node, coin: "BTC", block: @block, version: 170100)
+      @node = create(:node, coin: "BTC", block: @block)
     end
 
     it "should fetch the block" do
@@ -804,7 +804,7 @@ RSpec.describe Node, :type => :model do
 
     describe "restore_mirror" do
       before do
-        @node = build(:node_with_mirror, version: 170100)
+        @node = build(:node_with_mirror)
         @node.mirror_client.mock_set_height(560178)
         @node.poll_mirror!
         @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")

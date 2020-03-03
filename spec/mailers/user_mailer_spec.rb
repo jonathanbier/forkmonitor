@@ -49,7 +49,7 @@ RSpec.describe UserMailer, type: :mailer do
 
   describe "version bits notify" do
     let(:user) { create(:user) }
-    let(:node ) { create(:node_with_block, version: 170100) }
+    let(:node ) { create(:node_with_block,) }
     let(:mail) { UserMailer.with(user: user, bit: 1, tally: 2, window: 3, block: node.block).version_bits_email }
 
     it "renders the headers" do
