@@ -11,15 +11,16 @@ class BitcoinClientPython
     @node = node
   end
 
- def addnode(node, command)
-   raise Error, "Set Python node" unless @node != nil
-   begin
-     throw "Specify node and node_id" if node.nil? || command.nil?
-     return @node.addnode(node, command)
-   rescue Error => e
-     raise Error, "addnode(#{ node }, #{ command}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-   end
- end
+  def mock_connection_error(status)
+  def addnode(node, command)
+    raise Error, "Set Python node" unless @node != nil
+    begin
+      throw "Specify node and node_id" if node.nil? || command.nil?
+      return @node.addnode(node, command)
+    rescue Error => e
+      raise Error, "addnode(#{ node }, #{ command}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
 
   # TODO: add address, node_id params, this can only be called from Python atm
   def disconnectnode(params)
