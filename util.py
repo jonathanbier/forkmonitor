@@ -45,7 +45,8 @@ class TestWrapper(BitcoinTestFramework):
               pdbonfailure=False,
               usecli=False,
               perf=False,
-              randomseed=None):
+              randomseed=None,
+              extra_args=None):
 
         self.setup_clean_chain = setup_clean_chain
         self.num_nodes = num_nodes
@@ -53,6 +54,7 @@ class TestWrapper(BitcoinTestFramework):
         self.rpc_timeout = rpc_timeout
         self.supports_cli = supports_cli
         self.bind_to_localhost_only = bind_to_localhost_only
+        self.extra_args = extra_args
 
         self.options = argparse.Namespace
         self.options.nocleanup = nocleanup
@@ -82,6 +84,7 @@ class TestWrapper(BitcoinTestFramework):
             # binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.19.0.1/bin/bitcoin-cli")] * self.num_nodes,
             binary=[str(Path.home()) + "/bin/bitcoind"] * self.num_nodes,
             binary_cli=[str(Path.home()) + "/bin/bitcoin-cli"] * self.num_nodes,
+            extra_args=self.extra_args,
         )
         self.start_nodes()
 
