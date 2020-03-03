@@ -8,6 +8,7 @@ class Node < ApplicationRecord
   class NoTxIndexError < Error; end
   class TxNotFoundError < Error; end
   class ConnectionError < Error; end
+  class PartialFileError < Error; end
 
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
@@ -388,6 +389,8 @@ class Node < ApplicationRecord
       client.getblock(block_hash, verbosity)
     rescue BitcoinClient::ConnectionError
       raise ConnectionError
+    rescue BitcoinClient::PartialFileError
+      raise PartialFileError
     end
   end
 

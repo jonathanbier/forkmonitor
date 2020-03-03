@@ -1,12 +1,14 @@
 class BitcoinClientPython
   class Error < StandardError; end
   class ConnectionError < Error; end
+  class PartialFileError < Error; end
 
   def initialize(node_id, name_with_version, client_type)
     @client_type = client_type
     @node_id = node_id
     @name_with_version = name_with_version
     @mock_connection_error = false
+    @mock_partial_file_error = false
   end
 
   def set_python_node(node)
@@ -15,6 +17,10 @@ class BitcoinClientPython
 
   def mock_connection_error(status)
     @mock_connection_error = status
+  end
+
+  def mock_partial_file_error(status)
+    @mock_partial_file_error = status
   end
 
   def addnode(node, command)
@@ -51,6 +57,7 @@ class BitcoinClientPython
   def getblock(block_hash, verbosity)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
+    raise PartialFileError if @mock_partial_file_error
     raise Error, "Specify block hash" unless block_hash.present?
     begin
       return @node.getblock(blockhash=block_hash, verbosity=verbosity)

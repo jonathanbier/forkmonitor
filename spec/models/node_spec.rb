@@ -7,6 +7,7 @@ RSpec.describe Node, :type => :model do
   before do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    stub_const("BitcoinClient::PartialFileError", BitcoinClientPython::PartialFileError)
   end
 
   describe "version" do
@@ -81,6 +82,11 @@ RSpec.describe Node, :type => :model do
     it "should throw ConnectionError" do
       @node.client.mock_connection_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::ConnectionError
+    end
+
+    it "should throw PartialFileError" do
+      @node.client.mock_partial_file_error(true)
+      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::PartialFileError
     end
   end
 
