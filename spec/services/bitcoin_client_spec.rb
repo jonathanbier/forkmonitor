@@ -40,6 +40,10 @@ describe BitcoinClient do
         expect(@client).to receive(:request).with("getblock", "hash", 1)
         @client.getblock("hash", 1)
       end
+      it "should catch connection error" do
+        expect(@client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, "couldnt_connect")
+        expect { @client.getblock("hash", 1) }.to raise_error(BitcoinClient::ConnectionError)
+      end
     end
 
     describe "getblockheader" do

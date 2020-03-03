@@ -7,6 +7,7 @@ class Node < ApplicationRecord
   class InvalidCoinError < Error; end
   class NoTxIndexError < Error; end
   class TxNotFoundError < Error; end
+  class ConnectionError < Error; end
 
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
@@ -383,7 +384,11 @@ class Node < ApplicationRecord
     if verbosity > 0 && (btcd? || (core? && version <= 149999))
       verbosity = true
     end
-    client.getblock(block_hash, verbosity)
+    begin
+      client.getblock(block_hash, verbosity)
+    rescue BitcoinClient::ConnectionError
+      raise ConnectionError
+    end
   end
 
   def self.poll!(options = {})

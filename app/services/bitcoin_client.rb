@@ -3,6 +3,7 @@ require 'digest'
 
 class BitcoinClient
   class Error < StandardError; end
+  class ConnectionError < Error; end
 
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -115,10 +116,10 @@ class BitcoinClient
   end
 
   def getblock(hash, verbosity)
-
     begin
       return request("getblock", hash, verbosity)
     rescue Bitcoiner::Client::JSONRPCError => e
+      raise ConnectionError if e.message.include?("couldnt_connect")
       raise Error, "getblock(#{hash},#{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end

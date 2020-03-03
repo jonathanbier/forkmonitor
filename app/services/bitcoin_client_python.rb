@@ -1,10 +1,12 @@
 class BitcoinClientPython
   class Error < StandardError; end
+  class ConnectionError < Error; end
 
   def initialize(node_id, name_with_version, client_type)
     @client_type = client_type
     @node_id = node_id
     @name_with_version = name_with_version
+    @mock_connection_error = false
   end
 
   def set_python_node(node)
@@ -12,8 +14,12 @@ class BitcoinClientPython
   end
 
   def mock_connection_error(status)
+    @mock_connection_error = status
+  end
+
   def addnode(node, command)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       throw "Specify node and node_id" if node.nil? || command.nil?
       return @node.addnode(node, command)
@@ -27,6 +33,7 @@ class BitcoinClientPython
     address = params["address"]
     node_id = params["nodeid"]
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       throw "Specify address or node_id" if address.nil? && node_id.nil?
       if address.nil?
@@ -43,6 +50,7 @@ class BitcoinClientPython
 
   def getblock(block_hash, verbosity)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     raise Error, "Specify block hash" unless block_hash.present?
     begin
       return @node.getblock(blockhash=block_hash, verbosity=verbosity)
@@ -53,6 +61,7 @@ class BitcoinClientPython
 
   def getblockchaininfo
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getblockchaininfo()
     rescue PyCall::PyError => e
@@ -62,6 +71,7 @@ class BitcoinClientPython
 
   def getinfo
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getinfo()
     rescue NoMethodError => e
@@ -73,6 +83,7 @@ class BitcoinClientPython
 
   def getpeerinfo
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getpeerinfo()
     rescue PyCall::PyError => e
@@ -82,6 +93,7 @@ class BitcoinClientPython
 
   def getnetworkinfo
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getnetworkinfo()
     rescue Error => e
@@ -91,6 +103,7 @@ class BitcoinClientPython
 
   def generate(n)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       n.times do
         coinbase_dest = @node.getnewaddress()
@@ -103,6 +116,7 @@ class BitcoinClientPython
 
   def getchaintips
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getchaintips()
     rescue Error => e
@@ -112,6 +126,7 @@ class BitcoinClientPython
 
   def getpeerinfo
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getpeerinfo()
     rescue Error => e
@@ -121,6 +136,7 @@ class BitcoinClientPython
 
   def getbestblockhash
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     begin
       return @node.getbestblockhash()
     rescue Error => e
@@ -130,6 +146,7 @@ class BitcoinClientPython
 
   def getrawtransaction(hash, verbose = false, block_hash = nil)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     raise Error, "Specify transaction hash" unless hash.present?
     begin
       if block_hash.present?
@@ -144,6 +161,7 @@ class BitcoinClientPython
 
   def invalidateblock(block_hash)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     raise Error, "Specify block hash" unless block_hash.present?
     begin
       return @node.invalidateblock(blockhash=block_hash)
@@ -154,6 +172,7 @@ class BitcoinClientPython
 
   def reconsiderblock(block_hash)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     raise Error, "Specify block hash" unless block_hash.present?
     begin
       return @node.reconsiderblock(blockhash=block_hash)
@@ -164,6 +183,7 @@ class BitcoinClientPython
 
   def setnetworkactive(state)
     raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
     raise Error, "Set state to false or true" unless [false, true].include?(state)
     begin
       return @node.setnetworkactive(state)

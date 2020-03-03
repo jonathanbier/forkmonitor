@@ -6,6 +6,7 @@ RSpec.describe Node, :type => :model do
 
   before do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
+    stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
   end
 
   describe "version" do
@@ -65,7 +66,6 @@ RSpec.describe Node, :type => :model do
     end
 
     before do
-      stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
       test.setup()
       @node = create(:node_python)
       @node.client.set_python_node(test.nodes[0])
@@ -76,6 +76,11 @@ RSpec.describe Node, :type => :model do
     it "should call getblock on the client" do
       expect(@node.client).to receive("getblock").and_call_original()
       @node.getblock(@block_hash, 1)
+    end
+
+    it "should throw ConnectionError" do
+      @node.client.mock_connection_error(true)
+      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::ConnectionError
     end
   end
 
