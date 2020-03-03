@@ -78,7 +78,15 @@ class LightningTransaction < ApplicationRecord
         block.update timestamp: block_info["time"], mediantime: block_info["mediantime"]
       end
 
-      raw_block = node.client.getblock(block.block_hash, 0)
+      begin
+        raw_block = node.getblock(block.block_hash, 0)
+      rescue Node::ConnectionError
+        # The node probably crashed or temporarly ran out of RPC slots. Mark node
+        # as unreachable and gracefull exit
+        puts "Lost connection to #{ node.name_with_version }. Try again later." unless Rails.env.test?
+        node.update unreachable_since: Time.now
+        return false
+      end
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       puts "Block #{ block.height } (#{ block.block_hash }, #{ parsed_block.tx.count } txs)" unless Rails.env.test?
       MaybeUncoopTransaction.check!(node, block, parsed_block)
@@ -94,6 +102,8 @@ class LightningTransaction < ApplicationRecord
     if max_exceeded
       raise "More than #{ options[:max] } blocks behind for lightning checks, please manually check blocks before #{ blocks_to_check.first.height } (#{ blocks_to_check.first.block_hash })"
     end
+
+    return true
   end
 
   def self.check_public_channels!

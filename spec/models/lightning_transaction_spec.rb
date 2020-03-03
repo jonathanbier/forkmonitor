@@ -42,28 +42,35 @@ RSpec.describe LightningTransaction, type: :model do
 
     it "should fetch the raw block" do
       expect(@node.client).to receive(:getblock).with(@block.block_hash, 0).and_call_original
-      LightningTransaction.check!(coin: :btc, max: 1)
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call PenaltyTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      LightningTransaction.check!({coin: :btc, max: 1})
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call SweepTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      LightningTransaction.check!({coin: :btc, max: 1})
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it "should call MaybeUncoopTransaction.check! with the parsed block" do
       raw_block = @node.client.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      LightningTransaction.check!({coin: :btc, max: 1})
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+    end
+
+    it "should gracefully fail if node connection is lost" do
+      expect(@node).to receive(:getblock).and_raise(Node::ConnectionError)
+      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(false)
+      @node.reload
+      expect(@node.unreachable_since).not_to be_nil
     end
 
   end
