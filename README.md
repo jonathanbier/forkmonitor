@@ -100,6 +100,12 @@ cp ../bitcoin-config.ini test/config.ini
 contrib/devtools/previous_release.sh -b -t .. v0.19.0.1
 ```
 
+Currently the tests require a custom compiled version of Bitcoin Core, so instead:
+
+```sh
+TRAVIS_BUILD_DIR=$PWD ./bitcoind.sh
+```
+
 Edit `bitcoin/test/config.ini` and replace `$TRAVIS_BUILD_DIR` with the root path
 of this project.
 
