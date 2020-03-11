@@ -12,7 +12,6 @@ class BitcoinClientMock
     @version = 170100
     @coin = "BTC"
     @client_type = :core
-    @chaintips = []
     @extra_inflation = 0
     @networkactive = true
     @node_id = node_id
@@ -29,20 +28,6 @@ class BitcoinClientMock
       560180 => "0000000000000000002d802cf5fdbbfa94926be7f03b40be75eb6c3c13cbc8e4",
       560181 => "0000000000000000002641ea2457674fea1b2fc5fcfe6fde416dca2a0e13aec2",
       560182 =>   "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377"
-    }
-    @fork_block_hashes = {
-      560177 => "0000000000000000000000000000000000000000000000000000000000560177",
-      560178 => "0000000000000000000000000000000000000000000000000000000000560178"
-    }
-    @fork_block_info = {
-        "0000000000000000000000000000000000000000000000000000000000560177" => {
-            chainwork: "000000000000000000000000000000000000000004dac9d20e304bee0e69b31a",
-            previousblockhash: nil # connected to main chain
-        },
-        "0000000000000000000000000000000000000000000000000000000000560178" => {
-            chainwork: "000000000000000000000000000000000000000004dacf2c0c949abdc5c2c38f",
-            previousblockhash: "0000000000000000000000000000000000000000000000000000000000560177"
-        }
     }
     @blocks = {}
     @block_headers = {}
@@ -85,32 +70,9 @@ class BitcoinClientMock
   end
 
   def mock_set_height(height)
-    # If a mock fork exists at previous height, add it as a valid-fork
-    fork_block_height = height - 1
-    fork_block = @fork_block_hashes[fork_block_height]
-    # Find the fork tip
-    while @fork_block_hashes[fork_block_height + 1].present? && @blocks[@fork_block_hashes[fork_block_height + 1]].present?
-      fork_block_height += 1
-      fork_block = @fork_block_hashes[fork_block_height]
-    end
-    if @blocks[fork_block].present?
-      @chaintips.push({
-          "height" => fork_block_height,
-          "hash" => fork_block,
-          "branchlen" => 1,
-          "status" => "valid-fork"
-      })
-    end
-    @chaintips.delete_if { |t| t["status"] == "active" }
     @height = height
     @block_hash = @block_hashes[@height]
     @best_height = height
-    @chaintips.push({
-        "height" => height,
-        "hash" => @block_hash,
-        "branchlen" => 0,
-        "status" => "active"
-    })
   end
 
   def mock_unreachable
@@ -129,9 +91,6 @@ class BitcoinClientMock
     @peer_count = peer_count
   end
 
-  def mock_chaintips(tips)
-    @chaintips = tips
-  end
 
   def mock_set_extra_inflation(amount)
     @extra_inflation = amount
@@ -455,7 +414,7 @@ class BitcoinClientMock
     res[@version]
   end
 
-  def getblockhash(height) # does not take forks into account
+  def getblockhash(height)
     @block_hashes[height]
   end
 
@@ -477,7 +436,7 @@ class BitcoinClientMock
     end
   end
 
-  def getblockheader(hash_or_height) # height argument does not take fork into account
+  def getblockheader(hash_or_height)
     if @client_type == :libbitcoin
       raise Error, "Must provide height or hash" unless hash_or_height.present?
       if hash_or_height.is_a?(Numeric)
@@ -497,59 +456,6 @@ class BitcoinClientMock
     end
   end
 
-  def getchaintips
-    @chaintips
-  end
-
-  def gettxoutsetinfo # does not take forks into account
-    if @height == 560176
-      return {
-        "height" => @height, # Actually 572023
-        "bestblock" => @block_hashes[@height],
-        "transactions" => 29221340,
-        "txouts" => 53336961,
-        "bogosize" => 4018808071,
-        "hash_serialized_2" => "9bd2d3a6d6aa32e68f3c48286986a1c8771180f2c46bb316bb0073b194835d6b",
-        "disk_size" => 3202897585,
-        "total_amount" => 17650117.32457854
-      }
-    elsif @height == 560177 # Actually 572023
-      return {
-        "height" => @height, # Actually 572023
-        "bestblock" => @block_hashes[@height],
-        "transactions" => 29221340,
-        "txouts" => 53336961,
-        "bogosize" => 4018808071,
-        "hash_serialized_2" => "9bd2d3a6d6aa32e68f3c48286986a1c8771180f2c46bb316bb0073b194835d6b",
-        "disk_size" => 3202897585,
-        "total_amount" => 17650117.32457854 + 12.5
-      }
-    elsif @height == 560178
-      return {
-        "height" => @height, # Actually 572025,
-        "bestblock" => @block_hashes[@height],
-        "transactions" => 29222816,
-        "txouts" => 53340690,
-        "bogosize" => 4019083859,
-        "hash_serialized_2" => "f970cc0aabb3adff4e18a75460ef58c91eb8a181ec97e0d3d8acb71f55402c0a",
-        "disk_size" => 3147778574,
-        "total_amount" => 17650142.32457854 + @extra_inflation * 2
-      }
-    elsif @height == 560179
-      return {
-        "height" => @height, # Actually 572025,
-        "bestblock" => @block_hashes[@height],
-        "transactions" => 29222816,
-        "txouts" => 53340690,
-        "bogosize" => 4019083859,
-        "hash_serialized_2" => "f970cc0aabb3adff4e18a75460ef58c91eb8a181ec97e0d3d8acb71f55402c0a",
-        "disk_size" => 3147778574,
-        "total_amount" => 17650142.32457854 + 12.5 + @extra_inflation * 3
-      }
-    end
-    throw "No mock txoutset for height #{ @height }"
-  end
-
   def getrawtransaction(tx_hash, verbose = false, block_hash = nil)
     raw_tx = @transactions[tx_hash]
     if !verbose
@@ -561,94 +467,11 @@ class BitcoinClientMock
   end
 
   def invalidateblock(block_hash)
-    header = @block_headers[block_hash]
-    throw "Block #{ block_hash } not found" unless header.present?
-    # Mark the current tip as invalid:
-    throw "No active chaintip" unless @chaintips.find { |t| t["status"] == "active" }
-    @chaintips.map! { |t|
-      if t["status"] == "active"
-        t["status"] = "invalid"
-      end
-      t
-    }
-    # Determine the new active chaintip. This is 1 below the previously active
-    # tip, unless:
-    # 1. there is a valid fork to jump to at the original height
-    # 2. there is a valid fork at height - 1 AND it was seen earlier
-    # TODO: this only allows for one mock fork, because we don't actually check the ancestory
-    fork = @chaintips.find { |t| t["status"] == "valid-fork" && t["height"] == header["height"]}
-    if fork.present?
-      @chaintips.map! { |t|
-        if t["status"] == "valid-fork"
-          t["status"] = "active"
-          t["branchlen"] = 0
-        end
-        t
-      }
-      @block_hash = fork["hash"]
-
-      # Add parent of invalidated block as a valid-fork
-      @chaintips.push({
-          "height" => header["height"] - 1,
-          "hash" => @block_hashes[header["height"] - 1],
-          "branchlen" => 1,
-          "status" => "valid-fork"
-      })
-
-      @height = header["height"]
-      @best_height = @height
-    else
-      mock_set_height(header["height"] - 1)
-      fork = @chaintips.find { |t| t["status"] == "valid-fork" && t["height"] == header["height"] - 1}
-      if fork.present?
-        # If valid-fork is older (real world nodes check block was seen earlier, not the mediantime),
-        # switch to it. Otherwise stay on the main chain.
-        if @block_headers[fork["hash"]]["mediantime"] < @block_headers[@block_hashes[header["height"] - 1]]["mediantime"]
-          @chaintips.map! { |t|
-            if t["status"] == "active"
-              t["status"] = "valid-fork"
-              t["branchlen"] = 1
-            elsif t["status"] == "valid-fork"
-              t["status"] = "active"
-              t["branchlen"] = 0
-            end
-            t
-          }
-          @block_hash = fork["hash"]
-        end
-      end
-    end
+    raise Error, "Not implemented"
   end
 
   def reconsiderblock(block_hash)
-    # Do nothing if it's a fork
-    return if @fork_block_hashes.include?(block_hash)
-
-    active_chaintip = @chaintips.find { |t|
-      t["status"] == "active"
-    }
-
-    header = @block_headers[block_hash]
-    throw "Block #{ block_hash } not found" unless header.present?
-    # Mark the invalid chaintip (if any) as active, unless the current chaintip is higher
-    activated_block = nil
-    @chaintips.map! { |t|
-      if t["status"] == "invalid"
-        if active_chaintip && active_chaintip["height"] >= t["height"]
-          t["status"] = "valid-fork"
-        else
-          t["status"] = "active"
-          @height = t["height"]
-          @best_height = @height
-          activated_block = t["hash"]
-        end
-      end
-      t
-    }
-    if activated_block.present?
-      # Remove previous active tip
-      @chaintips.delete_if { |t| t["status"] == "active" && t["hash"] != activated_block}
-    end
+    raise Error, "Not implemented"
   end
 
   def mock_add_block(height, mediantime, chainwork, block_hash=nil, previousblockhash=nil, version=536870912) # versionHex 0x20000000
@@ -670,11 +493,6 @@ class BitcoinClientMock
     @blocks[block_hash]["tx"] = []
     @blocks[block_hash]["nTx"] = 0
     @blocks[block_hash]["size"] = 100
-  end
-
-  def mock_add_fork_block(height, relative_time = 1)
-      block_hash = @fork_block_hashes[height]
-      mock_add_block(height, @block_headers[@block_hashes[height]]["mediantime"] + relative_time, @fork_block_info[block_hash][:chainwork], block_hash, @fork_block_info[block_hash][:previousblockhash])
   end
 
   def mock_add_transaction(block_hash, tx_hash, raw_transaction)
