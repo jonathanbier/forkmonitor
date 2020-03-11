@@ -240,6 +240,7 @@ RSpec.describe Chaintip, type: :model do
         @nodeA.poll!
         @nodeB.poll!
         test.connect_nodes(@nodeA.client, 1)
+        test.sync_blocks()
       end
 
       it "should add chaintip entries" do
