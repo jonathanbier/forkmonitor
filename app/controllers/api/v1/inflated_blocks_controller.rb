@@ -6,7 +6,7 @@ class Api::V1::InflatedBlocksController < ApplicationController
   def index
     if @coin.present?
       latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
-      if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+      if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
         @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[@coin])
         response.headers['Content-Range'] = @inflated_blocks.count
         render json: @inflated_blocks

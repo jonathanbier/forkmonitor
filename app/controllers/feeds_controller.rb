@@ -5,7 +5,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @inflated_blocks = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
         end
       end
@@ -16,7 +16,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
         end
       end
@@ -27,7 +27,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = Lag.order(updated_at: :desc).first
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @lagging_nodes = Lag.where(publish: true).order(created_at: :desc)
         end
       end
@@ -38,7 +38,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = VersionBit.order(updated_at: :desc).first
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @version_bits = VersionBit.all.order(created_at: :desc)
         end
       end
@@ -47,7 +47,7 @@ class FeedsController < ApplicationController
 
   def stale_candidates
     latest = StaleCandidate.last_updated_cached(params[:coin])
-    if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+    if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
       @page = (params[:page] || 1).to_i
       @page_count = Rails.cache.fetch "StaleCandidate.count(#{@coin})" do
         (StaleCandidate.where(coin: @coin).count / StaleCandidate::PER_PAGE.to_f).ceil
@@ -65,7 +65,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = PenaltyTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_penalties = []
           if @coin == :btc
             @ln_penalties = PenaltyTransaction.all_with_block_cached
@@ -79,7 +79,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = SweepTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_sweeps = []
           if @coin == :btc
             @page = (params[:page] || 1).to_i
@@ -97,7 +97,7 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         latest = MaybeUncoopTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at), public: true)
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_uncoops = []
           if @coin == :btc
             @page = (params[:page] || 1).to_i
