@@ -66,6 +66,18 @@ class BitcoinClientPython
     end
   end
 
+  def getblockheader(block_hash, verbose=true)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise PartialFileError if @mock_partial_file_error
+    raise Error, "Specify block hash" unless block_hash.present?
+    begin
+      return @node.getblockheader(blockhash=block_hash, verbose=verbose)
+    rescue Error => e
+      raise Error, "getblockheader(#{ block_hash }, #{ verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getblockchaininfo
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
