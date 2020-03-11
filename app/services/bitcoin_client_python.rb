@@ -166,6 +166,16 @@ class BitcoinClientPython
     end
   end
 
+  def gettxoutsetinfo
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      return @node.gettxoutsetinfo()
+    rescue Error => e
+      raise Error, "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def invalidateblock(block_hash)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
