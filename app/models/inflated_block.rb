@@ -86,6 +86,7 @@ class InflatedBlock < ApplicationRecord
             elsif tally > 0
               # Fetch blocks for any newly activated chaintips
               node.poll_mirror!
+              block.reload
             end
             puts "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })" unless Rails.env.test?
             blocks_to_invalidate = []
