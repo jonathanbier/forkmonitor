@@ -1,35 +1,35 @@
 require 'rails_helper'
 require "bitcoind_helper"
 
-def setup_python_nodes
-  @use_python_nodes = true
-
-  stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
-  stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
-  test.setup(num_nodes: 2, extra_args: [[], ["-con_nsubsidyhalvinginterval=10"]])
-  @nodeA = create(:node_python)
-  @nodeA.client.set_python_node(test.nodes[0])
-  @nodeB = create(:node_python)
-  @nodeB.client.set_python_node(test.nodes[1])
-
-  @nodeA.client.generate(2)
-  test.sync_blocks()
-
-  @nodeA.poll!
-  @nodeA.reload
-  assert_equal(@nodeA.block.height, 2)
-  assert_equal(@nodeA.block.parent.height, 1)
-  assert_equal(Chaintip.count, 0)
-
-  @nodeB.poll!
-  @nodeB.reload
-  assert_equal(@nodeB.block.height, 2)
-  assert_equal(@nodeB.block.parent.height, 1)
-  assert_equal(Chaintip.count, 0)
-end
-
 RSpec.describe Chaintip, type: :model do
   let(:test) { TestWrapper.new() }
+
+  def setup_python_nodes
+    @use_python_nodes = true
+
+    stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
+    stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    test.setup(num_nodes: 2, extra_args: [[], ["-con_nsubsidyhalvinginterval=10"]])
+    @nodeA = create(:node_python)
+    @nodeA.client.set_python_node(test.nodes[0])
+    @nodeB = create(:node_python)
+    @nodeB.client.set_python_node(test.nodes[1])
+
+    @nodeA.client.generate(2)
+    test.sync_blocks()
+
+    @nodeA.poll!
+    @nodeA.reload
+    assert_equal(@nodeA.block.height, 2)
+    assert_equal(@nodeA.block.parent.height, 1)
+    assert_equal(Chaintip.count, 0)
+
+    @nodeB.poll!
+    @nodeB.reload
+    assert_equal(@nodeB.block.height, 2)
+    assert_equal(@nodeB.block.parent.height, 1)
+    assert_equal(Chaintip.count, 0)
+  end
 
   after do
     if @use_python_nodes
@@ -42,7 +42,7 @@ RSpec.describe Chaintip, type: :model do
       setup_python_nodes()
     end
 
-    it "should chreate fresh chaintip for a new node" do
+    it "should create fresh chaintip for a new node" do
       tip = Chaintip.process_active!(@nodeA, @nodeA.block)
       expect(tip.id).not_to be_nil
     end
@@ -63,7 +63,7 @@ RSpec.describe Chaintip, type: :model do
       expect(tip_after.block).to eq(@nodeA.block)
     end
 
-    it "should chreate fresh chaintip for the different node" do
+    it "should create fresh chaintip for the different node" do
       tip_A = Chaintip.process_active!(@nodeA, @nodeA.block)
       tip_B = Chaintip.process_active!(@nodeB, @nodeB.block)
       expect(tip_A).not_to eq(tip_B)
