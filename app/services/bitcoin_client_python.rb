@@ -9,6 +9,7 @@ class BitcoinClientPython
     @name_with_version = name_with_version
     @mock_connection_error = false
     @mock_partial_file_error = false
+    @mock_extra_inflation = 0
   end
 
   def set_python_node(node)
@@ -21,6 +22,10 @@ class BitcoinClientPython
 
   def mock_partial_file_error(status)
     @mock_partial_file_error = status
+  end
+
+  def mock_set_extra_inflation(amount)
+    @mock_extra_inflation = amount
   end
 
   def addnode(node, command)
@@ -182,7 +187,11 @@ class BitcoinClientPython
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     begin
-      return @node.gettxoutsetinfo()
+      info = @node.gettxoutsetinfo()
+      if @mock_extra_inflation > 0
+        info = Hash[ info.collect {|k,v| [k, k == "total_amount" ? (v.to_f + @mock_extra_inflation) : v ] } ]
+      end
+      return info
     rescue Error => e
       raise Error, "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
