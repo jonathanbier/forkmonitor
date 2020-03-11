@@ -84,7 +84,7 @@ class InflatedBlock < ApplicationRecord
             if tally > (Rails.env.test? ? 2 : 100)
               throw_unable_to_roll_back!(node, block)
             elsif tally > 0
-              # Fetch blocks for any newly activated chaintips
+              puts "Fetch blocks for any newly activated chaintips..." unless Rails.env.test?
               node.poll_mirror!
               block.reload
             end
@@ -95,10 +95,10 @@ class InflatedBlock < ApplicationRecord
               puts "Invalidate tip to jump to another fork" unless Rails.env.test?
               blocks_to_invalidate.append(active_tip_block)
             else
-              # Check if active chaintip descends from target block, otherwise invalidate it
+              puts "Check if active chaintip descends from target block, otherwise invalidate it..." unless Rails.env.test?
               active_tip_ancestor = active_tip_block
               if block.height < active_tip["height"]
-                puts "Target block height is below active tip height" unless  Rails.env.test?
+                puts "Target block height is below active tip height" unless Rails.env.test?
                 ancestor = nil
                 while !ancestor && active_tip_ancestor.present? do
                   if active_tip_ancestor.parent.height == block.height
@@ -146,7 +146,7 @@ class InflatedBlock < ApplicationRecord
           unless invalidated_block_hashes.empty?
             puts "Restore chain to tip..." unless Rails.env.test?
             invalidated_block_hashes.each do |block_hash|
-              puts "Reconsider block #{ block_hash }" unless Rails.env.test?
+              puts "Reconsider block #{ block_hash } (#{ block.height })" unless Rails.env.test?
               node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
             end
             invalidated_block_hashes = []
@@ -197,6 +197,7 @@ class InflatedBlock < ApplicationRecord
         node.update mirror_rest_until: 60.seconds.from_now
         raise # continue throwing error
       end
+      puts "Resume p2p networking..." unless Rails.env.test?
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
       # Leave node alone for a bit:
@@ -210,6 +211,7 @@ class InflatedBlock < ApplicationRecord
 
   def self.throw_unable_to_roll_back!(node, block, blocks_to_invalidate = nil)
     error = "Unable to roll active #{ block.coin.upcase } chaintip to #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
+    pp node.mirror_client.getchaintips unless Rails.env.test?
     if blocks_to_invalidate.present?
       error += "Invalidated blocks: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
     end
