@@ -1,6 +1,6 @@
 class Chaintip < ApplicationRecord
   belongs_to :block, optional: false
-  belongs_to :node, optional: false
+  belongs_to :node, optional: false, touch: true
   belongs_to :parent_chaintip, class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', optional: true, :dependent => :destroy  # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
   has_many :children,  class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', :dependent => :nullify
 
