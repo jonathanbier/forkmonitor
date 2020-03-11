@@ -400,54 +400,73 @@ class Node < ApplicationRecord
 
   def self.poll!(options = {})
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
-      bitcoin_core_nodes = self.bitcoin_core_by_version
-      bitcoin_core_nodes.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-        node.poll!
-      end
+      begin
+        bitcoin_core_nodes = self.bitcoin_core_by_version
+        bitcoin_core_nodes.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+          node.poll!
+        end
 
-      self.bitcoin_core_unknown_version.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
-        node.poll!
-      end
+        self.bitcoin_core_unknown_version.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
+          node.poll!
+        end
 
-      bitcoin_alternative_implementations.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        # Skip libbitcoin in repeat poll, due to ZMQ socket errors
-        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-        node.poll!
+        bitcoin_alternative_implementations.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          # Skip libbitcoin in repeat poll, due to ZMQ socket errors
+          next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+          puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+          node.poll!
+        end
+
+        self.check_chaintips!(:btc)
+        self.check_stale_blocks!(:btc)
       end
     end
 
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
-      self.testnet_by_version.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-        node.poll!
+    begin
+      if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
+        self.testnet_by_version.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+          node.poll!
+        end
       end
+
+      self.check_chaintips!(:tbtc)
+      self.check_stale_blocks!(:tbtc)
     end
 
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
-      self.bch_by_version.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-        node.poll!
+    begin
+      if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
+        self.bch_by_version.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+          node.poll!
+        end
       end
+
+      self.check_chaintips!(:bch)
+      self.check_stale_blocks!(:bch)
     end
 
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
-      self.bsv_by_version.each do |node|
-        next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
-        puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
-        node.poll!
+    begin
+      if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
+        self.bsv_by_version.each do |node|
+          next if options[:unless_fresh] && node.updated_at > 5.minutes.ago
+          puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
+          node.poll!
+        end
       end
+
+      self.check_chaintips!(:bsv)
+      self.check_stale_blocks!(:bsv)
     end
 
     self.check_laggards!(options)
-    self.check_chaintips!(options)
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       bitcoin_core_nodes.first.check_versionbits!
@@ -545,8 +564,9 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.check_chaintips!(options)
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
+  def self.check_chaintips!(coin)
+    case coin
+    when :btc
       self.bitcoin_core_by_version.each do |node|
         node.reload
         Chaintip.check!(node)
@@ -556,49 +576,47 @@ class Node < ApplicationRecord
         Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:btc)
-    end
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
+    when :tbtc
       self.testnet_by_version.each do |node|
         node.reload
         Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:tbtc)
-    end
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
+    when :bch
       self.bch_by_version.each do |node|
         node.reload
         Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:bch)
-    end
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
+    when :bsv
       self.bsv_by_version.each do |node|
         node.reload
         Chaintip.check!(node)
       end
       Node.prune_empty_chaintips!(:bsv)
+    else
+      throw Error, "Unknown coin"
     end
+  end
 
+  def self.check_stale_blocks!(coin)
     # Look for potential stale blocks, i.e. more than one block at the same height
-    for coin in SUPPORTED_COINS do
-      next if options[:coins] && !options[:coins].empty? && !options[:coins].include?(coin.to_s.upcase)
-      tip_height = Block.where(coin: coin).maximum(:height)
-      next if tip_height.nil?
-      Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
-        @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
-        if @stale_candidate.notified_at.nil?
-          User.all.each do |user|
-            if ![:tbtc].include?(coin) # skip email notification for testnet
-              UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
-            end
+    tip_height = Block.where(coin: coin).maximum(:height)
+    return if tip_height.nil?
+    Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
+      @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
+      if @stale_candidate.notified_at.nil?
+        User.all.each do |user|
+          if ![:tbtc].include?(coin) # skip email notification for testnet
+            UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
           end
-          @stale_candidate.update notified_at: Time.now
-          if ![:tbtc].include?(coin) # skip push notification for testnet
-            Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
-                               "#{ @stale_candidate.coin.upcase } stale candidate",
-                               "At height #{ @stale_candidate.height }"
-            )
-          end
+        end
+        @stale_candidate.update notified_at: Time.now
+        if ![:tbtc].include?(coin) # skip push notification for testnet
+          Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
+                             "#{ @stale_candidate.coin.upcase } stale candidate",
+                             "At height #{ @stale_candidate.height }"
+          )
         end
       end
     end

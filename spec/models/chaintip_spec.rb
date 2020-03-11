@@ -229,8 +229,6 @@ RSpec.describe Chaintip, type: :model do
     end
 
     describe "one active and one valid-fork chaintip" do
-      let(:user) { create(:user) }
-
       before do
         test.disconnect_nodes(@nodeA.client, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
@@ -259,16 +257,6 @@ RSpec.describe Chaintip, type: :model do
         expect(fork_tip.parent).not_to be_nil
         expect(fork_tip.parent.height).to eq(3)
         expect(fork_tip.parent.parent).to eq(split_block)
-      end
-
-      it "should trigger potential stale block alert" do
-        expect(User).to receive(:all).twice.and_return [user]
-        expect(Node).to receive(:bitcoin_core_by_version).twice.and_return [@nodeA, @nodeB]
-
-        # One alert for each height:
-        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(2)
-        # Just once...
-        expect { Node.check_chaintips!(coins: ["BTC"]) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
       it "should ignore forks more than 1000 blocks ago" do

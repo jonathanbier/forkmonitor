@@ -798,7 +798,10 @@ RSpec.describe Node, :type => :model do
 
         expect(Node).to receive(:check_laggards!)
 
-        expect(Node).to receive(:check_chaintips!)
+        expect(Node).to receive(:check_chaintips!).with(:btc)
+        expect(Node).to receive(:check_chaintips!).with(:tbtc)
+        expect(Node).to receive(:check_chaintips!).with(:bch)
+        expect(Node).to receive(:check_chaintips!).with(:bsv)
 
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
@@ -925,7 +928,7 @@ RSpec.describe Node, :type => :model do
 
       it "should call check_chaintips! against nodes" do
         expect(Chaintip).to receive(:check!).twice
-        Node.check_chaintips!(coins: ["BTC"])
+        Node.check_chaintips!(:btc)
       end
     end
 
@@ -953,6 +956,48 @@ RSpec.describe Node, :type => :model do
           }
         }
         Node.fetch_ancestors!(560176)
+      end
+    end
+
+    describe "check_stale_blocks!" do
+      let(:user) { create(:user) }
+
+      after do
+        test.shutdown()
+      end
+
+      before do
+        test.setup(num_nodes: 2)
+        @nodeA = create(:node_python)
+        @nodeA.client.set_python_node(test.nodes[0])
+        @nodeA.client.generate(2)
+
+        @nodeB = create(:node_python)
+        @nodeB.client.set_python_node(test.nodes[1])
+
+        test.sync_blocks()
+
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
+
+        @nodeA.client.generate(2)
+        @nodeB.client.generate(2) # alternative chain with same length
+        @nodeA.poll!
+        @nodeB.poll!
+        expect(@nodeA.block.height).to eq(@nodeB.block.height)
+        expect(@nodeA.block.block_hash).not_to eq(@nodeB.block.block_hash)
+        test.connect_nodes(@nodeA.client, 1)
+        # Don't sync, as the test framework will time out
+        # test.sync_blocks()
+      end
+
+      it "should trigger potential stale block alert" do
+        expect(User).to receive(:all).twice.and_return [user]
+
+        # One alert for each height:
+        expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(2)
+        # Just once...
+        expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
     end
 
