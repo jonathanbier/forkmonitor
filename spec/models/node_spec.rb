@@ -834,16 +834,25 @@ RSpec.describe Node, :type => :model do
     end
 
     describe "restore_mirror" do
+
+      after do
+        test.shutdown()
+      end
+
       before do
-        @node = build(:node_with_mirror)
-        @node.mirror_client.mock_set_height(560178)
+        test.setup()
+        @node = create(:node_python_with_mirror)
+        @node.client.set_python_node(test.nodes[0])
+        @node.mirror_client.set_python_node(test.nodes[0]) # use same node for mirror
+        @node.mirror_client.generate(2)
+        @block_hash = @node.client.getbestblockhash()
         @node.poll_mirror!
-        @node.mirror_client.invalidateblock("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
+        @node.mirror_client.invalidateblock(@block_hash)
       end
 
       it "should restore network and reconsider blocks" do
         expect(@node.mirror_client).to receive("setnetworkactive").with(true)
-        expect(@node.mirror_client).to receive("reconsiderblock").with("00000000000000000016816bd3f4da655a4d1fd326a3313fa086c2e337e854f9")
+        expect(@node.mirror_client).to receive("reconsiderblock").with(@block_hash)
         @node.restore_mirror
       end
 
