@@ -403,7 +403,7 @@ class Node < ApplicationRecord
       begin
         bitcoin_core_nodes = self.bitcoin_core_by_version
         bitcoin_core_nodes.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
           node.poll!
         end
