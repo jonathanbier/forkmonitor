@@ -409,13 +409,13 @@ class Node < ApplicationRecord
         end
 
         self.bitcoin_core_unknown_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           puts "Polling #{ node.coin } node #{node.id} (unknown verison)..." unless Rails.env.test?
           node.poll!
         end
 
         bitcoin_alternative_implementations.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           # Skip libbitcoin in repeat poll, due to ZMQ socket errors
           next if options[:repeat] && node.client_type.to_sym == :libbitcoin
           puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
@@ -430,7 +430,7 @@ class Node < ApplicationRecord
     begin
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
         self.testnet_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
           node.poll!
         end
@@ -443,7 +443,7 @@ class Node < ApplicationRecord
     begin
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
         self.bch_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
           node.poll!
         end
@@ -456,7 +456,7 @@ class Node < ApplicationRecord
     begin
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
         self.bsv_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at > 5.minutes.ago
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           puts "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..." unless Rails.env.test?
           node.poll!
         end
