@@ -224,6 +224,9 @@ class Node < ApplicationRecord
     # Allow 1 block extra for btcd and Knots nodes:
     return nil if (self.btcd? || self.knots?) && self.block.height > node.block.height - 2
 
+    # Allow 10 blocks extra for libbitcion nodes:
+    return nil if self.libbitcoin? && self.block.height > node.block.height - 10
+
     # Remove entry if no longer behind
     if lag_entry && !behind
       lag_entry.destroy
