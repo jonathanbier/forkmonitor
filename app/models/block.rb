@@ -71,7 +71,11 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block.block_hash)
         else
-          block_info = node.getblock(block.block_hash, 1, use_mirror)
+          begin
+            block_info = node.getblock(block.block_hash, 1, use_mirror)
+          rescue Node::BlockPrunedError
+            block_info = client.getblockheader(block.block_hash)
+          end
         end
         throw "block_info unexpectedly empty" unless block_info.present?
         parent = Block.find_by(block_hash: block_info["previousblockhash"])
