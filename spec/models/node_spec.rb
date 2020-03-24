@@ -724,7 +724,7 @@ RSpec.describe Node, :type => :model do
     end
 
     it "should not fetch parents before height 560176" do
-      @node.block.find_ancestors!(@node, false)
+      @node.block.find_ancestors!(@node, false, true)
       expect(Block.minimum(:height)).to equal(560176)
     end
 
@@ -735,7 +735,7 @@ RSpec.describe Node, :type => :model do
       expect(@node.block.height).to equal(560182)
       expect(Block.count).to equal(7)
 
-      @node.block.find_ancestors!(@node, false, 560176)
+      @node.block.find_ancestors!(@node, false, true, 560176)
       expect(Block.count).to equal(7)
       expect(Block.minimum(:height)).to equal(560176)
     end
@@ -926,8 +926,9 @@ RSpec.describe Node, :type => :model do
         @B.poll!
       end
 
-      it "should call check_chaintips! against nodes" do
+      it "should call check! on Chaintip and on InvalidBlock" do
         expect(Chaintip).to receive(:check!).twice
+        expect(InvalidBlock).to receive(:check!)
         Node.check_chaintips!(:btc)
       end
     end

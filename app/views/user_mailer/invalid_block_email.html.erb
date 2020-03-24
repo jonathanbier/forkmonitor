@@ -1,9 +1,7 @@
-<% if @invalid_block.block.first_seen_by.present? %>
 <p>
-  This block was first seen and accepted as valid by <%= @invalid_block.block.first_seen_by.name_with_version %>.
+  This block was accepted as valid by <%= Node.find(@invalid_block.block.marked_valid_by.first).name_with_version %>.
   It was mined by <%= @invalid_block.block.pool ? @invalid_block.block.pool : "an unknown pool" %>.
 </p>
-<% end %>
 
 <p>
   For more information, see: <%= nodes_for_coin_url(@invalid_block.block.coin.downcase) %>

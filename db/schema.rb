@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_11_210603) do
+ActiveRecord::Schema.define(version: 2020_03_24_125907) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -22,9 +22,9 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
     t.string "work"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "parent_id"
+    t.integer "parent_id"
     t.integer "mediantime"
-    t.bigint "first_seen_by_id"
+    t.integer "first_seen_by_id"
     t.integer "version"
     t.integer "coin"
     t.string "pool"
@@ -32,6 +32,8 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
     t.integer "size"
     t.boolean "connected", default: false
     t.boolean "checked_lightning", default: false
+    t.integer "marked_invalid_by", default: [], array: true
+    t.integer "marked_valid_by", default: [], array: true
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
@@ -65,8 +67,8 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
   end
 
   create_table "invalid_blocks", force: :cascade do |t|
-    t.bigint "block_id"
-    t.bigint "node_id"
+    t.integer "block_id"
+    t.integer "node_id"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -81,8 +83,8 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
   end
 
   create_table "lags", force: :cascade do |t|
-    t.bigint "node_a_id"
-    t.bigint "node_b_id"
+    t.integer "node_a_id"
+    t.integer "node_b_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "notified_at"
@@ -114,7 +116,6 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
-    t.bigint "block_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
@@ -124,9 +125,9 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
     t.string "rpcpassword"
     t.boolean "ibd"
     t.integer "peer_count"
-    t.integer "client"
     t.integer "client_type"
     t.integer "rpcport"
+    t.integer "block_id"
     t.string "version_extra", default: "", null: false
     t.boolean "pruned", default: false, null: false
     t.string "os"
@@ -164,7 +165,7 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
   end
 
   create_table "tx_outsets", force: :cascade do |t|
-    t.bigint "block_id"
+    t.integer "block_id"
     t.integer "txouts"
     t.decimal "total_amount", precision: 16, scale: 8
     t.datetime "created_at", null: false
@@ -192,8 +193,8 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
 
   create_table "version_bits", force: :cascade do |t|
     t.integer "bit"
-    t.bigint "activate_block_id"
-    t.bigint "deactivate_block_id"
+    t.integer "activate_block_id"
+    t.integer "deactivate_block_id"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -201,18 +202,11 @@ ActiveRecord::Schema.define(version: 2020_03_11_210603) do
     t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
-  add_foreign_key "blocks", "nodes", column: "first_seen_by_id"
   add_foreign_key "chaintips", "blocks"
   add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
   add_foreign_key "chaintips", "nodes"
   add_foreign_key "inflated_blocks", "blocks"
   add_foreign_key "inflated_blocks", "nodes"
-  add_foreign_key "invalid_blocks", "blocks"
-  add_foreign_key "invalid_blocks", "nodes"
   add_foreign_key "lightning_transactions", "blocks"
-  add_foreign_key "nodes", "blocks"
-  add_foreign_key "tx_outsets", "blocks"
   add_foreign_key "tx_outsets", "nodes"
-  add_foreign_key "version_bits", "blocks", column: "activate_block_id"
-  add_foreign_key "version_bits", "blocks", column: "deactivate_block_id"
 end

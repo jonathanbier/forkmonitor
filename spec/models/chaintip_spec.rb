@@ -289,6 +289,7 @@ RSpec.describe Chaintip, type: :model do
         @nodeB.client.generate(2) # active chaintip
         test.connect_nodes(@nodeA.client, 1)
         sleep(1)
+        @disputed_block_hash = @nodeA.client.getbestblockhash
       end
 
       describe "not in our db" do
@@ -296,20 +297,37 @@ RSpec.describe Chaintip, type: :model do
           # Don't poll node A, so our DB won't contain the disputed block
           @nodeB.poll!
         end
-        it "should add the active entry" do
+
+        it "should store the block" do
           Chaintip.check!(@nodeB)
-          # It won't add the invalid entry because the block is not in our db
-          expect(@nodeB.chaintips.count).to eq(1)
-          expect(@nodeB.chaintips[0].block.height).to eq(11)
+          block = Block.find_by(block_hash: @disputed_block_hash)
+          expect(block).not_to be_nil
+        end
+
+        it "should mark the block as invalid" do
+          Chaintip.check!(@nodeB)
+          block = Block.find_by(block_hash: @disputed_block_hash)
+          expect(block).not_to be_nil
+          expect(block.marked_invalid_by).to include(@nodeB.id)
+        end
+
+        it "should store invalid tip" do
+          Chaintip.check!(@nodeB)
+          expect(@nodeB.chaintips.where(status: "invalid").count).to eq(1)
         end
       end
 
       describe "in our db" do
-        let(:user) { create(:user) }
-
         before do
           @nodeA.poll!
           @nodeB.poll!
+        end
+
+        it "should mark the block as invalid" do
+          Chaintip.check!(@nodeB)
+          block = Block.find_by(block_hash: @disputed_block_hash)
+          expect(block).not_to be_nil
+          expect(block.marked_invalid_by).to include(@nodeB.id)
         end
 
         it "should store invalid tip" do
@@ -321,35 +339,6 @@ RSpec.describe Chaintip, type: :model do
           @nodeB.client.mock_connection_error(true)
           @nodeB.poll!
           expect(Chaintip.check!(@nodeB)).to eq(nil)
-        end
-
-        it "should store an InvalidBlock entry" do
-          Chaintip.check!(@nodeB)
-          disputed_block = @nodeA.block
-          expect(InvalidBlock.count).to eq(1)
-          expect(InvalidBlock.first.block).to eq(disputed_block)
-          expect(InvalidBlock.first.node).to eq(@nodeB)
-        end
-
-        it "should send an email to all users" do
-          expect(User).to receive(:all).and_return [user]
-          expect { Chaintip.check!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-        end
-
-        it "should send email only once" do
-          expect(User).to receive(:all).and_return [user]
-          expect { Chaintip.check!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-          expect { Chaintip.check!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(0)
-        end
-
-        it "node should have invalid blocks" do
-          Chaintip.check!(@nodeB)
-          expect(@nodeB.invalid_blocks.count).to eq(1)
-        end
-
-        it "can not be deleleted" do
-          Chaintip.check!(@nodeB)
-          expect { @nodeB.destroy }.to raise_error ActiveRecord::DeleteRestrictionError
         end
 
       end

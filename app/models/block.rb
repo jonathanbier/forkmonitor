@@ -56,7 +56,7 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
-  def find_ancestors!(node, use_mirror, until_height = nil)
+  def find_ancestors!(node, use_mirror, mark_valid, until_height = nil)
     block_id = self.id
     block_ids = []
     client = use_mirror ? node.mirror_client : node.client
@@ -89,7 +89,7 @@ class Block < ApplicationRecord
           block_info = node.getblock(block_info["previousblockhash"], 1, use_mirror)
         end
 
-        parent = Block.create_with(block_info, use_mirror, node)
+        parent = Block.create_with(block_info, use_mirror, node, mark_valid)
         block.update parent: parent
       end
       block_id = parent.id
@@ -110,7 +110,7 @@ class Block < ApplicationRecord
     return result + "#{ pool.present? ? pool : "unknown pool" })"
   end
 
-  def self.create_with(block_info, use_mirror, node)
+  def self.create_with(block_info, use_mirror, node, mark_valid)
     # Set pool:
     pool = node.get_pool_for_block!(block_info["hash"], use_mirror, block_info)
 
@@ -118,7 +118,7 @@ class Block < ApplicationRecord
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
                nil
 
-    Block.create(
+    block  = Block.create(
      coin: node.coin.downcase.to_sym,
      block_hash: block_info["hash"],
      height: block_info["height"],
@@ -131,6 +131,14 @@ class Block < ApplicationRecord
      first_seen_by: node,
      pool: pool
    )
+   if mark_valid.present?
+     if mark_valid == true
+       block.update marked_valid_by: [node.id]
+     else
+       block.update marked_invalid_by: [node.id]
+     end
+   end
+   return block
  end
 
   def self.pool_from_coinbase_tx(tx)
@@ -250,7 +258,7 @@ class Block < ApplicationRecord
     return nil
   end
 
-  def self.find_or_create_block_and_ancestors!(hash, node, use_mirror)
+  def self.find_or_create_block_and_ancestors!(hash, node, use_mirror, mark_valid)
     raise "block hash missing" unless hash.present?
     # Not atomic and called very frequently, so sometimes it tries to insert
     # a block that was already inserted. In that case try again, so it updates
@@ -265,10 +273,10 @@ class Block < ApplicationRecord
         else
           block_info = node.getblock(hash, 1, use_mirror)
         end
-        block = Block.create_with(block_info, use_mirror, node)
+        block = Block.create_with(block_info, use_mirror, node, mark_valid)
       end
 
-      block.find_ancestors!(node, use_mirror)
+      block.find_ancestors!(node, use_mirror, mark_valid)
     rescue ActiveRecord::RecordNotUnique
       raise unless Rails.env.production?
       retry

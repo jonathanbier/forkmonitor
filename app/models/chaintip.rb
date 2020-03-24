@@ -76,29 +76,17 @@ class Chaintip < ApplicationRecord
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
       # In that case, ignore the new chaintip and get back to it later.
       return nil unless block.present?
+      block.update marked_valid_by: block.marked_valid_by.push(node.id)
       tip = Chaintip.process_active!(node, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
-      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false)
+      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false, true)
       tip = node.chaintips.create(status: "valid-fork", block: block, coin: block.coin) # There can be multiple valid-block chaintips
+      block.update marked_valid_by: block.marked_valid_by | [node.id]
     when "invalid"
-      # Ignore if we don't know this block from a different node: (TODO: add it anyway, so we actively search this block)
-      return nil if block.nil?
-
+      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false, false)
+      block.update marked_invalid_by: block.marked_invalid_by | [node.id]
       tip = node.chaintips.create(status: "invalid", block: block, coin: block.coin)
-
-      # Create an alert
-      invalid_block = InvalidBlock.find_or_create_by(node: node, block: block)
-      if !invalid_block.notified_at
-        User.all.each do |user|
-          UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
-        end
-        invalid_block.update notified_at: Time.now
-        Subscription.blast("invalid-block-#{ invalid_block.id }",
-                           "Invalid block",
-                           "#{ invalid_block.node.name_with_version } considers #{ invalid_block.block.coin.upcase } block { @invalid_block.block.height } ({ @invalid_block.block.block_hash }) invalid",
-        )
-      end
     end
   end
 
@@ -165,7 +153,7 @@ class Chaintip < ApplicationRecord
       # Assuming this node doesn't implement it
       return nil
     end
-    return Chaintip.process_getchaintips(chaintips, node)
+    Chaintip.process_getchaintips(chaintips, node)
   end
 
   private

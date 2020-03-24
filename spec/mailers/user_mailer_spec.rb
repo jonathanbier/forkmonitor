@@ -29,7 +29,7 @@ RSpec.describe UserMailer, type: :mailer do
     let(:mail) { UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email }
 
     before do
-      invalid_block.block.update first_seen_by: node2
+      invalid_block.block.update first_seen_by: node2, marked_valid_by: [node2.id]
     end
 
     it "renders the headers" do

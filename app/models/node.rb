@@ -166,7 +166,7 @@ class Node < ApplicationRecord
 
     raise "Best block hash unexpectedly nil" unless best_block_hash.present?
 
-    block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false)
+    block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false, true)
 
     self.update block: block, unreachable_since: nil, polled_at: Time.now
   end
@@ -184,7 +184,7 @@ class Node < ApplicationRecord
     end
     best_block_hash = blockchaininfo["bestblockhash"]
     ibd = blockchaininfo["initialblockdownload"]
-    block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, true)
+    block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, true, nil)
     self.update mirror_block: block
   end
 
@@ -600,6 +600,7 @@ class Node < ApplicationRecord
     else
       throw Error, "Unknown coin"
     end
+    InvalidBlock.check!(coin)
   end
 
   def self.check_stale_blocks!(coin)
@@ -646,10 +647,11 @@ class Node < ApplicationRecord
     end
   end
 
+  # Also marks ancestor blocks valid
   def self.fetch_ancestors!(until_height)
     node = Node.bitcoin_core_by_version.first
     throw "Node in Initial Blockchain Download" if node.ibd
-    node.block.find_ancestors!(node, false, until_height)
+    node.block.find_ancestors!(node, false, true, until_height)
   end
 
   def self.first_with_txindex(coin, client_type = :core)
