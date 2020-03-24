@@ -369,11 +369,14 @@ class Node < ApplicationRecord
     client = use_mirror ? self.mirror_client : self.client
     begin
       block_info = block_info || getblock(block_hash, 1)
+    rescue Node::BlockPrunedError
+      return nil
     rescue BitcoinClient::Error => e
       puts "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
       return nil
     end
     return nil if block_info["height"] == 0 # Can't fetch the genesis coinbase
+    return nil if block_info["tx"].nil?
     tx_id = block_info["tx"].first
     begin
       coinbase = getrawtransaction(tx_id, true, block_hash)
