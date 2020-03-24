@@ -273,7 +273,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(hash, 1, use_mirror)
-          rescue BlockPrunedError => e
+          rescue Node::BlockPrunedError
             block_info = client.getblockheader(hash)
           end
         end
