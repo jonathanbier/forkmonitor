@@ -64,7 +64,7 @@ class Block < ApplicationRecord
       block_ids.append(block_id)
       block = Block.find(block_id)
       # Prevent new instances from going too far back:
-      break if block.height == MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym] || block.height == 0
+      break if block.height =< MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym] || block.height == 0
       break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
