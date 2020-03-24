@@ -119,15 +119,15 @@ class LightningTransaction < ApplicationRecord
       uri = URI.parse("https://1ml.com/search")
       begin
         response = Net::HTTP.post_form(uri, {"q" => tx.opening_tx_id})
+        if response.code.to_i == 302 && response["location"] =~ /\/channel\/(\d+)/
+           tx.update(channel_is_public: true, channel_id_1ml: $1.to_i)
+        else
+          tx.update channel_is_public: false
+        end
       rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
         Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
-        puts "1ml search for #{ tx.opening_tx_id } returned error #{ e }, try again later"
+        puts "1ml search for #{ tx.opening_tx_id } returned error #{ e }, try again later" unless Rails.env.test?
         sleep 10
-      end
-      if response.code.to_i == 302 && response["location"] =~ /\/channel\/(\d+)/
-         tx.update(channel_is_public: true, channel_id_1ml: $1.to_i)
-      else
-        tx.update channel_is_public: false
       end
     end
   end

@@ -89,6 +89,7 @@ RSpec.describe LightningTransaction, type: :model do
     let(:block1) { create(:lightning_block) }
     let(:penalty_tx_public) { create(:penalty_transaction_public, block: block1) }
     let(:penalty_tx_private) { create(:penalty_transaction_private) }
+    let(:penalty_tx_private_2) { create(:penalty_transaction_private, tx_id: "fail", opening_tx_id: "fail", block: block1) }
     let(:uncoop_tx) { create(:maybe_uncoop_transaction, block: block1) }
 
 
@@ -104,8 +105,12 @@ RSpec.describe LightningTransaction, type: :model do
       ).to_return(
         :status => 200
       )
+      stub_request(:post, "https://1ml.com/search").with(
+        body: "q=fail"
+      ).to_raise(Timeout::Error)
       expect(penalty_tx_public.channel_is_public).to eq(nil)
       expect(penalty_tx_private.channel_is_public).to eq(nil)
+      expect(penalty_tx_private_2.channel_is_public).to eq(nil)
       expect(uncoop_tx.channel_is_public).to eq(nil)
 
       LightningTransaction.check_public_channels!
@@ -125,6 +130,10 @@ RSpec.describe LightningTransaction, type: :model do
     it "should mark private channels as such" do
       expect(penalty_tx_private.channel_is_public).to eq(false)
       expect(penalty_tx_private.channel_id_1ml).to be_nil
+    end
+
+    it "should not mark channel if connection fails" do
+      expect(penalty_tx_private_2.channel_is_public).to eq(nil)
     end
 
   end
