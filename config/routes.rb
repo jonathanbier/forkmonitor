@@ -25,13 +25,14 @@ Rails.application.routes.draw do
       resources :ln_sweeps, only: [:index, :show]
       resources :ln_uncoops, only: [:index, :show]
       resources :ln_stats, only: [:index]
-      resources :blocks, only: [:index]
+      resources :blocks, only: [:index, :show]
       resources :subscriptions, only: [:create]
     end
   end
 
   scope format: true, constraints: { format: /rss/ } do
     namespace :feeds do
+      get ':coin/blocks/invalid', :action => :blocks_invalid
       get 'inflated_blocks/:coin', :action => :inflated_blocks
       get 'invalid_blocks/:coin', :action => :invalid_blocks
       get 'lagging_nodes'

@@ -15,6 +15,21 @@ class RSSFeeds extends React.Component {
         <h3>Invalid Blocks</h3>
 
         <ul>
+          <li>BTC <a href="/feeds/btc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC testnet<a href="/feeds/tbtc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BCH <a href="/feeds/bch/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BSV <a href="/feeds/bsv/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
+        <p>
+          Fork Monitor stores all invalid chaintip blocks in its own database. Invalid
+          blocks are occasionally found and don't have to be a problem (except
+          for the miner), as long as all nodes agree they're invalid.
+        </p>
+
+        <h3>Conflicting Invalid Blocks</h3>
+
+        <ul>
           <li>BTC <a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BTC testnet <a href="/feeds/invalid_blocks/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BCH <a href="/feeds/invalid_blocks/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
@@ -22,11 +37,11 @@ class RSSFeeds extends React.Component {
         </ul>
 
         <p>
-          Fork Monitor stores all valid blocks in its own database, including
-          intermediate blocks between poll moments, and including `valid-fork`
+          Fork Monitor stores both valid and invalid blocks in its own database,
+          including intermediate blocks between poll moments, and including `valid-fork`
           entries from `getchaintips`. It then takes the `invalid` chaintip entries
-          from each node and checks if it knows that block. If so then it sends
-          out an alert.
+          from each node and checks if any other node considered it valid. If so
+          then it sends out an alert.
         </p>
 
         <h3>Inflated Blocks</h3>

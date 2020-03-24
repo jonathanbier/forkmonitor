@@ -11,4 +11,8 @@ class Api::V1::BlocksController < ApplicationController
     render json: @blocks
   end
 
+  def show
+    render json: @block
+  end
+
 end

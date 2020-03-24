@@ -19,6 +19,25 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
+    describe "GET blocks_invalid feed" do
+      let!(:node) { create(:node) }
+      let!(:block) { create(:block) }
+
+      before do
+        block.update marked_invalid_by: [node.id]
+      end
+
+      it "should be rendered" do
+        get :blocks_invalid, params: {coin: "btc"}, format: :rss
+        expect(response).to render_template("feeds/blocks_invalid")
+        expect(response.body).to include("Invalid BTC blocks")
+      end
+
+      it "should contain invalid blocks" do
+        get :blocks_invalid, params: {coin: "btc"}, format: :rss
+        expect(response.body).to include(node.name_with_version)
+      end
+    end
 
     describe "GET invalid_block feed" do
       let!(:node) { create(:node) }
