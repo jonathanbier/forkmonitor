@@ -8,6 +8,7 @@ RSpec.describe Node, :type => :model do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
     stub_const("BitcoinClient::PartialFileError", BitcoinClientPython::PartialFileError)
+    stub_const("BitcoinClient::BlockPrunedError", BitcoinClientPython::BlockPrunedError)
   end
 
   describe "version" do
@@ -88,6 +89,12 @@ RSpec.describe Node, :type => :model do
       @node.client.mock_partial_file_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::PartialFileError
     end
+
+    it "should throw BlockPrunedError" do
+      @node.client.mock_block_pruned_error(true)
+      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::BlockPrunedError
+    end
+
   end
 
   describe "poll!" do

@@ -9,6 +9,7 @@ class Node < ApplicationRecord
   class TxNotFoundError < Error; end
   class ConnectionError < Error; end
   class PartialFileError < Error; end
+  class BlockPrunedError < Error; end
 
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
@@ -398,6 +399,8 @@ class Node < ApplicationRecord
       raise ConnectionError
     rescue BitcoinClient::PartialFileError
       raise PartialFileError
+    rescue BitcoinClient::BlockPrunedError
+      raise BlockPrunedError
     end
   end
 

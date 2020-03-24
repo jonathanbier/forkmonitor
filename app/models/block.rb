@@ -271,7 +271,11 @@ class Block < ApplicationRecord
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(hash)
         else
-          block_info = node.getblock(hash, 1, use_mirror)
+          begin
+            block_info = node.getblock(hash, 1, use_mirror)
+          rescue BlockPrunedError => e
+            block_info = client.getblockheader(hash)
+          end
         end
         block = Block.create_with(block_info, use_mirror, node, mark_valid)
       end
