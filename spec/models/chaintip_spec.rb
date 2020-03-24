@@ -21,6 +21,7 @@ RSpec.describe Chaintip, type: :model do
     @nodeA.poll!
     @nodeA.reload
     assert_equal(@nodeA.block.height, 2)
+    expect(@nodeA.block.parent).not_to be_nil
     assert_equal(@nodeA.block.parent.height, 1)
     assert_equal(Chaintip.count, 0)
 

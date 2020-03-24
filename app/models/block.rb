@@ -1,5 +1,5 @@
 MINIMUM_BLOCK_HEIGHTS = {
-  btc: Rails.env.test? ? 560176 : 500000, # Mid December 2017, around Lightning network launch
+  btc: Rails.env.test? ? 0 : 500000, # Mid December 2017, around Lightning network launch
   tbtc: 1600000,
   bch: 581000,
   bsv: Rails.env.production? ? 606000 : 621500 # February 2019 for development
@@ -64,7 +64,8 @@ class Block < ApplicationRecord
       block_ids.append(block_id)
       block = Block.find(block_id)
       # Prevent new instances from going too far back:
-      break if block.height <= MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym] || block.height == 0
+      minimum_height = node.client.class == BitcoinClientMock ? 560176 : MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym]
+      break if block.height == 0 || block.height <= minimum_height
       break if until_height && block.height == until_height
       parent = block.parent
       if parent.nil?
