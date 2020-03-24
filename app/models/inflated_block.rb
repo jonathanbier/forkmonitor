@@ -210,7 +210,7 @@ class InflatedBlock < ApplicationRecord
   end
 
   def self.throw_unable_to_roll_back!(node, block, blocks_to_invalidate = nil)
-    error = "Unable to roll active #{ block.coin.upcase } chaintip to #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
+    error = "Unable to roll active #{ block.coin.upcase } chaintip to #{ block.block_hash } (#{ block.height }) on node #{ node.id } #{ node.name_with_version }"
     pp node.mirror_client.getchaintips unless Rails.env.test?
     if blocks_to_invalidate.present?
       error += "Invalidated blocks: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
