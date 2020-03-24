@@ -133,6 +133,7 @@ class InflatedBlock < ApplicationRecord
               invalidated_block_hashes.append(block.block_hash)
               puts "Invalidate block #{ block.block_hash } (#{ block.height })" unless Rails.env.test?
               node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
+              sleep 1 unless Rails.env.test? # But wait anyway
             end
             tally += 1
           end
@@ -148,6 +149,7 @@ class InflatedBlock < ApplicationRecord
             invalidated_block_hashes.each do |block_hash|
               puts "Reconsider block #{ block_hash } (#{ block.height })" unless Rails.env.test?
               node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
+              sleep 1 unless Rails.env.test? # But wait anyway
             end
             invalidated_block_hashes = []
           end
@@ -191,6 +193,7 @@ class InflatedBlock < ApplicationRecord
         invalidated_block_hashes.each do |block_hash|
           puts "Reconsider block #{ block_hash }"
           node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
+          sleep 1 unless Rails.env.test? # But wait anyway
         end
         puts "Node restored"
         # Give node some time to catch up:
@@ -201,7 +204,7 @@ class InflatedBlock < ApplicationRecord
       # Resume p2p networking
       node.mirror_client.setnetworkactive(true)
       # Leave node alone for a bit:
-      node.update mirror_rest_until: 15.seconds.from_now
+      node.update mirror_rest_until: 60.seconds.from_now
     end
 
     if max_exceeded
