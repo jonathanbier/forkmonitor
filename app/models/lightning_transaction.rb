@@ -51,7 +51,7 @@ class LightningTransaction < ApplicationRecord
     begin
       node = Node.first_with_txindex(:btc, :core)
     rescue Node::NoTxIndexError
-      raise "Unable to perform lightning checks, because no suitable node is available"
+      puts "Unable to perform lightning checks, because no suitable node is available"
       return
     end
 
