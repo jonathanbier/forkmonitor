@@ -662,7 +662,7 @@ class Node < ApplicationRecord
 
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type).first or raise NoTxIndexError
+    node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type, unreachable_since: nil, ibd: false).first or raise NoTxIndexError
   end
 
   def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)

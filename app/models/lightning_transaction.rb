@@ -49,6 +49,7 @@ class LightningTransaction < ApplicationRecord
     throw "Must specifiy :max" unless options[:max].present?
     throw "Parameter :max should be at least 1" if options[:max] < 1
     node = Node.first_with_txindex(:btc, :core)
+    puts "No node available" unless node.present? 
 
     blocks_to_check = []
     block = node.block
