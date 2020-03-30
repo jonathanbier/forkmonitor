@@ -48,9 +48,10 @@ class LightningTransaction < ApplicationRecord
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
     throw "Must specifiy :max" unless options[:max].present?
     throw "Parameter :max should be at least 1" if options[:max] < 1
-    node = Node.first_with_txindex(:btc, :core)
-    if node.nil?
-      puts "No node available"
+    begin
+      node = Node.first_with_txindex(:btc, :core)
+    rescue Node::NoTxIndexError
+      raise "Unable to perform lightning checks, because no suitable node is available"
       return
     end
 
