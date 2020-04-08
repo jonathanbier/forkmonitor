@@ -48,6 +48,9 @@ class InflatedBlock < ApplicationRecord
           next
         end
 
+        # Skip if mirror node isn't synced
+        next if node.mirror_block.nil?
+
         # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
         if TxOutset.find_by(block: node.mirror_block, node: node).present?
           puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?

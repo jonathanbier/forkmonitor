@@ -58,6 +58,13 @@ RSpec.describe InflatedBlock, type: :model do
       test.sync_blocks()
     end
 
+    it "should skip that's not synced" do
+      @node.update mirror_block: nil
+      allow(@node).to receive(:poll_mirror!).and_return nil
+      expect(@node.mirror_client).not_to receive("setnetworkactive").with(false)
+      InflatedBlock.check_inflation!({coin: :btc, max: 1})
+    end
+
     it "should stop p2p networking and restart it after" do
       expect(@node.mirror_client).to receive("setnetworkactive").with(true) # restore
       expect(@node.mirror_client).to receive("setnetworkactive").with(false)
