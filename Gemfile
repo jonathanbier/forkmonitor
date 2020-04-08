@@ -88,8 +88,8 @@ group :development, :test do
 
   gem 'redis-rails'
 
-  # Call Python, e.g. Bitcoin Core test framework
-  gem 'pycall'
+  # Call Python, e.g. Bitcoin Core test framework (switch to 1.3.1 release when ready)
+  gem 'pycall', :git => 'git@github.com:mrkn/pycall.rb.git', :ref => "b9de184825b3bd0ab7ffb991d2b2f462f55227c4"
 
   gem 'parallel_tests'
 end
