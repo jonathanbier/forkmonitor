@@ -13,7 +13,7 @@ axios.defaults.headers.post['Content-Type'] = 'application/json'
 
 /**
  * urlBase64ToUint8Array
- * 
+ *
  * @param {string} base64String a public vavid key
  */
 function urlBase64ToUint8Array(base64String) {
@@ -86,7 +86,7 @@ class NotificationsPage extends React.Component {
 
   getKeys() {
     var applicationServerKey = this.state.vapidPublicKey;
-    navigator.serviceWorker.register('/serviceworker.js', {scope: './'})
+    navigator.serviceWorker.register('/serviceworker-4712d5ce5f6340d63e10db26507ae3a44d29fb8629d66adbb6a7e0696301f2e0.js', {scope: './'})
     .then(function(registration) {
       return registration.pushManager.getSubscription()
         .then(function(subscription) {
