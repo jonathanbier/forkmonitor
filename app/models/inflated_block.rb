@@ -49,16 +49,16 @@ class InflatedBlock < ApplicationRecord
           rescue BitcoinClient::Error
             # Ignore failure
             puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
-            next
+            Thread.exit
           end
 
           # Skip if mirror node isn't synced
-          next if node.mirror_block.nil?
+          Thread.exit if node.mirror_block.nil?
 
           # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
           if TxOutset.find_by(block: node.mirror_block, node: node).present?
             puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
-            next
+            Thread.exit
           end
 
           puts "Stop p2p networking to prevent the chain from updating underneath us" unless Rails.env.test?
