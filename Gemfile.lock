@@ -1,5 +1,5 @@
 GIT
-  remote: git@github.com:mrkn/pycall.rb.git
+  remote: https://github.com/mrkn/pycall.rb.git
   revision: b9de184825b3bd0ab7ffb991d2b2f462f55227c4
   ref: b9de184825b3bd0ab7ffb991d2b2f462f55227c4
   specs:
