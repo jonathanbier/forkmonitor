@@ -372,7 +372,6 @@ DEPENDENCIES
   table_print
   terminal-notifier-guard (~> 1.6.1)
   timecop
-  tzinfo-data
   webmock
   webpacker (~> 4.0.7)
   webpush
