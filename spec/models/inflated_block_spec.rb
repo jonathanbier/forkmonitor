@@ -36,7 +36,7 @@ RSpec.describe InflatedBlock, type: :model do
     end
   end
 
-  fdescribe "InflatedBlock.check_inflation!" do
+  describe "InflatedBlock.check_inflation!" do
     before do
       setup_python_nodes()
 
