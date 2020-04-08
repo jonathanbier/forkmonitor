@@ -409,9 +409,8 @@ class Node < ApplicationRecord
 
   def self.poll!(options = {})
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
-      begin
-        bitcoin_core_nodes = self.bitcoin_core_by_version
-        bitcoin_core_nodes.each do |node|
+      Node.transaction do
+        self.bitcoin_core_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
           logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
           node.poll!
@@ -436,7 +435,7 @@ class Node < ApplicationRecord
       end
     end
 
-    begin
+    Node.transaction do
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
         self.testnet_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
@@ -449,7 +448,7 @@ class Node < ApplicationRecord
       self.check_stale_blocks!(:tbtc)
     end
 
-    begin
+    Node.transaction do
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
         self.bch_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
@@ -462,7 +461,7 @@ class Node < ApplicationRecord
       self.check_stale_blocks!(:bch)
     end
 
-    begin
+    Node.transaction do
       if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
         self.bsv_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
@@ -478,7 +477,7 @@ class Node < ApplicationRecord
     self.check_laggards!(options)
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
-      bitcoin_core_nodes.first.check_versionbits!
+      self.bitcoin_core_by_version.first.check_versionbits!
     end
   end
 

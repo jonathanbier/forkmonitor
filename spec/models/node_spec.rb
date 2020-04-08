@@ -813,6 +813,10 @@ RSpec.describe Node, :type => :model do
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
             expect(node).to receive(:poll!)
+          }
+        }
+        expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
+          relation.call.each {|node|
             if node.version ==  170000
               expect(node).to receive(:check_versionbits!)
             end
