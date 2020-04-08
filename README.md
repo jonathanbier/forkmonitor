@@ -10,7 +10,7 @@ Install Redis, e.g. on macOS: `brew install redis` and see [instructions](https:
 
 Install Python. When using pyenv, use `env PYTHON_CONFIGURE_OPTS='--enable-shared' pyenv install VERSION` in order for [PyCall](https://github.com/mrkn/pycall.rb) to work.
 
-Install Ruby 2.7.0 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
+Install Ruby 2.7.1 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
 the bundler and foreman gems, then run bundler:
 
 ```
