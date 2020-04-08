@@ -33,7 +33,7 @@ class InflatedBlock < ApplicationRecord
       logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
       throw "Node in Initial Blockchain Download" if node.ibd
       if node.restore_mirror == false
-        logger.error "Node not reachable, skipping"
+        logger.error "#{ node.name_with_version } not reachable, skipping"
         next
       end
 
@@ -77,7 +77,7 @@ class InflatedBlock < ApplicationRecord
               break
             end
             comparison_block = comparison_block.parent
-            throw "Unable to check inflation due to missing intermediate block" if comparison_block.nil?
+            throw "Unable to check inflation due to missing intermediate block on #{ node.name_with_version }" if comparison_block.nil?
             comparison_tx_outset = TxOutset.find_by(node: node, block: comparison_block)
             break if comparison_tx_outset.present?
             blocks_to_check.unshift(comparison_block)
@@ -91,11 +91,11 @@ class InflatedBlock < ApplicationRecord
               if tally > (Rails.env.test? ? 2 : 100)
                 throw_unable_to_roll_back!(node, block)
               elsif tally > 0
-                logger.debug "Fetch blocks for any newly activated chaintips..."
+                logger.debug "Fetch blocks for any newly activated chaintips on #{ node.name_with_version }..."
                 node.poll_mirror!
                 block.reload
               end
-              logger.debug "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })"
+              logger.debug "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] }) on #{ node.name_with_version }"
               blocks_to_invalidate = []
               active_tip_block = Block.find_by(block_hash: active_tip["hash"])
               if block.height == active_tip["height"]
@@ -105,7 +105,7 @@ class InflatedBlock < ApplicationRecord
                 logger.debug "Check if active chaintip descends from target block, otherwise invalidate it..."
                 active_tip_ancestor = active_tip_block
                 if block.height < active_tip["height"]
-                  logger.debug "Target block height is below active tip height"
+                  logger.debug "Target block height is below active tip height on #{ node.name_with_version }"
                   ancestor = nil
                   while !ancestor && active_tip_ancestor.present? do
                     if active_tip_ancestor.parent.height == block.height
@@ -123,7 +123,7 @@ class InflatedBlock < ApplicationRecord
                   begin
                     node.mirror_client.getblockheader(child_block.block_hash)
                   rescue BitcoinClient::Error
-                    logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
+                    logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) on #{ node.name_with_version } because mirror node doesn't have it"
                     next
                   end
                   unless invalidated_block_hashes.include?(child_block.block_hash)
@@ -133,28 +133,28 @@ class InflatedBlock < ApplicationRecord
               end
               # Stop if there are no new blocks to invalidate
               if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
-                logger.error "Nothing to invalidate"
+                logger.error "Nothing to invalidate on #{ node.name_with_version }"
                 throw_unable_to_roll_back!(node, block, blocks_to_invalidate)
               end
               blocks_to_invalidate.each do |block|
                 invalidated_block_hashes.append(block.block_hash)
-                logger.debug "Invalidate block #{ block.block_hash } (#{ block.height })"
+                logger.debug "Invalidate block #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
                 node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
                 sleep 1 # But wait anyway
               end
               tally += 1
             end
 
-            throw "No active tip left after rollback. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
-            throw "Unexpected active tip hash #{ active_tip["hash"] } (#{ active_tip["height"] }) instead of #{ block.block_hash } (#{ block.height })" unless active_tip["hash"] == block.block_hash
+            throw "No active tip left after rollback on #{ node.name_with_version }. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
+            throw "Unexpected active tip hash #{ active_tip["hash"] } (#{ active_tip["height"] }) instead of #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }" unless active_tip["hash"] == block.block_hash
 
-            logger.debug "Get the total UTXO balance at height #{ block.height }..."
+            logger.debug "Get the total UTXO balance at height #{ block.height } on #{ node.name_with_version }..."
             txoutsetinfo = node.mirror_client.gettxoutsetinfo
 
             unless invalidated_block_hashes.empty?
-              logger.debug "Restore chain to tip..."
+              logger.debug "Restore chain to tip on #{ node.name_with_version }..."
               invalidated_block_hashes.each do |block_hash|
-                logger.debug "Reconsider block #{ block_hash } (#{ block.height })"
+                logger.debug "Reconsider block #{ block_hash } (#{ block.height }) on #{ node.name_with_version }"
                 node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
                 sleep 1 # But wait anyway
               end
