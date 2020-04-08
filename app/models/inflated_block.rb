@@ -30,10 +30,10 @@ class InflatedBlock < ApplicationRecord
 
       next unless node.mirror_node? && node.core?
       next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.now
-      puts "Check #{ node.coin } inflation for #{ node.name_with_version }..." unless Rails.env.test?
+      logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
       throw "Node in Initial Blockchain Download" if node.ibd
       if node.restore_mirror == false
-        puts "Node not reachable, skipping"
+        logger.error "Node not reachable, skipping"
         next
       end
 
@@ -48,7 +48,7 @@ class InflatedBlock < ApplicationRecord
             node.reload # without this, ancestors of node.block_block are not updated
           rescue BitcoinClient::Error
             # Ignore failure
-            puts "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
+            logger.error "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
             Thread.exit
           end
 
@@ -57,11 +57,11 @@ class InflatedBlock < ApplicationRecord
 
           # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
           if TxOutset.find_by(block: node.mirror_block, node: node).present?
-            puts "Already checked #{ node.name_with_version } for current mirror tip" unless Rails.env.test?
+            logger.debug "Already checked #{ node.name_with_version } for current mirror tip"
             Thread.exit
           end
 
-          puts "Stop p2p networking to prevent the chain from updating underneath us" unless Rails.env.test?
+          logger.debug "Stop p2p networking to prevent the chain from updating underneath us"
           node.mirror_client.setnetworkactive(false)
 
           # We want to call gettxoutsetinfo at every height since the last check.
@@ -85,27 +85,27 @@ class InflatedBlock < ApplicationRecord
 
           blocks_to_check.each do |block|
             # Invalidate new blocks, including any forks we don't know of yet
-            puts "Roll back the chain to #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }..." unless Rails.env.test?
+            logger.debug "Roll back the chain to #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }..."
             tally = 0
             while(active_tip = node.get_mirror_active_tip; active_tip.present? && block.block_hash != active_tip["hash"])
               if tally > (Rails.env.test? ? 2 : 100)
                 throw_unable_to_roll_back!(node, block)
               elsif tally > 0
-                puts "Fetch blocks for any newly activated chaintips..." unless Rails.env.test?
+                logger.debug "Fetch blocks for any newly activated chaintips..."
                 node.poll_mirror!
                 block.reload
               end
-              puts "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })" unless Rails.env.test?
+              logger.debug "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] })"
               blocks_to_invalidate = []
               active_tip_block = Block.find_by(block_hash: active_tip["hash"])
               if block.height == active_tip["height"]
-                puts "Invalidate tip to jump to another fork" unless Rails.env.test?
+                logger.debug "Invalidate tip to jump to another fork"
                 blocks_to_invalidate.append(active_tip_block)
               else
-                puts "Check if active chaintip descends from target block, otherwise invalidate it..." unless Rails.env.test?
+                logger.debug "Check if active chaintip descends from target block, otherwise invalidate it..."
                 active_tip_ancestor = active_tip_block
                 if block.height < active_tip["height"]
-                  puts "Target block height is below active tip height" unless Rails.env.test?
+                  logger.debug "Target block height is below active tip height"
                   ancestor = nil
                   while !ancestor && active_tip_ancestor.present? do
                     if active_tip_ancestor.parent.height == block.height
@@ -123,7 +123,7 @@ class InflatedBlock < ApplicationRecord
                   begin
                     node.mirror_client.getblockheader(child_block.block_hash)
                   rescue BitcoinClient::Error
-                    puts "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
+                    logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) because mirror node doesn't have it"
                     next
                   end
                   unless invalidated_block_hashes.include?(child_block.block_hash)
@@ -133,14 +133,14 @@ class InflatedBlock < ApplicationRecord
               end
               # Stop if there are no new blocks to invalidate
               if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
-                puts "Nothing to invalidate" unless Rails.env.test?
+                logger.error "Nothing to invalidate"
                 throw_unable_to_roll_back!(node, block, blocks_to_invalidate)
               end
               blocks_to_invalidate.each do |block|
                 invalidated_block_hashes.append(block.block_hash)
-                puts "Invalidate block #{ block.block_hash } (#{ block.height })" unless Rails.env.test?
+                logger.debug "Invalidate block #{ block.block_hash } (#{ block.height })"
                 node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
-                sleep 1 unless Rails.env.test? # But wait anyway
+                sleep 1 # But wait anyway
               end
               tally += 1
             end
@@ -148,15 +148,15 @@ class InflatedBlock < ApplicationRecord
             throw "No active tip left after rollback. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
             throw "Unexpected active tip hash #{ active_tip["hash"] } (#{ active_tip["height"] }) instead of #{ block.block_hash } (#{ block.height })" unless active_tip["hash"] == block.block_hash
 
-            puts "Get the total UTXO balance at height #{ block.height }..." unless Rails.env.test?
+            logger.debug "Get the total UTXO balance at height #{ block.height }..."
             txoutsetinfo = node.mirror_client.gettxoutsetinfo
 
             unless invalidated_block_hashes.empty?
-              puts "Restore chain to tip..." unless Rails.env.test?
+              logger.debug "Restore chain to tip..."
               invalidated_block_hashes.each do |block_hash|
-                puts "Reconsider block #{ block_hash } (#{ block.height })" unless Rails.env.test?
+                logger.debug "Reconsider block #{ block_hash } (#{ block.height })"
                 node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
-                sleep 1 unless Rails.env.test? # But wait anyway
+                sleep 1 # But wait anyway
               end
               invalidated_block_hashes = []
             end
@@ -169,7 +169,7 @@ class InflatedBlock < ApplicationRecord
             # Check that inflation does not exceed the maximum permitted miner award per block
             prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
             if prev_tx_outset.nil?
-              puts "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..." unless Rails.env.test?
+              logger.error "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..."
               next
             end
 
@@ -193,21 +193,21 @@ class InflatedBlock < ApplicationRecord
           end
 
         rescue
-          puts "Something went wrong, restoring node before bailing out..."
-          puts "Resume p2p networking..."
+          logger.error "Something went wrong, restoring node before bailing out..."
+          logger.debug "Resume p2p networking..."
           node.mirror_client.setnetworkactive(true)
           # Have node return to tip
           invalidated_block_hashes.each do |block_hash|
-            puts "Reconsider block #{ block_hash }"
+            logger.debug "Reconsider block #{ block_hash }"
             node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
-            sleep 1 unless Rails.env.test? # But wait anyway
+            sleep 1 # But wait anyway
           end
-          puts "Node restored"
+          logger.debug "Node restored"
           # Give node some time to catch up:
           node.update mirror_rest_until: 60.seconds.from_now
           raise # continue throwing error
         end
-        puts "Resume p2p networking..." unless Rails.env.test?
+        logger.debug "Resume p2p networking..."
         # Resume p2p networking
         node.mirror_client.setnetworkactive(true)
         # Leave node alone for a bit:
