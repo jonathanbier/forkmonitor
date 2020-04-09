@@ -883,7 +883,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call check_inflation!" do
-        expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 1000})
+        expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 50})
 
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
