@@ -200,9 +200,9 @@ class BitcoinClientMock
         }[@version]
       elsif @client_type == :bcoin
         {
-          "v1.0.2" => {
-            "version" => "v1.0.2",
-            "subversion" => "/bcoin:v1.0.2/",
+          "2.0.0" => {
+            "version" => "2.0.0",
+            "subversion" => "/bcoin:2.0.0/",
             "protocolversion" => 70015,
             "localservices" => "00000009",
             "localrelay" => true,
@@ -334,7 +334,7 @@ class BitcoinClientMock
         }
       elsif @client_type == :bcoin
         res = {
-          "v1.0.2" => {
+          "2.0.0" => {
             "chain" => "main",
             "blocks" => @height,
             "headers" => @height,

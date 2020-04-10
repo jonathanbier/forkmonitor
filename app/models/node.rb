@@ -39,8 +39,8 @@ class Node < ApplicationRecord
 
   def parse_version(v)
     return if v.nil?
-    if v[0] == "v"
-      digits = v[1..-1].split(".").collect{|d| d.to_i}
+    if v.is_a?(String) && v.split(".").count >= 3
+      digits = v.split(".").collect{|d| d.to_i}
       padding = [0] * (4 - digits.size)
       digits.push(*padding)
       return digits[3] + digits[2] * 100 + digits[1] * 10000 + digits[0] * 1000000

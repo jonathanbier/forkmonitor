@@ -1,7 +1,7 @@
 require "rails_helper"
 require "bitcoind_helper"
 
-RSpec.describe Node, :type => :model do
+RSpec.fdescribe Node, :type => :model do
   let(:test) { TestWrapper.new() }
 
   before do
@@ -148,11 +148,11 @@ RSpec.describe Node, :type => :model do
           @node.client.mock_ibd(true)
         end
 
-        it "should parse v1.0.2 variant (e.g. Bcoin)" do
-          @node.client.mock_version("v1.0.2")
+        it "should parse 2.0.0 variant (e.g. Bcoin)" do
+          @node.client.mock_version("2.0.0")
           @node.client.mock_client_type(:bcoin)
           @node.poll!
-          expect(@node.version).to eq(1000200)
+          expect(@node.version).to eq(2000000)
         end
       end
     end
@@ -574,9 +574,9 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should detect if bcoin node A is behind (core) node B" do
-        @A.client.mock_version("v1.0.2")
+        @A.client.mock_version("2.0.0")
         @A.client.mock_client_type(:bcoin)
-        @A.update version: "v1.0.2"
+        @A.update version: "2.0.0"
         @A.update client_type: :bcoin
         @A.poll!
 
