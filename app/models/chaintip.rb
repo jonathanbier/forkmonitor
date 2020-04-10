@@ -112,7 +112,27 @@ class Chaintip < ApplicationRecord
      return tip
    end
 
-# getchaintips returns all known chaintips for a node, which can be:
+  def self.check!(coin, nodes)
+    # In order to keep the database transaction lock as short as possible,
+    # we first fetch chaintip info from all nodes, and then process that.
+    chaintip_sets = nodes.collect { |node|
+      node.reload
+      {
+        node: node,
+        chaintips: Chaintip.fetch!(node)
+      }
+    }
+    Chaintip.transaction {
+      result = chaintip_sets.collect { |set|
+        if set[:chaintips].present?
+          Chaintip.process_getchaintips(set[:chaintips], set[:node])
+        end
+      }
+      Node.prune_empty_chaintips!(coin)
+    }
+  end
+
+  # getchaintips returns all known chaintips for a node, which can be:
   # * active: the current chaintip, added to our database with poll!
   # * valid-fork: valid chain, but not the most proof-of-work
   # * valid-headers: potentially valid chain, but not fully checked due to insufficient proof-of-work
@@ -128,7 +148,7 @@ class Chaintip < ApplicationRecord
   # 1. the node is unaware of a soft-fork and initially accepts a block that newer
   #    nodes reject
   # 2. the node has a consensus bug
-  def self.check!(node)
+  def self.fetch!(node)
     if node.unreachable_since || node.ibd || node.block.nil?
       # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
       Chaintip.where(node: node).destroy_all
@@ -148,12 +168,11 @@ class Chaintip < ApplicationRecord
     end
 
     begin
-      chaintips = node.client.getchaintips
+      return node.client.getchaintips
     rescue BitcoinClient::Error
       # Assuming this node doesn't implement it
       return nil
     end
-    Chaintip.process_getchaintips(chaintips, node)
   end
 
   private

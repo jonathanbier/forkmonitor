@@ -938,7 +938,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call check! on Chaintip and on InvalidBlock" do
-        expect(Chaintip).to receive(:check!).twice
+        expect(Chaintip).to receive(:check!).with(:btc, [@A,@B])
         expect(InvalidBlock).to receive(:check!)
         Node.check_chaintips!(:btc)
       end

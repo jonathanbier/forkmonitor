@@ -567,33 +567,13 @@ class Node < ApplicationRecord
   def self.check_chaintips!(coin)
     case coin
     when :btc
-      self.bitcoin_core_by_version.each do |node|
-        node.reload
-        Chaintip.check!(node)
-      end
-      self.bitcoin_alternative_implementations.each do |node|
-        node.reload
-        Chaintip.check!(node)
-      end
-      Node.prune_empty_chaintips!(:btc)
+      Chaintip.check!(:btc, self.bitcoin_core_by_version + self.bitcoin_alternative_implementations)
     when :tbtc
-      self.testnet_by_version.each do |node|
-        node.reload
-        Chaintip.check!(node)
-      end
-      Node.prune_empty_chaintips!(:tbtc)
+      Chaintip.check!(:tbtc, self.testnet_by_version)
     when :bch
-      self.bch_by_version.each do |node|
-        node.reload
-        Chaintip.check!(node)
-      end
-      Node.prune_empty_chaintips!(:bch)
+      Chaintip.check!(:bch, self.bch_by_version)
     when :bsv
-      self.bsv_by_version.each do |node|
-        node.reload
-        Chaintip.check!(node)
-      end
-      Node.prune_empty_chaintips!(:bsv)
+      Chaintip.check!(:bsv, self.bsv_by_version)
     else
       throw Error, "Unknown coin"
     end

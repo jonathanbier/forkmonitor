@@ -212,10 +212,8 @@ RSpec.describe Chaintip, type: :model do
     end
     describe "one node in IBD" do
       it "should do nothing" do
-        @nodeA.ibd = true
-        expect(Chaintip.check!(@nodeA)).to eq(nil)
-      end
-      it "should not have chaintip entries" do
+        @nodeA.update ibd: true
+        Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(0)
       end
     end
@@ -223,7 +221,7 @@ RSpec.describe Chaintip, type: :model do
     describe "only an active chaintip" do
       it "should add a chaintip entry" do
         expect(@nodeA.chaintips.count).to eq(0)
-        Chaintip.check!(@nodeA)
+        Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(1)
         expect(@nodeA.chaintips.first.block.height).to eq(2)
       end
@@ -243,13 +241,13 @@ RSpec.describe Chaintip, type: :model do
       end
 
       it "should add chaintip entries" do
-        Chaintip.check!(@nodeA)
+        Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(2)
         expect(@nodeA.chaintips.last.status).to eq("valid-fork")
       end
 
       it "should add the valid fork blocks up to the common ancenstor" do
-        Chaintip.check!(@nodeA)
+        Chaintip.check!(:btc, [@nodeA])
         @nodeA.reload
         split_block = Block.find_by(height: 2)
         fork_tip = @nodeA.block
@@ -271,7 +269,7 @@ RSpec.describe Chaintip, type: :model do
         @nodeB.poll!
         test.connect_nodes(@nodeA.client, 1)
 
-        Chaintip.check!(@nodeA)
+        Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(2)
       end
     end
@@ -300,20 +298,20 @@ RSpec.describe Chaintip, type: :model do
         end
 
         it "should store the block" do
-          Chaintip.check!(@nodeB)
+          Chaintip.check!(:btc, [@nodeB])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
         end
 
         it "should mark the block as invalid" do
-          Chaintip.check!(@nodeB)
+          Chaintip.check!(:btc, [@nodeB])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@nodeB.id)
         end
 
         it "should store invalid tip" do
-          Chaintip.check!(@nodeB)
+          Chaintip.check!(:btc, [@nodeB])
           expect(@nodeB.chaintips.where(status: "invalid").count).to eq(1)
         end
       end
@@ -325,21 +323,22 @@ RSpec.describe Chaintip, type: :model do
         end
 
         it "should mark the block as invalid" do
-          Chaintip.check!(@nodeB)
+          Chaintip.check!(:btc, [@nodeB])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@nodeB.id)
         end
 
         it "should store invalid tip" do
-          Chaintip.check!(@nodeB)
+          Chaintip.check!(:btc, [@nodeB])
           expect(@nodeB.chaintips.where(status: "invalid").count).to eq(1)
         end
 
         it "should be nil if the node is unreachable" do
           @nodeB.client.mock_connection_error(true)
           @nodeB.poll!
-          expect(Chaintip.check!(@nodeB)).to eq(nil)
+          Chaintip.check!(:btc, [@nodeB])
+          expect(@nodeB.chaintips.count).to eq(0)
         end
 
       end
