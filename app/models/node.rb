@@ -409,70 +409,62 @@ class Node < ApplicationRecord
 
   def self.poll!(options = {})
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
-      Node.transaction do
-        self.bitcoin_core_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
+      self.bitcoin_core_by_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        node.poll!
+      end
 
-        self.bitcoin_core_unknown_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          logger.debug "Polling #{ node.coin } node #{node.id} (unknown verison)..."
-          node.poll!
-        end
+      self.bitcoin_core_unknown_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        logger.debug "Polling #{ node.coin } node #{node.id} (unknown verison)..."
+        node.poll!
+      end
 
-        bitcoin_alternative_implementations.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          # Skip libbitcoin in repeat poll, due to ZMQ socket errors
-          next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-          logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
+      bitcoin_alternative_implementations.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        # Skip libbitcoin in repeat poll, due to ZMQ socket errors
+        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        node.poll!
+      end
 
-        self.check_chaintips!(:btc)
-        self.check_stale_blocks!(:btc)
+      self.check_chaintips!(:btc)
+      self.check_stale_blocks!(:btc)
+    end
+
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
+      self.testnet_by_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        node.poll!
       end
     end
 
-    Node.transaction do
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
-        self.testnet_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-      end
+    self.check_chaintips!(:tbtc)
+    self.check_stale_blocks!(:tbtc)
 
-      self.check_chaintips!(:tbtc)
-      self.check_stale_blocks!(:tbtc)
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
+      self.bch_by_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        node.poll!
+      end
     end
 
-    Node.transaction do
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
-        self.bch_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-      end
+    self.check_chaintips!(:bch)
+    self.check_stale_blocks!(:bch)
 
-      self.check_chaintips!(:bch)
-      self.check_stale_blocks!(:bch)
+    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
+      self.bsv_by_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        node.poll!
+      end
     end
 
-    Node.transaction do
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
-        self.bsv_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-      end
-
-      self.check_chaintips!(:bsv)
-      self.check_stale_blocks!(:bsv)
-    end
+    self.check_chaintips!(:bsv)
+    self.check_stale_blocks!(:bsv)
 
     self.check_laggards!(options)
 
