@@ -1,7 +1,7 @@
 require "rails_helper"
 require "bitcoind_helper"
 
-RSpec.fdescribe Node, :type => :model do
+RSpec.describe Node, :type => :model do
   let(:test) { TestWrapper.new() }
 
   before do
