@@ -16,15 +16,15 @@ class Chaintip < ApplicationRecord
     res = chaintip_nodes.collect{ | c | c.node }
     chaintip_nodes.each do |chaintip_node|
       chaintip_node.children.each do |child|
-        Node.where("block_id = ?", child.block_id).order(client_type: :asc ,name: :asc, version: :desc).each do |node_for_child|
+        Node.where("block_id = ?", child.block_id).each do |node_for_child|
           res.append node_for_child
         end
       end
     end
     # Node ordering:
     # * behind nodes at the bottom
-    # * order by client type, then version (done above)
-    res.uniq.sort_by { |node| -node.block.height }
+    # * order by client type, then version
+    res.uniq.sort_by{ |node| [-node.block.height, node.client_type_before_type_cast, node.name, -node.version] }
   end
 
   def as_json(options = nil)
