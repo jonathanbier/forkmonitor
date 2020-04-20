@@ -70,20 +70,6 @@ RSpec.describe Chaintip, type: :model do
       expect(tip_A).not_to eq(tip_B)
     end
 
-    it "should match parent block" do
-      tip_A = Chaintip.process_active!(@nodeA, @nodeA.block)
-      tip_B = Chaintip.process_active!(@nodeB, @nodeB.block.parent)
-      expect(tip_A).not_to be(tip_B)
-      expect(tip_B.parent_chaintip).to eq(tip_A)
-    end
-
-    it "should match child block" do
-      tip_A = Chaintip.process_active!(@nodeA, @nodeA.block.parent)
-      tip_B = Chaintip.process_active!(@nodeB, @nodeB.block)
-      tip_A.reload
-      expect(tip_A).not_to be(tip_B)
-      expect(tip_A.parent_chaintip).to eq(tip_B)
-    end
   end
 
   describe "nodes_for_identical_chaintips / process_active!" do
@@ -107,15 +93,6 @@ RSpec.describe Chaintip, type: :model do
       chaintip1.update status: "invalid"
       assert_nil chaintip1.nodes_for_identical_chaintips
       assert_nil chaintip1.nodes_for_identical_chaintips
-    end
-
-    it "should include parent blocks in chaintip" do
-      chaintip1.update block: block2
-      nodeA.update block: block2
-      nodeB.update block: block1
-      Chaintip.process_active!(nodeB, block1)
-      assert_equal 2, chaintip1.nodes_for_identical_chaintips.count
-      assert_equal [nodeA, nodeB], chaintip1.nodes_for_identical_chaintips
     end
 
   end
@@ -271,6 +248,27 @@ RSpec.describe Chaintip, type: :model do
 
         Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(2)
+      end
+    end
+
+    describe "nodeA ahead of nodeB" do
+      before do
+        @nodeA.client.generate(2)
+        @nodeA.poll!
+        @nodeB.poll!
+        # Disconnect nodes and produce one more block for A
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
+        @nodeA.client.generate(1)
+        @nodeA.poll!
+        Chaintip.check!(:btc, [@nodeA, @nodeB])
+      end
+
+      it "should match parent block" do
+        tip_A = @nodeA.chaintips.where(status: "active").first
+        tip_B = @nodeB.chaintips.where(status: "active").first
+        expect(tip_A).not_to be(tip_B)
+        expect(tip_B.parent_chaintip).to eq(tip_A)
       end
     end
 

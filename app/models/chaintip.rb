@@ -107,8 +107,6 @@ class Chaintip < ApplicationRecord
        end
      end
      tip.save
-     tip.match_children!(node)
-     tip.match_parent!(node)
      return tip
    end
 
@@ -133,6 +131,13 @@ class Chaintip < ApplicationRecord
           Chaintip.process_getchaintips(set[:chaintips], set[:node])
         end
       }
+      # Match children and parent active chaintips
+      nodes.each do |node|
+        Chaintip.where(node: node).where(status: "active").each do |chaintip|
+          chaintip.match_children!(node)
+          chaintip.match_parent!(node)
+        end
+      end
       Node.prune_empty_chaintips!(coin)
     }
   end
