@@ -113,6 +113,11 @@ class Chaintip < ApplicationRecord
    end
 
   def self.check!(coin, nodes)
+    # Delete existing (non-active chaintips)
+    nodes.each do |node|
+      Chaintip.purge!(node)
+    end
+
     # In order to keep the database transaction lock as short as possible,
     # we first fetch chaintip info from all nodes, and then process that.
     chaintip_sets = nodes.collect { |node|
@@ -130,6 +135,16 @@ class Chaintip < ApplicationRecord
       }
       Node.prune_empty_chaintips!(coin)
     }
+  end
+
+  def self.purge!(node)
+    if node.unreachable_since || node.ibd || node.block.nil?
+      # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
+      Chaintip.where(node: node).destroy_all
+    else
+      # Delete existing chaintip entries, except the active one (which might be unchanged):
+      Chaintip.where(node: node).where.not(status: "active").destroy_all
+    end
   end
 
   # getchaintips returns all known chaintips for a node, which can be:
@@ -150,13 +165,8 @@ class Chaintip < ApplicationRecord
   # 2. the node has a consensus bug
   def self.fetch!(node)
     if node.unreachable_since || node.ibd || node.block.nil?
-      # Remove cached chaintips from db and return nil if node is unreachbale or in IBD:
-      Chaintip.where(node: node).destroy_all
       return nil
     else
-      # Delete existing chaintip entries, except the active one (which might be unchanged):
-      Chaintip.where(node: node).where.not(status: "active").destroy_all
-
       # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
       if node.client_type.to_sym == :libbitcoin ||
          node.client_type.to_sym == :btcd ||
