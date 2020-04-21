@@ -7,7 +7,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{ @lag.node_a.name_with_version } is #{ @lag.node_b.block.height - @lag.node_a.block.height } blocks behind #{ @lag.node_b.version }"
+      subject: "[ForkMonitor] #{ @lag.node_a.name_with_version } is #{ @lag.node_b.active_chaintip.block.height - @lag.node_a.active_chaintip.block.height } blocks behind #{ @lag.node_b.version }"
     )
   end
 

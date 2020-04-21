@@ -20,6 +20,7 @@ class Node < ApplicationRecord
   has_many :lag_b, class_name: "Lag", foreign_key: "node_b_id", dependent: :destroy
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
+  has_one :active_chaintip, -> { where(status: "active") }, class_name: "Chaintip"
 
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
 
@@ -73,7 +74,7 @@ class Node < ApplicationRecord
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
     super({ only: fields }.merge(options || {})).merge({
-      height: block && block.height,
+      height: active_chaintip && active_chaintip.block.height,
       name_with_version: name_with_version,
       tx_outset: self.tx_outset,
       has_mirror_node: self.mirror_rpchost.present?
@@ -208,25 +209,27 @@ class Node < ApplicationRecord
 
     return nil if self.block.nil? || node.block.nil?
 
+    return nil if self.active_chaintip.nil? || node.active_chaintip.nil?
+
     # Sometimes the work field is missing:
-    return nil if self.block.work.nil? || node.block.work.nil?
+    return nil if self.active_chaintip.block.work.nil? || node.active_chaintip.block.work.nil?
 
     # Not behind if at the same block
-    if self.block == node.block
+    if self.active_chaintip.block == node.active_chaintip.block
       behind = false
     # Compare work:
-    elsif self.block.work < node.block.work
+    elsif self.active_chaintip.block.work < node.active_chaintip.block.work
       behind = true
     end
 
     # Allow 1 block extra for 0.16 nodes and older:
-    return nil if self.core? && self.version < 169999 && self.block.height > node.block.height - 2
+    return nil if self.core? && self.version < 169999 && self.active_chaintip.block.height > node.active_chaintip.block.height - 2
 
     # Allow 1 block extra for btcd and Knots nodes:
-    return nil if (self.btcd? || self.knots?) && self.block.height > node.block.height - 2
+    return nil if (self.btcd? || self.knots?) && self.active_chaintip.block.height > node.active_chaintip.block.height - 2
 
     # Allow 10 blocks extra for libbitcion nodes:
-    return nil if self.libbitcoin? && self.block.height > node.block.height - 10
+    return nil if self.libbitcoin? && self.active_chaintip.block.height > node.active_chaintip.block.height - 10
 
     # Remove entry if no longer behind
     if lag_entry && !behind
