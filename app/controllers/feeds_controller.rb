@@ -29,7 +29,7 @@ class FeedsController < ApplicationController
       format.rss do
         latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
+          @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(height: :desc)
         end
       end
     end
