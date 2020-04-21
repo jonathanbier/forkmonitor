@@ -27,7 +27,7 @@ class RSSFeeds extends React.Component {
           for the miner), as long as all nodes agree they're invalid.
         </p>
 
-        <h3>Conflicting Invalid Blocks</h3>
+        <h3>Inconsistent validity (blocks)</h3>
 
         <ul>
           <li>BTC <a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
@@ -35,6 +35,13 @@ class RSSFeeds extends React.Component {
           <li>BCH <a href="/feeds/invalid_blocks/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BSV <a href="/feeds/invalid_blocks/bsv.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
+
+        <p>
+          Invalid blocks are occasionally found and don't have to be a problem (except
+          for the miner), as long as all nodes agree they're invalid. But when some
+          nodes consider a block valid, while others consider it invalid, this
+          inconsistent validity could indicate a consensus bug.
+        </p>
 
         <p>
           Fork Monitor stores both valid and invalid blocks in its own database,
