@@ -493,34 +493,40 @@ RSpec.describe Node, :type => :model do
   end
 
   describe "check_if_behind!" do
-    before do
-      # Prepare two nodes that are out of IBD and have been polled
-      @A = build(:node)
-      @A.client.mock_set_height(560176)
-      @A.client.mock_ibd(true)
-      @A.poll!
-      @A.client.mock_ibd(false)
-      @A.poll!
+    after do
+      test.shutdown()
+    end
 
-      @B = build(:node)
-      @B.client.mock_set_height(560176)
-      @B.client.mock_ibd(true)
-      @B.poll!
-      @B.client.mock_ibd(false)
-      @B.poll!
+    before do
+      # Two nodes at the same height
+      test.setup(num_nodes: 2)
+      @nodeA = create(:node_python)
+      @nodeA.client.set_python_node(test.nodes[0])
+      @nodeA.client.generate(2)
+
+      @nodeB = create(:node_python)
+      @nodeB.client.set_python_node(test.nodes[1])
+
+      test.sync_blocks()
     end
 
     it "should detect if node A and B are at the same block" do
-      expect(@A.check_if_behind!(@B)).to eq(nil)
+      expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
     end
 
     describe "when behind" do
       let(:user) { create(:user) }
 
       before do
-        @B.client.mock_set_height(560177)
-        @B.poll!
-        @first_check = @A.check_if_behind!(@B)
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
+
+        @nodeB.client.generate(1)
+        allow(Node).to receive(:bitcoin_core_by_version).and_return [@nodeA, @nodeB]
+
+        Node.poll!
+        @nodeA.peer_count = 1 # Bypass peer check in check_if_behind!
+        @first_check = @nodeA.check_if_behind!(@nodeB)
         Timecop.freeze(Time.now + 15 * 60)
       end
 
@@ -529,85 +535,71 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should detect if node A is behind node B" do
-        lag = @A.check_if_behind!(@B)
+        lag = @nodeA.check_if_behind!(@nodeB)
         expect(lag).not_to be_nil
-        expect(lag.node_a).to eq(@A)
-        expect(lag.node_b).to eq(@B)
+        expect(lag.node_a).to eq(@nodeA)
+        expect(lag.node_b).to eq(@nodeB)
       end
 
       it "should be nil if the node is unreachable" do
-        @A.client.mock_unreachable
-        @A.poll!
-        expect(@A.check_if_behind!(@B)).to eq(nil)
+        @nodeA.update unreachable_since: Time.now
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
       it "should be nil if the node is in initial block download" do
-        @A.client.mock_ibd(true)
-        @A.poll!
-        expect(@A.ibd).to eq(true)
-        expect(@A.check_if_behind!(@B)).to eq(nil)
+        @nodeA.update ibd: true
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
       it "should be nil if other node is in initial block download" do
-        @B.client.mock_ibd(true)
-        @B.poll!
-        expect(@B.ibd).to eq(true)
-        expect(@A.check_if_behind!(@B)).to eq(nil)
+        @nodeB.update ibd: true
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
       it "should be nil if the node has no peers" do
-        @A.client.mock_peer_count(0)
-        @A.poll!
-        expect(@A.peer_count).to eq(0)
-        expect(@A.check_if_behind!(@B)).to eq(nil)
+        @nodeA.peer_count = 0
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
-      it "should allow 1 extra block for old nodes" do
-        @A.client.mock_version(100300)
-        @A.update version: 100300
-        @A.poll!
-        expect(@A.check_if_behind!(@B)).to eq(nil)
-
-        @B.client.mock_set_height(560178)
-        @B.poll!
-        expect(@A.check_if_behind!(@B)).not_to eq(nil)
+      it "should allow extra blocks for old nodes" do
+        @nodeA.update version: 100300
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
+        @nodeB.client.generate(3)
+        Node.poll!
+        @nodeA.update peer_count: 1, version: 100300 # Undo override from poll
+        expect(@nodeA.check_if_behind!(@nodeB)).not_to eq(nil)
       end
 
       it "should detect if bcoin node A is behind (core) node B" do
-        @A.client.mock_version("2.0.0")
-        @A.client.mock_client_type(:bcoin)
-        @A.update version: "2.0.0"
-        @A.update client_type: :bcoin
-        @A.poll!
+        @nodeA.update version: "2.0.0"
+        @nodeA.update client_type: :bcoin
 
-        lag = @A.check_if_behind!(@B)
+        lag = @nodeA.check_if_behind!(@nodeB)
         expect(lag).not_to be_nil
-        expect(lag.node_a).to eq(@A)
-        expect(lag.node_b).to eq(@B)
+        expect(lag.node_a).to eq(@nodeA)
+        expect(lag.node_b).to eq(@nodeB)
       end
 
-      it "should allow 1 extra block for btcd" do
-        @A.client.mock_version(120000)
-        @A.client.mock_client_type(:btcd)
-        @A.update version: 120000
-        @A.update client_type: :btcd
-        @A.poll!
-        expect(@A.check_if_behind!(@B)).to eq(nil)
+      it "should allow extra blocks for btcd" do
+        @nodeA.update client_type: :btcd, version: 120000
+        expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
 
-        @B.client.mock_set_height(560178)
-        @B.poll!
-        expect(@A.check_if_behind!(@B)).not_to eq(nil)
+        @nodeB.client.generate(2)
+        @nodeA.update client_type: :core, version: 170000 # Poll should use core
+        Node.poll!
+        @nodeA.update peer_count: 1, client_type: :btcd, version: 120000
+        expect(@nodeA.check_if_behind!(@nodeB)).not_to eq(nil)
       end
 
       it "should send an email to all users" do
         expect(User).to receive(:all).and_return [user]
-        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
       end
 
       it "should send email only once" do
         expect(User).to receive(:all).and_return [user]
-        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-        expect { @A.check_if_behind!(@B) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+        expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
     end
