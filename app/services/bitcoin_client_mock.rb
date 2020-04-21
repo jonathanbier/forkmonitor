@@ -390,25 +390,6 @@ class BitcoinClientMock
           "warnings" => ""
         }
       }
-    else # BSV
-      res = {
-        180500 => { # Copied from BTC
-          "chain" => "main",
-          "blocks" => @height,
-          "headers" => @height,
-          "bestblockhash" => @block_hashes[@height],
-          # "difficulty" => 5883988430955.408,
-          "mediantime" => 1548515214,
-          "verificationprogress" => @ibd ? 1.753483709675226e-06 : 1.0,
-          "initialblockdownload" => @ibd,
-          "chainwork" => @blocks[@block_hashes[@height]]["chainwork"],
-          "size_on_disk" => 229120703086 + (@height - 560179) * 2000000,
-          "pruned" => false,
-          "softforks" => [],
-          "bip9_softforks" => {},
-          "warnings" => ""
-        }
-      }
     end
     throw "No getblockchaininfo mock for #{ @client_type }" unless res.present?
     res[@version]
