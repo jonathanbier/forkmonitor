@@ -10,6 +10,10 @@ FactoryBot.define do
      block
    end
 
+   factory :node_with_chaintip, parent: :node_with_block do |node|
+      chaintips { build_list :chaintip, 1, block: block, status: "active" }
+    end
+
    factory :node_with_mirror, parent: :node do
      mirror_rpchost { "127.0.0.1" }
      mirror_rpcport { 8336 }
