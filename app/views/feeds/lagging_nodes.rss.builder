@@ -9,7 +9,7 @@ xml.rss :version => "2.0" do
     @lagging_nodes.each do |lagging_node|
       cache lagging_node do
         xml.item do
-          xml.title "#{ lagging_node.node_a.name_with_version } is #{ lagging_node.node_b.active_chaintip.block.height - lagging_node.node_a.active_chaintip.block.height } blocks behind #{ lagging_node.node_b.name_with_version }"
+          xml.title "#{ lagging_node.node_a.name_with_version } is #{ lagging_node.node_b.block.height - lagging_node.node_a.block.height } blocks behind #{ lagging_node.node_b.name_with_version }"
           xml.pubDate lagging_node.created_at.to_s(:rfc822)
           xml.link api_v1_lagging_node_url(lagging_node)
           xml.guid api_v1_lagging_node_url(lagging_node)
