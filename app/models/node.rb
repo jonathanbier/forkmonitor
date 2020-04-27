@@ -442,10 +442,11 @@ class Node < ApplicationRecord
         logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
-    end
 
-    self.check_chaintips!(:tbtc)
-    self.check_stale_blocks!(:tbtc)
+
+      self.check_chaintips!(:tbtc)
+      self.check_stale_blocks!(:tbtc)
+    end
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
@@ -453,10 +454,10 @@ class Node < ApplicationRecord
         logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
-    end
 
-    self.check_chaintips!(:bch)
-    self.check_stale_blocks!(:bch)
+      self.check_chaintips!(:bch)
+      self.check_stale_blocks!(:bch)
+    end
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
       self.bsv_by_version.each do |node|
@@ -464,10 +465,10 @@ class Node < ApplicationRecord
         logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
-    end
 
-    self.check_chaintips!(:bsv)
-    self.check_stale_blocks!(:bsv)
+      self.check_chaintips!(:bsv)
+      self.check_stale_blocks!(:bsv)
+    end
 
     self.check_laggards!(options)
 
