@@ -59,7 +59,6 @@ class Chaintip < ApplicationRecord
       # invalid. Abort early if we marked the block invalid.
       parent = candidate_tip.block
       while parent.present? && parent.height >= block.height
-        if node.chaintips.find_by(block: parent, status: "invalid")
         break if parent.marked_invalid_by.include?(node.id) || node.chaintips.find_by(block: parent, status: "invalid")
         if parent == block
           self.update parent_chaintip: candidate_tip
