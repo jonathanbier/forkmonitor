@@ -22,11 +22,9 @@ class Nodes extends React.Component {
     this.state = {
       coin: props.match.params.coin,
       chaintips: [],
-      nodesWithoutTip: []
+      nodesWithoutTip: [],
+      fresh: false
     };
-
-    this.getChaintips = this.getChaintips.bind(this);
-    this.getNodes = this.getNodes.bind(this);
   }
 
   componentDidMount() {
@@ -34,20 +32,28 @@ class Nodes extends React.Component {
     this.getNodes(this.state.coin);
   }
 
-  componentWillReceiveProps(nextProps) {
-    const currentCoin = this.state && this.state.coin;
-    const nextCoin = nextProps.match.params.coin;
+  static getDerivedStateFromProps(props, state) {
+    const currentCoin = state.coin;
+    const nextCoin = props.match.params.coin;
 
     if (currentCoin !== nextCoin) {
-      this.setState({
-        coin: this.props.match.params.coin,
-        nodesWithoutTip: [],
-        chaintips: []
-      });
-      this.getChaintips(nextProps.match.params.coin);
-      this.getNodes(nextProps.match.params.coin);
+      state.coin = props.match.params.coin;
+      state.nodesWithoutTip = [];
+      state.chaintips = [];
+      state.fresh = true;
     }
 
+    return state;
+  }
+
+  componentDidUpdate() {
+    if (this.state.fresh) {
+      this.getChaintips(this.state.coin);
+      this.getNodes(this.state.coin);
+      this.setState({
+          fresh: false
+      })
+    }
   }
 
   getChaintips(coin) {

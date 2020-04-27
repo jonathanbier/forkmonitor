@@ -11,32 +11,40 @@ axios.defaults.headers.post['Content-Type'] = 'application/json'
 class Alerts extends React.Component {
   constructor(props) {
     super(props);
-    
-    this.state = {
-    };
 
-    this.getInvalidBlocks = this.getInvalidBlocks.bind(this);
-    this.getInflatedBlocks = this.getInflatedBlocks.bind(this);
+    this.state = {
+      fresh: true
+    };
   }
-  
+
   componentDidMount() {
     this.getInvalidBlocks(this.props.coin);
     this.getInflatedBlocks(this.props.coin);
   }
 
-  componentWillReceiveProps(nextProps) {
-    const currentCoin = this.props.coin;
-    const nextCoin = nextProps.coin;
-    
-    if (!this.state.invalid_blocks || currentCoin !== nextCoin) {
-      this.setState({
-        invalid_blocks: [],
-        inflated_blocks: []
-      });
-      this.getInvalidBlocks(nextProps.coin);    
-      this.getInflatedBlocks(nextProps.coin);    
+  static getDerivedStateFromProps(props, state) {
+    const currentCoin = state.coin;
+    const nextCoin = props.coin;
+
+    if (currentCoin !== nextCoin) {
+      state.coin = props.coin;
+      state.nodesWithoutTip = [];
+      state.chaintips = [];
+      state.fresh = true;
     }
-  
+
+    return state;
+  }
+
+  componentDidUpdate() {
+    if (this.state.fresh) {
+      this.getInvalidBlocks(this.state.coin);
+      this.getInflatedBlocks(this.state.coin);
+      this.setState({
+          fresh: false
+      });
+    }
+
   }
 
    getInvalidBlocks(coin) {
@@ -50,7 +58,7 @@ class Alerts extends React.Component {
       console.error(error);
     });
   }
-  
+
   getInflatedBlocks(coin) {
     axios.get('/api/v1/inflated_blocks?coin=' + coin).then(function (response) {
       return response.data;
