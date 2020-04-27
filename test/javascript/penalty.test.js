@@ -27,7 +27,7 @@ const mockPenaltyNoAmount = Object.assign({}, mockPenalty);
 mockPenaltyNoAmount.amount = null
 
 describe('component', () => {
-  const wrapper = mount(<Penalty penalty={ mockPenalty } />);
+  const wrapper = mount(<table><tbody><Penalty penalty={ mockPenalty } /></tbody></table>);
 
   test('should show block height',() => {
     expect(wrapper.text()).toContain("602,649");
@@ -42,7 +42,9 @@ describe('component', () => {
   });
 
   test('should not show amount if absent',() => {
-    wrapper.setProps({penalty: mockPenaltyNoAmount});
+    // https://github.com/enzymejs/enzyme/issues/1925#issuecomment-445442480
+    wrapper.setProps({children: <tbody><Penalty penalty={ mockPenaltyNoAmount } /></tbody>});
+    wrapper.update();
     expect(wrapper.text()).not.toContain("0.0360");
   });
 
