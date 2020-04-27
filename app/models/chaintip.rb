@@ -16,9 +16,7 @@ class Chaintip < ApplicationRecord
     res = chaintip_nodes.collect{ | c | c.node }
     chaintip_nodes.each do |chaintip_node|
       chaintip_node.children.each do |child|
-        Node.where("block_id = ?", child.block_id).each do |node_for_child|
-          res.append node_for_child
-        end
+        res.append child.node
       end
     end
     # Node ordering:
