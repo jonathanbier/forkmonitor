@@ -50,6 +50,12 @@ rake nodes:poll
 rake nodes:poll[BTC,TBTC]
 ```
 
+Prefix rake command with `debug` or `log` to see more progress details:
+
+```
+rake debug nodes:poll[BTC]
+```
+
 To poll all nodes continuously, or filter by coin:
 
 ```sh

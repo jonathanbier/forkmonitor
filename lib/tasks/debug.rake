@@ -35,3 +35,17 @@ namespace 'debug' do :env
     test.shutdown()
   end
 end
+
+task :verbose => [:environment] do
+  Rails.logger = Logger.new(STDOUT)
+end
+
+desc "Force rails logger log level to debug"
+task :debug => [:environment, :verbose] do
+  Rails.logger.level = Logger::DEBUG
+end
+
+desc "Force rails logger log level to info"
+task :info => [:environment, :verbose] do
+  Rails.logger.level = Logger::INFO
+end
