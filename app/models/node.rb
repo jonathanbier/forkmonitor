@@ -153,7 +153,7 @@ class Node < ApplicationRecord
       if blockchaininfo["initialblockdownload"].present?
         ibd = blockchaininfo["initialblockdownload"]
       elsif blockchaininfo["verificationprogress"].present?
-        ibd = blockchaininfo["verificationprogress"] < 0.99
+        ibd = blockchaininfo["verificationprogress"] < 0.9999
       elsif self.coin == "BTC"
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
