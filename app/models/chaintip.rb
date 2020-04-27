@@ -76,7 +76,7 @@ class Chaintip < ApplicationRecord
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
       # In that case, ignore the new chaintip and get back to it later.
       return nil unless block.present?
-      block.update marked_valid_by: block.marked_valid_by.push(node.id)
+      block.update marked_valid_by: block.marked_valid_by | [node.id]
       tip = Chaintip.process_active!(node, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
