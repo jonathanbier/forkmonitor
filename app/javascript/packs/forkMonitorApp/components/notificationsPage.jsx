@@ -113,9 +113,6 @@ class NotificationsPage extends React.Component {
     this.checkNotifs();
   }
 
-  componentWillReceiveProps(nextProps) {
-  }
-
   render() {
       return(
         <TabPane align="left" >
