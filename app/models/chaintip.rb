@@ -32,16 +32,35 @@ class Chaintip < ApplicationRecord
     super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes_for_identical_chaintips})
   end
 
+  # If chaintip has a parent, find all invalid chaintips above it, traverse down
+  # to see if it descends from us. If so, disconnect parent.
+  def check_parent!(node)
+    if parent_chaintip.present?
+      node.chaintips.joins(:block).where(status: "invalid").where("blocks.height > ?", block.height).each do |candidate_tip|
+        # Traverse candidate tip down
+        parent = candidate_tip.block
+        while parent.present? && parent.height >= block.height
+          if parent == block
+            self.update parent_chaintip: nil
+            break
+          end
+          parent = parent.parent
+        end
+      end
+    end
+  end
+
   def match_parent!(node)
-    # Check if any of the other nodes are ahead of us. Use their chaintip instead unless we consider it invalid:
+    # If we don't already have a parent, check if any of the other nodes are ahead of us.
+    # Use their chaintip instead unless we consider it invalid:
+    return if parent_chaintip.present?
     Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height > ?", block.height).each do |candidate_tip|
-      # Travers candidate tip down to find our tip
+      # Traverse candidate tip down, abort if block is from a chaintip we consider
+      # invalid. Abort early if we marked the block invalid.
       parent = candidate_tip.block
       while parent.present? && parent.height >= block.height
         if node.chaintips.find_by(block: parent, status: "invalid")
-          self.update parent_chaintip: nil
-          break
-        end
+        break if parent.marked_invalid_by.include?(node.id) || node.chaintips.find_by(block: parent, status: "invalid")
         if parent == block
           self.update parent_chaintip: candidate_tip
           break
@@ -53,9 +72,10 @@ class Chaintip < ApplicationRecord
   end
 
   def match_children!(node)
-    # Check if any of the other nodes are behind of us. Mark us their parent chaintip, unless they consider us invalid.
-    Chaintip.joins(:block).where(coin: self.coin, status: "active").where("blocks.height < ?", block.height).each do |candidate_tip|
-      # Travers down from ourselfves to find candidate tip
+    # Check if any of the other nodes are behind of us. If they don't have a parent,
+    # mark us their parent chaintip, unless they consider us invalid.
+    Chaintip.joins(:block).where(coin: self.coin, status: "active", parent_chaintip: nil).where("blocks.height < ?", block.height).each do |candidate_tip|
+      # Traverse down from ourselfves to find candidate tip
       parent = self.block
       while parent.present? && parent.height >= candidate_tip.block.height
         break if node.chaintips.find_by(block: parent, status: "invalid")
@@ -135,6 +155,9 @@ class Chaintip < ApplicationRecord
       nodes.each do |node|
         Chaintip.where(node: node).where(status: "active").each do |chaintip|
           chaintip.match_children!(node)
+          # Ensure newly matched children don't consider their parent invalid
+          chaintip.check_parent!(node)
+          # Find parent chaintip for nodes without one (e.g. because it was removed in the previous step)
           chaintip.match_parent!(node)
         end
       end

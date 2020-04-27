@@ -136,11 +136,38 @@ RSpec.describe Chaintip, type: :model do
         assert_nil(chaintip2.parent_chaintip)
       end
 
+      it "should not mark invalid chain as parent, based on block marked invalid" do
+        # Node B considers block b invalid:
+        block2.update marked_invalid_by: block2.marked_invalid_by | [nodeB.id]
+
+        chaintip2.match_parent!(nodeB)
+        assert_nil(chaintip2.parent_chaintip)
+      end
+    end
+
+  end
+
+  describe "check_parent!" do
+
+    let(:nodeA) { create(:node) }
+    let(:nodeB) { create(:node) }
+    let(:block1) { create(:block) }
+    let(:block2) { create(:block, parent: block1) }
+    let(:block3) { create(:block, parent: block2) }
+    let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
+    let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
+
+    describe "when another chaintip is longer" do
+
+      before do
+        chaintip1.update block: block2
+      end
+
       it "should unmark parent if it later considers it invalid" do
         chaintip2.update parent_chaintip: chaintip1 # For example via match_children!
 
         chaintip3 = create(:chaintip, block: block2, node: nodeB, status: "invalid")
-        chaintip2.match_parent!(nodeB)
+        chaintip2.check_parent!(nodeB)
         assert_nil(chaintip2.parent_chaintip)
       end
 
