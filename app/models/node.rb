@@ -28,7 +28,7 @@ class Node < ApplicationRecord
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
   scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
 
-  enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu]
+  enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu, :omni]
 
   scope :testnet_by_version, -> { where(enabled: true, coin: "TBTC").order(version: :desc) }
   scope :bch_by_version, -> { where(enabled: true, coin: "BCH").order(version: :desc) }
