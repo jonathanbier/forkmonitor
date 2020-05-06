@@ -22,7 +22,7 @@ class Chaintip < ApplicationRecord
     # Node ordering:
     # * behind nodes at the bottom
     # * order by client type, then version
-    res.uniq.sort_by{ |node| [-node.block.height, node.client_type_before_type_cast, node.name, -node.version] }
+    res.uniq.sort_by{ |node| [-node.active_chaintip.block.height, node.client_type_before_type_cast, node.name, -node.version] }
   end
 
   def as_json(options = nil)
