@@ -29,6 +29,7 @@ const client_choices = [
     { id: "knots", name: "Knots"},
     { id: "btcd", name: "Btcd"},
     { id: "libbitcoin", name: "libbitcoin"},
+    { id: "omni", name: "omni"},
     { id: "abc", name: "Bitcoin ABC"},
     { id: "sv", name: "Bitcoin SV"},
     { id: "bu", name: "Bitcoin Unlimited"},
