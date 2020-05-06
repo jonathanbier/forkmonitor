@@ -13,13 +13,7 @@ class NodeInflation extends React.Component {
   render() {
     return(
       <span className="font-weight-light">Supply:&nbsp;
-        {
-          this.props.txOutset == null && (
-            <FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
-          )
-        }
-        {
-          this.props.txOutset != null &&
+        { this.props.txOutset != null &&
           <span>
             <NumberFormat
               value={ this.props.txOutset.total_amount }
@@ -28,16 +22,12 @@ class NodeInflation extends React.Component {
               fixedDecimalScale={true}
               decimalScale={1}
             />&nbsp;
-            {
-              !this.props.txOutset.inflated &&
-              <FontAwesomeIcon className="text-success" icon={faCheckCircle} />
-            }
-            {
-              this.props.txOutset.inflated &&
-              <FontAwesomeIcon className="text-danger" icon={faTimesCircle} />
-            }
           </span>
         }
+        <FontAwesomeIcon
+          className={ this.props.txOutset == null ? "fa-pulse" : (!this.props.txOutset.inflated ? "text-success" : "text-danger") }
+          icon={ this.props.txOutset == null ? faSpinner : (!this.props.txOutset.inflated ? faCheckCircle : faTimesCircle) }
+        />
       </span>
     )
   }
