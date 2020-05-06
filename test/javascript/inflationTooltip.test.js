@@ -45,7 +45,7 @@ describe('InflationTooltip', () => {
   });
 
   test('should show coin supply', () => {
-    expect(wrapper.text()).toContain("17,993,054.82194891");
+    expect(wrapper.text()).toContain("17,993,054.8");
   });
 
   test('should not show coin supply if there is no txoutset', () => {

@@ -29,7 +29,8 @@ class Block < ApplicationRecord
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
         name_with_version: first_seen_by.name_with_version
-      } : nil})
+      } : nil
+    })
   end
 
   def log2_pow
