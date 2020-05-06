@@ -222,14 +222,16 @@ class Node < ApplicationRecord
       behind = true
     end
 
+    blocks_behind = node.active_chaintip.block.height - self.active_chaintip.block.height
+
     # Allow 1 block extra for 0.16 nodes and older:
-    return nil if self.core? && self.version < 169999 && self.active_chaintip.block.height > node.active_chaintip.block.height - 2
+    return nil if self.core? && self.version < 169999 && blocks_behind < 2
 
     # Allow 1 block extra for btcd and Knots nodes:
-    return nil if (self.btcd? || self.knots?) && self.active_chaintip.block.height > node.active_chaintip.block.height - 2
+    return nil if (self.btcd? || self.knots?) && blocks_behind < 2
 
     # Allow 10 blocks extra for libbitcion nodes:
-    return nil if self.libbitcoin? && self.active_chaintip.block.height > node.active_chaintip.block.height - 10
+    return nil if self.libbitcoin? && blocks_behind < 10
 
     # Remove entry if no longer behind
     if lag_entry && !behind
@@ -237,9 +239,16 @@ class Node < ApplicationRecord
       return nil
     end
 
-    # Store when we first discover the lag:
-    if !lag_entry && behind
-      lag_entry = Lag.create(node_a: self, node_b: node)
+    if behind
+      if !lag_entry
+        # Store when we first discover the lag
+        lag_entry = Lag.create(node_a: self, node_b: node, blocks: blocks_behind)
+      else
+        # Update block count, but only if it increased:
+        if lag_entry.blocks < blocks_behind
+          lag_entry.update blocks: blocks_behind
+        end
+      end
     end
 
     # Return false if behind but still in grace period:

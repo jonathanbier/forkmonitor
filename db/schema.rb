@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_03_24_125907) do
+ActiveRecord::Schema.define(version: 2020_05_06_090832) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -89,6 +89,7 @@ ActiveRecord::Schema.define(version: 2020_03_24_125907) do
     t.datetime "updated_at", null: false
     t.datetime "notified_at"
     t.boolean "publish", default: true, null: false
+    t.integer "blocks", default: 0
     t.index ["node_a_id"], name: "index_lags_on_node_a_id"
     t.index ["node_b_id"], name: "index_lags_on_node_b_id"
   end
