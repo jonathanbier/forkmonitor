@@ -177,7 +177,7 @@ class Node < ApplicationRecord
   def poll_mirror!
     return unless mirror_node?
     return unless self.core?
-    logger.debug "Polling mirror node..."
+    Rails.logger.debug "Polling mirror node..."
     begin
       blockchaininfo = mirror_client.getblockchaininfo
     rescue BitcoinClient::Error
@@ -302,13 +302,13 @@ class Node < ApplicationRecord
     versions_tally.each_with_index do |tally, bit|
       if tally >= threshold
         if current_alerts[bit].nil?
-          logger.info "Bit #{ bit } exceeds threshold"
+          Rails.logger.info "Bit #{ bit } exceeds threshold"
           current_alerts[bit] = VersionBit.create(bit: bit, activate: self.block)
         end
       elsif tally == 0
         current_alert = current_alerts[bit]
         if current_alert.present?
-          logger.info "Turn off alert for bit #{ bit }"
+          Rails.logger.info "Turn off alert for bit #{ bit }"
           current_alert.update deactivate: self.block
         end
       end
@@ -339,7 +339,7 @@ class Node < ApplicationRecord
     fork_txs = []
     fork_len.times do
       header = client.getblockheader(block_hash)
-      logger.debug "Processing fork block at height #{ header["height"] }"
+      Rails.logger.debug "Processing fork block at height #{ header["height"] }"
       block = getblock(block_hash, 1)
       fork_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
@@ -350,7 +350,7 @@ class Node < ApplicationRecord
     main_txs = []
     fork_len.times do
       header = client.getblockheader(block_hash)
-      logger.debug "Processing main chain block at height #{ header["height"] }"
+      Rails.logger.debug "Processing main chain block at height #{ header["height"] }"
       block = getblock(block_hash, 1)
       main_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
@@ -361,7 +361,7 @@ class Node < ApplicationRecord
     main_tip_txs = []
     while true do
       header = client.getblockheader(block_hash)
-      logger.debug "Processing main chain block at height #{ header["height"] }"
+      Rails.logger.debug "Processing main chain block at height #{ header["height"] }"
       block = getblock(block_hash, 1)
       main_tip_txs.concat block["tx"]
       block_hash = header["previousblockhash"]
@@ -423,13 +423,13 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       self.bitcoin_core_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
       self.bitcoin_core_unknown_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        logger.debug "Polling #{ node.coin } node #{node.id} (unknown verison)..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (unknown verison)..."
         node.poll!
       end
 
@@ -437,7 +437,7 @@ class Node < ApplicationRecord
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
         # Skip libbitcoin in repeat poll, due to ZMQ socket errors
         next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -448,7 +448,7 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
       self.testnet_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -460,7 +460,7 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -471,7 +471,7 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
       self.bsv_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -489,13 +489,13 @@ class Node < ApplicationRecord
   def self.poll_repeat!(options = {})
     # Trap ^C
     Signal.trap("INT") {
-      logger.info "\nShutting down gracefully..."
+      Rails.logger.info "\nShutting down gracefully..."
       exit
     }
 
     # Trap `Kill `
     Signal.trap("TERM") {
-      logger.info "\nShutting down gracefully..."
+      Rails.logger.info "\nShutting down gracefully..."
       exit
     }
 
@@ -551,13 +551,13 @@ class Node < ApplicationRecord
   def self.heavy_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
-      logger.info "\nShutting down gracefully..."
+      Rails.logger.info "\nShutting down gracefully..."
       exit
     }
 
     # Trap `Kill `
     Signal.trap("TERM") {
-      logger.info "\nShutting down gracefully..."
+      Rails.logger.info "\nShutting down gracefully..."
       exit
     }
 
@@ -626,13 +626,13 @@ class Node < ApplicationRecord
       core_nodes = self.bitcoin_core_by_version
       core_nodes.drop(1).each do |node|
         lag  = node.check_if_behind!(core_nodes.first)
-        logger.debug "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
+        Rails.logger.debug "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
       end
 
       self.bitcoin_alternative_implementations.each do |node|
         next if options[:repeat] && node.client_type.to_sym == :libbitcoin
         lag  = node.check_if_behind!(core_nodes.first)
-        logger.debug "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
+        Rails.logger.debug "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
       end
     end
   end
