@@ -27,7 +27,7 @@ class Node extends React.Component {
         </td>
         <td align="right">
           { this.props.node.has_mirror_node &&
-            <NodeInflation txOutset={ this.props.node.tx_outset } />
+            <NodeInflation node={this.props.node} txOutset={ this.props.node.tx_outset } />
           }
         </td>
       </tr>

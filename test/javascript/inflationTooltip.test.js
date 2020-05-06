@@ -5,11 +5,11 @@ import { mount, configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
-import NodeInflation from 'forkMonitorApp/components/nodeInflation';
+import InflationTooltip from 'forkMonitorApp/components/inflationTooltip';
 
 let wrapper;
 
-describe('NodeInflation', () => {
+describe('InflationTooltip', () => {
 
   const chaintip = {
     hash: "abcd",
@@ -28,35 +28,33 @@ describe('NodeInflation', () => {
 
   const node = {
     id: 1,
-    name_with_version: "Bitcoin Core 0.17.1",
+    name_with_version: "Bitcoin Core 0.20.0",
     best_block: chaintip,
     unreachable_since: null,
     ibd: false,
-    height: 500000 - 2,
+    height: 500000,
     os: "Linux"
   };
 
 
   beforeAll(() => {
-    wrapper = mount(<NodeInflation
+    wrapper = mount(<InflationTooltip
       node={ node }
       txOutset={ txOutset }
-      disableTooltip={ true } // Tooltip compoment doesn't play nicely with Jest
     />)
   });
 
   test('should show coin supply', () => {
-    expect(wrapper.text()).toContain("17,993,054.8");
+    expect(wrapper.text()).toContain("17,993,054.82194891");
   });
 
-  test('should show spinner if supply is being calculated', () => {
-    wrapper.setProps({txOutset: null})
-    expect(wrapper.exists('.fa-spinner')).toEqual(true);
+  test('should not show coin supply if there is no txoutset', () => {
+    wrapper.setProps({txOutset: null});
+    expect(wrapper.text()).not.toContain("17,993,054.82194891");
   });
 
-  test('should show "inflated" if supply is inflated', () => {
-    wrapper.setProps({txOutset: {inflated: true}})
-    expect(wrapper.exists('.fa-times-circle')).toEqual(true);
+  test('should show block height', () => {
+    expect(wrapper.text()).toContain("500,000");
   });
 
 });
