@@ -46,6 +46,17 @@ class FeedsController < ApplicationController
     end
   end
 
+  def unreachable_nodes
+    respond_to do |format|
+      format.rss do
+        @unreachable_nodes = Node.where(enabled: true).where.not(unreachable_since: nil).order(unreachable_since: :desc)
+        latest = @unreachable_nodes.first
+        if stale?(etag: latest.try(:unreachable_since), last_modified: latest.try(:unreachable_since))
+        end
+      end
+    end
+  end
+
   def version_bits
     respond_to do |format|
       format.rss do

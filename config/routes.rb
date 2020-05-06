@@ -36,6 +36,7 @@ Rails.application.routes.draw do
       get 'inflated_blocks/:coin', :action => :inflated_blocks
       get 'invalid_blocks/:coin', :action => :invalid_blocks
       get 'lagging_nodes'
+      get 'nodes/unreachable', :action => :unreachable_nodes
       get 'version_bits'
       get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
       get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias

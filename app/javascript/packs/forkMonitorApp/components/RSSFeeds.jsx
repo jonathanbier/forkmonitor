@@ -91,6 +91,12 @@ class RSSFeeds extends React.Component {
           <li>BTC <a href="/feeds/lagging_nodes.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
+        <h3>Unreachable nodes</h3>
+
+        <ul>
+          <li>All coins <a href="/feeds/nodes/unreachable.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
         <p>
           Checks if any of the nodes fell behind. This doesn't have to be
           a consensus problem, but we filter common reasons like being offline,

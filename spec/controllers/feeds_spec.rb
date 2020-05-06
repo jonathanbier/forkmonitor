@@ -74,6 +74,21 @@ RSpec.describe FeedsController, type: :controller do
       end
     end
 
+    describe "GET nodes/unreachable feed" do
+      let!(:node) { create(:node, unreachable_since: 1.hour.ago) }
+
+      it "should be rendered" do
+        get :unreachable_nodes, format: :rss
+        expect(response).to render_template("feeds/unreachable_nodes")
+        expect(response.body).to include("unreachable")
+      end
+
+      it "should contain an unreachable node" do
+        get :unreachable_nodes, format: :rss
+        expect(response.body).to include(node.name_with_version)
+      end
+    end
+
     describe "GET version_bits feed" do
       let!(:version_bit) { create(:version_bit) }
 
