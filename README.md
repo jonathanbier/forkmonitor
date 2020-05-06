@@ -50,7 +50,7 @@ rake nodes:poll
 rake nodes:poll[BTC,TBTC]
 ```
 
-Prefix rake command with `debug` or `log` to see more progress details:
+Prefix rake command with `debug` or `info` to see more progress details:
 
 ```
 rake debug nodes:poll[BTC]
