@@ -563,7 +563,7 @@ class Node < ApplicationRecord
 
     while true
       options[:coins].each do |coin|
-        InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 50})
+        InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 20})
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
       end

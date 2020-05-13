@@ -214,7 +214,12 @@ class InflatedBlock < ApplicationRecord
         node.update mirror_rest_until: 60.seconds.from_now
 
         if max_exceeded
-          raise "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
+          message = "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
+          if options[:coin] == :tbtc # Don't send error emails for testnet
+            Rails.logger.error message
+            return
+          end
+          raise message
         end
       } # end thread
     end
