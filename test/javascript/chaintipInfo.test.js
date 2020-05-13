@@ -7,6 +7,8 @@ configure({ adapter: new Adapter() });
 
 import ChaintipInfo from 'forkMonitorApp/components/chaintipInfo';
 
+import MockCableApp from './__mocks__/cableAppMock'
+
 const chaintip = {
     block: {
         hash: "abcd",
@@ -23,6 +25,7 @@ describe('rendered component', () => {
 
   const wrapper = mount(<ChaintipInfo
     chaintip={ chaintip }
+    cableApp={ MockCableApp }
   />);
 
   test('should display transaction count of tip block', () => {

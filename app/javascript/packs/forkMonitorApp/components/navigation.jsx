@@ -29,6 +29,8 @@ import {
   LinkContainer
 } from 'react-router-bootstrap'
 
+import actionCable from 'actioncable';
+
 import withTracker from './withTracker';
 
 import LogoImage from '../assets/images/logo.png'
@@ -40,6 +42,10 @@ import Nodes from './nodes';
 import AdminPage from './adminPage';
 import NotificationsPage from './notificationsPage';
 
+const CableApp = {};
+
+CableApp.cable = actionCable.createConsumer(process.env.NODE_ENV == 'production' ? 'wss://forkmonitor.info/cable' : 'ws://localhost:3000/cable');
+
 class Navigation extends React.Component {
   constructor(props) {
     super(props);
@@ -48,7 +54,7 @@ class Navigation extends React.Component {
   render() {
     return(
       <div>
-        <Router>
+        <Router cableApp={CableApp}>
           <div>
             <Navbar color="inverse" light expand="md">
                 <NavbarBrand href="/"><img src={ LogoImage } height="39pt"/></NavbarBrand>
@@ -91,7 +97,7 @@ class Navigation extends React.Component {
             <TabContent>
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
-                <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ } )} />
+                <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ }, {cableApp: CableApp} )} />
                 <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
                 <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />

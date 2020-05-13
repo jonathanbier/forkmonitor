@@ -6,7 +6,7 @@ import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
 import Chaintip from 'forkMonitorApp/components/chaintip';
-
+import MockCableApp from './__mocks__/cableAppMock'
 
 const mockNodes = [
     {id: 1, name: "Bitcoin Core", version: 170100, height: 500000, unreachable_since: null, ibd: false},
@@ -33,6 +33,7 @@ describe('rendered component', () => {
     nodes={ mockNodes }
     index={ 0 }
     last={ true }
+    cableApp={ MockCableApp }
   />);
 
   test('should contain two nodes', () => {

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import PropTypes from 'prop-types';
+
 import axios from 'axios';
 
 import {
@@ -97,6 +99,7 @@ class Nodes extends React.Component {
                   nodes={ chaintip.nodes }
                   index={ index }
                   last={ index != this.state.chaintips.length - 1 }
+                  cableApp={ this.props.cableApp }
                 />)
               }.bind(this))}
               { this.state.nodesWithoutTip.length > 0 &&
@@ -108,4 +111,9 @@ class Nodes extends React.Component {
       );
   }
 }
+
+
+Nodes.propTypes = {
+}
+
 export default Nodes

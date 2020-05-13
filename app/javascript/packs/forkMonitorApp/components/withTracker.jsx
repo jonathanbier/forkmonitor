@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import ReactGA from "react-ga";
 
-export const withTracker = (WrappedComponent, options = {}) => {
-  if (!process.env['GOOGLE_ANALYTICS']) {
-    return WrappedComponent;
+export const withTracker = (WrappedComponent, options = {}, extraProps = {}) => {
+
+  if (process.env['GOOGLE_ANALYTICS']) {
+    ReactGA.initialize(process.env['GOOGLE_ANALYTICS']);
   }
-  ReactGA.initialize(process.env['GOOGLE_ANALYTICS']);
 
   const trackPage = page => {
     ReactGA.set({
@@ -16,11 +16,13 @@ export const withTracker = (WrappedComponent, options = {}) => {
   };
 
   const HOC = props => {
-    useEffect(() => trackPage(props.location.pathname), [
-      props.location.pathname
-    ]);
+    if (process.env['GOOGLE_ANALYTICS']) {
+      useEffect(() => trackPage(props.location.pathname), [
+        props.location.pathname
+      ]);
+    }
 
-    return <WrappedComponent {...props} />;
+    return <WrappedComponent {...props} {...extraProps} />;
   };
 
   return HOC;

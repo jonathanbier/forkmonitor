@@ -166,6 +166,9 @@ class InflatedBlock < ApplicationRecord
 
             tx_outset = TxOutset.create_with(txouts: txoutsetinfo["txouts"], total_amount: txoutsetinfo["total_amount"]).find_or_create_by(block: block, node: node)
 
+            # Update websockets
+            InflationChannel.broadcast_to(node, tx_outset)
+
             # Check that inflation does not exceed the maximum permitted miner award per block
             prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
             if prev_tx_outset.nil?

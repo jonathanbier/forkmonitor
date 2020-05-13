@@ -24,7 +24,11 @@ class NodesWithoutTip extends React.Component {
               <tbody>
                 {this.props.nodes.map(function (node) {
                   return (
-                    <Node node={ node } key={node.id} className="pull-left node-info" />
+                    <Node
+                      node={ node }
+                      key={node.id}
+                      className="pull-left node-info"
+                    />
                   )
                 }.bind(this))}
                 </tbody>

@@ -6,6 +6,7 @@ import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
 import NodeInfo from 'forkMonitorApp/components/nodeInfo';
+import MockCableApp from './__mocks__/cableAppMock';
 
 let wrapper;
 
@@ -32,6 +33,7 @@ describe('NodeInfo', () => {
       key={ 1 }
       node={ node }
       chaintip={ {block: chaintip} }
+      cableApp={ MockCableApp }
     />)
     wrapper.setState({tooltipOpen: true})
   });

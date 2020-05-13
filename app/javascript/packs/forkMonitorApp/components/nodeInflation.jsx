@@ -1,5 +1,7 @@
 import React from 'react';
 
+import PropTypes from 'prop-types';
+
 import { Badge } from 'reactstrap';
 import { Tooltip } from 'reactstrap';
 
@@ -11,6 +13,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 import NumberFormat from 'react-number-format';
 
 import InflationTooltip from './inflationTooltip';
+import InflationWebSocket from './inflationWebSocket';
 
 class NodeInflation extends React.Component {
   constructor(props) {
@@ -18,7 +21,8 @@ class NodeInflation extends React.Component {
 
     this.toggle = this.toggle.bind(this);
     this.state = {
-      tooltipOpen: false
+      tooltipOpen: false,
+      txOutset: props.txOutset
     };
   }
 
@@ -28,13 +32,21 @@ class NodeInflation extends React.Component {
     });
   }
 
+  updateTxOutset = (newTxOutset) => {
+    if (newTxOutset.height == this.props.node.height) {
+      this.setState({
+        txOutset: newTxOutset
+      })
+    }
+  }
+
   render() {
     return(
       <span id={`inflation-node-${ this.props.node.id }`} className="font-weight-light">Supply:&nbsp;
-        { this.props.txOutset != null &&
+        { this.state.txOutset != null &&
           <span>
             <NumberFormat
-              value={ this.props.txOutset.total_amount }
+              value={ this.state.txOutset.total_amount }
               displayType={'text'}
               thousandSeparator={true}
               fixedDecimalScale={true}
@@ -43,8 +55,8 @@ class NodeInflation extends React.Component {
           </span>
         }
         <FontAwesomeIcon
-          className={ this.props.txOutset == null ? "fa-pulse" : (!this.props.txOutset.inflated ? "text-success" : "text-danger") }
-          icon={ this.props.txOutset == null ? faSpinner : (!this.props.txOutset.inflated ? faCheckCircle : faTimesCircle) }
+          className={ this.state.txOutset == null ? "fa-pulse" : (!this.state.txOutset.inflated ? "text-success" : "text-danger") }
+          icon={ this.state.txOutset == null ? faSpinner : (!this.state.txOutset.inflated ? faCheckCircle : faTimesCircle) }
         />
         { !this.props.disableTooltip &&
           <Tooltip
@@ -55,11 +67,23 @@ class NodeInflation extends React.Component {
             modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
             style={{maxWidth: "100%", textAlign: "left"}}
           >
-            <InflationTooltip node={ this.props.node } txOutset={ this.props.txOutset }  />
+            <InflationTooltip node={ this.props.node } txOutset={ this.state.txOutset }  />
           </Tooltip>
         }
+        <InflationWebSocket
+          cableApp={ this.props.cableApp }
+          node={ this.props.node }
+          txOutset={ this.state.txOutset }
+          updateTxOutset={ this.updateTxOutset }
+        />
       </span>
     )
   }
 }
+
+
+NodeInflation.propTypes = {
+  cableApp: PropTypes.any.isRequired
+}
+
 export default NodeInflation

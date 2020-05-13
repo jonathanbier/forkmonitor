@@ -1,5 +1,7 @@
 import React from 'react';
 
+import PropTypes from 'prop-types';
+
 import Moment from 'react-moment';
 
 import {
@@ -27,11 +29,19 @@ class Node extends React.Component {
         </td>
         <td align="right">
           { this.props.node.has_mirror_node &&
-            <NodeInflation node={this.props.node} txOutset={ this.props.node.tx_outset } />
+            <NodeInflation
+              node={ this.props.node }
+              txOutset={ this.props.node.tx_outset }
+              cableApp={ this.props.cableApp }
+            />
           }
         </td>
       </tr>
     )
   }
 }
+
+Node.propTypes = {
+}
+
 export default Node

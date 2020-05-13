@@ -50,4 +50,6 @@ Rails.application.routes.draw do
   get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
   get 'admin', to: "pages#root"
   get 'notifications', to: "pages#root"
+
+  mount ActionCable.server => '/cable'
 end

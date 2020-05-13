@@ -1,5 +1,7 @@
 import React from 'react';
 
+import PropTypes from 'prop-types';
+
 import {
     Row,
     Col,
@@ -26,7 +28,13 @@ class Chaintip extends React.Component {
               <tbody>
                 {this.props.chaintip.nodes.map(function (node, index) {
                   return (
-                    <Node node={ node } key={node.id} chaintip={ this.props.chaintip } className="pull-left node-info" />
+                    <Node
+                      node={ node }
+                      key={node.id}
+                      chaintip={ this.props.chaintip }
+                      cableApp={ this.props.cableApp }
+                      className="pull-left node-info"
+                    />
                   )
                 }.bind(this))}
               </tbody>
@@ -40,4 +48,9 @@ class Chaintip extends React.Component {
     )
   }
 }
+
+Chaintip.propTypes = {
+  cableApp: PropTypes.any.isRequired
+}
+
 export default Chaintip

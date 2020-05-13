@@ -6,6 +6,7 @@ import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
 import NodeInflation from 'forkMonitorApp/components/nodeInflation';
+import MockCableApp from './__mocks__/cableAppMock'
 
 let wrapper;
 
@@ -42,6 +43,7 @@ describe('NodeInflation', () => {
       node={ node }
       txOutset={ txOutset }
       disableTooltip={ true } // Tooltip compoment doesn't play nicely with Jest
+      cableApp={ MockCableApp }
     />)
   });
 
@@ -50,12 +52,12 @@ describe('NodeInflation', () => {
   });
 
   test('should show spinner if supply is being calculated', () => {
-    wrapper.setProps({txOutset: null})
+    wrapper.setState({txOutset: null})
     expect(wrapper.exists('.fa-spinner')).toEqual(true);
   });
 
   test('should show "inflated" if supply is inflated', () => {
-    wrapper.setProps({txOutset: {inflated: true}})
+    wrapper.setState({txOutset: {inflated: true}})
     expect(wrapper.exists('.fa-times-circle')).toEqual(true);
   });
 

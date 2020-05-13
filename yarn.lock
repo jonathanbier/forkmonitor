@@ -1473,6 +1473,11 @@ acorn@^6.0.1, acorn@^6.4.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-6.4.1.tgz#531e58ba3f51b9dacb9a6646ca4debf5b14ca474"
   integrity sha512-ZVA9k326Nwrj3Cj9jlh3wGFutC2ZornPNARZwsNYqQYgN0EsV2d53w5RN/co65Ohn4sUAUtb1rSUAOD6XN9idA==
 
+actioncable@^5.2.4-2:
+  version "5.2.4-2"
+  resolved "https://registry.yarnpkg.com/actioncable/-/actioncable-5.2.4-2.tgz#3f58efd0704a68dd3f096810d3d344c0d92ac81c"
+  integrity sha512-tq2WNngBruV7uxCRCHTg+DDdrgG1ynSymV+2m8ocfnD0EiUx8C/BMuf/xsnfKAhNWZsKvcPZsIUGbVSjhGwhuA==
+
 adjust-sourcemap-loader@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/adjust-sourcemap-loader/-/adjust-sourcemap-loader-2.0.0.tgz#6471143af75ec02334b219f54bc7970c52fb29a4"

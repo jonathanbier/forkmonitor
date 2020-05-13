@@ -8,6 +8,7 @@ import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
 import Nodes from 'forkMonitorApp/components/nodes';
+import MockCableApp from './__mocks__/cableAppMock'
 
 jest.mock('axios');
 
@@ -42,7 +43,10 @@ axios.get.mockImplementation(url => {
 });
 
 test('rendered component', async () => {
-  const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
+  const wrapper = shallow(<Nodes
+    match={{params: {coin: 'BTC'}}}
+    cableApp={ MockCableApp }
+  />);
   await flushPromises();
   expect(wrapper.find('Chaintip')).toHaveLength(1);
   expect(wrapper.find('NodesWithoutTip')).toHaveLength(0);
@@ -57,7 +61,10 @@ test('can handle node without best block', async () => {
   }
   mockNodes[0].height = null
 
-  const wrapper = shallow(<Nodes match={{params: {coin: 'BTC'}}} />);
+  const wrapper = shallow(<Nodes
+    match={{params: {coin: 'BTC'}}}
+    cableApp={ MockCableApp }
+  />);
   await flushPromises();
   expect(wrapper.find('Chaintip')).toHaveLength(1);
   expect(wrapper.find('NodesWithoutTip')).toHaveLength(1);
