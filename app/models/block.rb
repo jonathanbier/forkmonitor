@@ -230,6 +230,7 @@ class Block < ApplicationRecord
       "Mined by MultiCoin.co" => "MultiCoin.co",
       "Rawpool.com" => "Rawpool.com",
       "SigmaPool.com" => "SigmaPool.com",
+      "SBIC" => "SBI Crypto",
       "TBDice" => "TBDice",
       "Triplemining.com" => "TripleMining",
       "bcpool.io" => "bcpool.io",
