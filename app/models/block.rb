@@ -197,6 +197,7 @@ class Block < ApplicationRecord
       "/haozhuzhu/" => "HAOZHUZHU",
       "/mined by gbminers/" => "GBMiners",
       "/mined by poopbut/" => "MiningKings",
+      "/Mining-Dutch" => "Mining-Dutch",
       "/mtred/" => "Mt Red",
       "/phash.cn/" => "PHash.IO",
       "/phash.io/" => "PHash.IO",
