@@ -988,11 +988,14 @@ RSpec.describe Node, :type => :model do
         @nodeB.client.generate(2) # alternative chain with same length
         @nodeA.poll!
         @nodeB.poll!
+        @nodeA.reload
         expect(@nodeA.block.height).to eq(@nodeB.block.height)
         expect(@nodeA.block.block_hash).not_to eq(@nodeB.block.block_hash)
         test.connect_nodes(@nodeA.client, 1)
         # Don't sync, as the test framework will time out
         # test.sync_blocks()
+
+        allow(User).to receive(:all).twice.and_return [user]
       end
 
       it "should trigger potential stale block alert" do
@@ -1002,6 +1005,21 @@ RSpec.describe Node, :type => :model do
         expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(2)
         # Just once...
         expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "should be quiet at an invalid block alert" do
+        i = InvalidBlock.create(block: @nodeA.block, node: @nodeA)
+        expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "should be quiet after an invalid block alert" do
+        i = InvalidBlock.create(block: @nodeA.block.parent, node: @nodeA)
+        expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      end
+
+      it "should notify again if alert was dismissed" do
+        InvalidBlock.create(block: @nodeA.block.parent, node: @nodeA, dismissed_at: Time.now)
+        expect { Node.check_stale_blocks!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(2)
       end
     end
 

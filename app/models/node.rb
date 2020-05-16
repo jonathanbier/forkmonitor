@@ -597,7 +597,12 @@ class Node < ApplicationRecord
     # Look for potential stale blocks, i.e. more than one block at the same height
     tip_height = Block.where(coin: coin).maximum(:height)
     return if tip_height.nil?
-    Block.select(:height).where(coin: coin).where("height > ?", tip_height - 100).group(:height).having('count(height) > 1').each do |block|
+    block_window = Rails.env.test? ? 2 : 100
+    Block.select(:height).where(coin: coin).where("height > ?", tip_height - block_window).group(:height).having('count(height) > 1').each do |block|
+      # If there was an invalid block, assume there's fork:
+      # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
+      #       until then, we assume a forked node is deleted and the alert is dismissed
+      next if InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin]).count > 0
       @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
       if @stale_candidate.notified_at.nil?
         User.all.each do |user|
