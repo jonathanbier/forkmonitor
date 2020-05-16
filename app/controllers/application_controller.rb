@@ -10,14 +10,14 @@ class ApplicationController < ActionController::Base
 
   def set_coin
     @coin = params[:coin].downcase.to_sym
-    unless params[:coin].present? && Node::SUPPORTED_COINS.include?(@coin)
+    unless params.key?(:coin) && Node::SUPPORTED_COINS.include?(@coin)
       render json: "invalid param", status: :unprocessable_entity
       return
     end
   end
 
   def set_coin_optional
-    set_coin if params[:coin].present?
+    set_coin if params.key?(:coin)
   end
 
 end

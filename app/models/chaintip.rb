@@ -144,7 +144,7 @@ class Chaintip < ApplicationRecord
     }
     Chaintip.transaction {
       result = chaintip_sets.collect { |set|
-        if set[:chaintips].present?
+        if set.key?(:chaintips) && !set[:chaintips].nil?
           Chaintip.process_getchaintips(set[:chaintips], set[:node])
         end
       }

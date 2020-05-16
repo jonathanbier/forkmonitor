@@ -150,9 +150,9 @@ class Node < ApplicationRecord
     if self.libbitcoin?
       ibd = block_height < 560176
     elsif blockchaininfo.present?
-      if blockchaininfo["initialblockdownload"].present?
+      if blockchaininfo.key?("initialblockdownload")
         ibd = blockchaininfo["initialblockdownload"]
-      elsif blockchaininfo["verificationprogress"].present?
+      elsif blockchaininfo.key?("verificationprogress")
         ibd = blockchaininfo["verificationprogress"] < 0.9999
       elsif self.coin == "BTC"
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10

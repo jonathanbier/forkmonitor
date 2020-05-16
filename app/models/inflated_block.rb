@@ -20,7 +20,7 @@ class InflatedBlock < ApplicationRecord
   end
 
   def self.check_inflation!(options)
-    max = options[:max].present? ? options[:max] : 10
+    max = options.key?(:max) ? options[:max] : 10
 
     threads = []
 

@@ -46,7 +46,7 @@ class LightningTransaction < ApplicationRecord
 
   def self.check!(options)
     throw "Only BTC mainnet supported" unless options[:coin].nil? || options[:coin] == :btc
-    throw "Must specifiy :max" unless options[:max].present?
+    throw "Must specifiy :max" unless options.key?(:max)
     throw "Parameter :max should be at least 1" if options[:max] < 1
     begin
       node = Node.first_with_txindex(:btc, :core)

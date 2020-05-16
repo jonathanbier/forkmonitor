@@ -124,7 +124,7 @@ class Block < ApplicationRecord
     # Set pool:
     pool = node.get_pool_for_block!(block_info["hash"], use_mirror, block_info)
 
-    tx_count = block_info["nTx"].present? ? block_info["nTx"] :
+    tx_count = block_info.key?("nTx") ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
                nil
 
