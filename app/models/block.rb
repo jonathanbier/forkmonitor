@@ -216,6 +216,7 @@ class Block < ApplicationRecord
       "Bitalo" => "Bitalo",
       "Bitsolo Pool" => "Bitsolo",
       "CoinLab" => "CoinLab",
+      "^easy2" => "WaYi",
       "EMC" => "EclipseMC",
       "Eligius" => "Eligius",
       "Give-Me-Coins" => "Give Me Coins",
