@@ -169,7 +169,7 @@ class Block < ApplicationRecord
       "/AntPool/" => "Antpool",
       "/BATPOOL/" => "BATPOOL",
       "/BCMonster/" => "BCMonster",
-      "/BTC.COM/" => "BTC.com",
+      "BTC.COM" => "BTC.com",
       "/BTC.TOP/" => "BTC.TOP",
       "/BTCC/" => "BTCC Pool",
       "/BitClub Network/" => "BitClub Network",
