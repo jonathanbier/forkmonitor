@@ -202,7 +202,7 @@ class Block < ApplicationRecord
       "/phash.io/" => "PHash.IO",
       "/pool34/" => "21 Inc.",
       "/poolin.com/" => "Poolin",
-      "/prohashing.com/" => "Prohashing",
+      "/prohashing.com" => "Prohashing",
       "/slush/" => "SlushPool",
       "/solo.ckpool.org/" => "Solo CKPool",
       "50BTC" => "50BTC",
