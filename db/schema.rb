@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_06_090832) do
+ActiveRecord::Schema.define(version: 2020_05_27_101747) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -145,6 +145,7 @@ ActiveRecord::Schema.define(version: 2020_05_06_090832) do
     t.datetime "mirror_rest_until"
     t.boolean "python", default: false, null: false
     t.datetime "polled_at"
+    t.integer "sync_height"
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
   end

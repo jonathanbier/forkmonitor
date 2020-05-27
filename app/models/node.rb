@@ -69,7 +69,7 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :unreachable_since, :ibd, :client_type, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released]
+    fields = [:id, :unreachable_since, :ibd, :client_type, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :sync_height]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
@@ -150,6 +150,7 @@ class Node < ApplicationRecord
     if self.libbitcoin?
       ibd = block_height < 560176
     elsif blockchaininfo.present?
+      block_height = blockchaininfo["height"]
       if blockchaininfo.key?("initialblockdownload")
         ibd = blockchaininfo["initialblockdownload"]
       elsif blockchaininfo.key?("verificationprogress")
@@ -158,7 +159,7 @@ class Node < ApplicationRecord
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
     end
-    self.update ibd: ibd
+    self.update ibd: ibd, sync_height: ibd ? block_height : nil
 
     if blockchaininfo.present?
       best_block_hash = blockchaininfo["bestblockhash"]

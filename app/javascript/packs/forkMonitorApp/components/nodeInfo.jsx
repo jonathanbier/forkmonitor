@@ -37,6 +37,9 @@ class NodeInfo extends React.Component {
         >
           <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } verbose={ true } />
           <ul style={{paddingLeft: 0, marginBottom: 0}}>
+            { this.props.node.ibd &&
+              <li>Sync height: { this.props.node.sync_height }</li>
+            }
             <li>Operating system: { this.props.node.os }</li>
             <li>CPU: { this.props.node.cpu }</li>
             <li>RAM: { this.props.node.ram } GB</li>

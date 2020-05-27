@@ -133,6 +133,13 @@ RSpec.describe Node, :type => :model do
           expect(@node.block).to be_nil
         end
 
+        # TODO: figure out how to put a regtest node in an IBD state
+        # it "should store sync height if in IBD" do
+        #   allow(@node).to receive("ibd").and_return(true)
+        #   @node.poll!
+        #   expect(@node.sync_height).to eq(2)
+        # end
+
         it "should store the latest block if not in IBD" do
           @node.poll!
           expect(@node.block).not_to be_nil
