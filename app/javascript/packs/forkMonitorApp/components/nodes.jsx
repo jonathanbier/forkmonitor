@@ -103,7 +103,11 @@ class Nodes extends React.Component {
                 />)
               }.bind(this))}
               { this.state.nodesWithoutTip.length > 0 &&
-                <NodesWithoutTip coin={ this.state.coin } nodes={ this.state.nodesWithoutTip } />
+                <NodesWithoutTip
+                  coin={ this.state.coin }
+                  nodes={ this.state.nodesWithoutTip }
+                  cableApp={ this.props.cableApp }
+                />
               }
           </Container>
 

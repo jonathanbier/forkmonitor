@@ -1,5 +1,7 @@
 import React from 'react';
 
+import PropTypes from 'prop-types';
+
 import {
     Row,
     Col,
@@ -25,6 +27,7 @@ class NodesWithoutTip extends React.Component {
                 {this.props.nodes.map(function (node) {
                   return (
                     <Node
+                      cableApp={ this.props.cableApp }
                       node={ node }
                       key={node.id}
                       className="pull-left node-info"
@@ -39,4 +42,9 @@ class NodesWithoutTip extends React.Component {
     )
   }
 }
+
+NodesWithoutTip.propTypes = {
+  cableApp: PropTypes.any.isRequired
+}
+
 export default NodesWithoutTip

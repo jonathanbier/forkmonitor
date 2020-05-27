@@ -42,6 +42,7 @@ class Node extends React.Component {
 }
 
 Node.propTypes = {
+  cableApp: PropTypes.any.isRequired
 }
 
 export default Node
