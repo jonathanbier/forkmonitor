@@ -5,6 +5,8 @@ import { shallow, configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
 configure({ adapter: new Adapter() });
 
+import MockCableApp from './__mocks__/cableAppMock'
+
 import NodesWithoutTip from 'forkMonitorApp/components/nodesWithoutTip';
 
 test('rendered component', () => {
@@ -15,6 +17,7 @@ test('rendered component', () => {
   const wrapper = shallow(<NodesWithoutTip
     coin="BTC"
     nodes={ nodes }
+    cableApp={ MockCableApp }
   />);
   expect(wrapper.find('.node-info')).toHaveLength(1);
 });
