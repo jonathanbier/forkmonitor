@@ -30,6 +30,7 @@ const client_choices = [
     { id: "btcd", name: "Btcd"},
     { id: "libbitcoin", name: "libbitcoin"},
     { id: "omni", name: "omni"},
+    { id: "blockcore", name: "Blockcore"},
     { id: "abc", name: "Bitcoin ABC"},
     { id: "sv", name: "Bitcoin SV"},
     { id: "bu", name: "Bitcoin Unlimited"},
