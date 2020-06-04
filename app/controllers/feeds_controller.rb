@@ -133,10 +133,4 @@ class FeedsController < ApplicationController
       end
     end
   end
-
-  private
-
-  def set_coin
-    @coin = params[:coin].downcase.to_sym
-  end
 end
