@@ -47,7 +47,6 @@ gem 'webpush'
 
 # Email when something breaks
 gem 'exception_notification'
-gem 'exception_notification-rake', '~> 0.3.0'
 
 # Generate text versions of email
 gem 'actionmailer-text'

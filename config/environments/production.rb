@@ -122,6 +122,4 @@ Rails.application.configure do
     },
     :error_grouping => true,
    :ignore_exceptions => ["Rack::Timeout::RequestTimeoutException"] + ExceptionNotifier.ignored_exceptions
-
-  ExceptionNotifier::Rake.configure
 end
