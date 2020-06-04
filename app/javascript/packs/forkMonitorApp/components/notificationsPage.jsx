@@ -86,7 +86,7 @@ class NotificationsPage extends React.Component {
 
   getKeys() {
     var applicationServerKey = this.state.vapidPublicKey;
-    navigator.serviceWorker.register(process.env.NODE_ENV == 'production' ? '/assets/serviceworker-4712d5ce5f6340d63e10db26507ae3a44d29fb8629d66adbb6a7e0696301f2e0.js' : 'serviceworker.js', {scope: './'})
+    navigator.serviceWorker.register(process.env.NODE_ENV == 'production' ? '/assets/serviceworker-4712d5ce5f6340d63e10db26507ae3a44d29fb8629d66adbb6a7e0696301f2e0.js' : '/assets/serviceworker.js', {scope: './assets/'})
     .then(function(registration) {
       return registration.pushManager.getSubscription()
         .then(function(subscription) {
