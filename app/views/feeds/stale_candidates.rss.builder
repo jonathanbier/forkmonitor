@@ -17,7 +17,7 @@ xml.rss :version => "2.0" do
       cache stale_candidate do
         xml.item do
           xml.title "There are #{ Block.where(coin: stale_candidate.coin, height: stale_candidate.height).count } distinct blocks at height #{ stale_candidate.height }"
-          xml.description "Blocks: #{ Block.where(coin: stale_candidate.coin, height: stale_candidate.height).collect {|block| block.summary(time = true) }.join(', ')}"
+          xml.description "Blocks: #{ Block.where(coin: stale_candidate.coin, height: stale_candidate.height).collect {|block| block.summary(time: true, first_seen_by: true) }.join(', ')}"
           xml.pubDate stale_candidate.created_at.to_s(:rfc822)
           xml.link api_v1_stale_candidate_url(stale_candidate)
           xml.guid api_v1_stale_candidate_url(stale_candidate)

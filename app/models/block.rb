@@ -109,7 +109,7 @@ class Block < ApplicationRecord
     Block.where("id in (?)", block_ids).update connected: true
   end
 
-  def summary(time=false)
+  def summary(time: false, first_seen_by: false)
     result = block_hash + " ("
     if size.present?
       result += "#{ (size / 1000.0 / 1000.0).round(2) } MB, "
@@ -117,7 +117,11 @@ class Block < ApplicationRecord
     if time && timestamp.present?
       result += "#{ Time.at(timestamp).utc.strftime("%H:%M:%S") } by "
     end
-    return result + "#{ pool.present? ? pool : "unknown pool" })"
+    result += "#{ pool.present? ? pool : "unknown pool" }"
+    if first_seen_by && self.first_seen_by.present?
+      result += ", first seen by #{ self.first_seen_by.name_with_version }"
+    end
+    return result + ")"
   end
 
   def self.create_with(block_info, use_mirror, node, mark_valid)

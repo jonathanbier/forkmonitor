@@ -44,6 +44,15 @@ RSpec.describe Block, :type => :model do
       block.size = nil
       expect(block.summary).to eq("0000000 (unknown pool)")
     end
+    it "should show first seen by if requested" do
+      block = create(:block, pool: nil, first_seen_by: build(:node))
+      expect(block.summary(first_seen_by: true)).to include("first seen by Bitcoin Core 0.17.1")
+    end
+    it "should not show first seen by if unknown" do
+      block = create(:block, pool: nil, first_seen_by: nil)
+      expect(block.summary(first_seen_by: true)).not_to include("first seen by Bitcoin Core 0.17.1")
+    end
+
   end
 
   describe "version_bits" do
