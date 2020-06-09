@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  match '(*any)', to: redirect(subdomain: ''), via: :all, constraints: {subdomain: 'www'}
+  match '(*any)', to: redirect(subdomain: ''), via: :all, constraints: {subdomain: 'www'} if Rails.env.production?
 
   devise_for :users,
              path: '',
