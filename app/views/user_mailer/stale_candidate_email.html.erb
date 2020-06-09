@@ -3,7 +3,7 @@
   <ul>
     <% @blocks.each do | block | %>
       <li>
-        <%= block.summary(time = true) %>
+        <%= block.summary(time: true, first_seen_by: true) %>
       </li>
     <% end %>
   </ul>
