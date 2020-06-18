@@ -56,9 +56,10 @@ RSpec.describe InflatedBlock, type: :model do
 
       @node.client.generate(1)
       test.sync_blocks()
+      @node.poll!
     end
 
-    it "should skip that's not synced" do
+    it "should skip mirror node that's not synced" do
       @node.update mirror_block: nil
       allow(@node).to receive(:poll_mirror!).and_return nil
       expect(@node.mirror_client).not_to receive("setnetworkactive").with(false)
@@ -73,12 +74,20 @@ RSpec.describe InflatedBlock, type: :model do
     end
 
     it "should call gettxoutsetinfo on BTC mirror node" do
+      expect(@node).to receive(:poll_mirror!).and_call_original
       expect(@node.mirror_client).to receive("gettxoutsetinfo").and_call_original
 
       InflatedBlock.check_inflation!({coin: :btc})
 
       expect(TxOutset.count).to eq(2)
       expect(TxOutset.last.block.height).to eq(6)
+    end
+
+    it "should not even poll the mirror if main node doesn't have a fresh block" do
+      InflatedBlock.check_inflation!({coin: :btc})
+      expect(@node).not_to receive(:poll_mirror!)
+      expect(@node.mirror_client).not_to receive("gettxoutsetinfo").and_call_original
+      InflatedBlock.check_inflation!({coin: :btc})
     end
 
     it "should not call gettxoutsetinfo for block with existing tx outset info" do
@@ -187,6 +196,7 @@ RSpec.describe InflatedBlock, type: :model do
         test.connect_nodes(@node.client, 2)
         @node.client.generate(1)
         test.sync_blocks()
+        @node.poll!
         @node.mirror_client.mock_set_extra_inflation(1.0)
       end
 

@@ -30,6 +30,7 @@ class InflatedBlock < ApplicationRecord
 
       next unless node.mirror_node? && node.core?
       next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.now
+
       Rails.logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
       throw "Node in Initial Blockchain Download" if node.ibd
       if node.restore_mirror == false
@@ -41,6 +42,12 @@ class InflatedBlock < ApplicationRecord
         begin
           # If anything goes wrong, re-enable the p2p networking and undo invalidateblock before throwing
           invalidated_block_hashes = []
+
+          # Take a break if main node doesn't have a new block
+          if TxOutset.find_by(block: node.block, node: node).present?
+            sleep 5 unless Rails.env.test?
+            Thread.exit
+          end
 
           begin
             # Update mirror node tip and fetch most recent blocks if needed
