@@ -137,6 +137,7 @@ RSpec.describe Block, :type => :model do
         "nTx" => 3024,
         "previousblockhash" => "00000000000000000005b127b27cc0771e1b0fcb18dcba4c0644f2bb4dc90597"
       }
+      allow(Node).to receive("get_pool_for_block!").and_return("Antpool")
     end
 
     it "should store the version" do

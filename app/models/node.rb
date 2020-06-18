@@ -10,6 +10,7 @@ class Node < ApplicationRecord
   class ConnectionError < Error; end
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
+  class NoMatchingNodeError < Error; end
 
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
@@ -377,28 +378,6 @@ class Node < ApplicationRecord
     puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
   end
 
-  def get_pool_for_block!(block_hash, use_mirror, block_info = nil)
-    return nil unless self.core? || self.abc? || self.sv?
-    client = use_mirror ? self.mirror_client : self.client
-    begin
-      block_info = block_info || getblock(block_hash, 1)
-    rescue Node::BlockPrunedError
-      return nil
-    rescue BitcoinClient::Error => e
-      logger.error "Unable to fetch block #{ block_hash } from #{ self.name_with_version } while looking for pool name"
-      return nil
-    end
-    return nil if block_info["height"] == 0 # Can't fetch the genesis coinbase
-    return nil if block_info["tx"].nil?
-    tx_id = block_info["tx"].first
-    begin
-      coinbase = getrawtransaction(tx_id, true, block_hash)
-      return Block.pool_from_coinbase_tx(coinbase)
-    rescue TxNotFoundError
-      return nil
-    end
-  end
-
   def getblock(block_hash, verbosity, use_mirror = false)
     throw "Specify block hash" if block_hash.nil?
     throw "Specify verbosity" if verbosity.nil?
@@ -513,6 +492,41 @@ class Node < ApplicationRecord
     end
   end
 
+  # Find pool name for a block. For modern nodes it uses getrawtransaction
+  # with a blockhash argument, so a txindex is not required.
+  # For older nodes it could process the raw block instead of using getrawtransaction,
+  # but that has not been implemented.
+  def self.get_pool_for_block!(coin, block_hash, block_info = nil)
+    node = nil
+    case coin
+    when :btc, :tbtc
+      # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
+      node = Node.first_newer_than(coin, 160000, :core)
+    when :bch
+      # getrawtransaction supports blockhash as of version 0.21, perhaps earlier too
+      node = Node.first_newer_than(coin, 210000, :abc)
+    end
+    throw "Unable to find suitable #{ coin } node in get_pool_for_block" if node.nil?
+    client = node.client
+    begin
+      block_info = block_info || node.getblock(block_hash, 1)
+    rescue Node::BlockPrunedError
+      return nil
+    rescue BitcoinClient::Error => e
+      logger.error "Unable to fetch block #{ block_hash } from #{ node.name_with_version } while looking for pool name"
+      return nil
+    end
+    return nil if block_info["height"] == 0 # Can't fetch the genesis coinbase
+    return nil if block_info["tx"].nil?
+    tx_id = block_info["tx"].first
+    begin
+      coinbase = node.getrawtransaction(tx_id, true, block_hash)
+      return Block.pool_from_coinbase_tx(coinbase)
+    rescue TxNotFoundError
+      return nil
+    end
+  end
+
   # Returns false if node is not reachable. Returns nil if current mirror_block is missing.
   def restore_mirror
     begin
@@ -567,6 +581,7 @@ class Node < ApplicationRecord
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 20})
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
+        Block.match_missing_pools!(coin.downcase.to_sym)
       end
 
       if Rails.env.test?
@@ -653,6 +668,10 @@ class Node < ApplicationRecord
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type, unreachable_since: nil, ibd: false).first or raise NoTxIndexError
+
+  def self.first_newer_than(coin, version, client_type)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    node = Node.where("coin = ? AND version >= ?", coin.upcase, version).where(client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoMatchingNodeError
   end
 
   def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)

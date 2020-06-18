@@ -126,7 +126,7 @@ class Block < ApplicationRecord
 
   def self.create_with(block_info, use_mirror, node, mark_valid)
     # Set pool:
-    pool = node.get_pool_for_block!(block_info["hash"], use_mirror, block_info)
+    pool = Node.get_pool_for_block!(node.coin.downcase.to_sym, block_info["hash"], block_info)
 
     tx_count = block_info.key?("nTx") ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
@@ -274,6 +274,13 @@ class Block < ApplicationRecord
       return name if message_utf8.include?(match)
     end
     return nil
+  end
+
+  def self.match_missing_pools!(coin)
+    Block.where(coin: coin, pool: nil, ).order(height: :desc).limit(3).each do |b|
+      b.pool = Node.get_pool_for_block!(coin, b.block_hash)
+      b.save if b.changed?
+    end
   end
 
   def self.find_or_create_block_and_ancestors!(hash, node, use_mirror, mark_valid)
