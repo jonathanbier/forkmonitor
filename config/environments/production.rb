@@ -106,14 +106,5 @@ Rails.application.configure do
   # Do not dump schema after migrations.
   config.active_record.dump_schema_after_migration = false
 
-  Rails.application.config.middleware.use ExceptionNotification::Rack,
-    :email => {
-      :email_prefix => "[Fork Monitor Exception] ",
-      :sender_address => ENV['EXCEPTION_FROM_EMAIL'],
-      :exception_recipients => ENV['BUGS_TO'].split(",")
-    },
-    :error_grouping => true,
-   :ignore_exceptions => ["Rack::Timeout::RequestTimeoutException"] + ExceptionNotifier.ignored_exceptions
-
   ExceptionNotifier::Rake.configure
 end
