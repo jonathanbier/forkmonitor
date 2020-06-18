@@ -223,9 +223,9 @@ class InflatedBlock < ApplicationRecord
           message = "More than #{ max } blocks behind for inflation check, please manually check #{ comparison_block.height } (#{ comparison_block.block_hash }) and earlier"
           if options[:coin] == :tbtc # Don't send error emails for testnet
             Rails.logger.error message
-            return
+          else
+            raise message
           end
-          raise message
         end
       } # end thread
     end
