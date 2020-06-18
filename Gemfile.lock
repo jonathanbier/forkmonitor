@@ -132,6 +132,9 @@ GEM
     exception_notification (4.4.0)
       actionmailer (>= 4.0, < 7)
       activesupport (>= 4.0, < 7)
+    exception_notification-rake (0.3.1)
+      exception_notification (~> 4.3)
+      rake (>= 0.9.0)
     factory_bot (5.2.0)
       activesupport (>= 4.2.0)
     ffaker (2.14.0)
@@ -374,6 +377,7 @@ DEPENDENCIES
   dotenv-rails
   ed25519
   exception_notification
+  exception_notification-rake (~> 0.3.0)
   factory_bot
   ffaker
   guard
