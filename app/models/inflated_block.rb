@@ -134,7 +134,7 @@ class InflatedBlock < ApplicationRecord
               # Stop if there are no new blocks to invalidate
               if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
                 logger.error "Nothing to invalidate on #{ node.name_with_version }"
-                throw_unable_to_roll_back!(node, block, blocks_to_invalidate)
+                throw_unable_to_roll_back!(node, block, blocks_to_invalidate, invalidated_block_hashes)
               end
               blocks_to_invalidate.each do |block|
                 invalidated_block_hashes.append(block.block_hash)
@@ -230,11 +230,14 @@ class InflatedBlock < ApplicationRecord
     threads.each(&:join)
   end
 
-  def self.throw_unable_to_roll_back!(node, block, blocks_to_invalidate = nil)
+  def self.throw_unable_to_roll_back!(node, block, blocks_to_invalidate = nil, invalidated_block_hashes = nil)
     error = "Unable to roll active #{ block.coin.upcase } chaintip to #{ block.block_hash } (#{ block.height }) on node #{ node.id } #{ node.name_with_version }"
     error += "\nChaintips: #{ node.mirror_client.getchaintips.filter{|t| t["height"] > block.height - 100 }.collect { |t| "#{ t["hash"] } (#{ t["height"] })=#{ t["status"] }" }.join(", ") }"
+    if !invalidated_block_hashes.nil?
+      error += "\nInvalidated blocks: #{ invalidated_block_hashes.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
+    end
     if !blocks_to_invalidate.nil?
-      error += "\nInvalidated blocks: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
+      error += "\nBlocks to invalidate: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
     end
     throw error
   end
