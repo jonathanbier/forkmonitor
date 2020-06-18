@@ -75,6 +75,7 @@ gem 'dalli'
  gem 'capistrano-rails', '~> 1.5'
  gem 'capistrano-passenger', '~> 0.2.0'
  gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
+ gem 'capistrano-rake'
  gem 'ed25519'
  gem 'bcrypt_pbkdf'
 
