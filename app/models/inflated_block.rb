@@ -140,9 +140,12 @@ class InflatedBlock < ApplicationRecord
                 invalidated_block_hashes.append(block.block_hash)
                 Rails.logger.debug "Invalidate block #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
                 node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
-                sleep 1 # But wait anyway
               end
               tally += 1
+              # Give node some time to update its internals. There were occasional
+              # failures where the gettxoutsetinfo below would be applied to the
+              # child block, despite checks against that.
+              sleep 3
             end
 
             throw "No active tip left after rollback on #{ node.name_with_version }. Was expecting #{ block.block_hash } (#{ block.height })" unless active_tip.present?
