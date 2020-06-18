@@ -12,11 +12,11 @@ class Chaintip < ApplicationRecord
 
   def nodes_for_identical_chaintips
     return nil if status != "active"
-    chaintip_nodes = Chaintip.joins(:node).where("chaintips.status = ? AND chaintips.block_id = ?", status, self.block_id).order(client_type: :asc ,name: :asc, version: :desc)
+    chaintip_nodes = Chaintip.joins(:node).where("nodes.enabled = ? AND chaintips.status = ? AND chaintips.block_id = ?", true, status, self.block_id).order(client_type: :asc ,name: :asc, version: :desc)
     res = chaintip_nodes.collect{ | c | c.node }
     chaintip_nodes.each do |chaintip_node|
       chaintip_node.children.each do |child|
-        res.append child.node
+        res.append child.node if child.node.enabled
       end
     end
     # Node ordering:

@@ -4,6 +4,7 @@ FactoryBot.define do
      name { "Bitcoin Core" }
      version { 170100 }
      client_type { :core }
+     enabled { true }
    end
 
    factory :node_with_block, parent: :node do
