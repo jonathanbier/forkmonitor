@@ -49,3 +49,8 @@ desc "Force rails logger log level to info"
 task :info => [:environment, :verbose] do
   Rails.logger.level = Logger::INFO
 end
+
+task :failing_task => :environment do
+  puts "Failing task in environment #{Rails.env}..."
+  FAIL!
+end
