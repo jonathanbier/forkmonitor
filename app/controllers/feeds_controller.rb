@@ -1,5 +1,5 @@
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:blocks_invalid, :inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps, :ln_uncoops]
+  before_action :set_coin, only: [:blocks_invalid, :inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps, :ln_uncoops, :unknown_pools]
 
   def blocks_invalid
     respond_to do |format|
@@ -30,6 +30,18 @@ class FeedsController < ApplicationController
         latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(height: :desc)
+        end
+      end
+    end
+  end
+
+  def unknown_pools
+    respond_to do |format|
+      format.rss do
+        # Blocks are marked invalid during chaintip check
+        latest = Block.where(coin: Block.coins[@coin], pool: nil).order(height: :desc).first
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
+          @unknown_pools = Block.where(coin: Block.coins[@coin], pool: nil).order(height: :desc).limit(50)
         end
       end
     end

@@ -77,6 +77,18 @@ class RSSFeeds extends React.Component {
           processed by our nodes.
         </p>
 
+        <h3>Unidentified mining pools</h3>
+
+        <ul>
+          <li>BTC <a href="/feeds/blocks/unknown_pools/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BTC testnet <a href="/feeds/blocks/unknown_pools/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>BCH <a href="/feeds/blocks/unknown_pools/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+        </ul>
+
+        <p>
+          List of recent blocks mined by a pool that can't be matched <a href="https://github.com/BitMEXResearch/forkmonitor/blob/master/app/models/block.rb#L158">by this list</a>.
+        </p>
+
         <h3>Version bit signaling</h3>
 
         <ul>
