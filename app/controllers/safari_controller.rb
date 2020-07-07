@@ -2,7 +2,7 @@ class SafariController < ApplicationController
   layout false
 
   def log
-    head :no_content
+    render json: {message: 'ok'}, status: 200
   end
 
   def package
@@ -13,6 +13,11 @@ class SafariController < ApplicationController
 
   def registrations
     SafariSubscription.find_or_create_by(device_token: params[:device_token])
-    head :no_content
+    render json: {message: 'ok'}, status: 200
+  end
+
+  def deregister
+    SafariSubscription.where(device_token: params[:device_token]).destroy_all
+    render json: {message: 'ok'}, status: 200
   end
 end
