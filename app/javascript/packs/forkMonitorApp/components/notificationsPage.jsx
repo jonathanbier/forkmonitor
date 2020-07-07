@@ -53,23 +53,19 @@ class NotificationsPage extends React.Component {
   }
 
   checkSafariPermission(permissionData) {
-    console.log(permissionData);
     if (permissionData.permission === 'default') {
       // This is a new web service URL and its validity is unknown.
-      console.log("Ask");
       this.setState({
         askSafari: true
       })
     } else if (permissionData.permission === 'denied') {
       // The user said no.
-      console.log("No");
       this.setState({
         askSafari: true
       })
     } else if (permissionData.permission === 'granted') {
       // The web service URL is a valid push provider, and the user said yes.
       // permissionData.deviceToken is now available to use.
-      console.log(permissionData.deviceToken);
       this.setState({
         askSafari: false
       })
