@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_05_27_101747) do
+ActiveRecord::Schema.define(version: 2020_07_07_102513) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -34,6 +34,7 @@ ActiveRecord::Schema.define(version: 2020_05_27_101747) do
     t.boolean "checked_lightning", default: false
     t.integer "marked_invalid_by", default: [], array: true
     t.integer "marked_valid_by", default: [], array: true
+    t.string "coinbase_message"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"

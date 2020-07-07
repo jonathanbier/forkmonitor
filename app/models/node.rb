@@ -496,7 +496,7 @@ class Node < ApplicationRecord
   # with a blockhash argument, so a txindex is not required.
   # For older nodes it could process the raw block instead of using getrawtransaction,
   # but that has not been implemented.
-  def self.get_pool_for_block!(coin, block_hash, block_info = nil)
+  def self.get_coinbase_for_block!(coin, block_hash, block_info = nil)
     node = nil
     case coin
     when :btc, :tbtc
@@ -506,7 +506,7 @@ class Node < ApplicationRecord
       # getrawtransaction supports blockhash as of version 0.21, perhaps earlier too
       node = Node.first_newer_than(coin, 210000, :abc)
     end
-    throw "Unable to find suitable #{ coin } node in get_pool_for_block" if node.nil?
+    throw "Unable to find suitable #{ coin } node in get_coinbase_for_block" if node.nil?
     client = node.client
     begin
       block_info = block_info || node.getblock(block_hash, 1)
@@ -520,11 +520,22 @@ class Node < ApplicationRecord
     return nil if block_info["tx"].nil?
     tx_id = block_info["tx"].first
     begin
-      coinbase = node.getrawtransaction(tx_id, true, block_hash)
-      return Block.pool_from_coinbase_tx(coinbase)
+      return node.getrawtransaction(tx_id, true, block_hash)
     rescue TxNotFoundError
       return nil
     end
+  end
+
+  def self.set_pool_for_block!(coin, block, block_info = nil)
+    coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
+    return if coinbase.nil?
+    block.pool = Block.pool_from_coinbase_tx(coinbase)
+    if block.pool.nil?
+      coinbase_message = Block.coinbase_message(coinbase)
+      return if coinbase_message.nil?
+      block.coinbase_message = coinbase_message.unpack('H*')
+    end
+    block.save if block.changed?
   end
 
   # Returns false if node is not reachable. Returns nil if current mirror_block is missing.

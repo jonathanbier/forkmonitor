@@ -125,9 +125,6 @@ class Block < ApplicationRecord
   end
 
   def self.create_with(block_info, use_mirror, node, mark_valid)
-    # Set pool:
-    pool = Node.get_pool_for_block!(node.coin.downcase.to_sym, block_info["hash"], block_info)
-
     tx_count = block_info.key?("nTx") ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
                nil
@@ -142,8 +139,7 @@ class Block < ApplicationRecord
      version: block_info["version"],
      tx_count:  tx_count,
      size: block_info["size"],
-     first_seen_by: node,
-     pool: pool
+     first_seen_by: node
    )
    if mark_valid.present?
      if mark_valid == true
@@ -152,10 +148,13 @@ class Block < ApplicationRecord
        block.update marked_invalid_by: [node.id]
      end
    end
+   # Set pool:
+   Node.set_pool_for_block!(node.coin.downcase.to_sym, block, block_info)
    return block
- end
+  end
 
-  def self.pool_from_coinbase_tx(tx)
+  def self.coinbase_message(tx)
+    throw "transaction missing" if tx.nil?
     return nil if tx["vin"].nil? || tx["vin"].blank?
     coinbase = nil
     tx["vin"].each do |vin|
@@ -163,8 +162,11 @@ class Block < ApplicationRecord
       break if coinbase.present?
     end
     throw "not a coinbase" if coinbase.nil?
-    message = [coinbase].pack('H*')
+    return [coinbase].pack('H*')
+  end
 
+  def self.pool_from_coinbase_tx(tx)
+    throw "transaction missing" if tx.nil?
     pools_ascii = {
       "--Nug--" => "shawnp0wers",
       "/$Mined by 7pool.com/" => "7pool",
@@ -266,6 +268,9 @@ class Block < ApplicationRecord
         "🐟" => "F2Pool"
     }
 
+    message = coinbase_message(tx)
+    return nil if message.nil?
+
     pools_ascii.each do |match, name|
       return name if message.include?(match)
     end
@@ -278,8 +283,7 @@ class Block < ApplicationRecord
 
   def self.match_missing_pools!(coin)
     Block.where(coin: coin, pool: nil, ).order(height: :desc).limit(3).each do |b|
-      b.pool = Node.get_pool_for_block!(coin, b.block_hash)
-      b.save if b.changed?
+      Node.set_pool_for_block!(coin, b)
     end
   end
 
