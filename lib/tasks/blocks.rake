@@ -36,6 +36,11 @@ namespace 'blocks' do :env
     end
   end
 
+  desc "Match missing pools [coin] [n]"
+  task :match_missing_pools, [:coin, :n] => :environment do |action, args|
+    Block.match_missing_pools!(args.coin.downcase.to_sym, args.n.to_i)
+  end
+
   desc "Perform lightning related checks for [coin] (limit to [max=10000])"
   task :check_lightning, [:coin, :max] => :environment do |action, args|
     LightningTransaction.check!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : 10000})

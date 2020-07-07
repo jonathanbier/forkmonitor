@@ -592,7 +592,7 @@ class Node < ApplicationRecord
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 20})
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
-        Block.match_missing_pools!(coin.downcase.to_sym)
+        Block.match_missing_pools!(coin.downcase.to_sym, 3)
       end
 
       if Rails.env.test?

@@ -26,3 +26,12 @@ describe "blocks:check_lightning" do
     subject.invoke("BTC")
   end
 end
+
+describe "blocks:match_missing_pools" do
+  include_context "rake"
+
+  it "should call match_missing_pools! for a given coin" do
+    expect(Block).to receive(:match_missing_pools!).with(:btc,100)
+    subject.invoke("BTC", "100")
+  end
+end

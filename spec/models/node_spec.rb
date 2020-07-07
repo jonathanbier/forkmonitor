@@ -888,7 +888,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call match_missing_pools!" do
-        expect(Block).to receive(:match_missing_pools!).with(:btc)
+        expect(Block).to receive(:match_missing_pools!).with(:btc, 3)
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 
