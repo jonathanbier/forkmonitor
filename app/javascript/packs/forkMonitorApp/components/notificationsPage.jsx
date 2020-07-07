@@ -37,6 +37,7 @@ class NotificationsPage extends React.Component {
 
     this.state = {
       webpush: null,
+      askSafari: null,
       vapidPublicKey: process.env['VAPID_PUBLIC_KEY']
     };
 
@@ -47,9 +48,51 @@ class NotificationsPage extends React.Component {
       }
       return new Uint8Array(result);
     }
+
+    this.safariRequestPermission = this.safariRequestPermission.bind(this);
+  }
+
+  checkSafariPermission(permissionData) {
+    console.log(permissionData);
+    if (permissionData.permission === 'default') {
+      // This is a new web service URL and its validity is unknown.
+      console.log("Ask");
+      this.setState({
+        askSafari: true
+      })
+    } else if (permissionData.permission === 'denied') {
+      // The user said no.
+      console.log("No");
+      this.setState({
+        askSafari: true
+      })
+    } else if (permissionData.permission === 'granted') {
+      // The web service URL is a valid push provider, and the user said yes.
+      // permissionData.deviceToken is now available to use.
+      console.log(permissionData.deviceToken);
+      this.setState({
+        askSafari: false
+      })
+    }
+  }
+
+  safariRequestPermission() {
+    window.safari.pushNotification.requestPermission(
+      'https://forkmonitor.info',
+      'web.info.forkmonitor',
+      {}, // Data that you choose to send to your server to help you identify the user.
+      this.checkSafariPermission
+    );
   }
 
   checkNotifs() {
+    if ('safari' in window && 'pushNotification' in window.safari) {
+      var permissionData = window.safari.pushNotification.permission('web.info.forkmonitor');
+      this.checkSafariPermission(permissionData);
+      return;
+    }
+
+    // Standard HTML5 notifications
     if (!("Notification" in window)) {
       return;
     }
@@ -122,8 +165,11 @@ class NotificationsPage extends React.Component {
             <p>
               We currently send browser push notifications for invalid blocks (all coins),
               stale candidates (all coins except testnet) and unexpected extra inflation (Bitcoin and testnet).
-              Tested with Chrome. Safari is currently not supported.
             </p>
+            { this.state && this.state.askSafari == true &&
+              <button onClick={ this.safariRequestPermission }>Grant permission</button>
+            }
+
             { this.state && this.state.webpush == false &&
               <p>Browser push notification permission denied</p>
             }

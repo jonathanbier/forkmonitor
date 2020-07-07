@@ -32,6 +32,11 @@ Rails.application.routes.draw do
     end
   end
 
+  post 'v1/log', to: "safari#v1_log"
+  post 'v2/log', to: "safari#v2_log"
+  post 'v2/pushPackages/web.info.forkmonitor', to: "safari#v2_package"
+  post 'v2/devices/:device_token/registrations/web.info.forkmonitor', to: "safari#v2_registrations"
+
   scope format: true, constraints: { format: /rss/ } do
     namespace :feeds do
       get ':coin/blocks/invalid', :action => :blocks_invalid

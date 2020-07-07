@@ -1,0 +1,2 @@
+class SafariSubscription < ApplicationRecord
+end

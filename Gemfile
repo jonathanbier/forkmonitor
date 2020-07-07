@@ -45,6 +45,10 @@ gem 'devise-jwt'
 gem 'serviceworker-rails'
 gem 'webpush'
 
+# Safari notifications
+gem 'rpush'
+gem 'push_package'
+
 # Email when something breaks
 gem 'exception_notification'
 gem 'exception_notification-rake', '~> 0.3.0'
