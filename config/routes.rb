@@ -32,10 +32,10 @@ Rails.application.routes.draw do
     end
   end
 
-  post 'v1/log', to: "safari#v1_log"
-  post 'v2/log', to: "safari#v2_log"
-  post 'v2/pushPackages/web.info.forkmonitor', to: "safari#v2_package"
-  post 'v2/devices/:device_token/registrations/web.info.forkmonitor', to: "safari#v2_registrations"
+  post 'push/v1/log', to: "safari#v1_log"
+  post 'push/v2/log', to: "safari#v2_log"
+  post 'push/v2/pushPackages/web.info.forkmonitor', to: "safari#v2_package"
+  post 'push/v2/devices/:device_token/registrations/web.info.forkmonitor', to: "safari#v2_registrations"
 
   scope format: true, constraints: { format: /rss/ } do
     namespace :feeds do

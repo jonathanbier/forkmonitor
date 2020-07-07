@@ -78,7 +78,7 @@ class NotificationsPage extends React.Component {
 
   safariRequestPermission() {
     window.safari.pushNotification.requestPermission(
-      'https://forkmonitor.info',
+      'https://forkmonitor.info/push',
       'web.info.forkmonitor',
       {}, // Data that you choose to send to your server to help you identify the user.
       this.checkSafariPermission
