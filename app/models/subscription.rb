@@ -11,5 +11,7 @@ class Subscription < ApplicationRecord
       end
     end
 
+    SafariSubscription.blast(tag, subject, body)
+
   end
 end

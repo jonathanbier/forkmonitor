@@ -16,4 +16,15 @@ namespace 'safari' do :env
     package = PushPackage.new(website_params, iconset_path, certificate, ENV['CERT_PWD'], intermediate_cert)
     package.save('public/pushPackage.zip')
   end
+
+  desc "Register app"
+  task :register_app => [:environment] do
+    app = Rpush::Apns::App.new
+    app.name = "Fork Monitor"
+    app.certificate = File.read("certs/forkmonitor.pem")
+    app.environment = "production"
+    app.password = ENV['CERT_PWD']
+    app.connections = 1
+    app.save!
+  end
 end
