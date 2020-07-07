@@ -175,8 +175,9 @@ class Block < ApplicationRecord
       "/AntPool/" => "Antpool",
       "/BATPOOL/" => "BATPOOL",
       "/BCMonster/" => "BCMonster",
+      "Binance" => "Binance",
       "BTC.COM" => "BTC.com",
-      "/BTC.TOP/" => "BTC.TOP",
+      "BTC.TOP/" => "BTC.TOP",
       "/BTCC/" => "BTCC Pool",
       "/BitClub Network/" => "BitClub Network",
       "/BitFury/" => "BitFury",
@@ -189,11 +190,15 @@ class Block < ApplicationRecord
       "/DCExploration/" => "DCExploration",
       "/DPOOL.TOP/" => "DPOOL",
       "/HaoBTC/" => "Bixin",
+      "/hash.okkong.com/" => "OKKong",
+      "/HuoBi/" => "HuoBi",
       "/HotPool/" => "HotPool",
+      "/LongBOXShortTheWorld/" => "LongBOXShortTheWorld",
       "/Mined by HashBX.io/" => "HashBX",
       "/Nexious/" => "Nexious",
       "/NiceHashSolo" => "NiceHash Solo",
       "/RigPool.com/" => "RigPool",
+      "Sigmapool" => "Sigmapool",
       "/ViaBTC/" => "ViaBTC",
       "/WATERHOLE.IO/" => "Waterhole",
       "/agentD/" => "digitalBTC",
@@ -203,8 +208,10 @@ class Block < ApplicationRecord
       "/haozhuzhu/" => "HAOZHUZHU",
       "/mined by gbminers/" => "GBMiners",
       "/mined by poopbut/" => "MiningKings",
+      "/MiningCity/" => "MiningCity",
       "/Mining-Dutch" => "Mining-Dutch",
       "/mtred/" => "Mt Red",
+      "/NovaBlock" => "NovaBlock",
       "/phash.cn/" => "PHash.IO",
       "/phash.io/" => "PHash.IO",
       "/pool34/" => "21 Inc.",
@@ -212,6 +219,7 @@ class Block < ApplicationRecord
       "/prohashing.com" => "Prohashing",
       "/slush/" => "SlushPool",
       "/solo.ckpool.org/" => "Solo CKPool",
+      "/SpiderPool" => "SpiderPool",
       "50BTC" => "50BTC",
       "ASICMiner" => "ASICMiner",
       "BTC Guild" => "BTC Guild",
@@ -221,6 +229,7 @@ class Block < ApplicationRecord
       "BitMinter" => "BitMinter",
       "Bitalo" => "Bitalo",
       "Bitsolo Pool" => "Bitsolo",
+      "/Buffett/" => "Buffett",
       "CoinLab" => "CoinLab",
       "^easy2" => "WaYi",
       "EMC" => "EclipseMC",
@@ -230,6 +239,7 @@ class Block < ApplicationRecord
       "HHTT" => "HHTT",
       "Kano" => "KanoPool",
       "KnCMiner" => "KnCMiner",
+      "/lubian.com/" => "Lubian",
       "MaxBTC" => "MaxBTC",
       "Mined By 175btc.com" => "175btc",
       "Mined by 1hash.com" => "1Hash",
@@ -253,14 +263,17 @@ class Block < ApplicationRecord
       "mmpool" => "mmpool",
       "myBTCcoin Pool" => "myBTCcoin Pool",
       "nmcbit.com" => "NMCbit",
+      "/www.okex.com/" => "OKEx",
       "ozco.in" => "OzCoin",
       "ozcoin" => "OzCoin",
       "pool.bitcoin.com" => "Bitcoin.com",
       "simplecoin" => "simplecoin.us",
       "st mining corp" => "ST Mining Corp",
+      "/1THash" => "1THash",
       "triplemining" => "TripleMining",
       "viabtc.com deploy" => "ViaBTC",
       "xbtc.exx.com&bw.com" => "xbtc.exx.com&bw.com",
+      "/Ukrpool.com/" => "Ukrpool",
       "yourbtc.net" => "Yourbtc.net"
     }
 
@@ -272,7 +285,7 @@ class Block < ApplicationRecord
     return nil if message.nil?
 
     pools_ascii.each do |match, name|
-      return name if message.include?(match)
+      return name if message.downcase.include?(match.downcase)
     end
     message_utf8 = message.force_encoding('UTF-8')
     pools_utf8.each do |match, name|
