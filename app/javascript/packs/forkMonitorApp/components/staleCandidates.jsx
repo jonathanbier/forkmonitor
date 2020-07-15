@@ -70,7 +70,7 @@ class StaleCandidates extends React.Component {
               </BreadcrumbItem>
             </Breadcrumb>
             <p>
-              Multiple blocks were producted at height { this.state.height }.
+              Multiple blocks were produced at height { this.state.height }.
               As new blocks are mined that reference one of these blocks as their
               parent, the heaviest chain survives and the other blocks become
               stale.
