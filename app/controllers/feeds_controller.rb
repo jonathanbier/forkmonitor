@@ -39,9 +39,9 @@ class FeedsController < ApplicationController
     respond_to do |format|
       format.rss do
         # Blocks are marked invalid during chaintip check
-        latest = Block.where(coin: Block.coins[@coin], pool: nil).order(height: :desc).first
+        latest = Block.where(coin: Block.coins[@coin], pool: nil).where.not(coinbase_message: nil).order(height: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @unknown_pools = Block.where(coin: Block.coins[@coin], pool: nil).order(height: :desc).limit(50)
+          @unknown_pools = Block.where(coin: Block.coins[@coin], pool: nil).where.not(coinbase_message: nil).order(height: :desc).limit(50)
         end
       end
     end
