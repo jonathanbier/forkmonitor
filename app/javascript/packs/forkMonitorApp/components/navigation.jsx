@@ -39,6 +39,7 @@ import classnames from 'classnames';
 
 import Lightning from './lightning';
 import Nodes from './nodes';
+import StaleCandidates from './staleCandidates';
 import AdminPage from './adminPage';
 import NotificationsPage from './notificationsPage';
 
@@ -101,6 +102,7 @@ class Navigation extends React.Component {
                 <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
                 <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />
+                <Route path='/stale/:coin/:height' component={withTracker(StaleCandidates, { /* additional attributes */ } )} />
               </Switch>
             </TabContent>
           </div>

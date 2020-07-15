@@ -5,6 +5,16 @@ class StaleCandidate < ApplicationRecord
 
   after_commit :expire_cache
 
+  def as_json(options = nil)
+    super({ only: [:coin, :height] }).merge({
+      blocks: blocks
+    })
+  end
+
+  def blocks
+    Block.where(coin: coin, height: height)
+  end
+
   private
 
   def self.last_updated_cached(coin)

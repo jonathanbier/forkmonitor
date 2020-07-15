@@ -22,7 +22,9 @@ Rails.application.routes.draw do
       resources :invalid_blocks, only: [:index, :show, :destroy]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
-      resources :stale_candidates, only: [:index, :show]
+      namespace :stale_candidates do
+        get ":coin/:height", action: :show
+      end
       resources :ln_penalties, only: [:index, :show]
       resources :ln_sweeps, only: [:index, :show]
       resources :ln_uncoops, only: [:index, :show]
@@ -56,6 +58,7 @@ Rails.application.routes.draw do
 
   get 'lightning', to: "pages#root"
   get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
+  get 'stale/:coin/:height', to: "pages#root", :as => "stale_candidate"
   get 'admin', to: "pages#root"
   get 'notifications', to: "pages#root"
 
