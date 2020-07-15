@@ -2,6 +2,8 @@ import React from 'react';
 
 import axios from 'axios';
 
+import { Redirect } from 'react-router'
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -21,6 +23,7 @@ class StaleCandidates extends React.Component {
     super(props);
 
     this.state = {
+      redirect: false,
       staleCandidates: [],
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
@@ -41,11 +44,21 @@ class StaleCandidates extends React.Component {
         staleCandidates: res.blocks
       });
       }.bind(this)).catch(function (error) {
-        console.error(error);
-      });
+        if (error.response.status == 404) {
+          this.setState({ redirect: true })
+        } else {
+          console.error(error);
+        }
+      }.bind(this));
    }
 
   render() {
+    const { redirect } = this.state;
+
+    if (redirect) {
+      return <Redirect to={ `/nodes/${ this.state.coin }` } />;
+    }
+
     return(
       <TabPane align="left" >
         <br />
