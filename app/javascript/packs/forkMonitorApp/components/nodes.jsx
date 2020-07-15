@@ -25,6 +25,7 @@ class Nodes extends React.Component {
       coin: props.match.params.coin,
       chaintips: [],
       nodesWithoutTip: [],
+      currentHeight: null,
       fresh: false
     };
   }
@@ -42,6 +43,7 @@ class Nodes extends React.Component {
       state.coin = props.match.params.coin;
       state.nodesWithoutTip = [];
       state.chaintips = [];
+      state.currentHeight = null;
       state.fresh = true;
     }
 
@@ -63,7 +65,8 @@ class Nodes extends React.Component {
       return response.data;
     }).then(function (chaintips) {
       this.setState({
-        chaintips: chaintips
+        chaintips: chaintips,
+        currentHeight: Math.max.apply(Math, chaintips.map(function(c) { return c.block.height }))
       });
       }.bind(this)).catch(function (error) {
         console.error(error);
@@ -89,7 +92,7 @@ class Nodes extends React.Component {
   render() {
       return(
         <TabPane align="left" >
-          <Alerts coin={ this.state.coin } />
+          <Alerts coin={ this.state.coin } currentHeight={ this.state.currentHeight } />
           <Container>
               {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
                 return (<Chaintip
