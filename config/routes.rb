@@ -23,6 +23,7 @@ Rails.application.routes.draw do
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
       namespace :stale_candidates do
+        get ":coin", action: :index
         get ":coin/:height", action: :show
       end
       resources :ln_penalties, only: [:index, :show]
