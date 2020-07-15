@@ -5,6 +5,13 @@ class StaleCandidate < ApplicationRecord
 
   after_commit :expire_cache
 
+  scope :feed, -> {
+    # RSS feed switched to new GUID. Drop old items to prevent spurious notifications.
+    where(
+      "created_at >= ?", DateTime.civil_from_format(:local, 2020, 7, 15)
+    )
+  }
+
   def as_json(options = nil)
     super({ only: [:coin, :height] }).merge({
       blocks: blocks
@@ -24,16 +31,16 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.page_cached(coin, page)
-      Rails.cache.fetch("StaleCandidate.for_coin(#{ coin },#{page})") {
-        where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+      Rails.cache.fetch("StaleCandidate.feed.for_coin(#{ coin },#{page})") {
+        feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
       }
   end
 
   def expire_cache
     Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
-    for page in 1...(StaleCandidate.count / PER_PAGE + 1) do
-      Rails.cache.delete("StaleCandidate.for_coin(#{ coin },#{page})")
+    for page in 1...(StaleCandidate.feed.count / PER_PAGE + 1) do
+      Rails.cache.delete("StaleCandidate.feed.for_coin(#{ coin },#{page})")
     end
-    Rails.cache.delete("StaleCandidate.count(#{self.coin})")
+    Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
   end
 end
