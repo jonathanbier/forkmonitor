@@ -9,10 +9,18 @@ class Explorer extends React.Component {
     let url;
     let image;
     if (this.props.blockstream) {
-      url = "https://blockstream.info/tx/" + this.props.tx
+      if (this.props.tx) {
+        url = "https://blockstream.info/tx/" + this.props.tx
+      } else {
+        url = "https://blockstream.info/block/" + this.props.block
+      }
       image = ImageBlockstream
     } else if (this.props.btcCom) {
-      url = "https://btc.com/" + this.props.tx
+      if (this.props.tx) {
+        url = "https://btc.com/" + this.props.tx
+      } else {
+        url = "https://btc.com/" + this.props.block
+      }
       image = ImageBtcCom
     } else if (this.props.oneML) {
       url = "https://1ml.com/channel/" + this.props.channelId
