@@ -183,6 +183,7 @@ class Node < ApplicationRecord
     begin
       blockchaininfo = mirror_client.getblockchaininfo
     rescue BitcoinClient::Error
+      Rails.logger.debug "Failed to poll mirror node..."
       # Ignore failure
       return
     end
@@ -542,7 +543,7 @@ class Node < ApplicationRecord
   def restore_mirror
     begin
       mirror_client.setnetworkactive(true)
-    rescue BitcoinClient::Error
+    rescue BitcoinClient::ConnectionError
       return false
     end
     return if mirror_block.nil?

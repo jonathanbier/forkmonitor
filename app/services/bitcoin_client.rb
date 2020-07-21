@@ -205,6 +205,7 @@ class BitcoinClient
     begin
       return request("setnetworkactive", status)
     rescue Bitcoiner::Client::JSONRPCError => e
+      raise ConnectionError if e.message.include?("couldnt_connect")
       raise Error, "setnetworkactive #{ status } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
