@@ -132,7 +132,7 @@ class InflatedBlock < ApplicationRecord
                   begin
                     node.mirror_client.getblockheader(child_block.block_hash)
                   rescue BitcoinClient::Error
-                    logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) on #{ node.name_with_version } because mirror node doesn't have it"
+                    Rails.logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) on #{ node.name_with_version } because mirror node doesn't have it"
                     next
                   end
                   unless invalidated_block_hashes.include?(child_block.block_hash)
@@ -142,7 +142,7 @@ class InflatedBlock < ApplicationRecord
               end
               # Stop if there are no new blocks to invalidate
               if (blocks_to_invalidate.collect { |b| b.block_hash } - invalidated_block_hashes).empty?
-                logger.error "Nothing to invalidate on #{ node.name_with_version }"
+                Rails.logger.error "Nothing to invalidate on #{ node.name_with_version }"
                 throw_unable_to_roll_back!(node, block, blocks_to_invalidate, invalidated_block_hashes)
               end
               blocks_to_invalidate.each do |block|
@@ -184,7 +184,7 @@ class InflatedBlock < ApplicationRecord
             # Check that inflation does not exceed the maximum permitted miner award per block
             prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
             if prev_tx_outset.nil?
-              logger.error "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..."
+              Rails.logger.error "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..."
               next
             end
 
@@ -208,7 +208,7 @@ class InflatedBlock < ApplicationRecord
           end
 
         rescue
-          logger.error "Something went wrong, restoring node before bailing out..."
+          Rails.logger.error "Something went wrong, restoring node before bailing out..."
           Rails.logger.debug "Resume p2p networking..."
           node.mirror_client.setnetworkactive(true)
           # Have node return to tip
