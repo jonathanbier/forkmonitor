@@ -21,6 +21,8 @@ class InflatedBlock < ApplicationRecord
 
   def self.check_inflation!(options)
     max = options.key?(:max) ? options[:max] : 10
+    throw "Missing :coin argument" unless options.key?(:coin)
+    throw "Invalid :coin argument #{ options[:coin] }" unless Node::SUPPORTED_COINS.include?(options[:coin])
 
     threads = []
 
