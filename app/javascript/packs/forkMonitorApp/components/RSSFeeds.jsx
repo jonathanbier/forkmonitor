@@ -111,6 +111,8 @@ class RSSFeeds extends React.Component {
 
         <h3>Unreachable nodes</h3>
 
+        <p>This includes mirror nodes, which are used for inflation checks.</p>
+
         <ul>
           <li>All coins <a href="/feeds/nodes/unreachable.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
