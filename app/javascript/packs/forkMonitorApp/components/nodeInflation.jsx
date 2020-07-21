@@ -54,21 +54,40 @@ class NodeInflation extends React.Component {
             />&nbsp;
           </span>
         }
-        <FontAwesomeIcon
-          className={ this.state.txOutset == null ? "fa-pulse" : (!this.state.txOutset.inflated ? "text-success" : "text-danger") }
-          icon={ this.state.txOutset == null ? faSpinner : (!this.state.txOutset.inflated ? faCheckCircle : faTimesCircle) }
-        />
-        { !this.props.disableTooltip &&
-          <Tooltip
-            placement="auto"
-            isOpen={this.state.tooltipOpen}
-            target={`inflation-node-${ this.props.node.id }`}
-            toggle={this.toggle}
-            modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
-            style={{maxWidth: "100%", textAlign: "left"}}
-          >
-            <InflationTooltip node={ this.props.node } txOutset={ this.state.txOutset }  />
-          </Tooltip>
+        { (this.props.node.mirror_unreachable_since == null || this.state.txOutset != null) &&
+          <span>
+            <FontAwesomeIcon
+              className={ this.state.txOutset == null ? "fa-pulse" : (!this.state.txOutset.inflated ? "text-success" : "text-danger") }
+              icon={ this.state.txOutset == null ? faSpinner : (!this.state.txOutset.inflated ? faCheckCircle : faTimesCircle) }
+            />
+            { !this.props.disableTooltip &&
+              <Tooltip
+                placement="auto"
+                isOpen={this.state.tooltipOpen}
+                target={`inflation-node-${ this.props.node.id }`}
+                toggle={this.toggle}
+                modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
+                style={{maxWidth: "100%", textAlign: "left"}}
+              >
+                <InflationTooltip node={ this.props.node } txOutset={ this.state.txOutset }  />
+              </Tooltip>
+            }
+          </span>
+        }
+        { this.props.node.mirror_unreachable_since != null && this.state.txOutset == null &&
+          <span>
+            <Badge color="warning">Offline</Badge>
+            <Tooltip
+              placement="auto"
+              isOpen={this.state.tooltipOpen}
+              target={`inflation-node-${ this.props.node.id }`}
+              toggle={this.toggle}
+              modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
+              style={{maxWidth: "100%", textAlign: "left"}}
+            >
+              <p>The dedicated inflation check node is currently offline</p>
+            </Tooltip>
+          </span>
         }
         <InflationWebSocket
           cableApp={ this.props.cableApp }
