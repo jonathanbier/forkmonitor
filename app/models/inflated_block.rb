@@ -26,6 +26,8 @@ class InflatedBlock < ApplicationRecord
 
     threads = []
 
+    Rails.logger.info "Check #{ options[:coin] } inflation for #{ Node.coin_by_version(options[:coin]).count } nodes..."
+
     Node.coin_by_version(options[:coin]).each do |node|
       max_exceeded = false
       comparison_block = nil
@@ -33,10 +35,22 @@ class InflatedBlock < ApplicationRecord
       next unless node.mirror_node? && node.core?
       next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.now
 
+      # Check mirror node again if we marked it as unreachable more than 10 minutes ago
+      if !node.mirror_unreachable_since.nil?
+        next unless node.last_polled_mirror_at < 10.minutes.ago
+        begin
+          node.mirror_client.getblockchaininfo
+          node.update mirror_unreachable_since: nil
+          next
+        rescue BitcoinClient::ConnectionError
+          node.update last_polled_mirror_at: Time.now
+        end
+      end
+
       Rails.logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
       throw "Node in Initial Blockchain Download" if node.ibd
-      if node.restore_mirror == false
-        logger.error "#{ node.name_with_version } not reachable, skipping"
+      if node.restore_mirror == false # false: unable to connect, nil: no mirror block
+        Rails.logger.error "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }"
         next
       end
 
@@ -55,9 +69,9 @@ class InflatedBlock < ApplicationRecord
             # Update mirror node tip and fetch most recent blocks if needed
             node.poll_mirror!
             node.reload # without this, ancestors of node.block_block are not updated
-          rescue BitcoinClient::Error
-            # Ignore failure
-            logger.error "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
+          rescue Node::ConnectionError
+            Rails.logger.error "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }, skipping inflation check."
+            node.update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
             Thread.exit
           end
 

@@ -544,6 +544,7 @@ class Node < ApplicationRecord
     begin
       mirror_client.setnetworkactive(true)
     rescue BitcoinClient::ConnectionError
+      self.update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
       return false
     end
     return if mirror_block.nil?
