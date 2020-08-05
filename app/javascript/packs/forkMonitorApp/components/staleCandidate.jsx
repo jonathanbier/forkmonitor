@@ -7,14 +7,19 @@ class StaleCandidate extends React.Component {
   render() {
     return(
       <tr>
-        <td>{ this.props.block.hash }</td>
+        <td>{ this.props.length }</td>
+        <td>{ this.props.root.hash }</td>
         <td>
-          <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{ this.props.block.timestamp }</Moment>
+          <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{ this.props.root.timestamp }</Moment>
         </td>
-        <td>{ this.props.block.pool }</td>
+        <td>{ this.props.root.pool }</td>
         <td>
-          <Explorer blockstream block={ this.props.block.hash }/>&nbsp;
-          <Explorer btcCom block={ this.props.block.hash }/>
+          <Explorer blockstream block={ this.props.root.hash }/>&nbsp;
+          <Explorer btcCom block={ this.props.root.hash }/>
+        </td>
+        <td>
+          <Explorer blockstream block={ this.props.tip.hash }/>&nbsp;
+          <Explorer btcCom block={ this.props.tip.hash }/>
         </td>
       </tr>
     )

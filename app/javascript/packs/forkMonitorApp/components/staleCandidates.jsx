@@ -41,7 +41,7 @@ class StaleCandidates extends React.Component {
       return response.data;
     }).then(function (res) {
       this.setState({
-        staleCandidates: res.blocks
+        staleCandidates: res.children
       });
       }.bind(this)).catch(function (error) {
         if (error.response.status == 404) {
@@ -81,16 +81,18 @@ class StaleCandidates extends React.Component {
             <Table striped responsive size="sm" className="lightning">
               <thead>
                 <tr align="left">
+                  <th>Length</th>
                   <th>Hash</th>
                   <th>Timestamp</th>
                   <th>Pool</th>
-                  <th>Explorer</th>
+                  <th>Root</th>
+                  <th>Tip</th>
                 </tr>
               </thead>
               <tbody>
-                {this.state.staleCandidates.map(function (block, index) {
+                {this.state.staleCandidates.map(function (child, index) {
                   return (
-                    <StaleCandidate block={ block } key={index}/>
+                    <StaleCandidate root={ child.root } tip={ child.tip } length={ child.length } key={index}/>
                   )
                 })}
               </tbody>

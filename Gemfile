@@ -70,6 +70,7 @@ gem '0mq', '~> 0.5.3'
 
 # Use Postgres as the database for Active Record
 gem 'pg'
+gem 'activerecord-hierarchical_query'
 
 # Memcachier
 gem 'dalli'

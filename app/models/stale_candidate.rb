@@ -14,15 +14,38 @@ class StaleCandidate < ApplicationRecord
 
   def as_json(options = nil)
     super({ only: [:coin, :height] }).merge({
-      blocks: blocks
+      children: children
     })
   end
 
-  def blocks
-    Block.where(coin: coin, height: height)
+  def json_cached
+    Rails.cache.fetch("StaleCandidate(#{ self.id }).json") {
+      self.to_json
+    }
+  end
+
+  def children
+    Block.where(coin: coin, height: height).collect{ | child |
+      chain = Block.join_recursive {
+        start_with(block_hash: child.block_hash).
+        connect_by(id: :parent_id).
+        order_siblings(:work)
+      }
+      {
+        root: child,
+        tip: chain[-1],
+        length: chain.count
+      }
+    }
   end
 
   private
+
+  def self.index_json_cached(coin)
+    Rails.cache.fetch("StaleCandidate.index.for_coin(#{ coin }).json") {
+      where(coin: coin).order(height: :desc).limit(1).to_json
+    }
+  end
 
   def self.last_updated_cached(coin)
       Rails.cache.fetch("StaleCandidate.last_updated(#{ coin })") {
@@ -37,6 +60,8 @@ class StaleCandidate < ApplicationRecord
   end
 
   def expire_cache
+    Rails.cache.delete("StaleCandidate(#{ self.id }).json")
+    Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
     Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
     for page in 1...(StaleCandidate.feed.count / PER_PAGE + 1) do
       Rails.cache.delete("StaleCandidate.feed.for_coin(#{ coin },#{page})")

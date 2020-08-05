@@ -3,11 +3,11 @@ class Api::V1::StaleCandidatesController < ApplicationController
   before_action :set_stale_candidate, only: [:show]
 
   def index
-    render json: StaleCandidate.where(coin: @coin).order(height: :desc).limit(10)
+    render json: StaleCandidate.index_json_cached(@coin)
   end
 
   def show
-    render json: @stale_candidate
+    render json: @stale_candidate.json_cached
   end
 
   private

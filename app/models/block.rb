@@ -17,6 +17,8 @@ class Block < ApplicationRecord
   has_many :sweep_transactions
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
+  after_create :expire_stale_candidate_cache
+
   def as_json(options = nil)
     super({ only: [:height, :timestamp] }.merge(options || {})).merge({
       id: id,
@@ -329,6 +331,14 @@ class Block < ApplicationRecord
       retry
     end
     return block
+  end
+
+  private
+
+  def expire_stale_candidate_cache
+    StaleCandidate.where(coin: self.coin).each do |c|
+      c.expire_cache
+    end
   end
 
 end
