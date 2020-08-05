@@ -39,6 +39,16 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
+  def expire_cache
+    Rails.cache.delete("StaleCandidate(#{ self.id }).json")
+    Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
+    Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
+    for page in 1...(StaleCandidate.feed.count / PER_PAGE + 1) do
+      Rails.cache.delete("StaleCandidate.feed.for_coin(#{ coin },#{page})")
+    end
+    Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
+  end
+
   private
 
   def self.index_json_cached(coin)
@@ -59,13 +69,4 @@ class StaleCandidate < ApplicationRecord
       }
   end
 
-  def expire_cache
-    Rails.cache.delete("StaleCandidate(#{ self.id }).json")
-    Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
-    Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
-    for page in 1...(StaleCandidate.feed.count / PER_PAGE + 1) do
-      Rails.cache.delete("StaleCandidate.feed.for_coin(#{ coin },#{page})")
-    end
-    Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
-  end
 end
