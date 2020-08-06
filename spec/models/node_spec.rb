@@ -892,6 +892,11 @@ RSpec.describe Node, :type => :model do
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 
+      it "should call process_stale_candidates" do
+        expect(StaleCandidate).to receive(:process!).with(:btc)
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
+      end
+
     end
 
     describe "check_laggards!" do

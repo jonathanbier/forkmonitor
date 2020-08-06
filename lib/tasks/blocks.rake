@@ -45,4 +45,9 @@ namespace 'blocks' do :env
   task :check_lightning, [:coin, :max] => :environment do |action, args|
     LightningTransaction.check!({coin: args.coin.downcase.to_sym, max: args[:max] ? args[:max].to_i : 10000})
   end
+
+  desc "Process stale candidates for [coin]"
+  task :stale_candidates, [:coin] => :environment do |action, args|
+    StaleCandidate.process!(args.coin.downcase.to_sym)
+  end
 end

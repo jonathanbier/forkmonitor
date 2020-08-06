@@ -82,6 +82,9 @@ class StaleCandidate < ApplicationRecord
     return s
   end
 
+  def self.process!(coin)
+  end
+
   def notify!
     if self.notified_at.nil?
       User.all.each do |user|

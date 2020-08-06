@@ -36,3 +36,12 @@ describe "blocks:match_missing_pools" do
     subject.invoke("BTC", "100")
   end
 end
+
+describe "blocks:stale_candidates" do
+  include_context "rake"
+
+  it "should call StaleCandidate.process! for a given coin" do
+    expect(StaleCandidate).to receive(:process!).with(:btc)
+    subject.invoke("BTC")
+  end
+end
