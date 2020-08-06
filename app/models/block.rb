@@ -62,11 +62,14 @@ class Block < ApplicationRecord
 
   def descendants
     block_hash = self.block_hash
-    Block.join_recursive {
+    height = self.height
+    coin = self.coin
+    # Constrain query by coin and minimum height to reduce memory usage
+    Block.where(coin: coin).where("height > ?", height).join_recursive {
       start_with(block_hash: block_hash).
       connect_by(id: :parent_id).
       order_siblings(:work)
-    }.where.not(block_hash: block_hash)
+    }
   end
 
   # Find branch point with common ancestor, and return the start of the branch,
