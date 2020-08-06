@@ -120,7 +120,7 @@ class InflatedBlock < ApplicationRecord
               end
               Rails.logger.debug "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] }) on #{ node.name_with_version }"
               blocks_to_invalidate = []
-              active_tip_block = Block.find_by(block_hash: active_tip["hash"])
+              active_tip_block = Block.find_by!(block_hash: active_tip["hash"])
               if block.height == active_tip["height"]
                 Rails.logger.debug "Invalidate tip to jump to another fork"
                 blocks_to_invalidate.append(active_tip_block)
