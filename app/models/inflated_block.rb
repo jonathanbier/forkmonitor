@@ -125,21 +125,9 @@ class InflatedBlock < ApplicationRecord
                 Rails.logger.debug "Invalidate tip to jump to another fork"
                 blocks_to_invalidate.append(active_tip_block)
               else
-                Rails.logger.debug "Check if active chaintip descends from target block, otherwise invalidate it..."
-                active_tip_ancestor = active_tip_block
-                if block.height < active_tip["height"]
-                  Rails.logger.debug "Target block height is below active tip height on #{ node.name_with_version }"
-                  ancestor = nil
-                  while !ancestor && active_tip_ancestor.present? do
-                    if active_tip_ancestor.parent.height == block.height
-                      ancestor = active_tip_ancestor.parent == block
-                    end
-                    if ancestor == false && active_tip_ancestor.parent.children.count > 1
-                      blocks_to_invalidate.append(active_tip_ancestor)
-                      break
-                    end
-                    active_tip_ancestor = active_tip_ancestor.parent
-                  end
+                Rails.logger.debug "Check if active chaintip descends from target block, otherwise invalidate the active chain..."
+                if !block.descendants.include? active_tip_block
+                  blocks_to_invalidate.append(active_tip_block.branch_start(block))
                 end
                 # Invalidate all child blocks we know of, if the node knows them
                 block.children.each do |child_block|

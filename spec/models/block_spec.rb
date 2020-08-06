@@ -113,6 +113,58 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  fdescribe "descendants" do
+    before do
+      # A -> B1 -> C1 -> D1
+      #   -> B2
+      @a = create(:block)
+      @b1 = create(:block, parent: @a)
+      @b2 = create(:block, parent: @a)
+      @c1 = create(:block, parent: @b1)
+      @d1 = create(:block, parent: @c1)
+    end
+
+    it "should not return itself" do
+      expect(@a.descendants).not_to include(@a)
+    end
+
+    it "should return all blocks descending" do
+      expect(@b1.descendants).to include(@c1)
+      expect(@b1.descendants).to include(@d1)
+    end
+
+    it "should not return blocks that don't descend from it" do
+      expect(@b2.descendants).not_to include(@c1)
+    end
+  end
+
+  fdescribe "branch_start" do
+    before do
+      # A -> B1 -> C1 -> D1
+      #   -> B2 -> C2
+      @a = create(:block)
+      @b1 = create(:block, parent: @a)
+      @b2 = create(:block, parent: @a)
+      @c1 = create(:block, parent: @b1)
+      @c2 = create(:block, parent: @b2)
+      @d1 = create(:block, parent: @c1)
+    end
+
+    it "should fail if comparing to self" do
+      expect { @a.branch_start(@a) }.to raise_error("same block")
+    end
+
+    it "should fail if comparing on same branch" do
+      expect { @b1.branch_start(@c1) }.to raise_error("same branch")
+      expect { @c1.branch_start(@d1) }.to raise_error("same branch")
+    end
+
+    it "should find the branch start" do
+      expect( @d1.branch_start(@c2)).to eq(@b1)
+      expect( @c2.branch_start(@d1)).to eq(@b2)
+    end
+  end
+
   describe "create_with" do
     before do
       @node = build(:node)

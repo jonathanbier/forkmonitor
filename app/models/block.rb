@@ -59,6 +59,30 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
+  def descendants
+    block_hash = self.block_hash
+    Block.join_recursive {
+      start_with(block_hash: block_hash).
+      connect_by(id: :parent_id).
+      order_siblings(:work)
+    }.where.not(block_hash: block_hash)
+  end
+
+  # Find branch point with common ancestor, and return the start of the branch,
+  # i.e. the block after the common ancenstor
+  def branch_start(other_block)
+    raise "same block" if self == other_block
+    candidate_branch_start = self
+    while !candidate_branch_start.nil?
+      if candidate_branch_start.parent.descendants.include? other_block
+        raise "same branch" if self == candidate_branch_start
+        return candidate_branch_start
+      end
+      candidate_branch_start = candidate_branch_start.parent
+    end
+    raise "dead end"
+  end
+
   def find_ancestors!(node, use_mirror, mark_valid, until_height = nil)
     block_id = self.id
     block_ids = []
