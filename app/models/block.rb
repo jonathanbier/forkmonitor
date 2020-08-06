@@ -15,6 +15,7 @@ class Block < ApplicationRecord
   has_many :maybe_uncoop_transactions
   has_many :penalty_transactions
   has_many :sweep_transactions
+  has_many :transactions
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   after_create :expire_stale_candidate_cache

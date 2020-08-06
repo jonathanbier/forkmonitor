@@ -65,7 +65,21 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.find_or_generate(coin, height)
-    StaleCandidate.find_or_create_by(coin: coin, height: height)
+    throw "Expected at least two #{ coin } blocks at height #{ height }" unless Block.where(coin: coin, height: height).count > 1
+    s = StaleCandidate.find_or_create_by(coin: coin, height: height)
+    # Fetch transactions for all blocks at this height
+    Block.where(coin: coin, height: height).each do |block|
+      if block.transactions.count == 0
+        # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
+        block_info = block.first_seen_by.getblock(block.block_hash, 1)
+        coinbase = block_info["tx"].first
+        block.transactions.create(is_coinbase: true, tx_id: coinbase)
+        block_info["tx"][1..-1].each do |tx_id|
+          block.transactions.create(is_coinbase: false, tx_id: tx_id)
+        end
+      end
+    end
+    return s
   end
 
   def notify!

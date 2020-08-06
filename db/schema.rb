@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_07_21_095223) do
+ActiveRecord::Schema.define(version: 2020_08_06_112508) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -244,6 +244,16 @@ ActiveRecord::Schema.define(version: 2020_07_21_095223) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "transactions", force: :cascade do |t|
+    t.bigint "block_id"
+    t.string "tx_id", limit: 64, null: false
+    t.boolean "is_coinbase", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["block_id"], name: "index_transactions_on_block_id"
+    t.index ["tx_id"], name: "index_transactions_on_tx_id"
+  end
+
   create_table "tx_outsets", force: :cascade do |t|
     t.integer "block_id"
     t.integer "txouts"
@@ -288,5 +298,6 @@ ActiveRecord::Schema.define(version: 2020_07_21_095223) do
   add_foreign_key "inflated_blocks", "blocks"
   add_foreign_key "inflated_blocks", "nodes"
   add_foreign_key "lightning_transactions", "blocks"
+  add_foreign_key "transactions", "blocks"
   add_foreign_key "tx_outsets", "nodes"
 end

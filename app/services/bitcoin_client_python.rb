@@ -132,6 +132,16 @@ class BitcoinClientPython
     end
   end
 
+  def getnewaddress()
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      return @node.getnewaddress()
+    rescue Error => e
+      raise Error, "getnewaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def generate(n)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
@@ -223,6 +233,18 @@ class BitcoinClientPython
       return @node.reconsiderblock(blockhash=block_hash)
     rescue Error => e
       raise Error, "reconsiderblock(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def sendtoaddress(destination, amount)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Specify destination" unless destination.present?
+    raise Error, "Specify amount" unless amount.present?
+    begin
+      return @node.sendtoaddress(address=destination, amount=amount.to_s)
+    rescue Error => e
+      raise Error, "sendtoaddress(#{ destination }, #{ amount }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
