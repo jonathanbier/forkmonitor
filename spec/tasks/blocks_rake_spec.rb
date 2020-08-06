@@ -1,3 +1,4 @@
+require "rails_helper"
 require 'spec_helper'
 
 describe "blocks:fetch_ancestors" do
