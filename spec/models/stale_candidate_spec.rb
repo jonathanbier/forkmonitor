@@ -40,6 +40,14 @@ RSpec.describe StaleCandidate, :type => :model do
     test.shutdown()
   end
 
+  describe "find_or_generate" do
+    it "should create StaleCandidate" do
+      s = StaleCandidate.find_or_generate(:btc, 3)
+      expect(s).to_not be_nil
+      expect(s.children.count).to eq(2)
+    end
+  end
+
   describe "self.check!" do
     let(:user) { create(:user) }
 
