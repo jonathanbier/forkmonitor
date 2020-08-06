@@ -236,6 +236,17 @@ class BitcoinClientPython
     end
   end
 
+  def sendrawtransaction(tx)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Specify transaction" unless tx.present?
+    begin
+        return @node.sendrawtransaction(tx)
+    rescue Error => e
+      raise Error, "sendrawtransaction(#{ tx }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def sendtoaddress(destination, amount)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error

@@ -49,12 +49,21 @@ class StaleCandidate < ApplicationRecord
     Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
   end
 
+  # Iterate over descendant blocks to add their transactions
+  def process!
+    Block.where(coin: self.coin, height: self.height).each do |candidate_block|
+      candidate_block.descendants.where("height <= ?", self.height + 10).each do |block|
+        block.fetch_transactions!
+      end
+    end
+  end
+
   def self.check!(coin)
     # Look for potential stale blocks, i.e. more than one block at the same height
     tip_height = Block.where(coin: coin).maximum(:height)
     return if tip_height.nil?
     block_window = Rails.env.test? ? 2 : 100
-    Block.select(:height).where(coin: coin).where("height > ?", tip_height - block_window).group(:height).having('count(height) > 1').each do |block|
+    Block.select(:height).where(coin: coin).where("height > ?", tip_height - block_window).group(:height).having('count(height) > 1').order(height: :asc).limit(1).each do |block|
       # If there was an invalid block, assume there's fork:
       # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
       #       until then, we assume a forked node is deleted and the alert is dismissed
@@ -69,20 +78,15 @@ class StaleCandidate < ApplicationRecord
     s = StaleCandidate.find_or_create_by(coin: coin, height: height)
     # Fetch transactions for all blocks at this height
     Block.where(coin: coin, height: height).each do |block|
-      if block.transactions.count == 0
-        # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
-        block_info = block.first_seen_by.getblock(block.block_hash, 1)
-        coinbase = block_info["tx"].first
-        block.transactions.create(is_coinbase: true, tx_id: coinbase)
-        block_info["tx"][1..-1].each do |tx_id|
-          block.transactions.create(is_coinbase: false, tx_id: tx_id)
-        end
-      end
+      block.fetch_transactions!
     end
     return s
   end
 
   def self.process!(coin)
+    StaleCandidate.where(coin: coin).each do |c|
+      c.process!
+    end
   end
 
   def notify!
