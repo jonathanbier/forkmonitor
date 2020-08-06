@@ -423,7 +423,7 @@ class Node < ApplicationRecord
       end
 
       self.check_chaintips!(:btc)
-      self.check_stale_blocks!(:btc)
+      StaleCandidate.check!(:btc)
     end
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
@@ -435,7 +435,7 @@ class Node < ApplicationRecord
 
 
       self.check_chaintips!(:tbtc)
-      self.check_stale_blocks!(:tbtc)
+      StaleCandidate.check!(:tbtc)
     end
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
@@ -446,7 +446,7 @@ class Node < ApplicationRecord
       end
 
       self.check_chaintips!(:bch)
-      self.check_stale_blocks!(:bch)
+      StaleCandidate.check!(:bch)
     end
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
@@ -457,7 +457,7 @@ class Node < ApplicationRecord
       end
 
       self.check_chaintips!(:bsv)
-      self.check_stale_blocks!(:bsv)
+      StaleCandidate.check!(:bsv)
     end
 
     self.check_laggards!(options)
@@ -622,34 +622,6 @@ class Node < ApplicationRecord
       throw Error, "Unknown coin"
     end
     InvalidBlock.check!(coin)
-  end
-
-  def self.check_stale_blocks!(coin)
-    # Look for potential stale blocks, i.e. more than one block at the same height
-    tip_height = Block.where(coin: coin).maximum(:height)
-    return if tip_height.nil?
-    block_window = Rails.env.test? ? 2 : 100
-    Block.select(:height).where(coin: coin).where("height > ?", tip_height - block_window).group(:height).having('count(height) > 1').each do |block|
-      # If there was an invalid block, assume there's fork:
-      # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
-      #       until then, we assume a forked node is deleted and the alert is dismissed
-      next if InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin]).count > 0
-      @stale_candidate = StaleCandidate.find_or_create_by(coin: coin, height: block.height)
-      if @stale_candidate.notified_at.nil?
-        User.all.each do |user|
-          if ![:tbtc].include?(coin) # skip email notification for testnet
-            UserMailer.with(user: user, stale_candidate: @stale_candidate).stale_candidate_email.deliver
-          end
-        end
-        @stale_candidate.update notified_at: Time.now
-        if ![:tbtc].include?(coin) # skip push notification for testnet
-          Subscription.blast("stale-candidate-#{ @stale_candidate.id }",
-                             "#{ @stale_candidate.coin.upcase } stale candidate",
-                             "At height #{ @stale_candidate.height }"
-          )
-        end
-      end
-    end
   end
 
   # Sometimes an empty chaintip is left over

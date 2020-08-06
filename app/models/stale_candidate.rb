@@ -49,6 +49,42 @@ class StaleCandidate < ApplicationRecord
     Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
   end
 
+  def self.check!(coin)
+    # Look for potential stale blocks, i.e. more than one block at the same height
+    tip_height = Block.where(coin: coin).maximum(:height)
+    return if tip_height.nil?
+    block_window = Rails.env.test? ? 2 : 100
+    Block.select(:height).where(coin: coin).where("height > ?", tip_height - block_window).group(:height).having('count(height) > 1').each do |block|
+      # If there was an invalid block, assume there's fork:
+      # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
+      #       until then, we assume a forked node is deleted and the alert is dismissed
+      next if InvalidBlock.joins(:block).where(dismissed_at: nil).where("blocks.coin = ?", Block.coins[coin]).count > 0
+      stale_candidate = find_or_generate(coin, block.height)
+      stale_candidate.notify!
+    end
+  end
+
+  def self.find_or_generate(coin, height)
+    StaleCandidate.find_or_create_by(coin: coin, height: height)
+  end
+
+  def notify!
+    if self.notified_at.nil?
+      User.all.each do |user|
+        if ![:tbtc].include?(self.coin) # skip email notification for testnet
+          UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
+        end
+      end
+      self.update notified_at: Time.now
+      if ![:tbtc].include?(self.coin) # skip push notification for testnet
+        Subscription.blast("stale-candidate-#{ self.id }",
+                           "#{ self.coin.upcase } stale candidate",
+                           "At height #{ self.height }"
+        )
+      end
+    end
+  end
+
   private
 
   def self.index_json_cached(coin)
