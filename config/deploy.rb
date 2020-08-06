@@ -38,4 +38,4 @@ set :keep_releases, 5
 # set :ssh_options, verify_host_key: :secure
 
 after :deploy, "restart_rake_tasks"
-after :deploy, "invoke[cache:clear]"
+after :deploy, "clear_cache"

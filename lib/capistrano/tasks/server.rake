@@ -4,13 +4,14 @@ task :restart_rake_tasks do
   end
 end
 
-desc 'Invoke a rake command on the remote server'
-task :invoke, [:command] => 'deploy:set_rails_env' do |task, args|
-  on primary(:app) do
+rake_roles = fetch(:rake_roles, :app)
+desc 'Clear Rails cache'
+task :clear_cache do
+  on roles(rake_roles) do
     within current_path do
-      with :rails_env => fetch(:rails_env) do
-        rake args[:command]
-      end
+        with rails_env: fetch(:rails_env) do
+          execute :rake, "cache:clear"
+        end
     end
   end
 end
