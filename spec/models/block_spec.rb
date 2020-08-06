@@ -113,7 +113,7 @@ RSpec.describe Block, :type => :model do
     end
   end
 
-  fdescribe "descendants" do
+  describe "descendants" do
     before do
       # A -> B1 -> C1 -> D1
       #   -> B2
@@ -138,7 +138,7 @@ RSpec.describe Block, :type => :model do
     end
   end
 
-  fdescribe "branch_start" do
+  describe "branch_start" do
     before do
       # A -> B1 -> C1 -> D1
       #   -> B2 -> C2
