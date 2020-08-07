@@ -88,12 +88,16 @@ class Block < ApplicationRecord
   end
 
   def fetch_transactions!
-    if self.transactions.count == 0
+    if self.transactions.count == 0 && !self.pruned
       # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
       # Workaround for test framework, needed in order to mock first_seen_by
       this_block = Rails.env.test? ? Block.find_by(block_hash: self.block_hash) : self
-
-      block_info = this_block.first_seen_by.getblock(self.block_hash, 1)
+      begin
+        block_info = this_block.first_seen_by.getblock(self.block_hash, 1)
+      rescue Node::BlockPrunedError
+        self.update pruned: true
+        return
+      end
       coinbase = block_info["tx"].first
       self.transactions.create(is_coinbase: true, tx_id: coinbase)
       block_info["tx"][1..-1].each do |tx_id|

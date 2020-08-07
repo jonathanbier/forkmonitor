@@ -1,6 +1,8 @@
 class BitcoinClientMock
-  class Error < StandardError
-  end
+  class Error < StandardError; end
+  class BlockPrunedError < Error; end
+  class ConnectionError < Error; end
+  class PartialFileError < Error; end
 
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
@@ -37,6 +39,9 @@ class BitcoinClientMock
       # 560177: actually block 603351 (empty)
       "00000000000000000009eeed38d42da6428b0dcf596093a9d313bdd3d87c0eef" => "000040204cd87f8c0d91fbdf42f73748ea8324d191cc0a4f606806000000000000000000b45e927dc0db75bff9b0ddf83ac0d8166c79ae7622599e9ad6353f76522639c72dc5c95dd12016176defd08101010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff1903d734090d6506046c666bf5da0000319d102f736c7573682f0000000002807c814a000000001976a9147c154ed1dc59609e3d26abb2df2ea3d587cd8c4188ac0000000000000000266a24aa21a9ede2f61c3f71d1defd3fa999dfa36953755c690689799962b48bebd836974e8cf90120000000000000000000000000000000000000000000000000000000000000000000000000"
     }
+    @pruned_blocks = [
+      "0000000000000000000000000000000000000000000000000000000000000001"
+    ]
     @transactions = {}
 
     mock_add_block(976, 1232327230, "000000000000000000000000000000000000000000000000000003d103d103d1", nil, nil)
@@ -405,6 +410,10 @@ class BitcoinClientMock
 
   def getblock(hash, verbosity)
     raise Error, "getblock requires block hash" unless hash.present?
+
+    if @pruned_blocks.include? hash
+      raise BlockPrunedError
+    end
 
     if verbosity == 0
       raise Error, "Raw block #{ hash }  not found" unless @raw_blocks[hash]

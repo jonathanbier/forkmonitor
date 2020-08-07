@@ -1,6 +1,13 @@
 require "rails_helper"
 
 RSpec.describe Block, :type => :model do
+  before do
+    stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
+    stub_const("BitcoinClient::ConnectionError", BitcoinClientMock::ConnectionError)
+    stub_const("BitcoinClient::PartialFileError", BitcoinClientMock::PartialFileError)
+    stub_const("BitcoinClient::BlockPrunedError", BitcoinClientMock::BlockPrunedError)
+  end
+
   describe "log2_pow" do
     it "should be log2(pow)" do
       block = create(:block, work: "00000000000000000000000000000001")
@@ -166,11 +173,36 @@ RSpec.describe Block, :type => :model do
   end
 
   describe "fetch_transactions!" do
-    it "should fetch transactions for the block" do
+    before do
       @node = create(:node)
+    end
+
+    it "should fetch transactions for the block" do
+      expect(Block).to receive(:find_by).and_call_original # Sanity check for later test
       @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377", first_seen_by: @node)
       @block.fetch_transactions! # Mock client knows one transaction for this block
       expect(@block.transactions.count).to eq(1)
+    end
+
+    it "should not fetch twice" do
+      expect(Block).to receive(:find_by).once.and_call_original
+      @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377", first_seen_by: @node)
+      @block.fetch_transactions!
+      @block.fetch_transactions!
+      expect(@block.transactions.count).to eq(1)
+    end
+
+    it "should mark block as pruned if it can't be fetched" do
+      @block = create(:block, block_hash: "0000000000000000000000000000000000000000000000000000000000000001", first_seen_by: @node)
+      @block.fetch_transactions!
+      expect(@block.pruned).to eq(true)
+    end
+
+    it "should not try a pruned block again" do
+      @block = create(:block, block_hash: "0000000000000000000000000000000000000000000000000000000000000001", first_seen_by: @node)
+      @block.fetch_transactions!
+      expect(Block).not_to receive(:find_by)
+      @block.fetch_transactions!
     end
   end
 
