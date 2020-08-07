@@ -165,6 +165,15 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "fetch_transactions!" do
+    it "should fetch transactions for the block" do
+      @node = create(:node)
+      @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377", first_seen_by: @node)
+      @block.fetch_transactions! # Mock client knows one transaction for this block
+      expect(@block.transactions.count).to eq(1)
+    end
+  end
+
   describe "create_with" do
     before do
       @node = build(:node)
