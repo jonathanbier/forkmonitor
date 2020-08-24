@@ -111,7 +111,8 @@ class StaleCandidate < ApplicationRecord
 
   def self.index_json_cached(coin)
     Rails.cache.fetch("StaleCandidate.index.for_coin(#{ coin }).json") {
-      where(coin: coin).order(height: :desc).limit(1).to_json
+      min_height = Block.where(coin: coin).maximum(:height) - 100
+      where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).to_json
     }
   end
 
