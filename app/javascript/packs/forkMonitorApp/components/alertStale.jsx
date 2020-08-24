@@ -8,10 +8,11 @@ import {
 
 class AlertStale extends React.Component {
   render() {
+    const branchCount = this.props.candidate.children.length;
     return(
       <UncontrolledAlert color="warning">
-        There { this.props.currentHeight > this.props.candidate.height ? "were" : "are" } { this.props.candidate.blocks.length } blocks at height { this.props.candidate.height }
-        . <Link to={ `/stale/${ this.props.candidate.coin }/${ this.props.candidate.height }` }>More info</Link>
+        There are { branchCount } blocks at height { this.props.candidate.height }
+        . <Link to={ `/stale/${ this.props.coin }/${ this.props.candidate.height }` }>More info</Link>
       </UncontrolledAlert>
     );
   }
