@@ -1,6 +1,7 @@
 class BitcoinClientMock
   class Error < StandardError; end
   class BlockPrunedError < Error; end
+  class BlockNotFoundError < Error; end
   class ConnectionError < Error; end
   class PartialFileError < Error; end
 
@@ -419,7 +420,7 @@ class BitcoinClientMock
       raise Error, "Raw block #{ hash }  not found" unless @raw_blocks[hash]
       return @raw_blocks[hash]
     elsif verbosity # true or 1
-      raise Error, "Block #{ hash }  not found" unless @blocks[hash]
+      raise BlockNotFoundError unless @blocks[hash]
       return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
     else
       raise Error, "Unexpected verbosity=#{ verbosity }"

@@ -10,6 +10,7 @@ class Node < ApplicationRecord
   class ConnectionError < Error; end
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
+  class BlockNotFoundError < Error; end
   class NoMatchingNodeError < Error; end
 
   belongs_to :block, required: false
@@ -397,6 +398,8 @@ class Node < ApplicationRecord
       raise PartialFileError
     rescue BitcoinClient::BlockPrunedError
       raise BlockPrunedError
+    rescue BitcoinClient::BlockNotFoundError
+      raise BlockNotFoundError
     end
   end
 
@@ -512,6 +515,8 @@ class Node < ApplicationRecord
     begin
       block_info = block_info || node.getblock(block_hash, 1)
     rescue Node::BlockPrunedError
+      return nil
+    rescue Node::BlockNotFoundError
       return nil
     rescue BitcoinClient::Error => e
       logger.error "Unable to fetch block #{ block_hash } from #{ node.name_with_version } while looking for pool name"

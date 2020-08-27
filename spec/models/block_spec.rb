@@ -6,6 +6,7 @@ RSpec.describe Block, :type => :model do
     stub_const("BitcoinClient::ConnectionError", BitcoinClientMock::ConnectionError)
     stub_const("BitcoinClient::PartialFileError", BitcoinClientMock::PartialFileError)
     stub_const("BitcoinClient::BlockPrunedError", BitcoinClientMock::BlockPrunedError)
+    stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientMock::BlockNotFoundError)
   end
 
   describe "log2_pow" do

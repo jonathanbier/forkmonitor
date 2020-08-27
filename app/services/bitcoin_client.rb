@@ -6,6 +6,7 @@ class BitcoinClient
   class ConnectionError < Error; end
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
+  class BlockNotFoundError < Error; end
 
   def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -124,6 +125,7 @@ class BitcoinClient
       raise ConnectionError if e.message.include?("couldnt_connect")
       raise PartialFileError if e.message.include?("partial_file")
       raise BlockPrunedError if e.message.include?("pruned data")
+      raise BlockNotFoundError if e.message.include?("Block not found")
       raise Error, "getblock(#{hash},#{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
