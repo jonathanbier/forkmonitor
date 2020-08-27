@@ -93,12 +93,12 @@ class StaleCandidate < ApplicationRecord
   def notify!
     if self.notified_at.nil?
       User.all.each do |user|
-        if ![:tbtc].include?(self.coin) # skip email notification for testnet
+        unless self.tbtc? # skip email notification for testnet
           UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
         end
       end
       self.update notified_at: Time.now
-      if ![:tbtc].include?(self.coin) # skip push notification for testnet
+      unless self.tbtc? # skip push notification for testnet
         Subscription.blast("stale-candidate-#{ self.id }",
                            "#{ self.coin.upcase } stale candidate",
                            "At height #{ self.height }"
