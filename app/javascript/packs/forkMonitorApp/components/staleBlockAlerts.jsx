@@ -58,7 +58,7 @@ class StaleBlockAlerts extends React.Component {
     return(
       <div>
         {(this.state && this.state.stale_candidates || []).filter(
-          c => this.props.currentHeight - c.height < 6
+          c => this.props.currentHeight - c.height < 1000
         ).map(function (candidate) {
           return (<AlertStale candidate={ candidate }  coin={ this.state.coin } currentHeight={ this.props.currentHeight } key={ candidate.height }/>)
         }.bind(this))}

@@ -42,7 +42,7 @@ describe('component', () => {
   });
 
   test('should not show stale block alert after a while', async () => {
-    component.setProps({currentHeight: 1000});
+    component.setProps({currentHeight: 2000});
     await flushPromises();
     expect(component.text()).not.toContain("<AlertStale />");
   });
