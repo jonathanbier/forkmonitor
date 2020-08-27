@@ -1,5 +1,6 @@
 class StaleCandidate < ApplicationRecord
   PER_PAGE = Rails.env.production? ? 100 : 2
+  DOUBLE_SPEND_RANGE = 10
 
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
@@ -13,8 +14,10 @@ class StaleCandidate < ApplicationRecord
   }
 
   def as_json(options = nil)
+    children = self.children # avoid repeating this operation
     super({ only: [:coin, :height] }).merge({
-      children: children
+      children: children,
+      double_spend_candidates: double_spend_candidates(children)
     })
   end
 
@@ -37,6 +40,25 @@ class StaleCandidate < ApplicationRecord
         length: chain.count
       }
     }
+  end
+
+  def double_spend_candidates(children)
+    return nil if children.length < 2
+    # TODO: handle more than 2 branches:
+    return nil if children.length > 2
+    # If branches are of different length, potential double spends are transactions
+    # in the shortest chain that are missing in the longest chain.
+    (shortest, longest) = children.sort_by {|c| c[:length] }
+    shortest_txs = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    longest_txs = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    if shortest[:length] == longest[:length]
+      shortest_txs - longest_txs
+    else
+      # If both branches are the same length, consider doublespends on either side:
+      (shortest_txs - longest_txs) | (longest_txs - shortest_txs)
+    end
+
+    # * take RBF into account (fee bump is not a double spend)
   end
 
   def expire_cache

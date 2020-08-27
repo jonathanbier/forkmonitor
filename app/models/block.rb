@@ -60,10 +60,11 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
-  def descendants
+  def descendants(depth_limit=nil)
     block_hash = self.block_hash
     height = self.height
     coin = self.coin
+    max_height = depth_limit.nil? ? 10000000 : height + depth_limit
     # Constrain query by coin and minimum height to reduce memory usage
     Block.where(coin: coin).where("height > ?", height).join_recursive {
       start_with(block_hash: block_hash).
@@ -172,6 +173,10 @@ class Block < ApplicationRecord
       result += ", first seen by #{ self.first_seen_by.name_with_version }"
     end
     return result + ")"
+  end
+
+  def block_and_descendant_transaction_ids(depth_limit)
+    ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false)}.flatten.collect{|tx| tx.tx_id}.uniq
   end
 
   def self.create_with(block_info, use_mirror, node, mark_valid)
@@ -385,7 +390,9 @@ class Block < ApplicationRecord
 
   def expire_stale_candidate_cache
     StaleCandidate.where(coin: self.coin).each do |c|
-      c.expire_cache
+      if self.height - c.height <= StaleCandidate::DOUBLE_SPEND_RANGE
+        c.expire_cache
+      end
     end
   end
 
