@@ -15,6 +15,7 @@ import {
 } from 'reactstrap';
 
 import StaleCandidate from "./staleCandidate"
+import Explorer from "./explorer"
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 
@@ -25,6 +26,7 @@ class StaleCandidates extends React.Component {
     this.state = {
       redirect: false,
       staleCandidates: [],
+      doubleSpends: [],
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
@@ -41,7 +43,8 @@ class StaleCandidates extends React.Component {
       return response.data;
     }).then(function (res) {
       this.setState({
-        staleCandidates: res.children
+        staleCandidates: res.children,
+        doubleSpends: res.double_spend_candidates
       });
       }.bind(this)).catch(function (error) {
         if (error.response.status == 404) {
@@ -97,6 +100,42 @@ class StaleCandidates extends React.Component {
                 })}
               </tbody>
             </Table>
+            { (this.state.doubleSpends == null ||  this.state.doubleSpends.length == 0) &&
+              <p>No double spends have been detected</p>
+            }
+            { this.state.doubleSpends != null && this.state.doubleSpends.length > 0 &&
+              <div>
+                <p>
+                  { this.state.doubleSpends.length } potential doublespends have
+                  been detected. Some transaction may still appear in future blocks.
+                  The following list may contain false positives due to an RBF fee bump,
+                  or because it was included after our 10 block scan window.
+                </p>
+                <Table striped responsive size="sm" className="lightning">
+                  <thead>
+                    <tr align="left">
+                      <th>Hash</th>
+                      <th>Explorer</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {this.state.doubleSpends.map(function (tx_id, index) {
+                      return (
+                        <tr key={ index }>
+                          <td>
+                            { tx_id }
+                          </td>
+                          <td>
+                            <Explorer blockstream tx={ tx_id }/>&nbsp;
+                            <Explorer btcCom tx={ tx_id }/>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </Table>
+              </div>
+            }
           </Col></Row>
         </Container>
       </TabPane>

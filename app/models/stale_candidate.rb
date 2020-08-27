@@ -51,7 +51,7 @@ class StaleCandidate < ApplicationRecord
     (shortest, longest) = children.sort_by {|c| c[:length] }
     shortest_txs = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_txs = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
-    if shortest[:length] == longest[:length]
+    if shortest[:length] < longest[:length]
       shortest_txs - longest_txs
     else
       # If both branches are the same length, consider doublespends on either side:
