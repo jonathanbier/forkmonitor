@@ -176,7 +176,7 @@ class Block < ApplicationRecord
   end
 
   def block_and_descendant_transaction_ids(depth_limit)
-    ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false)}.flatten.collect{|tx| tx.tx_id}.uniq
+    ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id)}.flatten.collect{|tx| tx.tx_id}.uniq
   end
 
   def self.create_with(block_info, use_mirror, node, mark_valid)
