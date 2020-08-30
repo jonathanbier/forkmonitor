@@ -29,7 +29,7 @@ class StaleCandidate < ApplicationRecord
 
   def children
     Block.where(coin: coin, height: height).collect{ | child |
-      chain = Block.join_recursive {
+      chain = Block.where("height <= ?", height + 100).join_recursive {
         start_with(block_hash: child.block_hash).
         connect_by(id: :parent_id).
         order_siblings(:work)

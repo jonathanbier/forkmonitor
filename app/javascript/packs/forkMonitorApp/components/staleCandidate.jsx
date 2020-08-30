@@ -7,7 +7,7 @@ class StaleCandidate extends React.Component {
   render() {
     return(
       <tr>
-        <td>{ this.props.length }</td>
+        <td>{ this.props.length <= 100 ? this.props.length : "100+" }</td>
         <td>{ this.props.root.hash }</td>
         <td>
           <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{ this.props.root.timestamp }</Moment>
