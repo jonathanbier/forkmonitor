@@ -1,5 +1,6 @@
 import React from 'react';
 import Moment from 'react-moment';
+import PropTypes from 'prop-types';
 
 import Explorer from './explorer';
 
@@ -14,15 +15,20 @@ class StaleCandidate extends React.Component {
         </td>
         <td>{ this.props.root.pool }</td>
         <td>
-          <Explorer blockstream block={ this.props.root.hash }/>&nbsp;
-          <Explorer btcCom block={ this.props.root.hash }/>
+          <Explorer blockstream coin={ this.props.coin } block={ this.props.root.hash }/>&nbsp;
+          <Explorer btcCom coin={ this.props.coin }  block={ this.props.root.hash }/>
         </td>
         <td>
-          <Explorer blockstream block={ this.props.tip.hash }/>&nbsp;
-          <Explorer btcCom block={ this.props.tip.hash }/>
+          <Explorer blockstream coin={ this.props.coin } block={ this.props.tip.hash }/>&nbsp;
+          <Explorer btcCom coin={ this.props.coin } block={ this.props.tip.hash }/>
         </td>
       </tr>
     )
   }
 }
+
+StaleCandidate.propTypes = {
+  coin: PropTypes.string.isRequired
+}
+
 export default StaleCandidate

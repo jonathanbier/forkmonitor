@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import axios from 'axios';
 
@@ -43,6 +44,7 @@ class StaleCandidates extends React.Component {
       return response.data;
     }).then(function (res) {
       this.setState({
+        coin: res.coin,
         staleCandidates: res.children,
         doubleSpends: res.double_spend_candidates
       });
@@ -57,9 +59,10 @@ class StaleCandidates extends React.Component {
 
   render() {
     const { redirect } = this.state;
+    const coin = this.state.coin;
 
     if (redirect) {
-      return <Redirect to={ `/nodes/${ this.state.coin }` } />;
+      return <Redirect to={ `/nodes/${ coin }` } />;
     }
 
     return(
@@ -95,7 +98,7 @@ class StaleCandidates extends React.Component {
               <tbody>
                 {this.state.staleCandidates.map(function (child, index) {
                   return (
-                    <StaleCandidate root={ child.root } tip={ child.tip } length={ child.length } key={index}/>
+                    <StaleCandidate coin={ coin } root={ child.root } tip={ child.tip } length={ child.length } key={index}/>
                   )
                 })}
               </tbody>
@@ -126,8 +129,8 @@ class StaleCandidates extends React.Component {
                             { tx_id }
                           </td>
                           <td>
-                            <Explorer blockstream tx={ tx_id }/>&nbsp;
-                            <Explorer btcCom tx={ tx_id }/>
+                            <Explorer blockstream coin={ this.state.coin } tx={ tx_id }/>&nbsp;
+                            <Explorer btcCom coin={ this.state.coin } tx={ tx_id }/>
                           </td>
                         </tr>
                       )
@@ -142,4 +145,8 @@ class StaleCandidates extends React.Component {
     );
   }
 }
+
+StaleCandidates.propTypes = {
+}
+
 export default StaleCandidates

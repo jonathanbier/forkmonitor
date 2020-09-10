@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import ImageBlockstream from '../assets/images/blockstream.png'
 import ImageBtcCom from '../assets/images/btc.png'
@@ -8,18 +9,35 @@ class Explorer extends React.Component {
   render() {
     let url;
     let image;
+    const coin = this.props.coin;
     if (this.props.blockstream) {
-      if (this.props.tx) {
-        url = "https://blockstream.info/tx/" + this.props.tx
+      var rootUrl = "https://blockstream.info/";
+      if (coin == "btc") {
+      } else if (coin == "tbtc") {
+        rootUrl += "testnet/"
       } else {
-        url = "https://blockstream.info/block/" + this.props.block
+        return null;
+      }
+      if (this.props.tx) {
+        url = rootUrl + "tx/" + this.props.tx
+      } else {
+        url = rootUrl + "block/" + this.props.block
       }
       image = ImageBlockstream
     } else if (this.props.btcCom) {
-      if (this.props.tx) {
-        url = "https://btc.com/" + this.props.tx
+      var rootUrl = "https://btc.com/";
+      if (coin == "btc") {
+      } else if (coin == "tbtc") {
+        return null;
+      } else if (coin == "bch") {
+        rootUrl = "https://bch.btc.com/"
       } else {
-        url = "https://btc.com/" + this.props.block
+        return null;
+      }
+      if (this.props.tx) {
+        url = rootUrl + this.props.tx
+      } else {
+        url = rootUrl + this.props.block
       }
       image = ImageBtcCom
     } else if (this.props.oneML) {
@@ -33,4 +51,9 @@ class Explorer extends React.Component {
     );
   }
 }
+
+Explorer.propTypes = {
+  coin: PropTypes.string.isRequired
+}
+
 export default Explorer

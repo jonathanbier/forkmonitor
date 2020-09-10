@@ -21,14 +21,9 @@ class Block < ApplicationRecord
   after_create :expire_stale_candidate_cache
 
   def as_json(options = nil)
-    super({ only: [:height, :timestamp] }.merge(options || {})).merge({
-      id: id,
+    super({ only: [:id, :coin, :height, :timestamp, :pool, :tx_count, :size] }.merge(options || {})).merge({
       hash: block_hash,
-      timestamp: timestamp,
       work: log2_pow,
-      pool: pool,
-      tx_count: tx_count,
-      size: size,
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
         name_with_version: first_seen_by.name_with_version

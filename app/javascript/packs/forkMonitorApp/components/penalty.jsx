@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import Moment from 'react-moment';
 import 'moment-timezone'
@@ -27,21 +28,30 @@ class Penalty extends React.Component {
           }
         </td>
         <td>
-          <Explorer blockstream tx={ this.props.penalty.opening_tx_id }/>&nbsp;
-          <Explorer btcCom tx={ this.props.penalty.opening_tx_id }/>&nbsp;
+          <Explorer blockstream coin={ this.props.penalty.block.coin } tx={ this.props.penalty.opening_tx_id }/>&nbsp;
+          <Explorer btcCom coin={ this.props.penalty.block.coin } tx={ this.props.penalty.opening_tx_id }/>&nbsp;
           { this.props.penalty.channel_is_public == true &&
-            <Explorer oneML channelId={ this.props.penalty.channel_id_1ml }/>
+            <Explorer oneML coin={ this.props.penalty.block.coin } channelId={ this.props.penalty.channel_id_1ml }/>
           }
           { this.props.penalty.channel_is_public == null &&
             <FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
           }
         </td>
         <td>
-          <Explorer blockstream tx={ this.props.penalty.tx_id }/>&nbsp;
-          <Explorer btcCom tx={ this.props.penalty.tx_id }/>
+          <Explorer blockstream coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>&nbsp;
+          <Explorer btcCom coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>
         </td>
       </tr>
     );
   }
 }
+
+Penalty.propTypes = {
+  penalty: PropTypes.shape({
+    block: PropTypes.shape({
+      coin: PropTypes.string.isRequired
+    })
+  })
+}
+
 export default Penalty
