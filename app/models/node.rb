@@ -445,6 +445,17 @@ class Node < ApplicationRecord
     end
   end
 
+  def self.newest_node(coin)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    case coin
+    when :btc, :tbtc
+      return Node.newest(coin, :core)
+    when :bch
+      return Node.newest(coin, :abc)
+    end
+    throw "Unable to find suitable #{ coin } node in newest_node"
+  end
+
   # Find pool name for a block. For modern nodes it uses getrawtransaction
   # with a blockhash argument, so a txindex is not required.
   # For older nodes it could process the raw block instead of using getrawtransaction,
@@ -610,6 +621,11 @@ class Node < ApplicationRecord
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoTxIndexError
+  end
+
+  def self.newest(coin, client_type)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    node = Node.where(coin: coin.upcase).where(client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).order(version: :desc).first or raise NoMatchingNodeError
   end
 
   def self.first_newer_than(coin, version, client_type)
