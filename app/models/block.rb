@@ -97,6 +97,7 @@ class Block < ApplicationRecord
         return
       end
       coinbase = block_info["tx"].first
+      throw "Coinbase of #{ this_block.coin } block #{ this_block.block_hash } ( #{ this_block.height } ) is missing 'vout'"  if coinbase["vout"].nil?
       self.transactions.create(
         is_coinbase: true,
         tx_id: coinbase["txid"],
