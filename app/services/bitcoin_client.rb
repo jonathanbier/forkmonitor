@@ -52,8 +52,12 @@ class BitcoinClient
     end
   end
 
-  def help
-    request("help")
+  def help(command=nil)
+    if command.nil?
+      request("help")
+    else
+      request(command)
+    end
   end
 
   def getnetworkinfo
