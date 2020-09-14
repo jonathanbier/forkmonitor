@@ -179,6 +179,18 @@ class Block < ApplicationRecord
     ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id)}.flatten.collect{|tx| tx.tx_id}.uniq
   end
 
+  def fetch_info!
+    node = Node.newest_node(self.coin.to_sym)
+    begin
+      block_info = node.getblockheader(self.block_hash)
+      self.work = block_info["chainwork"]
+      self.mediantime = block_info["mediantime"]
+      self.save if self.changed?
+    rescue Node::BlockNotFoundError
+      # Just try again later
+    end
+  end
+
   def self.create_with(block_info, use_mirror, node, mark_valid)
     tx_count = block_info.key?("nTx") ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
@@ -353,6 +365,13 @@ class Block < ApplicationRecord
 
     Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
       Node.set_pool_for_block!(coin, b)
+    end
+  end
+
+  def self.fetch_missing_info!(coin, n)
+    blocks = Block.where(coin: coin).order(height: :desc).limit(n)
+    blocks.where(work: nil).or(blocks.where(mediantime: nil)).each do |b|
+      b.fetch_info!
     end
   end
 

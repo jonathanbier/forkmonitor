@@ -352,6 +352,20 @@ class Node < ApplicationRecord
     end
   end
 
+  def getblockheader(block_hash, use_mirror = false)
+    throw "Specify block hash" if block_hash.nil?
+    client = use_mirror ? self.mirror_client : self.client
+    begin
+      client.getblockheader(block_hash)
+    rescue BitcoinClient::ConnectionError
+      raise ConnectionError
+    rescue BitcoinClient::PartialFileError
+      raise PartialFileError
+    rescue BitcoinClient::BlockNotFoundError
+      raise BlockNotFoundError
+    end
+  end
+
   def self.poll!(options = {})
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       self.bitcoin_core_by_version.each do |node|
@@ -560,6 +574,7 @@ class Node < ApplicationRecord
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
         Block.match_missing_pools!(coin.downcase.to_sym, 3)
+        Block.fetch_missing_info!(coin.downcase.to_sym, 3)
         StaleCandidate.process!(coin.downcase.to_sym)
         Rpush.apns_feedback unless Rails.env.test?
         Rpush.push unless Rails.env.test?
