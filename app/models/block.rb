@@ -91,7 +91,7 @@ class Block < ApplicationRecord
       this_block = Rails.env.test? ? Block.find_by(block_hash: self.block_hash) : self
       begin
         node = this_block.first_seen_by
-        # getblock argument verbosity 2 was added in v0.16.0 
+        # getblock argument verbosity 2 was added in v0.16.0
         if node.nil? || (node.core? && node.version < 160000) || node.libbitcoin?
           node = Node.newest_node(this_block.coin.to_sym)
         end
