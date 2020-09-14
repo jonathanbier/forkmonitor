@@ -61,7 +61,7 @@ class Block < ApplicationRecord
     coin = self.coin
     max_height = depth_limit.nil? ? 10000000 : height + depth_limit
     # Constrain query by coin and minimum height to reduce memory usage
-    Block.where(coin: coin).where("height > ?", height).join_recursive {
+    Block.where(coin: coin).where("height > ? AND height <= ?", height, max_height).join_recursive {
       start_with(block_hash: block_hash).
       connect_by(id: :parent_id).
       order_siblings(:work)
