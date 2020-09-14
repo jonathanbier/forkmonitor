@@ -90,7 +90,10 @@ class Block < ApplicationRecord
       # Workaround for test framework, needed in order to mock first_seen_by
       this_block = Rails.env.test? ? Block.find_by(block_hash: self.block_hash) : self
       begin
-        node = this_block.first_seen_by.present? ? this_block.first_seen_by : Node.newest_node(this_block.coin.to_sym)
+        node = this_block.first_seen_by
+        if node.nil? || (node.core? && node.version < 160000) || node.libbitcoin?
+          node = Node.newest_node(this_block.coin.to_sym)
+        end
         block_info = node.getblock(self.block_hash, 2)
       rescue Node::BlockPrunedError
         self.update pruned: true
