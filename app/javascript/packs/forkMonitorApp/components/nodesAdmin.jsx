@@ -57,6 +57,8 @@ export const NodeEdit = props => (
             <TextField source="coin" />
             <TextField source="name_with_version" readOnly />
             <TextInput source="version_extra" />
+            <TextInput source="link" />
+            <TextInput source="link_text" />
             <TextInput source="rpchost" />
             <TextInput source="mirror_rpchost" />
             <NumberInput source="rpcport" />
@@ -83,6 +85,8 @@ export const NodeCreate = props => (
             <TextInput source="name" defaultValue="Bitcoin Core" />
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="version_extra" />
+            <TextInput source="link" />
+            <TextInput source="link_text" />
             <TextInput source="rpchost" />
             <TextInput source="mirror_rpchost" />
             <NumberInput source="rpcport" />

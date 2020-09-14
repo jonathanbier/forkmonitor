@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_09_14_103715) do
+ActiveRecord::Schema.define(version: 2020_09_14_112715) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -150,6 +150,8 @@ ActiveRecord::Schema.define(version: 2020_09_14_103715) do
     t.integer "sync_height"
     t.datetime "mirror_unreachable_since"
     t.datetime "last_polled_mirror_at"
+    t.string "link"
+    t.string "link_text"
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
   end

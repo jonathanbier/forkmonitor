@@ -23,6 +23,11 @@ class Node extends React.Component {
         <td>
           <NodeBehindBlocks chaintip={ this.props.chaintip } node={ this.props.node }/>
           <NodeName node={this.props.node} />
+          { this.props.node.link &&
+            <span> <a href={ this.props.node.link } target="_blank">
+              { this.props.node.link_text }
+            </a></span>
+          }
           <NodeInfo chaintip={ this.props.chaintip } node={this.props.node} />
           <NodeStatusBadge node={this.props.node} />
           <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } />

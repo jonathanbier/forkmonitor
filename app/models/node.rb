@@ -72,7 +72,7 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :unreachable_since, :mirror_unreachable_since, :ibd, :client_type, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :sync_height]
+    fields = [:id, :unreachable_since, :mirror_unreachable_since, :ibd, :client_type, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :sync_height, :link, :link_text]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
