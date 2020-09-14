@@ -62,6 +62,20 @@ RSpec.describe Node, :type => :model do
 
   end
 
+  describe "destroy" do
+    it "should remove marked_(in)valid_by references in blocks" do
+      node = create(:node, version: 170001)
+      node_id = node.id
+      block1 = create(:block, marked_valid_by: [node_id])
+      block2 = create(:block, marked_invalid_by: [node_id])
+      node.destroy
+      block1.reload
+      block2.reload
+      expect(block1.marked_valid_by).not_to include(node_id)
+      expect(block2.marked_invalid_by).not_to include(node_id)
+    end
+  end
+
   describe "getblock" do
     after do
       test.shutdown()

@@ -25,6 +25,7 @@ class Node < ApplicationRecord
   has_one :active_chaintip, -> { where(status: "active") }, class_name: "Chaintip"
 
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
+  before_destroy :clear_references
 
   scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
@@ -680,6 +681,16 @@ class Node < ApplicationRecord
 
   def self.last_updated_cached(coin)
       Rails.cache.fetch("Node.last_updated(#{ coin })") { where(coin: coin).order(updated_at: :desc).first }
+  end
+
+  def clear_references
+    Block.where(coin: self.coin.downcase.to_sym).where("? = ANY(marked_valid_by)", self.id).each do |b|
+      b.update marked_valid_by: b.marked_valid_by - [self.id]
+    end
+
+    Block.where(coin: self.coin.downcase.to_sym).where("? = ANY(marked_invalid_by)", self.id).each do |b|
+      b.update marked_invalid_by: b.marked_invalid_by - [self.id]
+    end
   end
 
   def expire_cache
