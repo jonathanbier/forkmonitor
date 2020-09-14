@@ -49,16 +49,19 @@ class StaleCandidate < ApplicationRecord
     # If branches are of different length, potential double spends are transactions
     # in the shortest chain that are missing in the longest chain.
     (shortest, longest) = children.sort_by {|c| c[:length] }
-    shortest_txs = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
-    longest_txs = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    shortest_tx_ids = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    longest_tx_ids = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     if shortest[:length] < longest[:length]
-      shortest_txs - longest_txs
+      tx_ids = shortest_tx_ids - longest_tx_ids
     else
       # If both branches are the same length, consider doublespends on either side:
-      (shortest_txs - longest_txs) | (longest_txs - shortest_txs)
+      tx_ids = (shortest_tx_ids - longest_tx_ids) | (longest_tx_ids - shortest_tx_ids)
     end
 
-    # * take RBF into account (fee bump is not a double spend)
+    # TODO: take RBF into account (fee bump is not a double spend)
+
+    # Return transaction details
+    Transaction.where("tx_id in (?)", tx_ids)
   end
 
   def expire_cache

@@ -131,15 +131,15 @@ class StaleCandidates extends React.Component {
                     </tr>
                   </thead>
                   <tbody>
-                    {this.state.doubleSpends.map(function (tx_id, index) {
+                    {this.state.doubleSpends.map(function (tx, index) {
                       return (
                         <tr key={ index }>
                           <td>
-                            { tx_id }
+                            { tx.tx_id }
                           </td>
                           <td>
-                            <Explorer blockstream coin={ coin } tx={ tx_id }/>&nbsp;
-                            <Explorer btcCom coin={ coin } tx={ tx_id }/>
+                            <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
+                            <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
                           </td>
                         </tr>
                       )

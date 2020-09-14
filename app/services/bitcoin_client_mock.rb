@@ -419,9 +419,15 @@ class BitcoinClientMock
     if verbosity == 0
       raise Error, "Raw block #{ hash }  not found" unless @raw_blocks[hash]
       return @raw_blocks[hash]
-    elsif verbosity # true or 1
+    elsif verbosity == true || verbosity == 1
       raise BlockNotFoundError unless @blocks[hash]
       return @blocks[hash].tap { |b| b.delete("mediantime") if @version <= 100300 }
+    elsif verbosity == 2
+      raise BlockNotFoundError unless @blocks[hash]
+      return @blocks[hash].tap { |b|
+        b["tx"] = b["tx"].collect{ |tx_id| {"txid" => tx_id} }
+        b.delete("mediantime") if @version <= 100300
+      }
     else
       raise Error, "Unexpected verbosity=#{ verbosity }"
     end
