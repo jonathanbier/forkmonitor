@@ -97,7 +97,11 @@ class Block < ApplicationRecord
         return
       end
       coinbase = block_info["tx"].first
-      self.transactions.create(is_coinbase: true, tx_id: coinbase["txid"])
+      self.transactions.create(
+        is_coinbase: true,
+        tx_id: coinbase["txid"],
+        amount: coinbase["vout"].sum { |vout| vout["value"] }
+      )
       block_info["tx"][1..-1].each do |tx|
         self.transactions.create(
           is_coinbase: false,

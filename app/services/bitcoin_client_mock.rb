@@ -425,7 +425,7 @@ class BitcoinClientMock
     elsif verbosity == 2
       raise BlockNotFoundError unless @blocks[hash]
       return @blocks[hash].tap { |b|
-        b["tx"] = b["tx"].collect{ |tx_id| {"txid" => tx_id} }
+        b["tx"] = b["tx"].collect{ |tx_id| {"txid" => tx_id, "vout" => [{"value" => 0.001}]} }
         b.delete("mediantime") if @version <= 100300
       }
     else
