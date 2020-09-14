@@ -129,8 +129,8 @@ class StaleCandidates extends React.Component {
                             { tx_id }
                           </td>
                           <td>
-                            <Explorer blockstream coin={ this.state.coin } tx={ tx_id }/>&nbsp;
-                            <Explorer btcCom coin={ this.state.coin } tx={ tx_id }/>
+                            <Explorer blockstream coin={ coin } tx={ tx_id }/>&nbsp;
+                            <Explorer btcCom coin={ coin } tx={ tx_id }/>
                           </td>
                         </tr>
                       )
