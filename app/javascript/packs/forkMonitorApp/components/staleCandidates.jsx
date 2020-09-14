@@ -31,6 +31,7 @@ class StaleCandidates extends React.Component {
       redirect: false,
       staleCandidates: [],
       doubleSpends: null,
+      doubleSpendsTotal: null,
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
@@ -49,7 +50,8 @@ class StaleCandidates extends React.Component {
       this.setState({
         coin: res.coin,
         staleCandidates: res.children,
-        doubleSpends: res.double_spend_candidates
+        doubleSpends: res.double_spend_candidates,
+        doubleSpendsTotal: res.double_spend_total
       });
       }.bind(this)).catch(function (error) {
         if (error.response.status == 404) {
@@ -119,7 +121,8 @@ class StaleCandidates extends React.Component {
               <div>
                 <p>
                   { this.state.doubleSpends.length } potential doublespends have
-                  been detected. Some transaction may still appear in future blocks.
+                  been detected involving { this.state.doubleSpendsTotal } BTC.
+                  Some transaction may still appear in future blocks.
                   The following list may contain false positives due to an RBF fee bump,
                   or because it was included after our 10 block scan window.
                 </p>

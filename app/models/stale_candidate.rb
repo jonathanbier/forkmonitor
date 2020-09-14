@@ -14,10 +14,14 @@ class StaleCandidate < ApplicationRecord
   }
 
   def as_json(options = nil)
-    children = self.children # avoid repeating this operation
+    # Avoid repeating these operations:
+    children = self.children
+    double_spends = double_spend_candidates(children)
+
     super({ only: [:coin, :height] }).merge({
       children: children,
-      double_spend_candidates: double_spend_candidates(children)
+      double_spend_candidates: double_spends,
+      double_spend_total: double_spends.sum { |tx| tx["amount"] }
     })
   end
 
