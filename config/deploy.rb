@@ -5,7 +5,7 @@ set :application, "forkmonitor"
 set :repo_url, "https://github.com/BitMEXResearch/forkmonitor.git"
 
 # Default branch is :master
-ask :branch, `git rev-parse --abbrev-ref HEAD`.chomp
+set :branch, `git rev-parse --abbrev-ref HEAD`.chomp
 
 set :deploy_to, "/home/forkmonitor/#{fetch :application}"
 
