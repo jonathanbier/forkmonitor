@@ -53,7 +53,12 @@ class NodeInfo extends React.Component {
               <li>
                 Mempool: { this.props.node.mempool_count } transactions&nbsp;
                 (<NumberFormat value={ this.props.node.mempool_bytes / 1024 / 1024 } displayType={'text'} decimalScale={1} fixedDecimalScale={true} />&nbsp;
-                of <NumberFormat value={ this.props.node.mempool_max / 1024 / 1024 } displayType={'text'} decimalScale={0} fixedDecimalScale={true} /> MiB)
+                { this.props.node.mempool_max != null &&
+                  <span>
+                    of <NumberFormat value={ this.props.node.mempool_max / 1024 / 1024 } displayType={'text'} decimalScale={0} fixedDecimalScale={true} />&nbsp;
+                  </span>
+                }
+                MiB)
               </li>
             }
           </ul>
