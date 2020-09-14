@@ -162,6 +162,15 @@ RSpec.describe Node, :type => :model do
           expect(@node.block.first_seen_by).to eq(@node)
         end
 
+        it "should get mempool size" do
+          @node.client.generate(100)
+          @node.client.sendtoaddress(@node.client.getnewaddress(), 0.1)
+          @node.poll!
+          expect(@node.mempool_bytes).to be_within(2).of(141)
+          expect(@node.mempool_count).to eq(1)
+          expect(@node.mempool_max).to eq(300000000)
+        end
+
       end
 
       describe "other clients" do

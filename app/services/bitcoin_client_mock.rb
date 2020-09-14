@@ -401,6 +401,18 @@ class BitcoinClientMock
     res[@version]
   end
 
+  def getmempoolinfo
+    return {
+      "loaded" => true,
+      "size" => 10393,
+      "bytes" => 5049318,
+      "usage" => 21004608,
+      "maxmempool" => 1000000000,
+      "mempoolminfee" => 0.00001000,
+      "minrelaytxfee" => 0.00001000
+    }
+  end
+
   def getblockhash(height)
     @block_hashes[height]
   end

@@ -200,6 +200,17 @@ class BitcoinClientPython
     end
   end
 
+  def getmempoolinfo
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      info = @node.getmempoolinfo()
+      return info
+    rescue Error => e
+      raise Error, "getmempoolinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def gettxoutsetinfo
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error

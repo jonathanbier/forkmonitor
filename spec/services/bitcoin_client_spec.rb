@@ -57,6 +57,13 @@ describe BitcoinClient do
       end
     end
 
+    describe "getmempoolinfo" do
+      it "should call getmempoolinfo rpc method" do
+        expect(@client).to receive(:request).with("getmempoolinfo")
+        @client.getmempoolinfo()
+      end
+    end
+
     describe "gettxoutsetinfo" do
       it "should call gettxoutsetinfo rpc method" do
         expect(@client).to receive(:request).with("gettxoutsetinfo")

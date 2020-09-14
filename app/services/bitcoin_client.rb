@@ -183,6 +183,14 @@ class BitcoinClient
     end
   end
 
+  def getmempoolinfo
+    begin
+      return request("getmempoolinfo")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "getmempoolinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def gettxoutsetinfo
     begin
       return request("gettxoutsetinfo")

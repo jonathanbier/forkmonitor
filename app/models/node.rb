@@ -72,7 +72,27 @@ class Node < ApplicationRecord
   end
 
   def as_json(options = nil)
-    fields = [:id, :unreachable_since, :mirror_unreachable_since, :ibd, :client_type, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :sync_height, :link, :link_text]
+    fields = [
+      :id,
+      :unreachable_since,
+      :mirror_unreachable_since,
+      :ibd,
+      :client_type,
+      :pruned,
+      :txindex,
+      :os,
+      :cpu,
+      :ram,
+      :storage,
+      :cve_2018_17144,
+      :released,
+      :sync_height,
+      :link,
+      :link_text,
+      :mempool_count,
+      :mempool_bytes,
+      :mempool_max
+    ]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
     end
@@ -170,11 +190,28 @@ class Node < ApplicationRecord
       best_block_hash = client.getblockhash(info["blocks"])
     end
 
+    mempool_bytes = nil
+    mempool_count = nil
+    mempool_max = nil
+    unless self.libbitcoin?
+      mempool_info = client.getmempoolinfo
+      mempool_bytes = mempool_info["bytes"]
+      mempool_count = mempool_info["size"]
+      mempool_max = mempool_info["maxmempool"]
+    end
+
     raise "Best block hash unexpectedly nil" unless best_block_hash.present?
 
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false, true)
 
-    self.update block: block, unreachable_since: nil, polled_at: Time.now
+    self.update(
+      polled_at: Time.now,
+      unreachable_since: nil,
+      block: block,
+      mempool_bytes: mempool_bytes,
+      mempool_count: mempool_count,
+      mempool_max: mempool_max
+    )
   end
 
   # Get most recent block height from mirror node
