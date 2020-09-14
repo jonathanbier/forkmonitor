@@ -21,7 +21,7 @@ class StaleCandidate < ApplicationRecord
     super({ only: [:coin, :height] }).merge({
       children: children,
       double_spend_candidates: double_spends,
-      double_spend_total: double_spends.sum { |tx| tx["amount"] }
+      double_spend_total: double_spends.nil? ? 0 : double_spends.sum { |tx| tx["amount"] }
     })
   end
 
