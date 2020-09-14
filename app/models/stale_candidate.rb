@@ -61,7 +61,7 @@ class StaleCandidate < ApplicationRecord
     # TODO: take RBF into account (fee bump is not a double spend)
 
     # Return transaction details
-    Transaction.where("tx_id in (?)", tx_ids)
+    Transaction.where("tx_id in (?)", tx_ids).order(amount: :desc)
   end
 
   def expire_cache

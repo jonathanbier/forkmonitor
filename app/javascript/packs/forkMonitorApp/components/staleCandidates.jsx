@@ -127,6 +127,7 @@ class StaleCandidates extends React.Component {
                   <thead>
                     <tr align="left">
                       <th>Hash</th>
+                      <th>BTC</th>
                       <th>Explorer</th>
                     </tr>
                   </thead>
@@ -136,6 +137,9 @@ class StaleCandidates extends React.Component {
                         <tr key={ index }>
                           <td>
                             { tx.tx_id }
+                          </td>
+                          <td>
+                            { tx.amount }
                           </td>
                           <td>
                             <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
