@@ -15,6 +15,9 @@ import {
     TabPane
 } from 'reactstrap';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons'
+
 import StaleCandidate from "./staleCandidate"
 import Explorer from "./explorer"
 
@@ -27,7 +30,7 @@ class StaleCandidates extends React.Component {
     this.state = {
       redirect: false,
       staleCandidates: [],
-      doubleSpends: [],
+      doubleSpends: null,
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
@@ -103,7 +106,13 @@ class StaleCandidates extends React.Component {
                 })}
               </tbody>
             </Table>
-            { (this.state.doubleSpends == null ||  this.state.doubleSpends.length == 0) &&
+            { this.state.doubleSpends == null &&
+              <FontAwesomeIcon
+                className="fa-pulse"
+                icon={ faSpinner }
+              />
+            }
+            { this.state.doubleSpends != null && this.state.doubleSpends.length == 0 &&
               <p>No double spends have been detected</p>
             }
             { this.state.doubleSpends != null && this.state.doubleSpends.length > 0 &&
