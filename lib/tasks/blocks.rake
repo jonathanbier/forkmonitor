@@ -20,12 +20,6 @@ namespace 'blocks' do :env
     end
   end
 
-  desc "Investigate a fork [node_id] [chaintip]"
-  task :investigate_fork, [:node,:chaintip] => :environment do |action, args|
-    @node = Node.find(args.node.to_i)
-    @node.investigate_chaintip(args.chaintip)
-  end
-
   desc "Fetch known pool list"
   task :fetch_pool_names do |action|
     puts "Fetching known pool names from blockchain.com..."

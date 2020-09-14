@@ -154,12 +154,6 @@ HEIGHT | BRANCHLEN | STATUS        | HASH
 525890 | 1         | valid-headers | 0000000000000000003d068ec400b1042b8d1ed867cf3c380b64ca074c6d12c7
 ```
 
-To investigate stale blocks (`valid-fork`), use the node id and chaintip hash from above:
-
-```rb
-rake blocks:investigate_chaintip[NODE_ID,CHAINTIP_HASH]
-```
-
 ## Push notifications
 
 Generate a `VAPID_PUBLIC_KEY` and `VAPID_PRIVATEY_KEY` for push notifications:

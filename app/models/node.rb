@@ -329,58 +329,6 @@ class Node < ApplicationRecord
     end
   end
 
-  def investigate_chaintip(block_hash)
-    # Find chaintip:
-    chaintips = client.getchaintips
-    matches = chaintips.select {|tip| tip["hash"] == block_hash }
-    throw "Chaintip #{ block_hash } not found on node #{id} (#{name_with_version})" if matches.empty?
-    chaintip = matches.first
-    throw "Chaintip is not a valid-fork" unless chaintip["status"] == "valid-fork"
-    fork_len = chaintip["branchlen"]
-    header = client.getblockheader(block_hash)
-    fork_max_height = header["height"]
-
-    # Collect all transaction ids in fork:
-    fork_txs = []
-    fork_len.times do
-      header = client.getblockheader(block_hash)
-      Rails.logger.debug "Processing fork block at height #{ header["height"] }"
-      block = getblock(block_hash, 1)
-      fork_txs.concat block["tx"]
-      block_hash = header["previousblockhash"]
-    end
-
-    # Collect all transaction ids in main chain up to same height
-    block_hash = client.getblockhash(fork_max_height)
-    main_txs = []
-    fork_len.times do
-      header = client.getblockheader(block_hash)
-      Rails.logger.debug "Processing main chain block at height #{ header["height"] }"
-      block = getblock(block_hash, 1)
-      main_txs.concat block["tx"]
-      block_hash = header["previousblockhash"]
-    end
-
-    # Collect all transaction ids in main chain up to tip
-    block_hash = client.getbestblockhash
-    main_tip_txs = []
-    while true do
-      header = client.getblockheader(block_hash)
-      Rails.logger.debug "Processing main chain block at height #{ header["height"] }"
-      block = getblock(block_hash, 1)
-      main_tip_txs.concat block["tx"]
-      block_hash = header["previousblockhash"]
-      break if header["height"] == fork_max_height + 1
-    end
-
-    puts "Main chain transactions            : #{ main_txs.size }"
-    puts "Fork transactions                  : #{ fork_txs.size }"
-    puts "Overlap (same # blocks)            : #{ (main_txs & fork_txs).size }"
-    puts "Overlap at tip                     : #{ ((main_txs + main_tip_txs) & fork_txs).size }"
-    puts "Unique txs main chain (ex coinbase): #{ ((main_txs + main_tip_txs) - fork_txs).size - fork_len }"
-    puts "Unique txs fork chain (ex coinbase): #{ (fork_txs - (main_txs + main_tip_txs)).size - fork_len }"
-  end
-
   def getblock(block_hash, verbosity, use_mirror = false)
     throw "Specify block hash" if block_hash.nil?
     throw "Specify verbosity" if verbosity.nil?
