@@ -15,16 +15,16 @@ class Chaintip extends React.Component {
         <br/>
         { this.props.chaintip.block.pool &&
           <span>
-            Mined by: { this.props.chaintip.block.pool } 
+            Mined by: { this.props.chaintip.block.pool }
             <br/>
           </span>
         }
         Accumulated log2(PoW): <NumberFormat value={this.props.chaintip.block.work} displayType={'text'} decimalScale={6} fixedDecimalScale={true} />
         { this.props.chaintip.block.size &&
-            <span><br />Latest blocksize: <NumberFormat value={ this.props.chaintip.block.size / 1000000 } displayType={'text'} thousandSeparator={true} decimalScale={2} fixedDecimalScale={true} /> MB</span>
+            <span><br />Size: <NumberFormat value={ this.props.chaintip.block.size / 1000000 } displayType={'text'} thousandSeparator={true} decimalScale={2} fixedDecimalScale={true} /> MB</span>
         }
         <br />
-        Latest block transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
+        Transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
       </p>
     )
   }

@@ -33,14 +33,14 @@ describe('rendered component', () => {
   });
 
   test('should display size of tip block', () => {
-    expect(wrapper.find('.chaintip-info').text()).toContain("blocksize");
+    expect(wrapper.find('.chaintip-info').text()).toContain("Size");
     expect(wrapper.find('.chaintip-info').text()).toContain("1.33 MB");
   });
 
   test('should handle missing size', () => {
     chaintip.block.size = null;
     wrapper.setProps({chaintip: chaintip});
-    expect(wrapper.find('.chaintip-info').text()).not.toContain("blocksize");
+    expect(wrapper.find('.chaintip-info').text()).not.toContain("Size");
   });
 
 });
