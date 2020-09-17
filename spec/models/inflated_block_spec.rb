@@ -40,10 +40,8 @@ RSpec.describe InflatedBlock, type: :model do
     before do
       setup_python_nodes()
 
-      @node_without_mirror = build(:node) # Not a regtest node
-
       expect(Block.maximum(:height)).to eq(5)
-      allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node_without_mirror, @node]
+      allow(Node).to receive(:with_mirror).with(:btc).and_return [@node]
 
       # throw the first time for lacking a comparison block
       expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error(/More than 0 blocks behind for inflation check, please manually check 5/)

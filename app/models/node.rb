@@ -41,6 +41,10 @@ class Node < ApplicationRecord
     where(enabled: true, coin: coin.to_s.upcase).order(version: :desc)
   end
 
+  def self.with_mirror(coin)
+     where(enabled: true, coin: coin.to_s.upcase, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
+  end
+
   def parse_version(v)
     return if v.nil?
     if v.is_a?(String) && v.split(".").count >= 3
@@ -65,10 +69,6 @@ class Node < ApplicationRecord
     v = self.sv? ? self.version  - 100000000 : self.version
     version_arr = v.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
     return name + " #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
-  end
-
-  def mirror_node?
-    return mirror_rpchost.present? && mirror_rpchost != ""
   end
 
   def as_json(options = nil)
@@ -216,7 +216,7 @@ class Node < ApplicationRecord
 
   # Get most recent block height from mirror node
   def poll_mirror!
-    return unless mirror_node?
+    return if mirror_rpchost.nil?
     return unless self.core?
     Rails.logger.debug "Polling mirror node..."
     begin
