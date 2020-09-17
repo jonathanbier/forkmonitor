@@ -28,7 +28,7 @@ class InflatedBlock < ApplicationRecord
     Node.where(mirror_rpchost: "").update_all mirror_rpchost: nil
     nodes = Node.with_mirror(options[:coin])
     Rails.logger.info "Check #{ options[:coin].to_s.upcase } inflation for #{ nodes.count } nodes..."
-    throw "Increase RAILS_MAX_THREADS to match #{ nodes.count } #{ options[:coin] } mirror nodes." if nodes.count > (ENV["RAILS_MAX_THREADS"] || 5)
+    throw "Increase RAILS_MAX_THREADS to match #{ nodes.count } #{ options[:coin] } mirror nodes." if nodes.count > (ENV["RAILS_MAX_THREADS"] || "5").to_i
 
     nodes.each do |node|
       max_exceeded = false
