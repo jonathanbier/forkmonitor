@@ -84,7 +84,7 @@ class StaleCandidate < ApplicationRecord
     Block.where(coin: self.coin, height: self.height).each do |candidate_block|
       candidate_block.fetch_transactions!
       Rails.logger.debug "Fetch descendants"
-      candidate_block.descendants.where("height <= ?", self.height + 10).each do |block|
+      candidate_block.descendants.where("height <= ?", self.height + DOUBLE_SPEND_RANGE).each do |block|
         block.fetch_transactions!
       end
     end
