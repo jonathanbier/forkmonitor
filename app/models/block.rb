@@ -8,14 +8,14 @@ MINIMUM_BLOCK_HEIGHTS = {
 class Block < ApplicationRecord
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
   belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
-  has_many :invalid_blocks
+  has_many :invalid_blocks, dependent: :destroy
   belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
-  has_many :tx_outsets
+  has_many :tx_outsets, dependent: :destroy
   has_one :inflated_block
-  has_many :maybe_uncoop_transactions
-  has_many :penalty_transactions
-  has_many :sweep_transactions
-  has_many :transactions
+  has_many :maybe_uncoop_transactions, dependent: :destroy
+  has_many :penalty_transactions, dependent: :destroy
+  has_many :sweep_transactions, dependent: :destroy
+  has_many :transactions, dependent: :destroy
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   after_create :expire_stale_candidate_cache
