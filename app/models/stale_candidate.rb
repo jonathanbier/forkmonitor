@@ -16,12 +16,12 @@ class StaleCandidate < ApplicationRecord
   def as_json(options = nil)
     # Avoid repeating these operations:
     children = self.children
-    double_spends = double_spend_candidates(children)
+    confirmed_in_one_branch = confirmed_in_one_branch(children)
 
     super({ only: [:coin, :height] }).merge({
       children: children,
-      double_spend_candidates: double_spends,
-      double_spend_total: double_spends.nil? ? 0 : double_spends.sum { |tx| tx["amount"] }
+      confirmed_in_one_branch: confirmed_in_one_branch,
+      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] }
     })
   end
 
@@ -46,7 +46,7 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
-  def double_spend_candidates(children)
+  def confirmed_in_one_branch(children)
     return nil if children.length < 2
     # TODO: handle more than 2 branches:
     return nil if children.length > 2
