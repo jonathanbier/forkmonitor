@@ -18,8 +18,6 @@ class Block < ApplicationRecord
   has_many :transactions, dependent: :destroy
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
-  after_create :expire_stale_candidate_cache
-
   def as_json(options = nil)
     super({ only: [:id, :coin, :height, :timestamp, :pool, :tx_count, :size] }.merge(options || {})).merge({
       hash: block_hash,
@@ -224,8 +222,14 @@ class Block < ApplicationRecord
        block.update marked_invalid_by: [node.id]
      end
    end
+   coin = node.coin.downcase.to_sym
    # Set pool:
-   Node.set_pool_for_block!(node.coin.downcase.to_sym, block, block_info)
+   Node.set_pool_for_block!(coin, block, block_info)
+   # Fetch transactions if there was a stale block recently
+   if StaleCandidate.where(coin: coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
+     block.fetch_transactions!
+     block.expire_stale_candidate_cache
+   end
    return block
   end
 
@@ -413,8 +417,6 @@ class Block < ApplicationRecord
     end
     return block
   end
-
-  private
 
   def expire_stale_candidate_cache
     StaleCandidate.where(coin: self.coin).each do |c|
