@@ -228,8 +228,8 @@ class Block < ApplicationRecord
    # Fetch transactions if there was a stale block recently
    if StaleCandidate.where(coin: coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
      block.fetch_transactions!
-     block.expire_stale_candidate_cache
    end
+   block.expire_stale_candidate_cache
    return block
   end
 
@@ -420,7 +420,7 @@ class Block < ApplicationRecord
 
   def expire_stale_candidate_cache
     StaleCandidate.where(coin: self.coin).each do |c|
-      if self.height - c.height <= StaleCandidate::DOUBLE_SPEND_RANGE
+      if self.height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
         c.expire_cache
       end
     end
