@@ -51,7 +51,8 @@ class StaleCandidates extends React.Component {
         coin: res.coin,
         staleCandidates: res.children,
         confirmedInOneBranch: res.confirmed_in_one_branch,
-        confirmedInOneBranchTotal: res.confirmed_in_one_branch_total
+        confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
+        headersOnly: res.headers_only
       });
       }.bind(this)).catch(function (error) {
         if (error.response.status == 404) {
@@ -109,10 +110,17 @@ class StaleCandidates extends React.Component {
               </tbody>
             </Table>
             { this.state.confirmedInOneBranch == null &&
-              <FontAwesomeIcon
-                className="fa-pulse"
-                icon={ faSpinner }
-              />
+              <span>
+                { this.state.headersOnly &&
+                  <p>Due to missing block data we are currently unable to check for potential double spends.</p>
+                }
+                { !this.state.headersOnly &&
+                  <FontAwesomeIcon
+                    className="fa-pulse"
+                    icon={ faSpinner }
+                  />
+                }
+              </span>
             }
             { this.state.confirmedInOneBranch != null && this.state.confirmedInOneBranch.length == 0 &&
               <p>No double spends have been detected</p>

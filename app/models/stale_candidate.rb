@@ -22,7 +22,8 @@ class StaleCandidate < ApplicationRecord
     super({ only: [:coin, :height] }).merge({
       children: children,
       confirmed_in_one_branch: confirmed_in_one_branch,
-      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] }
+      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
+      headers_only: children.any? { |child| child[:root].headers_only }
     })
   end
 
@@ -54,6 +55,7 @@ class StaleCandidate < ApplicationRecord
     # If branches are of different length, potential double spends are transactions
     # in the shortest chain that are missing in the longest chain.
     (shortest, longest) = children.sort_by {|c| c[:length] }
+    return nil if shortest[:root].headers_only || longest[:root].headers_only
     shortest_tx_ids = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_tx_ids = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     if shortest[:length] < longest[:length]
