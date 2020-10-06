@@ -108,24 +108,24 @@ class Chaintip < ApplicationRecord
   end
 
   def self.process_getchaintips(chaintips, node)
-     chaintips.each do |chaintip|
-       process_chaintip_result(chaintip, node)
-     end
-   end
+    chaintips.each do |chaintip|
+      process_chaintip_result(chaintip, node)
+    end
+  end
 
-   # Update the existing active chaintip or create a fresh one. Then update parents and children.
-   def self.process_active!(node, block)
-     tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: "active")
-     if tip.block != block
-       tip.block = block
-       tip.parent_chaintip = nil
-       tip.children.each do |child|
-         child.parent_chaintip = nil
-       end
-     end
-     tip.save
-     return tip
-   end
+  # Update the existing active chaintip or create a fresh one. Then update parents and children.
+  def self.process_active!(node, block)
+    tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: "active")
+    if tip.block != block
+      tip.block = block
+      tip.parent_chaintip = nil
+      tip.children.each do |child|
+        child.parent_chaintip = nil
+      end
+    end
+    tip.save
+    return tip
+  end
 
   def self.check!(coin, nodes)
     # Delete existing (non-active chaintips)
