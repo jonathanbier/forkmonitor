@@ -242,7 +242,8 @@ class Block < ApplicationRecord
       coin: node.coin.downcase.to_sym,
       height: height,
       block_hash: block_hash,
-      headers_only: true
+      headers_only: true,
+      first_seen_by: node
     )
     # TODO: call getblockheader
     # TODO: see if other nodes have the full block

@@ -313,6 +313,11 @@ RSpec.describe Block, :type => :model do
       expect(block.headers_only).to eq(true)
     end
 
+    it "should set first seen by" do
+      block = Block.create_headers_only(@node, 10, "abcd")
+      expect(block.first_seen_by).to eq(@node)
+    end
+
     it "should be updated by find_or_create_by" do
       allow(Node).to receive("set_pool_for_block!").and_return(nil)
       block = Block.create_headers_only(@node, 10, "abcd")
@@ -328,7 +333,7 @@ RSpec.describe Block, :type => :model do
 
     it "should have a valid summary" do
       block = Block.create_headers_only(@node, 10, "abcd")
-      expect(block.summary(time: true, first_seen_by: true)).to eq("abcd (unknown pool)")
+      expect(block.summary(time: true, first_seen_by: true)).to eq("abcd (unknown pool, first seen by Bitcoin Core 0.17.1)")
     end
   end
 
