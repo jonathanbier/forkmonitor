@@ -325,6 +325,11 @@ RSpec.describe Block, :type => :model do
       expect(block.headers_only).to eq(false)
       expect(block.tx_count).to eq(3)
     end
+
+    it "should have a valid summary" do
+      block = Block.create_headers_only(@node, 10, "abcd")
+      expect(block.summary(time: true, first_seen_by: true)).to eq("abcd (unknown pool)")
+    end
   end
 
 end

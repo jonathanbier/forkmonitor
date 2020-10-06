@@ -110,6 +110,11 @@ RSpec.describe StaleCandidate, :type => :model do
       InvalidBlock.create(block: @nodeA.block.parent, node: @nodeA, dismissed_at: Time.now)
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
+
+    it "should work for headers_only block" do
+      @nodeB.block.update headers_only: true, pool: nil, tx_count: nil, timestamp: nil, work: nil, parent_id: nil, mediantime: nil, first_seen_by_id: nil
+      expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+    end
   end
 
   describe "self.process!" do
