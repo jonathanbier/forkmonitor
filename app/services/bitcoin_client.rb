@@ -141,6 +141,8 @@ class BitcoinClient
       begin
         return request("getblockheader", hash)
       rescue Bitcoiner::Client::JSONRPCError => e
+        raise ConnectionError if e.message.include?("couldnt_connect")
+        raise BlockNotFoundError if e.message.include?("Block not found")
         raise Error, "getblockheader(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
       end
     else
