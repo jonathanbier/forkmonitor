@@ -187,14 +187,24 @@ class Block < ApplicationRecord
   end
 
   def fetch_info!
-    node = Node.newest_node(self.coin.to_sym)
-    begin
-      block_info = node.getblockheader(self.block_hash)
-      self.work = block_info["chainwork"]
-      self.mediantime = block_info["mediantime"]
-      self.save if self.changed?
-    rescue Node::BlockNotFoundError
-      # Just try again later
+    nodes_to_try = case self.coin.to_sym
+    when :btc
+      Node.bitcoin_core_by_version
+    when :tbtc
+      Node.testnet_by_version
+    when :bch
+      Node.bch_by_version
+    end
+    nodes_to_try.each do |node|
+      begin
+        block_info = node.getblockheader(self.block_hash)
+        self.work = block_info["chainwork"]
+        self.mediantime = block_info["mediantime"]
+        self.save if self.changed?
+        break
+      rescue Node::BlockNotFoundError
+        # Try another node and/or try again later
+      end
     end
   end
 
@@ -245,7 +255,7 @@ class Block < ApplicationRecord
       headers_only: true,
       first_seen_by: node
     )
-    # TODO: call getblockheader
+    # getblockheader will be called by fetch_missing_info!
     # TODO: see if other nodes have the full block
     # TODO: connect to ancestors (fetch more headers if needed)
   end
