@@ -97,6 +97,23 @@ RSpec.describe Chaintip, type: :model do
 
   end
 
+  describe "process_valid_headers!" do
+    before do
+      setup_python_nodes()
+    end
+
+    it "should do nothing if we already know the block" do
+      block = Block.create(block_hash: "1234", height: 5)
+      expect(Block).not_to receive(:create_headers_only)
+      Chaintip.process_valid_headers!(@nodeA, {"hash": "1234", "height": 5}, block)
+    end
+
+    it "should create headers_only block entry" do
+      expect(Block).to receive(:create_headers_only)
+      Chaintip.process_valid_headers!(@nodeA, {"hash": "1234", "height": 5}, nil)
+    end
+  end
+
   describe "match_parent!" do
     let(:nodeA) { create(:node) }
     let(:nodeB) { create(:node) }

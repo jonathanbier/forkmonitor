@@ -95,6 +95,8 @@ class Chaintip < ApplicationRecord
       return nil unless block.present?
       block.update marked_valid_by: block.marked_valid_by | [node.id]
       tip = Chaintip.process_active!(node, block)
+    when "valid-headers"
+      Chaintip.process_valid_headers!(node, chaintip, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
       block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false, true)
@@ -125,6 +127,11 @@ class Chaintip < ApplicationRecord
     end
     tip.save
     return tip
+  end
+
+  def self.process_valid_headers!(node, chaintip, block)
+    return if block.present?
+    Block.create_headers_only(node, chaintip["height"], chaintip["hash"])
   end
 
   def self.check!(coin, nodes)

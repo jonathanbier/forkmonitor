@@ -207,7 +207,7 @@ RSpec.describe Block, :type => :model do
     end
   end
 
-  describe "create_with" do
+  describe "create_or_update_with" do
     before do
       @node = build(:node)
       @block_info = {
@@ -235,17 +235,17 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should store the version" do
-      @block = Block.create_with(@block_info, false, @node, true)
+      @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.version).to eq(536870912)
     end
 
     it "should store number of transactions" do
-      @block = Block.create_with(@block_info, false, @node, true)
+      @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.tx_count).to eq(3024)
     end
 
     it "should store size" do
-      @block = Block.create_with(@block_info, false, @node, true)
+      @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.size).to eq(1328797)
     end
 
@@ -300,6 +300,30 @@ RSpec.describe Block, :type => :model do
       }
 
       expect(Block.pool_from_coinbase_tx(tx)).to eq("F2Pool")
+    end
+  end
+
+  describe "self.create_headers_only" do
+    before do
+      @node = build(:node)
+    end
+
+    it "should mark block as headers_only" do
+      block = Block.create_headers_only(@node, 10, "abcd")
+      expect(block.headers_only).to eq(true)
+    end
+
+    it "should be updated by find_or_create_by" do
+      allow(Node).to receive("set_pool_for_block!").and_return(nil)
+      block = Block.create_headers_only(@node, 10, "abcd")
+      Block.create_or_update_with({
+        "hash" => "abcd",
+        "height" => 10,
+        "nTx" => 3
+      }, false, @node, nil)
+      block.reload
+      expect(block.headers_only).to eq(false)
+      expect(block.tx_count).to eq(3)
     end
   end
 

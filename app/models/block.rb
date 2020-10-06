@@ -157,7 +157,7 @@ class Block < ApplicationRecord
           end
         end
 
-        parent = Block.create_with(block_info, use_mirror, node, mark_valid)
+        parent = Block.create_or_update_with(block_info, use_mirror, node, mark_valid)
         block.update parent: parent
       end
       block_id = parent.id
@@ -198,22 +198,25 @@ class Block < ApplicationRecord
     end
   end
 
-  def self.create_with(block_info, use_mirror, node, mark_valid)
+  def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
     tx_count = block_info.key?("nTx") ? block_info["nTx"] :
                block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
                nil
 
-    block  = Block.create(
-     coin: node.coin.downcase.to_sym,
-     block_hash: block_info["hash"],
-     height: block_info["height"],
-     mediantime: block_info["mediantime"],
-     timestamp: block_info["time"],
-     work: block_info["chainwork"],
-     version: block_info["version"],
-     tx_count:  tx_count,
-     size: block_info["size"],
-     first_seen_by: node
+    block = Block.find_or_create_by(
+       block_hash: block_info["hash"]
+    )
+    block.update(
+      coin: node.coin.downcase.to_sym,
+      height: block_info["height"],
+      mediantime: block_info["mediantime"],
+      timestamp: block_info["time"],
+      work: block_info["chainwork"],
+      version: block_info["version"],
+      tx_count:  tx_count,
+      size: block_info["size"],
+      first_seen_by: node,
+      headers_only: false
    )
    if mark_valid.present?
      if mark_valid == true
@@ -225,12 +228,25 @@ class Block < ApplicationRecord
    coin = node.coin.downcase.to_sym
    # Set pool:
    Node.set_pool_for_block!(coin, block, block_info)
+
    # Fetch transactions if there was a stale block recently
    if StaleCandidate.where(coin: coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
      block.fetch_transactions!
    end
    block.expire_stale_candidate_cache
    return block
+  end
+
+  def self.create_headers_only(node, height, block_hash)
+    Block.create(
+      coin: node.coin.downcase.to_sym,
+      height: height,
+      block_hash: block_hash,
+      headers_only: true
+    )
+    # TODO: call getblockheader
+    # TODO: see if other nodes have the full block
+    # TODO: connect to ancestors (fetch more headers if needed)
   end
 
   def self.coinbase_message(tx)
@@ -407,7 +423,7 @@ class Block < ApplicationRecord
             block_info = client.getblockheader(hash)
           end
         end
-        block = Block.create_with(block_info, use_mirror, node, mark_valid)
+        block = Block.create_or_update_with(block_info, use_mirror, node, mark_valid)
       end
 
       block.find_ancestors!(node, use_mirror, mark_valid)
