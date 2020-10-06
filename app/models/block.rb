@@ -200,6 +200,11 @@ class Block < ApplicationRecord
         block_info = node.getblockheader(self.block_hash)
         self.work = block_info["chainwork"]
         self.mediantime = block_info["mediantime"]
+        self.timestamp = block_info["time"]
+        self.work = block_info["chainwork"]
+        self.version = block_info["version"]
+        self.tx_count = block_info["nTx"]
+        self.size = block_info["size"]
         self.save if self.changed?
         break
       rescue Node::BlockNotFoundError
