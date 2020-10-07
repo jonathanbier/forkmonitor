@@ -80,6 +80,8 @@ class BitcoinClientPython
     raise Error, "Specify block hash" unless block_hash.present?
     begin
       return @node.getblock(blockhash=block_hash, verbosity=verbosity)
+    rescue PyCall::PyError => e
+      raise BlockNotFoundError if e.message.include?("Block not found")
     rescue Error => e
       raise Error, "getblock(#{ block_hash }, #{ verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

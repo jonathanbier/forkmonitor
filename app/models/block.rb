@@ -467,20 +467,35 @@ class Block < ApplicationRecord
 
     blocks.each do |block|
       # Try to fetch from other nodes
-      # TODO
+      block_info = nil
+      nodes_to_try = case coin.to_sym
+      when :btc
+        Node.bitcoin_core_by_version
+      when :tbtc
+        Node.testnet_by_version
+      when :bch
+        Node.bch_by_version
+      end
+      nodes_to_try.each do |node|
+        begin
+          block_info = node.getblock(block.block_hash, 0)
+          block.update headers_only: false, first_seen_by: node
+          break
+        rescue Node::BlockNotFoundError
+        end
+      end
 
-      # skip mirror node if successfull
+      if block_info.nil?
+        # Try to obtain block by reorging a mirror node
+        next if Node.with_mirror(coin).count == 0
+        node = Node.with_mirror(coin).first
 
-      # Try to obtain block by reorging a mirror node
-      next if Node.with_mirror(coin).count == 0
-      node = Node.with_mirror(coin).first
+        node.mirror_client.setnetworkactive(true) # restore
+        node.mirror_client.setnetworkactive(false)
+        node.mirror_client.setnetworkactive(true)
 
-      node.mirror_client.setnetworkactive(true) # restore
-      node.mirror_client.setnetworkactive(false)
-      node.mirror_client.setnetworkactive(true)
-
-      # TODO
-
+        # TODO
+      end
 
       # TODO: feed block to original node?
     end

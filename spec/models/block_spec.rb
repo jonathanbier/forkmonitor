@@ -11,6 +11,7 @@ RSpec.describe Block, :type => :model do
 
     stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientPython::BlockNotFoundError)
     test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
     @nodeA = create(:node_python_with_mirror)
     @nodeA.client.set_python_node(test.nodes[0])
@@ -35,6 +36,7 @@ RSpec.describe Block, :type => :model do
     assert_equal(Chaintip.count, 0)
 
     allow(Node).to receive(:with_mirror).with(:btc).and_return [@nodeA]
+    allow(Node).to receive(:bitcoin_core_by_version).and_return [@nodeA, @nodeB]
   end
 
   after do
@@ -404,25 +406,41 @@ RSpec.describe Block, :type => :model do
       expect(chaintipsA[-1]["status"]).to eq("headers-only")
 
       Chaintip.check!(:btc, [@nodeA])
-      expect(Block.find_by(block_hash: chaintipsA[-1]["hash"]).headers_only).to eq(true)
+      @headers_only_block = Block.find_by(block_hash: chaintipsA[-1]["hash"])
+      expect(@headers_only_block.headers_only).to eq(true)
     end
 
-    it "should do nothing for older blocks" do
-      @nodeA.client.generate(2)
-      test.sync_blocks()
-      @nodeA.poll!
-      @nodeA.reload
-
-      expect(@nodeA.mirror_client).not_to receive("setnetworkactive")
+    it "should obtain block from other node if available" do
       Block.find_missing(:btc, 1)
+      @headers_only_block.reload
+      expect(@headers_only_block.headers_only).to eq(false)
+      expect(@headers_only_block.first_seen_by).to eq(@nodeB)
     end
 
-    it "should stop p2p networking and restart it after" do
-      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true) # restore
-      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(false)
-      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true)
-      Block.find_missing(:btc, 1)
+    describe "if none of our nodes have the block" do
+      before do
+        # Pretend node B doesn't exist, so we check the mirror node
+        allow(Node).to receive(:bitcoin_core_by_version).and_return [@nodeA]
+      end
+
+      it "should do nothing for older blocks" do
+        @nodeA.client.generate(2)
+        test.sync_blocks()
+        @nodeA.poll!
+        @nodeA.reload
+
+        expect(@nodeA.mirror_client).not_to receive("setnetworkactive")
+        Block.find_missing(:btc, 1)
+      end
+
+      it "should stop p2p networking and restart it after" do
+        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true) # restore
+        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(false)
+        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true)
+        Block.find_missing(:btc, 1)
+      end
     end
+
   end
 
 end
