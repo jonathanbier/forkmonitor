@@ -107,9 +107,9 @@ class Node < ApplicationRecord
   def client
     if !@client
       if self.python
-        @client = BitcoinClientPython.new(self.id, self.name_with_version, self.client_type.to_sym)
+        @client = BitcoinClientPython.new(self.id, self.name_with_version, self.client_type.to_sym, self.version)
       else
-        @client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
+        @client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.version, self.rpchost, self.rpcport, self.rpcuser, self.rpcpassword)
       end
     end
     return @client
@@ -119,9 +119,9 @@ class Node < ApplicationRecord
     return nil if !self.mirror_rpchost || self.mirror_rpchost == ""
     if !@mirror_client
       if self.python
-        @mirror_client = BitcoinClientPython.new(self.id, self.name_with_version, self.client_type.to_sym)
+        @mirror_client = BitcoinClientPython.new(self.id, self.name_with_version, self.client_type.to_sym, self.version)
       else
-        @mirror_client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.mirror_rpchost, self.mirror_rpcport, self.rpcuser, self.rpcpassword)
+        @mirror_client = self.class.client_klass.new(self.id, self.name_with_version, self.client_type.to_sym, self.version, self.mirror_rpchost, self.mirror_rpcport, self.rpcuser, self.rpcpassword)
       end
     end
     return @mirror_client

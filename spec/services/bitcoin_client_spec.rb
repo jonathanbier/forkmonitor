@@ -4,7 +4,7 @@ describe BitcoinClient do
 
   describe "instance" do
     before do
-      @client = described_class.new(1, "Bitcoin Core v0.19.0", :core, "127.0.0.1", "8332", "user", "password")
+      @client = described_class.new(1, "Bitcoin Core v0.19.0", :core, 190000, "127.0.0.1", "8332", "user", "password")
     end
 
     describe "help" do

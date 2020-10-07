@@ -4,8 +4,9 @@ class BitcoinClientPython
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
 
-  def initialize(node_id, name_with_version, client_type)
+  def initialize(node_id, name_with_version, client_type, client_version)
     @client_type = client_type
+    @client_version = client_version
     @node_id = node_id
     @name_with_version = name_with_version
     @mock_connection_error = false

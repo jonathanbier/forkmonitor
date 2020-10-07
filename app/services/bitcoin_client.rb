@@ -8,8 +8,9 @@ class BitcoinClient
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
 
-  def initialize(node_id, name_with_version, client_type, rpchost, rpcport, rpcuser, rpcpassword)
+  def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
+    @client_version = client_version
     if @client_type == :libbitcoin
       @socket = ZMQ::Socket.new ZMQ::REQ
       @socket_uri = "tcp://#{ rpchost }:#{ rpcport }"
