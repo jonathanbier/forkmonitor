@@ -205,6 +205,11 @@ class Block < ApplicationRecord
         self.version = block_info["version"]
         self.tx_count = block_info["nTx"]
         self.size = block_info["size"]
+        # Connect to parent if available:
+        if self.parent.nil?
+          self.parent = Block.find_by(block_hash: block_info["previousblockhash"])
+          self.connected = self.parent.nil? ? false : self.parent.connected
+        end
         self.save if self.changed?
         break
       rescue Node::MethodNotFoundError
@@ -264,7 +269,7 @@ class Block < ApplicationRecord
     )
     # getblockheader will be called by fetch_missing_info!
     # TODO: see if other nodes have the full block
-    # TODO: connect to ancestors (fetch more headers if needed)
+    # TODO: connect longer branches to common ancestor (fetch more headers if needed)
   end
 
   def self.coinbase_message(tx)
