@@ -3,6 +3,8 @@ class BitcoinClientPython
   class ConnectionError < Error; end
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
+  class BlockNotFoundError < Error; end
+  class MethodNotFoundError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version)
     @client_type = client_type
@@ -33,6 +35,10 @@ class BitcoinClientPython
 
   def mock_block_pruned_error(status)
     @mock_block_pruned_error = status
+  end
+
+  def mock_version(version)
+    @client_version = version
   end
 
   def addnode(node, command)
@@ -82,6 +88,7 @@ class BitcoinClientPython
   def getblockheader(block_hash, verbose=true)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
+    raise MethodNotFoundError if @client_version < 120000
     raise PartialFileError if @mock_partial_file_error
     raise Error, "Specify block hash" unless block_hash.present?
     begin

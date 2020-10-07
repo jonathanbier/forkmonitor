@@ -4,6 +4,7 @@ class BitcoinClientMock
   class BlockNotFoundError < Error; end
   class ConnectionError < Error; end
   class PartialFileError < Error; end
+  class MethodNotFoundError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176

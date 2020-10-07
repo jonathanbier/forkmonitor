@@ -7,6 +7,7 @@ class BitcoinClient
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
+  class MethodNotFoundError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -256,6 +257,11 @@ class BitcoinClient
   private
 
   def request(*args)
-    @client.request(*args)
+    begin
+      @client.request(*args)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise MethodNotFoundError if e.message.include?("Method not found")
+      raise
+    end
   end
 end

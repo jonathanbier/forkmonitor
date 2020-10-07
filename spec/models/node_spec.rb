@@ -9,6 +9,8 @@ RSpec.describe Node, :type => :model do
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
     stub_const("BitcoinClient::PartialFileError", BitcoinClientPython::PartialFileError)
     stub_const("BitcoinClient::BlockPrunedError", BitcoinClientPython::BlockPrunedError)
+    stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientPython::BlockNotFoundError)
+    stub_const("BitcoinClient::MethodNotFoundError", BitcoinClientPython::MethodNotFoundError)
   end
 
   describe "version" do
@@ -107,6 +109,36 @@ RSpec.describe Node, :type => :model do
     it "should throw BlockPrunedError" do
       @node.client.mock_block_pruned_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::BlockPrunedError
+    end
+
+  end
+
+  describe "getblockheader" do
+    after do
+      test.shutdown()
+    end
+
+    before do
+      test.setup()
+      @node = create(:node_python)
+      @node.client.set_python_node(test.nodes[0])
+      @node.client.generate(2)
+      @block_hash = @node.client.getbestblockhash()
+    end
+
+    it "should call getblockheader on the client" do
+      expect(@node.client).to receive("getblockheader").and_call_original()
+      @node.getblockheader(@block_hash)
+    end
+
+    it "should throw ConnectionError" do
+      @node.client.mock_connection_error(true)
+      expect { @node.getblockheader(@block_hash) }.to raise_error Node::ConnectionError
+    end
+
+    it "should throw MethodNotFoundError" do
+      @node.client.mock_version(100000)
+      expect { @node.getblockheader(@block_hash) }.to raise_error Node::MethodNotFoundError
     end
 
   end

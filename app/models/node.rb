@@ -11,6 +11,7 @@ class Node < ApplicationRecord
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
+  class MethodNotFoundError < Error; end
   class NoMatchingNodeError < Error; end
 
   belongs_to :block, required: false
@@ -400,6 +401,8 @@ class Node < ApplicationRecord
       raise PartialFileError
     rescue BitcoinClient::BlockNotFoundError
       raise BlockNotFoundError
+    rescue BitcoinClient::MethodNotFoundError
+      raise MethodNotFoundError
     end
   end
 
