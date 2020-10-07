@@ -922,6 +922,7 @@ RSpec.describe Node, :type => :model do
         allow(InflatedBlock).to receive(:check_inflation!).and_return true
         allow(LightningTransaction).to receive(:check!).and_return true
         allow(LightningTransaction).to receive(:check_public_channels!).and_return true
+        allow(Block).to receive(:find_missing).and_return true
       end
 
       it "should call check_inflation!" do
@@ -949,6 +950,12 @@ RSpec.describe Node, :type => :model do
 
       it "should call process_stale_candidates" do
         expect(StaleCandidate).to receive(:process!).with(:btc)
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
+      end
+
+      it "should call find_missing" do
+        expect(Block).to receive(:find_missing).with(:btc, 10)
+
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 
