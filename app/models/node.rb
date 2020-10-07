@@ -615,6 +615,7 @@ class Node < ApplicationRecord
         LightningTransaction.check_public_channels! if coin == "BTC"
         Block.match_missing_pools!(coin.downcase.to_sym, 3)
         Block.fetch_missing_info!(coin.downcase.to_sym, 3)
+        Block.find_missing(coin.downcase.to_sym, 10)
         StaleCandidate.process!(coin.downcase.to_sym)
         Rpush.apns_feedback unless Rails.env.test?
         Rpush.push unless Rails.env.test?

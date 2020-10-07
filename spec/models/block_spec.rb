@@ -1,6 +1,48 @@
 require "rails_helper"
+require "bitcoind_helper"
 
 RSpec.describe Block, :type => :model do
+  let(:test) { TestWrapper.new() }
+
+  def setup_python_nodes
+    # Node A with mirror node, node B
+    # Create two blocks and sync
+    @use_python_nodes = true
+
+    stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
+    stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
+    @nodeA = create(:node_python_with_mirror)
+    @nodeA.client.set_python_node(test.nodes[0])
+    @nodeA.mirror_client.set_python_node(test.nodes[1])
+
+    @nodeB = create(:node_python)
+    @nodeB.client.set_python_node(test.nodes[2])
+
+    @nodeA.client.generate(2)
+    test.sync_blocks()
+
+    @nodeA.poll!
+    @nodeA.poll_mirror!
+    @nodeA.reload
+    assert_equal(@nodeA.block.height, 2)
+    assert_equal(@nodeA.mirror_block.height, 2)
+
+    @nodeB.poll!
+    @nodeB.reload
+    assert_equal(@nodeB.block.height, 2)
+
+    assert_equal(Chaintip.count, 0)
+
+    allow(Node).to receive(:with_mirror).with(:btc).and_return [@nodeA]
+  end
+
+  after do
+    if @use_python_nodes
+      test.shutdown()
+    end
+  end
+
   before do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientMock::ConnectionError)
@@ -334,6 +376,52 @@ RSpec.describe Block, :type => :model do
     it "should have a valid summary" do
       block = Block.create_headers_only(@node, 10, "abcd")
       expect(block.summary(time: true, first_seen_by: true)).to eq("abcd (unknown pool, first seen by Bitcoin Core 0.17.1)")
+    end
+  end
+
+  describe "self.find_missing" do
+    before do
+      setup_python_nodes()
+
+      test.disconnect_nodes(@nodeA.client, 1) # disconnect A from mirror (A')
+      test.disconnect_nodes(@nodeA.client, 2) # disconnect A from B
+      test.disconnect_nodes(@nodeA.mirror_client, 2) # disconnect A' from B
+      assert_equal(0, @nodeA.client.getpeerinfo().count)
+      assert_equal(0, @nodeA.mirror_client.getpeerinfo().count)
+
+      @nodeA.client.generate(2) # this is and remains active
+      @nodeB.client.generate(1) # Node A will see this as valid-headers after reconnect
+      @nodeA.poll!
+      test.connect_nodes(@nodeA.client, 1)
+      test.connect_nodes(@nodeA.client, 2)
+      test.connect_nodes(@nodeA.mirror_client, 2)
+
+      test.sync_blocks()
+
+      chaintipsA = @nodeA.client.getchaintips()
+
+      expect(chaintipsA.length).to eq(2)
+      expect(chaintipsA[-1]["status"]).to eq("headers-only")
+
+      Chaintip.check!(:btc, [@nodeA])
+      expect(Block.find_by(block_hash: chaintipsA[-1]["hash"]).headers_only).to eq(true)
+    end
+
+    it "should do nothing for older blocks" do
+      @nodeA.client.generate(2)
+      test.sync_blocks()
+      @nodeA.poll!
+      @nodeA.reload
+
+      expect(@nodeA.mirror_client).not_to receive("setnetworkactive")
+      Block.find_missing(:btc, 1)
+    end
+
+    it "should stop p2p networking and restart it after" do
+      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true) # restore
+      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(false)
+      expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true)
+      Block.find_missing(:btc, 1)
     end
   end
 

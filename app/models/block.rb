@@ -457,6 +457,35 @@ class Block < ApplicationRecord
     return block
   end
 
+  def self.find_missing(coin, max_depth)
+    throw "Invalid coin argument #{ coin }" unless Node::SUPPORTED_COINS.include?(coin)
+    Node.where(mirror_rpchost: "").update_all mirror_rpchost: nil
+
+    # Find recent headers_only blocks
+    blocks = Block.where(coin: coin, headers_only: true).where("height >= ?", Block.where(coin: coin).maximum(:height) - max_depth)
+    return if blocks.count == 0
+
+    blocks.each do |block|
+      # Try to fetch from other nodes
+      # TODO
+
+      # skip mirror node if successfull
+
+      # Try to obtain block by reorging a mirror node
+      next if Node.with_mirror(coin).count == 0
+      node = Node.with_mirror(coin).first
+
+      node.mirror_client.setnetworkactive(true) # restore
+      node.mirror_client.setnetworkactive(false)
+      node.mirror_client.setnetworkactive(true)
+
+      # TODO
+
+
+      # TODO: feed block to original node?
+    end
+  end
+
   def expire_stale_candidate_cache
     StaleCandidate.where(coin: self.coin).each do |c|
       if self.height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
