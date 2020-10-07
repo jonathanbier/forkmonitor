@@ -275,10 +275,10 @@ RSpec.describe Node, :type => :model do
       it "should not fetch parent blocks older than MINIMUM_BLOCK_HEIGHTS" do
         # Exit IBD, fetching all previous blocks would take forever, so don't:
         @node.client.generate(2)
-        before = MINIMUM_BLOCK_HEIGHTS[:btc]
-        MINIMUM_BLOCK_HEIGHTS[:btc] = 4
+        before = Block::MINIMUM_BLOCK_HEIGHTS[:btc]
+        Block::MINIMUM_BLOCK_HEIGHTS[:btc] = 4
         @node.poll!
-        MINIMUM_BLOCK_HEIGHTS[:btc] = before
+        Block::MINIMUM_BLOCK_HEIGHTS[:btc] = before
         @node.reload
         expect(@node.block.height).to equal(4)
         expect(@node.block.parent).to be_nil
