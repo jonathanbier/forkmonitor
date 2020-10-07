@@ -296,6 +296,43 @@ RSpec.describe Block, :type => :model do
 
   end
 
+  describe "make_active_on_mirror!" do
+    before do
+      setup_python_nodes()
+
+      test.disconnect_nodes(@nodeA.client, 1) # disconnect A from mirror (A')
+      test.disconnect_nodes(@nodeA.client, 2) # disconnect A from B
+      test.disconnect_nodes(@nodeA.mirror_client, 2) # disconnect A' from B
+      assert_equal(0, @nodeA.client.getpeerinfo().count)
+      assert_equal(0, @nodeA.mirror_client.getpeerinfo().count)
+
+      @nodeA.client.generate(1) # this active, but changes to valid-fork after reconnect
+      @nodeB.client.generate(2) # active one node B
+      @nodeA.poll!
+      @nodeB.poll!
+      test.connect_nodes(@nodeA.client, 1)
+      test.connect_nodes(@nodeA.client, 2)
+      test.connect_nodes(@nodeA.mirror_client, 2)
+
+      test.sync_blocks()
+
+      chaintipsA = @nodeA.client.getchaintips()
+
+      expect(chaintipsA.length).to eq(2)
+      expect(chaintipsA[-1]["status"]).to eq("valid-fork")
+
+      Chaintip.check!(:btc, [@nodeA])
+      @valid_fork_block = Block.find_by(block_hash: chaintipsA[-1]["hash"])
+    end
+
+    it "should change the mirror's active chaintip" do
+      @valid_fork_block.make_active_on_mirror!(@nodeA)
+      chaintipsA = @nodeA.mirror_client.getchaintips()
+      expect(chaintipsA[1]["status"]).to eq("active")
+      expect(chaintipsA[1]["hash"]).to eq(@valid_fork_block.block_hash)
+    end
+  end
+
   describe "self.pool_from_coinbase_tx" do
     it "should find Antpool" do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true

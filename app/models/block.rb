@@ -18,6 +18,10 @@ class Block < ApplicationRecord
   has_many :transactions, dependent: :destroy
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
+  # Used to trigger and restore reorgs on the mirror node
+  attr_accessor :invalidated_block_hashes
+  after_initialize :set_invalidated_block_hashes
+
   def as_json(options = nil)
     super({ only: [:id, :coin, :height, :timestamp, :pool, :tx_count, :size] }.merge(options || {})).merge({
       hash: block_hash,
@@ -517,6 +521,80 @@ class Block < ApplicationRecord
         c.expire_cache
       end
     end
+  end
+
+  def set_invalidated_block_hashes
+    @invalidated_block_hashes = []
+  end
+
+  def make_active_on_mirror!(node)
+    # Invalidate new blocks, including any forks we don't know of yet
+    Rails.logger.debug "Roll back the chain to #{ self.block_hash } (#{ self.height }) on #{ node.name_with_version }..."
+    tally = 0
+    while(active_tip = node.get_mirror_active_tip; active_tip.present? && self.block_hash != active_tip["hash"])
+      if tally > (Rails.env.test? ? 2 : 100)
+        throw_unable_to_roll_back!(node)
+      elsif tally > 0
+        Rails.logger.debug "Fetch blocks for any newly activated chaintips on #{ node.name_with_version }..."
+        node.poll_mirror!
+        self.reload
+      end
+      Rails.logger.debug "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] }) on #{ node.name_with_version }"
+      blocks_to_invalidate = []
+      active_tip_block = Block.find_by!(block_hash: active_tip["hash"])
+      if self.height == active_tip["height"]
+        Rails.logger.debug "Invalidate tip to jump to another fork"
+        blocks_to_invalidate.append(active_tip_block)
+      else
+        Rails.logger.debug "Check if active chaintip (#{ active_tip["height"] }) descends from target block (#{ self.height }), otherwise invalidate the active chain..."
+        if !self.descendants.include? active_tip_block
+          blocks_to_invalidate.append(active_tip_block.branch_start(self))
+        end
+        # Invalidate all child blocks we know of, if the node knows them
+        self.children.each do |child_block|
+          begin
+            node.mirror_client.getblockheader(child_block.block_hash)
+          rescue BitcoinClient::Error
+            Rails.logger.error "Skip invalidation of #{ child_block.block_hash } (#{ child_block.height }) on #{ node.name_with_version } because mirror node doesn't have it"
+            next
+          end
+          unless @invalidated_block_hashes.include?(child_block.block_hash)
+            blocks_to_invalidate.append(child_block)
+          end
+        end
+      end
+      # Stop if there are no new blocks to invalidate
+      if (blocks_to_invalidate.collect { |b| b.block_hash } - @invalidated_block_hashes).empty?
+        Rails.logger.error "Nothing to invalidate on #{ node.name_with_version }"
+        throw_unable_to_roll_back!(node, blocks_to_invalidate, @invalidated_block_hashes)
+      end
+      blocks_to_invalidate.each do |block|
+        @invalidated_block_hashes.append(block.block_hash)
+        Rails.logger.debug "Invalidate block #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
+        node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
+      end
+      tally += 1
+      # Give node some time to update its internals. There were occasional
+      # failures where the gettxoutsetinfo below would be applied to the
+      # child block, despite checks against that.
+      sleep 3
+    end
+
+    throw "No active tip left after rollback on #{ node.name_with_version }. Was expecting #{ self.block_hash } (#{ self.height })" unless active_tip.present?
+    throw "Unexpected active tip hash #{ active_tip["hash"] } (#{ active_tip["height"] }) instead of #{ self.block_hash } (#{ self.height }) on #{ node.name_with_version }" unless active_tip["hash"] == self.block_hash
+
+  end
+
+  def throw_unable_to_roll_back!(node, blocks_to_invalidate = nil, invalidated_block_hashes = nil)
+    error = "Unable to roll active #{ self.coin.upcase } chaintip to #{ self.block_hash } (#{ self.height }) on node #{ node.id } #{ node.name_with_version }"
+    error += "\nChaintips: #{ node.mirror_client.getchaintips.filter{|t| t["height"] > self.height - 100 }.collect { |t| "#{ t["hash"] } (#{ t["height"] })=#{ t["status"] }" }.join(", ") }"
+    if !invalidated_block_hashes.nil?
+      error += "\nInvalidated blocks: #{ invalidated_block_hashes.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
+    end
+    if !blocks_to_invalidate.nil?
+      error += "\nBlocks to invalidate: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
+    end
+    throw error
   end
 
 end
