@@ -207,6 +207,8 @@ class Block < ApplicationRecord
         self.size = block_info["size"]
         self.save if self.changed?
         break
+      rescue Node::MethodNotFoundError
+        # Ignore old clients that don't support getblockheader
       rescue Node::BlockNotFoundError
         # Try another node and/or try again later
       end
