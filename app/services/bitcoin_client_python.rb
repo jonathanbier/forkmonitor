@@ -290,4 +290,15 @@ class BitcoinClientPython
       raise Error, "setnetworkactive(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
+
+  def submitblock(block)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Specify block" unless block.present?
+    begin
+        return @node.submitblock(block)
+    rescue Error => e
+      raise Error, "submitblock(#{ block }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
 end

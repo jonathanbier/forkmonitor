@@ -476,6 +476,9 @@ class Block < ApplicationRecord
       when :bch
         Node.bch_by_version
       end
+      # Keep track of the original first seen node
+      # To make mocks easier, require that it's part of nodes_to_try:
+      originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
       nodes_to_try.each do |node|
         begin
           block_info = node.getblock(block.block_hash, 0)
@@ -497,7 +500,10 @@ class Block < ApplicationRecord
         # TODO
       end
 
-      # TODO: feed block to original node?
+      # Feed block to original node
+      if block_info.present? && originally_seen_by.present?
+        originally_seen_by.client.submitblock(block_info)
+      end
     end
   end
 

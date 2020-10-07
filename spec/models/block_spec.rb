@@ -417,6 +417,13 @@ RSpec.describe Block, :type => :model do
       expect(@headers_only_block.first_seen_by).to eq(@nodeB)
     end
 
+    it "should submit block to original node" do
+      expect { @nodeA.client.getblock(@headers_only_block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
+      Block.find_missing(:btc, 1)
+      res = @nodeA.client.getblock(@headers_only_block.block_hash, 1)
+      expect(res["confirmations"]).to eq(-1)
+    end
+
     describe "if none of our nodes have the block" do
       before do
         # Pretend node B doesn't exist, so we check the mirror node
