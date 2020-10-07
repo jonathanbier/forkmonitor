@@ -95,7 +95,11 @@ class Chaintip < ApplicationRecord
       return nil unless block.present?
       block.update marked_valid_by: block.marked_valid_by | [node.id]
       tip = Chaintip.process_active!(node, block)
+    when "headers-only"
+      # Not all blocks for this branch are available, but the headers are valid
+      Chaintip.process_valid_headers!(node, chaintip, block)
     when "valid-headers"
+      # All blocks are available for this branch, but they were never fully validated
       Chaintip.process_valid_headers!(node, chaintip, block)
     when "valid-fork"
       return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
