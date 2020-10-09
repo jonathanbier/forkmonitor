@@ -8,6 +8,7 @@ class BitcoinClient
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
   class MethodNotFoundError < Error; end
+  class TimeOutError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -261,6 +262,7 @@ class BitcoinClient
       @client.request(*args)
     rescue Bitcoiner::Client::JSONRPCError => e
       raise MethodNotFoundError if e.message.include?("Method not found")
+      raise TimeOutError if e.message.include?("operation_timedout")
       raise
     end
   end

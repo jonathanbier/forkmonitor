@@ -3,6 +3,7 @@ class BitcoinClientMock
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
   class ConnectionError < Error; end
+  class TimeOutError < Error; end
   class PartialFileError < Error; end
   class MethodNotFoundError < Error; end
 

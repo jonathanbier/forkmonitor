@@ -13,6 +13,7 @@ class Node < ApplicationRecord
   class BlockNotFoundError < Error; end
   class MethodNotFoundError < Error; end
   class NoMatchingNodeError < Error; end
+  class TimeOutError < Error; end
 
   belongs_to :block, required: false
   has_many :chaintips, dependent: :destroy
@@ -387,6 +388,8 @@ class Node < ApplicationRecord
       raise BlockPrunedError
     rescue BitcoinClient::BlockNotFoundError
       raise BlockNotFoundError
+    rescue BitcoinClient::TimeOutError
+      raise TimeOutError
     end
   end
 
@@ -403,6 +406,8 @@ class Node < ApplicationRecord
       raise BlockNotFoundError
     rescue BitcoinClient::MethodNotFoundError
       raise MethodNotFoundError
+    rescue BitcoinClient::TimeOutError
+      raise TimeOutError
     end
   end
 

@@ -7,6 +7,7 @@ RSpec.describe Node, :type => :model do
   before do
     stub_const("BitcoinClient::Error", BitcoinClientMock::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    stub_const("BitcoinClient::TimeOutError", BitcoinClientPython::TimeOutError)
     stub_const("BitcoinClient::PartialFileError", BitcoinClientPython::PartialFileError)
     stub_const("BitcoinClient::BlockPrunedError", BitcoinClientPython::BlockPrunedError)
     stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientPython::BlockNotFoundError)

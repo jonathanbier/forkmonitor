@@ -1,6 +1,7 @@
 class BitcoinClientPython
   class Error < StandardError; end
   class ConnectionError < Error; end
+  class TimeOutError < Error; end
   class PartialFileError < Error; end
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end

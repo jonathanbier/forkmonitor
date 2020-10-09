@@ -216,6 +216,8 @@ class Block < ApplicationRecord
         # Ignore old clients that don't support getblockheader
       rescue Node::BlockNotFoundError
         # Try another node and/or try again later
+      rescue Node::TimeOutError
+        # Try another node and/or try again later
       end
     end
   end
