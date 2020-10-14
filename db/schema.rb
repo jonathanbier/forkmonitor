@@ -10,14 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_06_135236) do
+ActiveRecord::Schema.define(version: 2020_10_14_132021) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
-    t.integer "height"
+    t.integer "height", null: false
     t.integer "timestamp"
     t.string "work"
     t.datetime "created_at", null: false
@@ -26,7 +26,7 @@ ActiveRecord::Schema.define(version: 2020_10_06_135236) do
     t.integer "mediantime"
     t.integer "first_seen_by_id"
     t.integer "version"
-    t.integer "coin"
+    t.integer "coin", null: false
     t.string "pool"
     t.integer "tx_count"
     t.integer "size"
