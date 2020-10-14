@@ -228,11 +228,11 @@ class Block < ApplicationRecord
                nil
 
     block = Block.find_or_create_by(
-       block_hash: block_info["hash"]
+       block_hash: block_info["hash"],
+       coin: node.coin.downcase.to_sym,
+       height: block_info["height"]
     )
     block.update(
-      coin: node.coin.downcase.to_sym,
-      height: block_info["height"],
       mediantime: block_info["mediantime"],
       timestamp: block_info["time"],
       work: block_info["chainwork"],
@@ -262,6 +262,8 @@ class Block < ApplicationRecord
   end
 
   def self.create_headers_only(node, height, block_hash)
+    throw "node missing" if node.nil?
+    throw "height missing" if height.nil?
     Block.create(
       coin: node.coin.downcase.to_sym,
       height: height,

@@ -103,7 +103,7 @@ RSpec.describe Chaintip, type: :model do
     end
 
     it "should do nothing if we already know the block" do
-      block = Block.create(block_hash: "1234", height: 5)
+      block = Block.create(coin: :btc, block_hash: "1234", height: 5)
       expect(Block).not_to receive(:create_headers_only)
       Chaintip.process_valid_headers!(@nodeA, {"hash" => "1234", "height" => 5}, block)
     end
