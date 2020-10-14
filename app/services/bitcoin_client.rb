@@ -129,7 +129,6 @@ class BitcoinClient
     begin
       return request("getblock", hash, verbosity)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise ConnectionError if e.message.include?("couldnt_connect")
       raise PartialFileError if e.message.include?("partial_file")
       raise BlockPrunedError if e.message.include?("pruned data")
       raise BlockNotFoundError if e.message.include?("Block not found")
@@ -144,7 +143,6 @@ class BitcoinClient
       begin
         return request("getblockheader", hash)
       rescue Bitcoiner::Client::JSONRPCError => e
-        raise ConnectionError if e.message.include?("couldnt_connect")
         raise BlockNotFoundError if e.message.include?("Block not found")
         raise Error, "getblockheader(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
       end
@@ -224,7 +222,6 @@ class BitcoinClient
     begin
       return request("setnetworkactive", status)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise ConnectionError if e.message.include?("couldnt_connect")
       raise Error, "setnetworkactive #{ status } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -263,6 +260,7 @@ class BitcoinClient
     rescue Bitcoiner::Client::JSONRPCError => e
       raise MethodNotFoundError if e.message.include?("Method not found")
       raise TimeOutError if e.message.include?("operation_timedout")
+      raise ConnectionError if e.message.include?("couldnt_connect")
       raise
     end
   end
