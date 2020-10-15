@@ -52,6 +52,8 @@ RSpec.describe Block, :type => :model do
     stub_const("BitcoinClient::PartialFileError", BitcoinClientMock::PartialFileError)
     stub_const("BitcoinClient::BlockPrunedError", BitcoinClientMock::BlockPrunedError)
     stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientMock::BlockNotFoundError)
+    stub_const("BitcoinClient::MethodNotFoundError", BitcoinClientMock::MethodNotFoundError)
+    stub_const("BitcoinClient::TimeOutError", BitcoinClientMock::TimeOutError)
   end
 
   describe "log2_pow" do
@@ -391,21 +393,21 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should mark block as headers_only" do
-      block = Block.create_headers_only(@node, 10, "abcd")
+      block = Block.create_headers_only(@node, 560182, "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
       expect(block.headers_only).to eq(true)
     end
 
     it "should set first seen by" do
-      block = Block.create_headers_only(@node, 10, "abcd")
+      block = Block.create_headers_only(@node, 560182, "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
       expect(block.first_seen_by).to eq(@node)
     end
 
     it "should be updated by find_or_create_by" do
       allow(Node).to receive("set_pool_for_block!").and_return(nil)
-      block = Block.create_headers_only(@node, 10, "abcd")
+      block = Block.create_headers_only(@node, 560182, "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
       Block.create_or_update_with({
-        "hash" => "abcd",
-        "height" => 10,
+        "hash" => "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377",
+        "height" => 560182,
         "nTx" => 3
       }, false, @node, nil)
       block.reload
@@ -414,8 +416,8 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should have a valid summary" do
-      block = Block.create_headers_only(@node, 10, "abcd")
-      expect(block.summary(time: true, first_seen_by: true)).to eq("abcd (unknown pool, first seen by Bitcoin Core 0.17.1)")
+      block = Block.create_headers_only(@node, 560182, "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
+      expect(block.summary(time: true, first_seen_by: true)).to eq("0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377 (10:57:31 by unknown pool, first seen by Bitcoin Core 0.17.1)")
     end
   end
 

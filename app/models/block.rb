@@ -192,40 +192,33 @@ class Block < ApplicationRecord
     ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id)}.flatten.collect{|tx| tx.tx_id}.uniq
   end
 
-  def fetch_info!
-    nodes_to_try = case self.coin.to_sym
-    when :btc
-      Node.bitcoin_core_by_version
-    when :tbtc
-      Node.testnet_by_version
-    when :bch
-      Node.bch_by_version
-    end
-    nodes_to_try.each do |node|
-      begin
-        block_info = node.getblockheader(self.block_hash)
-        self.work = block_info["chainwork"]
-        self.mediantime = block_info["mediantime"]
-        self.timestamp = block_info["time"]
-        self.work = block_info["chainwork"]
-        self.version = block_info["version"]
-        self.tx_count = block_info["nTx"]
-        self.size = block_info["size"]
-        # Connect to parent if available:
-        if self.parent.nil?
-          self.parent = Block.find_by(block_hash: block_info["previousblockhash"])
-          self.connected = self.parent.nil? ? false : self.parent.connected
-        end
-        self.save if self.changed?
-        break
-      rescue Node::MethodNotFoundError
-        # Ignore old clients that don't support getblockheader
-      rescue Node::BlockNotFoundError
-        # Try another node and/or try again later
-      rescue Node::TimeOutError
-        # Try another node and/or try again later
+  def fetch_header!(node)
+    begin
+      block_info = node.getblockheader(self.block_hash)
+      self.work = block_info["chainwork"]
+      self.mediantime = block_info["mediantime"]
+      self.timestamp = block_info["time"]
+      self.work = block_info["chainwork"]
+      self.version = block_info["version"]
+      self.tx_count = block_info["nTx"]
+      self.size = block_info["size"]
+      # Connect to parent if available:
+      if self.parent.nil?
+        self.parent = Block.find_by(block_hash: block_info["previousblockhash"])
+        self.connected = self.parent.nil? ? false : self.parent.connected
       end
+      self.save if self.changed?
+    rescue Node::MethodNotFoundError
+      # Ignore old clients that don't support getblockheader
+      return false
+    rescue Node::BlockNotFoundError
+      # Try another node and/or try again later
+      return false
+    rescue Node::TimeOutError
+      # Try another node and/or try again later
+      return false
     end
+    return true
   end
 
   def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
@@ -270,16 +263,17 @@ class Block < ApplicationRecord
   def self.create_headers_only(node, height, block_hash)
     throw "node missing" if node.nil?
     throw "height missing" if height.nil?
-    Block.create(
+    block = Block.create(
       coin: node.coin.downcase.to_sym,
       height: height,
       block_hash: block_hash,
       headers_only: true,
       first_seen_by: node
     )
-    # getblockheader will be called by fetch_missing_info!
-    # TODO: see if other nodes have the full block
+    # fetch headers
+    block.fetch_header!(node)
     # TODO: connect longer branches to common ancestor (fetch more headers if needed)
+    return block
   end
 
   def self.coinbase_message(tx)
@@ -427,13 +421,6 @@ class Block < ApplicationRecord
 
     Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
       Node.set_pool_for_block!(coin, b)
-    end
-  end
-
-  def self.fetch_missing_info!(coin, n)
-    blocks = Block.where(coin: coin).order(height: :desc).limit(n)
-    blocks.where(work: nil).or(blocks.where(mediantime: nil)).each do |b|
-      b.fetch_info!
     end
   end
 
