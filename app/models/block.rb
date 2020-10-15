@@ -6,6 +6,8 @@ class Block < ApplicationRecord
     bsv: Rails.env.production? ? 606000 : 621500 # February 2019 for development
   }
 
+  class RollbackError < StandardError; end
+
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
   belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
   has_many :invalid_blocks, dependent: :destroy
@@ -594,7 +596,7 @@ class Block < ApplicationRecord
     if !blocks_to_invalidate.nil?
       error += "\nBlocks to invalidate: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
     end
-    throw error
+    raise RollbackError.new(error)
   end
 
 end
