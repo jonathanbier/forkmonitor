@@ -186,6 +186,11 @@ class Block < ApplicationRecord
     ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id)}.flatten.collect{|tx| tx.tx_id}.uniq
   end
 
+  # Preloads tx_id, raw and amount
+  def block_and_descendant_transactions(depth_limit)
+    ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id, :raw, :amount)}.flatten
+  end
+
   def fetch_header!(node)
     begin
       block_info = node.getblockheader(self.block_hash)

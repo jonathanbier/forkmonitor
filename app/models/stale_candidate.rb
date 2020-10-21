@@ -18,11 +18,14 @@ class StaleCandidate < ApplicationRecord
     # Avoid repeating these operations:
     children = self.children
     confirmed_in_one_branch = confirmed_in_one_branch(children)
+    double_spent_in_one_branch = double_spent_inputs(children)
 
     super({ only: [:coin, :height] }).merge({
       children: children,
       confirmed_in_one_branch: confirmed_in_one_branch,
       confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
+      double_spent_in_one_branch: double_spent_in_one_branch,
+      double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
       headers_only: children.any? { |child| child[:root].headers_only }
     })
   end
@@ -42,7 +45,7 @@ class StaleCandidate < ApplicationRecord
       }
       {
         root: child,
-        tip: chain[-1],
+        tip: chain[-1], # TODO: this and the next line cause two very slow queries
         length: chain.count
       }
     }
@@ -59,9 +62,10 @@ class StaleCandidate < ApplicationRecord
     shortest_tx_ids = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_tx_ids = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     if shortest[:length] < longest[:length]
+      # Transactions that were created on the shortest side, but not on the longest:
       tx_ids = shortest_tx_ids - longest_tx_ids
     else
-      # If both branches are the same length, consider doublespends on either side:
+      # If both branches are the same length, consider unique transactions on either side:
       tx_ids = (shortest_tx_ids - longest_tx_ids) | (longest_tx_ids - shortest_tx_ids)
     end
 
@@ -69,6 +73,30 @@ class StaleCandidate < ApplicationRecord
 
     # Return transaction details
     Transaction.where("tx_id in (?)", tx_ids).order(amount: :desc)
+  end
+
+  def double_spent_inputs(children)
+    return nil if children.length < 2
+    # TODO: handle more than 2 branches:
+    return nil if children.length > 2
+    # If branches are of different length, double spends are inputs spent
+    # in the shortest chain that also spent by a different transaction in the longest chain
+    (shortest, longest) = children.sort_by {|c| c[:length] }
+    return nil if shortest[:root].headers_only || longest[:root].headers_only
+    shortest_txs = shortest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
+    longest_txs = longest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
+
+    longest_spent_coins_with_tx = longest_txs.collect { | tx |
+      tx.spent_coins_map
+    }.inject(&:merge)
+    shortest_spent_coins_with_tx = shortest_txs.collect { | tx |
+      tx.spent_coins_map
+    }.inject(&:merge)
+    # Filter coins that are spent with a different tx in the longest chain
+    txs = shortest_spent_coins_with_tx.filter { |txout, tx|
+      longest_spent_coins_with_tx.key?(txout) && tx.tx_id != longest_spent_coins_with_tx[txout].tx_id
+      # TODO: take RBF into account (fee bump is not a double spend)
+    }.collect{|txout, tx| tx}.uniq
   end
 
   def expire_cache
