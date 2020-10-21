@@ -1,5 +1,6 @@
 class FeedsController < ApplicationController
   before_action :set_coin, only: [:blocks_invalid, :inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps, :ln_uncoops, :unknown_pools]
+  before_action :set_page
 
   def blocks_invalid
     respond_to do |format|
@@ -84,7 +85,6 @@ class FeedsController < ApplicationController
   def stale_candidates
     latest = StaleCandidate.last_updated_cached(params[:coin])
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-      @page = (params[:page] || 1).to_i
       @page_count = Rails.cache.fetch "StaleCandidate.feed.count(#{@coin})" do
         (StaleCandidate.feed.where(coin: @coin).count / StaleCandidate::PER_PAGE.to_f).ceil
       end
@@ -118,7 +118,6 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_sweeps = []
           if @coin == :btc
-            @page = (params[:page] || 1).to_i
             @page_count = Rails.cache.fetch "SweepTransaction.count" do
               (SweepTransaction.count / SweepTransaction::PER_PAGE.to_f).ceil
             end
@@ -136,7 +135,6 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_uncoops = []
           if @coin == :btc
-            @page = (params[:page] || 1).to_i
             @page_count = Rails.cache.fetch "MaybeUncoopTransaction.count" do
               (MaybeUncoopTransaction.count / MaybeUncoopTransaction::PER_PAGE.to_f).ceil
             end
@@ -144,6 +142,16 @@ class FeedsController < ApplicationController
           end
         end
       end
+    end
+  end
+
+  private
+
+  def set_page
+    @page = (params[:page] || 1).to_i
+    if @page < 1
+      render json: "invalid param", status: :unprocessable_entity
+      return
     end
   end
 end

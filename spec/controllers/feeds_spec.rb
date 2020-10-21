@@ -126,6 +126,11 @@ RSpec.describe FeedsController, type: :controller do
         get :stale_candidates, params: {coin: "btc", page: 2}, format: :rss
         expect(response.body).not_to include(@block1.block_hash)
       end
+
+      it "should reject negative page numbers" do
+        get :stale_candidates, params: {coin: "btc", page: -2}, format: :rss
+        expect(response.status).to eq(422)
+      end
     end
 
     describe "GET lightning penalty feed" do
