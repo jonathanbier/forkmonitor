@@ -32,6 +32,8 @@ class StaleCandidates extends React.Component {
       staleCandidates: [],
       confirmedInOneBranch: null,
       confirmedInOneBranchTotal: null,
+      doubleSpent: null,
+      doubleSpentTotal: null,
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
@@ -52,6 +54,8 @@ class StaleCandidates extends React.Component {
         staleCandidates: res.children,
         confirmedInOneBranch: res.confirmed_in_one_branch,
         confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
+        doubleSpent: res.double_spent_in_one_branch,
+        doubleSpentTotal: res.double_spent_in_one_branch_total,
         headersOnly: res.headers_only
       });
       }.bind(this)).catch(function (error) {
@@ -122,73 +126,106 @@ class StaleCandidates extends React.Component {
                 }
               </span>
             }
-            { this.state.confirmedInOneBranch != null && this.state.confirmedInOneBranch.length == 0 &&
-              <p>No double spends have been detected</p>
-            }
-            { this.state.confirmedInOneBranch != null && this.state.confirmedInOneBranch.length > 0 &&
-              <div>
-                <h3>Transactions not seen in both branches</h3>
-                <p>
-                  { this.state.confirmedInOneBranch.length } transactions
-                  involving { this.state.confirmedInOneBranchTotal } BTC
-                  have been detected that don't occur on both sides of the split.
-                  Usually this happens because different miners select a slightly
-                  different set of transactions for their block. In that case they
-                  should appear in future blocks.
-                </p>
-                <p>
-                  It is unsafe to consider these transactions confirmed, because
-                  an opportunistic sender could still broadcast a conflicting
-                  replacement transaction which, if it ends up in the heaviest chain,
-                  would doublespend the original. We may add detection for this later.
-                </p>
-                <p>
-                  Another possiblity is that a transaction fee was increased using
-                  RBF and that one miner didn't receive the fee increase in time.
-                  We may add detection for this later.
-                </p>
-                <p>
-                  The list below is updated every block until 10 blocks after the split.
-                </p>
-                <Table striped responsive size="sm" className="lightning">
-                  <thead>
-                    <tr align="left">
-                      <th>Hash</th>
-                      <th>BTC</th>
-                      <th>Explorer</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {this.state.confirmedInOneBranch.map(function (tx, index) {
-                      return (
-                        <tr key={ index }>
-                          <td>
-                            { tx.tx_id }
-                          </td>
-                          <td>
-                            { tx.amount }
-                          </td>
-                          <td>
-                            <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
-                            <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </Table>
-                <h3>Doublespent inputs</h3>
-                <p>
-                  Coming soon. If a transaction occurs in one branch <i>and a conflicting
-                  transaction occurs in the other branch</i>, then it was either an RBF
-                  fee increase or a malicious attempt to doublespend. We plan to
-                  add detection for this soon.
-                </p>
-                <p>
-                  The list here will be a subset of the above.
-                </p>
-              </div>
-            }
+            <div>
+              <h3>Double-spending</h3>
+              <p>
+                If a transaction occurs in one branch <i>and a conflicting
+                transaction occurs in the other branch</i>, then it was either an RBF
+                fee increase or an actual doublespend.
+              </p>
+              { this.state.doubleSpent != null && this.state.doubleSpent.length == 0 &&
+                <p>No double spends have been detected</p>
+              }
+              { this.state.doubleSpent != null && this.state.doubleSpent.length > 0 &&
+                <div>
+                    <p>{ this.state.doubleSpent.length } transaction(s)
+                    involving { this.state.doubleSpentTotal } BTC have been doublespent
+                    on the longest chain.
+                  </p>
+                  <Table striped responsive size="sm" className="lightning">
+                    <thead>
+                      <tr align="left">
+                        <th>Hash</th>
+                        <th>BTC</th>
+                        <th>Explorer</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.doubleSpent.map(function (tx, index) {
+                        return (
+                          <tr key={ index }>
+                            <td>
+                              { tx.tx_id }
+                            </td>
+                            <td>
+                              { tx.amount }
+                            </td>
+                            <td>
+                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
+                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              }
+              { this.state.confirmedInOneBranch != null && this.state.confirmedInOneBranch.length > 0 &&
+                <div>
+                  <h3>Transactions not seen in both branches</h3>
+                  <p>
+                    { this.state.confirmedInOneBranch.length } transactions
+                    involving { this.state.confirmedInOneBranchTotal } BTC
+                    have been detected that don't occur on both sides of the split.
+                    Usually this happens because different miners select a slightly
+                    different set of transactions for their block. In that case they
+                    should appear in future blocks.
+                  </p>
+                  <p>
+                    It is unsafe to consider these transactions confirmed, because
+                    an opportunistic sender could still broadcast a conflicting
+                    replacement transaction which, if it ends up in the heaviest chain,
+                    would doublespend the original. We may add detection for this later.
+                  </p>
+                  <p>
+                    Another possiblity is that a transaction fee was increased using
+                    RBF and that one miner didn't receive the fee increase in time.
+                    We may add detection for this later.
+                  </p>
+                  <p>
+                    The list below is updated every block until 10 blocks after the split.
+                  </p>
+                  <Table striped responsive size="sm" className="lightning">
+                    <thead>
+                      <tr align="left">
+                        <th>Hash</th>
+                        <th>BTC</th>
+                        <th>Explorer</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.confirmedInOneBranch.map(function (tx, index) {
+                        return (
+                          <tr key={ index }>
+                            <td>
+                              { tx.tx_id }
+                            </td>
+                            <td>
+                              { tx.amount }
+                            </td>
+                            <td>
+                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
+                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              }
+            </div>
           </Col></Row>
         </Container>
       </TabPane>
