@@ -30,8 +30,8 @@ class StaleCandidates extends React.Component {
     this.state = {
       redirect: false,
       staleCandidates: [],
-      doubleSpends: null,
-      doubleSpendsTotal: null,
+      confirmedInOneBranch: null,
+      confirmedInOneBranchTotal: null,
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
