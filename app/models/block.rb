@@ -503,7 +503,10 @@ class Block < ApplicationRecord
 
       # Feed block to original node
       if block_info.present? && originally_seen_by.present?
-        originally_seen_by.client.submitblock(block_info)
+        # Except for pre-segwit nodes
+        unless originally_seen_by.core? && originally_seen_by.version < 130100
+          originally_seen_by.client.submitblock(block_info)
+        end
       end
     end
   end
