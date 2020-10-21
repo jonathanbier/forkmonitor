@@ -136,6 +136,7 @@ class Chaintip < ApplicationRecord
   def self.process_valid_headers!(node, chaintip, block)
     return unless block.nil?
     return if chaintip["height"] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.downcase.to_sym]
+    return if Block.find_by(block_hash: chaintip["hash"]).present?
     Block.create_headers_only(node, chaintip["height"], chaintip["hash"])
   end
 
