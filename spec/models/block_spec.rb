@@ -464,30 +464,6 @@ RSpec.describe Block, :type => :model do
       expect(res["confirmations"]).to eq(-1)
     end
 
-    describe "if none of our nodes have the block" do
-      before do
-        # Pretend node B doesn't exist, so we check the mirror node
-        allow(Node).to receive(:bitcoin_core_by_version).and_return [@nodeA]
-      end
-
-      it "should do nothing for older blocks" do
-        @nodeA.client.generate(2)
-        test.sync_blocks()
-        @nodeA.poll!
-        @nodeA.reload
-
-        expect(@nodeA.mirror_client).not_to receive("setnetworkactive")
-        Block.find_missing(:btc, 1)
-      end
-
-      it "should stop p2p networking and restart it after" do
-        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true) # restore
-        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(false)
-        expect(@nodeA.mirror_client).to receive("setnetworkactive").with(true)
-        Block.find_missing(:btc, 1)
-      end
-    end
-
   end
 
 end

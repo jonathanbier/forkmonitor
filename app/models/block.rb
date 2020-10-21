@@ -489,18 +489,6 @@ class Block < ApplicationRecord
         end
       end
 
-      if block_info.nil?
-        # Try to obtain block by reorging a mirror node
-        next if Node.with_mirror(coin).count == 0
-        node = Node.with_mirror(coin).first
-
-        node.mirror_client.setnetworkactive(true) # restore
-        node.mirror_client.setnetworkactive(false)
-        node.mirror_client.setnetworkactive(true)
-
-        # TODO
-      end
-
       # Feed block to original node
       if block_info.present? && originally_seen_by.present?
         # Except for pre-segwit nodes
