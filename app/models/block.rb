@@ -270,8 +270,12 @@ class Block < ApplicationRecord
       headers_only: true,
       first_seen_by: node
     )
-    # fetch headers
-    block.fetch_header!(node)
+    # Fetch headers
+    # * except for BCHN nodes, which don't support getblockheader outside main chain:
+    #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
+    unless node.name == "BCHN"
+      block.fetch_header!(node)
+    end
     # TODO: connect longer branches to common ancestor (fetch more headers if needed)
     return block
   end
