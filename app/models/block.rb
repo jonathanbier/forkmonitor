@@ -104,17 +104,11 @@ class Block < ApplicationRecord
         self.update pruned: true
         return
       end
-      coinbase = block_info["tx"].first
-      throw "Coinbase of #{ this_block.coin } block #{ this_block.block_hash } ( #{ this_block.height } ) is missing 'vout'"  if coinbase["vout"].nil?
-      self.transactions.create(
-        is_coinbase: true,
-        tx_id: coinbase["txid"],
-        amount: coinbase["vout"].sum { |vout| vout["value"] }
-      )
-      block_info["tx"][1..-1].each do |tx|
+      block_info["tx"].each_with_index do |tx, i|
         self.transactions.create(
-          is_coinbase: false,
+          is_coinbase: i == 0,
           tx_id: tx["txid"],
+          raw: tx["hex"],
           amount: tx["vout"].sum { |vout| vout["value"] }
         )
       end
