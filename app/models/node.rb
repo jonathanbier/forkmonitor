@@ -203,6 +203,11 @@ class Node < ApplicationRecord
     end
 
     raise "Best block hash unexpectedly nil" unless best_block_hash.present?
+    # Mark node as reachable (if needed) before trying to fetch additional info
+    # such as the coinbase message.
+    if self.unreachable_since
+      self.update polled_at: Time.now, unreachable_since: nil
+    end
 
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false, true)
 
