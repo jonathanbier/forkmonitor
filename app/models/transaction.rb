@@ -6,6 +6,8 @@ class Transaction < ApplicationRecord
   end
 
   def spent_coins_map
+    throw "raw transaction missing for #{ self.tx_id }" unless self.raw.present?
+
     tx = Bitcoin::Protocol::Tx.new([self.raw].pack('H*'))
     map = {}
     tx.in.each do |input|
