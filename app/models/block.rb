@@ -309,6 +309,7 @@ class Block < ApplicationRecord
       "/BitFury/" => "BitFury",
       "/Bitcoin-India/" => "Bitcoin India",
       "/Bitcoin-Russia.ru/" => "BitcoinRussia",
+      "/Bitdeer/" => "Bitdeer",
       "/Bitfury/" => "BitFury",
       "/Bixin/" => "Bixin",
       "/CANOE/" => "CANOE",
