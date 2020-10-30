@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_21_120359) do
+ActiveRecord::Schema.define(version: 2020_10_30_090854) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -258,7 +258,7 @@ ActiveRecord::Schema.define(version: 2020_10_21_120359) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "amount", precision: 16, scale: 8, null: false
-    t.binary "raw"
+    t.binary "raw", null: false
     t.index ["block_id"], name: "index_transactions_on_block_id"
     t.index ["tx_id"], name: "index_transactions_on_tx_id"
   end
