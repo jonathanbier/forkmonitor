@@ -1,3 +1,5 @@
+require 'csv'
+
 class Block < ApplicationRecord
   MINIMUM_BLOCK_HEIGHTS = {
     btc: Rails.env.test? ? 0 : 500000, # Mid December 2017, around Lightning network launch
@@ -33,6 +35,18 @@ class Block < ApplicationRecord
         name_with_version: first_seen_by.name_with_version
       } : nil
     })
+  end
+
+  def self.to_csv
+    attributes = %w{height block_hash timestamp mediantime work version tx_count size pool }
+
+    CSV.generate(headers: true) do |csv|
+      csv << attributes
+
+      order(height: :desc).each do |block|
+        csv << attributes.map{ |attr| block.send(attr) }
+      end
+    end
   end
 
   def log2_pow
