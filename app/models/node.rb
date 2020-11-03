@@ -236,7 +236,7 @@ class Node < ApplicationRecord
     best_block_hash = blockchaininfo["bestblockhash"]
     ibd = blockchaininfo["initialblockdownload"]
     block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, true, nil)
-    self.update mirror_block: block
+    self.update mirror_block: block, last_polled_mirror_at: Time.now
   end
 
   # Should be run after polling all nodes, otherwise it may find false positives
