@@ -54,7 +54,7 @@ class NodeInflation extends React.Component {
             />&nbsp;
           </span>
         }
-        { (this.props.node.mirror_unreachable_since == null || this.state.txOutset != null) &&
+        { ((this.props.node.mirror_unreachable_since == null && !this.props.node.mirror_ibd) || this.state.txOutset != null) &&
           <span>
             <FontAwesomeIcon
               className={ this.state.txOutset == null ? "fa-pulse" : (!this.state.txOutset.inflated ? "text-success" : "text-danger") }
@@ -86,6 +86,21 @@ class NodeInflation extends React.Component {
               style={{maxWidth: "100%", textAlign: "left"}}
             >
               <p>The dedicated inflation check node is currently offline</p>
+            </Tooltip>
+          </span>
+        }
+        { this.props.node.mirror_unreachable_since == null && this.props.node.mirror_ibd && this.state.txOutset == null &&
+          <span>
+            <Badge color="info">Syncing</Badge>
+            <Tooltip
+              placement="auto"
+              isOpen={this.state.tooltipOpen}
+              target={`inflation-node-${ this.props.node.id }`}
+              toggle={this.toggle}
+              modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
+              style={{maxWidth: "100%", textAlign: "left"}}
+            >
+              <p>The dedicated inflation check node is currently syncing</p>
             </Tooltip>
           </span>
         }

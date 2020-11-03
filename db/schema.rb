@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_10_30_090854) do
+ActiveRecord::Schema.define(version: 2020_11_03_094808) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -156,6 +156,7 @@ ActiveRecord::Schema.define(version: 2020_10_30_090854) do
     t.integer "mempool_count"
     t.integer "mempool_bytes"
     t.integer "mempool_max"
+    t.boolean "mirror_ibd", default: false, null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
   end

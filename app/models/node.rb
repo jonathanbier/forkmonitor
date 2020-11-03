@@ -93,7 +93,8 @@ class Node < ApplicationRecord
       :link_text,
       :mempool_count,
       :mempool_bytes,
-      :mempool_max
+      :mempool_max,
+      :mirror_ibd
     ]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
