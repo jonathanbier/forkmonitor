@@ -508,6 +508,7 @@ class Block < ApplicationRecord
           block.update headers_only: false, first_seen_by: node
           break
         rescue Node::BlockNotFoundError
+        rescue Node::TimeOutError
         end
       end
 
