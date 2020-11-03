@@ -278,21 +278,27 @@ class Block < ApplicationRecord
   def self.create_headers_only(node, height, block_hash)
     throw "node missing" if node.nil?
     throw "height missing" if height.nil?
-    block = Block.create(
-      coin: node.coin.downcase.to_sym,
-      height: height,
-      block_hash: block_hash,
-      headers_only: true,
-      first_seen_by: node
-    )
-    # Fetch headers
-    # * except for BCHN nodes, which don't support getblockheader outside main chain:
-    #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
-    unless node.name == "BCHN"
-      block.fetch_header!(node)
+    begin
+      block = Block.create(
+        coin: node.coin.downcase.to_sym,
+        height: height,
+        block_hash: block_hash,
+        headers_only: true,
+        first_seen_by: node
+      )
+      # Fetch headers
+      # * except for BCHN nodes, which don't support getblockheader outside main chain:
+      #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
+      unless node.name == "BCHN"
+        block.fetch_header!(node)
+      end
+      # TODO: connect longer branches to common ancestor (fetch more headers if needed)
+      return block
+    rescue ActiveRecord::RecordNotUnique
+      raise unless Rails.env.production?
+      return Block.find_by(node.coin.downcase.to_sym, block_hash: block_hash)
     end
-    # TODO: connect longer branches to common ancestor (fetch more headers if needed)
-    return block
+
   end
 
   def self.coinbase_message(tx)
