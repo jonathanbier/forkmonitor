@@ -85,6 +85,7 @@ class StaleCandidate < ApplicationRecord
     return nil if shortest[:root].headers_only || longest[:root].headers_only
     shortest_txs = shortest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
     longest_txs = longest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
+    return nil if shortest_txs.nil? || longest_txs.nil?
 
     longest_spent_coins_with_tx = longest_txs.collect { | tx |
       tx.spent_coins_map
