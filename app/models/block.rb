@@ -111,7 +111,7 @@ class Block < ApplicationRecord
         node = this_block.first_seen_by
         # getblock argument verbosity 2 was added in v0.16.0
         # Knots doesn't return the transaction hash
-        if node.nil? || (node.core? && node.version < 160000) || node.libbitcoin? || node.knots?
+        if node.nil? || (node.core? && node.version < 160000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
           node = Node.newest_node(this_block.coin.to_sym)
         end
         block_info = node.getblock(self.block_hash, 2)
