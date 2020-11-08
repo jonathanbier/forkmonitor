@@ -49,7 +49,10 @@ class InflatedBlock < ApplicationRecord
       end
 
       Rails.logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
-      throw "Node in Initial Blockchain Download" if node.ibd
+      if node.ibd
+        Rails.logger.info "Node in Initial Blockchain Download"
+        next
+      end
       if node.restore_mirror == false # false: unable to connect, nil: no mirror block
         Rails.logger.error "Unable to connect to mirror node #{ node.id } #{ node.name_with_version }"
         next
