@@ -527,15 +527,19 @@ class Node < ApplicationRecord
   # but that has not been implemented.
   def self.get_coinbase_for_block!(coin, block_hash, block_info = nil)
     node = nil
-    case coin
-    when :btc, :tbtc
-      # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
-      node = Node.first_newer_than(coin, 160000, :core)
-    when :bch
-      # getrawtransaction supports blockhash as of version 0.21, perhaps earlier too
-      node = Node.first_newer_than(coin, 210000, :abc)
+    begin
+      case coin
+      when :btc, :tbtc
+        # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
+        node = Node.first_newer_than(coin, 160000, :core)
+      when :bch
+        # getrawtransaction supports blockhash as of version 0.21, perhaps earlier too
+        node = Node.first_newer_than(coin, 210000, :abc)
+      end
+    rescue Node::NoMatchingNodeError
+      Rails.logger.warning "Unable to find suitable #{ coin } node in get_coinbase_for_block"
+      return nil
     end
-    throw "Unable to find suitable #{ coin } node in get_coinbase_for_block" if node.nil?
     client = node.client
     begin
       block_info = block_info || node.getblock(block_hash, 1)
