@@ -626,6 +626,7 @@ class Node < ApplicationRecord
         Block.match_missing_pools!(coin.downcase.to_sym, 3)
         Block.find_missing(coin.downcase.to_sym, 10)
         StaleCandidate.process!(coin.downcase.to_sym)
+        StaleCandidate.prime_cache(coin.downcase.to_sym)
         Rpush.apns_feedback unless Rails.env.test?
         Rpush.push unless Rails.env.test?
       end

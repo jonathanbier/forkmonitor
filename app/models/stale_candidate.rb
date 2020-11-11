@@ -171,6 +171,17 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
+  def self.prime_cache(coin)
+    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    min_height = Block.where(coin: coin).maximum(:height) - 20000
+    StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).each do |s|
+      unless Rails.cache.exist?("StaleCandidate(#{ s.id }).json")
+        Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ s.height }..."
+        s.json_cached
+      end
+    end
+  end
+
   private
 
   def self.index_json_cached(coin)
