@@ -57,12 +57,6 @@ RSpec.describe Node, :type => :model do
       expect(node.name_with_version).to eq("Libbitcoin 3.6.0")
     end
 
-    # https://github.com/bitcoin-sv/bitcoin-sv/blob/v0.1.1/src/clientversion.h#L57-L64
-    it "should handle SV version shift" do
-      node = create(:node, version: 100010000, client_type: :sv, name: "Bitcoin SV")
-      expect(node.name_with_version).to eq("Bitcoin SV 0.1.0")
-    end
-
   end
 
   describe "destroy" do
@@ -449,30 +443,6 @@ RSpec.describe Node, :type => :model do
 
     end
 
-    describe "Bitcoin SV" do
-      before do
-        allow(Node).to receive("set_pool_for_block!").and_return(nil)
-        @node = build(:node, coin: "BSV")
-        @node.client.mock_coin("BSV")
-        @node.client.mock_version(180500) # TODO: use a real SV version
-        @node.poll!
-      end
-
-      # TODO: add blocks to mock
-      # it "should have correct data" do
-      #   expect(@node.version).to equal(180500)
-      #   expect(@node.block.timestamp).to equal(1548498742)
-      # end
-      #
-      # it "should store intermediate blocks" do
-      #   @node.client.mock_set_height(560178)
-      #   @node.poll!
-      #   @node.reload
-      #   expect(@node.block.height).to equal(560178)
-      #   expect(@node.block.parent.parent).not_to be_nil
-      # end
-    end
-
   end
 
   describe "poll_mirror!" do
@@ -843,14 +813,12 @@ RSpec.describe Node, :type => :model do
         node1 = create(:node_with_block, coin: :btc, version: 170000)
         node2 = create(:node_with_block, coin: :btc, version: 160000)
         node3 = create(:node_with_block, coin: :bch)
-        node4 = create(:node_with_block, coin: :bsv)
 
         expect(Node).to receive(:check_laggards!)
 
         expect(Node).to receive(:check_chaintips!).with(:btc)
         expect(Node).to receive(:check_chaintips!).with(:tbtc)
         expect(Node).to receive(:check_chaintips!).with(:bch)
-        expect(Node).to receive(:check_chaintips!).with(:bsv)
 
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original {|relation|
           relation.call.each {|node|
@@ -866,12 +834,6 @@ RSpec.describe Node, :type => :model do
         }
 
         expect(Node).to receive(:bch_by_version).once().and_wrap_original {|relation|
-          relation.call.each {|node|
-            expect(node).to receive(:poll!)
-          }
-        }
-
-        expect(Node).to receive(:bsv_by_version).once().and_wrap_original {|relation|
           relation.call.each {|node|
             expect(node).to receive(:poll!)
           }

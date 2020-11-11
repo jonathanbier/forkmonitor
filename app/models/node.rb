@@ -1,6 +1,7 @@
 class Node < ApplicationRecord
-  SUPPORTED_COINS=[:btc, :tbtc, :bch, :bsv]
+  SUPPORTED_COINS=[:btc, :tbtc, :bch]
 
+  # BSV support has been removed, but enums are stored as integer in the database.
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   after_commit :expire_cache
@@ -35,11 +36,11 @@ class Node < ApplicationRecord
   scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: :btc, client_type: :core).where(version: nil) }
   scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: :btc). where.not(client_type: :core) }
 
+  # Enum is stored as an integer, so do not remove entries from this list:
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu, :omni, :blockcore]
 
   scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
-  scope :bsv_by_version, -> { where(enabled: true, coin: :bsv).order(version: :desc) }
 
   def self.coin_by_version(coin)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
@@ -72,8 +73,7 @@ class Node < ApplicationRecord
       end
       return name
     end
-    v = self.sv? ? self.version  - 100000000 : self.version
-    version_arr = v.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
+    version_arr = self.version.to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
     return name + " #{ version_arr[3] == 0 && !self.bu? ? version_arr[0..2].join(".") : version_arr.join(".") }" + self.version_extra
   end
 
@@ -470,17 +470,6 @@ class Node < ApplicationRecord
       StaleCandidate.check!(:bch)
     end
 
-    if !options[:coins] || options[:coins].empty? || options[:coins].include?("BSV")
-      self.bsv_by_version.each do |node|
-        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        Rails.logger.debug "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
-        node.poll!
-      end
-
-      self.check_chaintips!(:bsv)
-      StaleCandidate.check!(:bsv)
-    end
-
     self.check_laggards!(options)
 
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
@@ -659,8 +648,6 @@ class Node < ApplicationRecord
       Chaintip.check!(:tbtc, self.testnet_by_version)
     when :bch
       Chaintip.check!(:bch, self.bch_by_version)
-    when :bsv
-      Chaintip.check!(:bsv, self.bsv_by_version)
     else
       throw Error, "Unknown coin"
     end

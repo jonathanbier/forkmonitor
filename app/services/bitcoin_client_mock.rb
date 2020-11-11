@@ -241,21 +241,8 @@ class BitcoinClientMock
           "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
         }
       }[@version]
-    else # SV: using the same mock data as ABC for now
-      {
-        180500 => {
-          "version" => 180500,
-          "subversion" => "/Bitcoin ABC:0.18.5(EB32.0)/",
-          "protocolversion" => 70015,
-          "localservices" => "0000000000000024",
-          "localrelay"=> true,
-          "timeoffset"=> 0,
-          "networkactive"=> @network_active,
-          "connections"=> @peer_count,
-          "relayfee" => 1.0e-05,
-          "warnings" => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
-        }
-      }[@version]
+    else
+      throw "Unsporrted coin: #{ @coin }"
     end
   end
 

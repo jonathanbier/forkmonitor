@@ -4,8 +4,7 @@ class Block < ApplicationRecord
   MINIMUM_BLOCK_HEIGHTS = {
     btc: Rails.env.test? ? 0 : 500000, # Mid December 2017, around Lightning network launch
     tbtc: 1600000,
-    bch: 581000,
-    bsv: Rails.env.production? ? 606000 : 621500 # February 2019 for development
+    bch: 581000
   }
 
   class RollbackError < StandardError; end
