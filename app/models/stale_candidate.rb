@@ -93,6 +93,7 @@ class StaleCandidate < ApplicationRecord
     shortest_spent_coins_with_tx = shortest_txs.collect { | tx |
       tx.spent_coins_map
     }.inject(&:merge)
+    return nil if longest_spent_coins_with_tx.nil? || shortest_spent_coins_with_tx.nil?
     # Filter coins that are spent with a different tx in the longest chain
     txs = shortest_spent_coins_with_tx.filter { |txout, tx|
       longest_spent_coins_with_tx.key?(txout) && tx.tx_id != longest_spent_coins_with_tx[txout].tx_id
