@@ -1,6 +1,8 @@
 class Node < ApplicationRecord
   SUPPORTED_COINS=[:btc, :tbtc, :bch, :bsv]
 
+  enum coin: [:btc, :bch, :bsv, :tbtc]
+
   after_commit :expire_cache
 
   class Error < StandardError; end
@@ -29,22 +31,24 @@ class Node < ApplicationRecord
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
   before_destroy :clear_references
 
-  scope :bitcoin_core_by_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where.not(version: nil).order(version: :desc) }
-  scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: "BTC", client_type: :core).where(version: nil) }
-  scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: "BTC"). where.not(client_type: :core) }
+  scope :bitcoin_core_by_version, -> { where(enabled: true, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc) }
+  scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: :btc, client_type: :core).where(version: nil) }
+  scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: :btc). where.not(client_type: :core) }
 
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu, :omni, :blockcore]
 
-  scope :testnet_by_version, -> { where(enabled: true, coin: "TBTC").order(version: :desc) }
-  scope :bch_by_version, -> { where(enabled: true, coin: "BCH").order(version: :desc) }
-  scope :bsv_by_version, -> { where(enabled: true, coin: "BSV").order(version: :desc) }
+  scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
+  scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
+  scope :bsv_by_version, -> { where(enabled: true, coin: :bsv).order(version: :desc) }
 
   def self.coin_by_version(coin)
-    where(enabled: true, coin: coin.to_s.upcase).order(version: :desc)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    where(enabled: true, coin: coin).order(version: :desc)
   end
 
   def self.with_mirror(coin)
-     where(enabled: true, coin: coin.to_s.upcase, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
   end
 
   def parse_version(v)
@@ -181,7 +185,7 @@ class Node < ApplicationRecord
         ibd = blockchaininfo["initialblockdownload"]
       elsif blockchaininfo.key?("verificationprogress")
         ibd = blockchaininfo["verificationprogress"] < 0.9999
-      elsif self.coin == "BTC"
+      elsif self.btc?
         ibd = info["blocks"] < Block.where(coin: :btc).maximum(:height) - 10
       end
     end
@@ -526,6 +530,7 @@ class Node < ApplicationRecord
   # For older nodes it could process the raw block instead of using getrawtransaction,
   # but that has not been implemented.
   def self.get_coinbase_for_block!(coin, block_hash, block_info = nil)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     node = nil
     begin
       case coin
@@ -562,6 +567,7 @@ class Node < ApplicationRecord
   end
 
   def self.set_pool_for_block!(coin, block, block_info = nil)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
     return if coinbase.nil?
     block.pool = Block.pool_from_coinbase_tx(coinbase)
@@ -645,6 +651,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!(coin)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     case coin
     when :btc
       Chaintip.check!(:btc, self.bitcoin_core_by_version + self.bitcoin_alternative_implementations)
@@ -662,6 +669,7 @@ class Node < ApplicationRecord
 
   # Sometimes an empty chaintip is left over
   def self.prune_empty_chaintips!(coin)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
   end
 
@@ -690,20 +698,21 @@ class Node < ApplicationRecord
 
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where("coin = ?", coin.upcase).where(txindex: true, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoTxIndexError
+    node = Node.where(coin: coin, txindex: true, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoTxIndexError
   end
 
   def self.newest(coin, client_type)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where(coin: coin.upcase).where(client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).order(version: :desc).first or raise NoMatchingNodeError
+    node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).order(version: :desc).first or raise NoMatchingNodeError
   end
 
   def self.first_newer_than(coin, version, client_type)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where("coin = ? AND version >= ?", coin.upcase, version).where(client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoMatchingNodeError
+    node = Node.where("version >= ?", version).where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoMatchingNodeError
   end
 
   def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     first_with_txindex(coin).getrawtransaction(tx_id, verbose, block_hash)
   end
 
@@ -714,21 +723,22 @@ class Node < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-      Rails.cache.fetch("Node.last_updated(#{ coin })") { where(coin: coin).order(updated_at: :desc).first }
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin.downcase.to_sym)
+    Rails.cache.fetch("Node.last_updated(#{ coin })") { where(coin: coin.downcase.to_sym).order(updated_at: :desc).first }
   end
 
   def clear_references
-    Block.where(coin: self.coin.downcase.to_sym).where("? = ANY(marked_valid_by)", self.id).each do |b|
+    Block.where(coin: self.coin).where("? = ANY(marked_valid_by)", self.id).each do |b|
       b.update marked_valid_by: b.marked_valid_by - [self.id]
     end
 
-    Block.where(coin: self.coin.downcase.to_sym).where("? = ANY(marked_invalid_by)", self.id).each do |b|
+    Block.where(coin: self.coin).where("? = ANY(marked_invalid_by)", self.id).each do |b|
       b.update marked_invalid_by: b.marked_invalid_by - [self.id]
     end
   end
 
   def expire_cache
-      Rails.cache.delete("Node.last_updated(#{self.coin})")
+      Rails.cache.delete("Node.last_updated(#{self.coin.to_s.upcase})")
   end
 
   def clear_chaintips

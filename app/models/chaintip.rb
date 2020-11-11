@@ -87,7 +87,7 @@ class Chaintip < ApplicationRecord
   end
 
   def self.process_chaintip_result(chaintip, node)
-    block = Block.find_by(block_hash: chaintip["hash"], coin: node.coin.downcase.to_sym)
+    block = Block.find_by(block_hash: chaintip["hash"], coin: node.coin)
     case chaintip["status"]
     when "active"
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
@@ -135,7 +135,7 @@ class Chaintip < ApplicationRecord
 
   def self.process_valid_headers!(node, chaintip, block)
     return unless block.nil?
-    return if chaintip["height"] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.downcase.to_sym]
+    return if chaintip["height"] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.to_sym]
     return if Block.find_by(block_hash: chaintip["hash"]).present?
     Block.create_headers_only(node, chaintip["height"], chaintip["hash"])
   end

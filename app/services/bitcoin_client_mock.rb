@@ -15,7 +15,7 @@ class BitcoinClientMock
     @ibd = false
     @peer_count = 100
     @version = 170100
-    @coin = "BTC"
+    @coin = :btc
     @client_type = client_type
     @client_version = client_version
     @extra_inflation = 0
@@ -119,7 +119,7 @@ class BitcoinClientMock
 
   def getinfo
     raise Error if !@reachable
-    if @coin == "BTC"
+    if @coin == :btc
       if @client_type == :core
         res = {
           80600 => {
@@ -156,7 +156,7 @@ class BitcoinClientMock
 
   def getnetworkinfo
     raise Error if !@reachable
-    if @coin == "BTC"
+    if @coin == :btc
       if @client_type == :core
         raise Error if @version < 100000
         {
@@ -226,7 +226,7 @@ class BitcoinClientMock
       else
         throw "No getnetworkinfo mock for #{ @client_type }"
       end
-    elsif @coin == "BCH"
+    elsif @coin == :bch
       {
         180500 => {
           "version" => 180500,
@@ -265,7 +265,7 @@ class BitcoinClientMock
 
   def getblockchaininfo
     raise Error if !@reachable
-    if @coin == "BTC"
+    if @coin == :btc
       if @client_type == :core
         raise Error if @version < 100000
         res = {
@@ -359,7 +359,7 @@ class BitcoinClientMock
           }
         }
       end
-    elsif @coin == "TBTC" # tesnet
+    elsif @coin == :tbtc # tesnet
       if @client_type == :core
         raise Error if @version < 100000
         res = {
@@ -380,7 +380,7 @@ class BitcoinClientMock
           }
         }
       end
-    elsif @coin == "BCH"
+    elsif @coin == :bch
       res = {
         180500 => { # Copied from BTC
           "chain" => "main",

@@ -427,8 +427,8 @@ RSpec.describe Node, :type => :model do
     describe "Bitcoin ABC" do
       before do
         allow(Node).to receive("set_pool_for_block!").and_return(nil)
-        @node = build(:node, coin: "BCH")
-        @node.client.mock_coin("BCH")
+        @node = build(:node, coin: :bch)
+        @node.client.mock_coin(:bch)
         @node.client.mock_version(180500)
         @node.poll!
       end
@@ -512,8 +512,8 @@ RSpec.describe Node, :type => :model do
 
   describe "Bitcoin Testnet" do
     before do
-      @node = build(:node, coin: "TBTC")
-      @node.client.mock_coin("BCH")
+      @node = build(:node, coin: :tbtc)
+      @node.client.mock_coin(:tbtc)
       @node.client.mock_version(180500)
       @node.poll!
     end
@@ -807,9 +807,9 @@ RSpec.describe Node, :type => :model do
     describe "set_pool_for_block!" do
       before do
         @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
-        @node = create(:node, coin: "BTC", block: @block, version: 160000)
+        @node = create(:node, coin: :btc, block: @block, version: 160000)
 
-        @modernNode = create(:node, coin: "BTC", txindex: true)
+        @modernNode = create(:node, coin: :btc, txindex: true)
         @modernNode.client.mock_set_height(560178)
         @modernNode.poll!
 
@@ -840,10 +840,10 @@ RSpec.describe Node, :type => :model do
 
     describe "poll!" do
       it "should call poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!" do
-        node1 = create(:node_with_block, coin: "BTC", version: 170000)
-        node2 = create(:node_with_block, coin: "BTC", version: 160000)
-        node3 = create(:node_with_block, coin: "BCH")
-        node4 = create(:node_with_block, coin: "BSV")
+        node1 = create(:node_with_block, coin: :btc, version: 170000)
+        node2 = create(:node_with_block, coin: :btc, version: 160000)
+        node3 = create(:node_with_block, coin: :bch)
+        node4 = create(:node_with_block, coin: :bsv)
 
         expect(Node).to receive(:check_laggards!)
 

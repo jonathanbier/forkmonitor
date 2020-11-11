@@ -7,7 +7,7 @@ class Api::V1::NodesController < ApplicationController
   def index_coin
     latest = Node.last_updated_cached(@coin.upcase)
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-      @nodes = Node.where(enabled: true, coin: @coin.upcase).order(client_type: :asc ,name: :asc, version: :desc)
+      @nodes = Node.where(enabled: true, coin: @coin).order(client_type: :asc ,name: :asc, version: :desc)
       render json: @nodes
     end
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_11_03_103730) do
+ActiveRecord::Schema.define(version: 2020_11_11_085010) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -123,7 +123,6 @@ ActiveRecord::Schema.define(version: 2020_11_03_103730) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.datetime "unreachable_since"
-    t.string "coin"
     t.string "rpchost"
     t.string "rpcuser"
     t.string "rpcpassword"
@@ -157,6 +156,7 @@ ActiveRecord::Schema.define(version: 2020_11_03_103730) do
     t.integer "mempool_bytes"
     t.integer "mempool_max"
     t.boolean "mirror_ibd", default: false, null: false
+    t.integer "coin", null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
   end

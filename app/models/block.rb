@@ -243,7 +243,7 @@ class Block < ApplicationRecord
 
     block = Block.find_or_create_by(
        block_hash: block_info["hash"],
-       coin: node.coin.downcase.to_sym,
+       coin: node.coin,
        height: block_info["height"]
     )
     block.update(
@@ -263,12 +263,11 @@ class Block < ApplicationRecord
        block.update marked_invalid_by: [node.id]
      end
    end
-   coin = node.coin.downcase.to_sym
    # Set pool:
-   Node.set_pool_for_block!(coin, block, block_info)
+   Node.set_pool_for_block!(node.coin.to_sym, block, block_info)
 
    # Fetch transactions if there was a stale block recently
-   if StaleCandidate.where(coin: coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
+   if StaleCandidate.where(coin: node.coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
      block.fetch_transactions!
    end
    block.expire_stale_candidate_cache
@@ -280,7 +279,7 @@ class Block < ApplicationRecord
     throw "height missing" if height.nil?
     begin
       block = Block.create(
-        coin: node.coin.downcase.to_sym,
+        coin: node.coin,
         height: height,
         block_hash: block_hash,
         headers_only: true,
@@ -296,7 +295,7 @@ class Block < ApplicationRecord
       return block
     rescue ActiveRecord::RecordNotUnique
       raise unless Rails.env.production?
-      return Block.find_by(node.coin.downcase.to_sym, block_hash: block_hash)
+      return Block.find_by(node.coin, block_hash: block_hash)
     end
 
   end
