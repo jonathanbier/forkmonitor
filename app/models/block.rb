@@ -206,22 +206,26 @@ class Block < ApplicationRecord
     ([self] + self.descendants(depth_limit)).collect{|b| b.transactions.where(is_coinbase: false).select(:tx_id, :raw, :amount)}.flatten
   end
 
+  def update_fields(block_info)
+    self.work = block_info["chainwork"]
+    self.mediantime = block_info["mediantime"]
+    self.timestamp = block_info["time"]
+    self.work = block_info["chainwork"]
+    self.version = block_info["version"]
+    self.tx_count = Block.extract_tx_count(block_info)
+    self.size = block_info["size"]
+    # Connect to parent if available:
+    if self.parent.nil?
+      self.parent = Block.find_by(block_hash: block_info["previousblockhash"])
+      self.connected = self.parent.nil? ? false : self.parent.connected
+    end
+    self.save if self.changed?
+  end
+
   def fetch_header!(node)
     begin
       block_info = node.getblockheader(self.block_hash)
-      self.work = block_info["chainwork"]
-      self.mediantime = block_info["mediantime"]
-      self.timestamp = block_info["time"]
-      self.work = block_info["chainwork"]
-      self.version = block_info["version"]
-      self.tx_count = block_info["nTx"]
-      self.size = block_info["size"]
-      # Connect to parent if available:
-      if self.parent.nil?
-        self.parent = Block.find_by(block_hash: block_info["previousblockhash"])
-        self.connected = self.parent.nil? ? false : self.parent.connected
-      end
-      self.save if self.changed?
+      update_fields(block_info)
     rescue Node::MethodNotFoundError
       # Ignore old clients that don't support getblockheader
       return false
@@ -236,15 +240,14 @@ class Block < ApplicationRecord
   end
 
   def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
-    tx_count = block_info.key?("nTx") ? block_info["nTx"] :
-               block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
-               nil
 
     block = Block.find_or_create_by(
        block_hash: block_info["hash"],
        coin: node.coin,
        height: block_info["height"]
     )
+    tx_count = extract_tx_count(block_info)
+
     block.update(
       mediantime: block_info["mediantime"],
       timestamp: block_info["time"],
@@ -297,6 +300,12 @@ class Block < ApplicationRecord
       return Block.find_by(node.coin, block_hash: block_hash)
     end
 
+  end
+
+  def self.extract_tx_count(block_info)
+    block_info.key?("nTx") ? block_info["nTx"] :
+               block_info["tx"].kind_of?(Array) ? block_info["tx"].count :
+               nil
   end
 
   def self.coinbase_message(tx)
@@ -442,7 +451,6 @@ class Block < ApplicationRecord
   end
 
   def self.match_missing_pools!(coin, n)
-
     Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
       Node.set_pool_for_block!(coin, b)
     end
@@ -489,6 +497,7 @@ class Block < ApplicationRecord
     blocks.each do |block|
       # Try to fetch from other nodes
       block_info = nil
+      raw_block = nil
       nodes_to_try = case coin.to_sym
       when :btc
         Node.bitcoin_core_by_version
@@ -502,7 +511,9 @@ class Block < ApplicationRecord
       originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
       nodes_to_try.each do |node|
         begin
-          block_info = node.getblock(block.block_hash, 0)
+          block_info = node.getblock(block.block_hash, 1)
+          raw_block = node.getblock(block.block_hash, 0)
+          block.update_fields(block_info)
           block.update headers_only: false, first_seen_by: node
           break
         rescue Node::BlockNotFoundError
@@ -511,10 +522,10 @@ class Block < ApplicationRecord
       end
 
       # Feed block to original node
-      if block_info.present? && originally_seen_by.present?
+      if raw_block.present? && originally_seen_by.present?
         # Except for pre-segwit nodes
         unless originally_seen_by.core? && originally_seen_by.version < 130100
-          originally_seen_by.client.submitblock(block_info)
+          originally_seen_by.client.submitblock(raw_block)
         end
       end
     end
