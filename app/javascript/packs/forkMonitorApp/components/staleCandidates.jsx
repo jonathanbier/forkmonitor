@@ -194,7 +194,7 @@ class StaleCandidates extends React.Component {
                     We may add detection for this later.
                   </p>
                   <p>
-                    The list below is updated every block until 10 blocks after the split.
+                    The list below is updated every block until 30 blocks after the split.
                   </p>
                   <Table striped responsive size="sm" className="lightning">
                     <thead>
