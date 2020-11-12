@@ -1,6 +1,6 @@
 class StaleCandidate < ApplicationRecord
   PER_PAGE = Rails.env.production? ? 100 : 2
-  DOUBLE_SPEND_RANGE = 30
+  DOUBLE_SPEND_RANGE = Rails.env.production? ? 30 : 10
   STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
   enum coin: [:btc, :bch, :bsv, :tbtc]
