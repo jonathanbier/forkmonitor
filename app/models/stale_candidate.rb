@@ -1,7 +1,7 @@
 class StaleCandidate < ApplicationRecord
   PER_PAGE = Rails.env.production? ? 100 : 2
   DOUBLE_SPEND_RANGE = 30
-  STALE_BLOCK_WINDOW = Rails.env.test? ? 2 : 100
+  STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
@@ -127,7 +127,9 @@ class StaleCandidate < ApplicationRecord
     # Look for potential stale blocks, i.e. more than one block at the same height
     tip_height = Block.where(coin: coin).maximum(:height)
     return if tip_height.nil?
-    Block.select(:height).where(coin: coin).where("height > ?", tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).limit(1).each do |block|
+    Block.select(:height).where(coin: coin).where("height > ?", tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).each do |block|
+      # If there are is more than 1 block at the previous height, assume we already have a stale block entry:
+      next if Block.where(coin: coin, height: block.height - 1).count > 1
       # If there was an invalid block, assume there's fork:
       # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
       #       until then, we assume a forked node is deleted and the alert is dismissed

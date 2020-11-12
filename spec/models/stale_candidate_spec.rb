@@ -115,6 +115,21 @@ RSpec.describe StaleCandidate, :type => :model do
       @nodeB.block.update headers_only: true, pool: nil, tx_count: nil, timestamp: nil, work: nil, parent_id: nil, mediantime: nil, first_seen_by_id: nil
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
+
+    it "should not also create one if the race continues 1 more block" do
+      test.disconnect_nodes(@nodeA.client, 1)
+      assert_equal(0, @nodeA.client.getpeerinfo().count)
+      @nodeA.client.generate(1)
+      @nodeB.client.generate(1)
+      @nodeA.poll!
+      @nodeB.poll!
+      @nodeA.reload
+      expect(@nodeA.block.height).to eq(@nodeB.block.height)
+      expect(@nodeA.block.block_hash).not_to eq(@nodeB.block.block_hash)
+      test.connect_nodes(@nodeA.client, 1)
+
+      expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+    end
   end
 
   describe "self.process!" do
@@ -147,7 +162,7 @@ RSpec.describe StaleCandidate, :type => :model do
       expect(block.transactions.where(is_coinbase: false).count).to eq(1)
     end
 
-    it "should stop adding transactions after 10 descendant blocks" do
+    it "should stop adding transactions after N descendant blocks" do
       # Make node B chain win:
       @nodeB.client.generate(11) # 105
       test.sync_blocks()
