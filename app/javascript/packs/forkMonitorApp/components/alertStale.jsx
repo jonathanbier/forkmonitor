@@ -8,7 +8,7 @@ import {
 
 class AlertStale extends React.Component {
   render() {
-    const branchCount = this.props.candidate.children.length;
+    const branchCount = this.props.candidate.n_children;
     return(
       <UncontrolledAlert color="warning">
         There are { branchCount } blocks at height { this.props.candidate.height }

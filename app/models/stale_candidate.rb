@@ -15,19 +15,26 @@ class StaleCandidate < ApplicationRecord
   }
 
   def as_json(options = nil)
-    # Avoid repeating these operations:
-    children = self.children
-    confirmed_in_one_branch = confirmed_in_one_branch(children)
-    double_spent_in_one_branch = double_spent_inputs(children)
+    if options[:short]
+      super({ only: [:coin, :height] }).merge({
+        n_children: Block.where(coin: coin, height: height).count
+      })
+    else
+      # Avoid repeating these operations:
+      children = self.children
+      confirmed_in_one_branch = confirmed_in_one_branch(children)
+      double_spent_in_one_branch = double_spent_inputs(children)
 
-    super({ only: [:coin, :height] }).merge({
-      children: children,
-      confirmed_in_one_branch: confirmed_in_one_branch,
-      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
-      double_spent_in_one_branch: double_spent_in_one_branch,
-      double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
-      headers_only: children.any? { |child| child[:root].headers_only }
-    })
+      super({ only: [:coin, :height] }).merge({
+        n_children: children.count,
+        children: children,
+        confirmed_in_one_branch: confirmed_in_one_branch,
+        confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
+        double_spent_in_one_branch: double_spent_in_one_branch,
+        double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
+        headers_only: children.any? { |child| child[:root].headers_only }
+      })
+    end
   end
 
   def json_cached
@@ -195,7 +202,7 @@ class StaleCandidate < ApplicationRecord
     raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
     Rails.cache.fetch("StaleCandidate.index.for_coin(#{ coin }).json") {
       min_height = Block.where(coin: coin).maximum(:height) - 1000
-      where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).to_json
+      where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).to_json({short: true})
     }
   end
 
