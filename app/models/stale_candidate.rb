@@ -71,8 +71,8 @@ class StaleCandidate < ApplicationRecord
 
     # TODO: take RBF into account (fee bump is not a double spend)
 
-    # Return transaction details
-    Transaction.where("tx_id in (?)", tx_ids).order(amount: :desc)
+    # Return transaction details (database id is omitted)
+    Transaction.where("tx_id in (?)", tx_ids).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
   end
 
   def double_spent_inputs(children)
