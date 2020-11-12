@@ -173,6 +173,11 @@ class StaleCandidate < ApplicationRecord
 
   def self.prime_cache(coin)
     raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{ coin }).json")
+      Rails.logger.info "Prime stale candidate index for #{ coin.to_s.upcase }..."
+      StaleCandidate.index_json_cached(coin)
+    end
+
     min_height = Block.where(coin: coin).maximum(:height) - 20000
     StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).each do |s|
       unless Rails.cache.exist?("StaleCandidate(#{ s.id }).json")
@@ -185,6 +190,7 @@ class StaleCandidate < ApplicationRecord
   private
 
   def self.index_json_cached(coin)
+    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
     Rails.cache.fetch("StaleCandidate.index.for_coin(#{ coin }).json") {
       min_height = Block.where(coin: coin).maximum(:height) - 1000
       where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).to_json
@@ -192,15 +198,17 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-      Rails.cache.fetch("StaleCandidate.last_updated(#{ coin })") {
-        where(coin: coin).order(updated_at: :desc).first
-      }
+    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    Rails.cache.fetch("StaleCandidate.last_updated(#{ coin })") {
+      where(coin: coin).order(updated_at: :desc).first
+    }
   end
 
   def self.page_cached(coin, page)
-      Rails.cache.fetch("StaleCandidate.feed.for_coin(#{ coin },#{page})") {
-        feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
-      }
+    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    Rails.cache.fetch("StaleCandidate.feed.for_coin(#{ coin },#{page})") {
+      feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+    }
   end
 
 end
