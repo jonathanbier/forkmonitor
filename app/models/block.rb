@@ -285,7 +285,8 @@ class Block < ApplicationRecord
         height: height,
         block_hash: block_hash,
         headers_only: true,
-        first_seen_by: node
+        first_seen_by: node,
+        tx_count: nil
       )
       # Fetch headers
       # * except for BCHN nodes, which don't support getblockheader outside main chain:

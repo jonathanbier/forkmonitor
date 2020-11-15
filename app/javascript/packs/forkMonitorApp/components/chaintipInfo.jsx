@@ -24,7 +24,11 @@ class Chaintip extends React.Component {
             <span><br />Size: <NumberFormat value={ this.props.chaintip.block.size / 1000000 } displayType={'text'} thousandSeparator={true} decimalScale={2} fixedDecimalScale={true} /> MB</span>
         }
         <br />
-        Transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
+        { this.props.chaintip.block.tx_count != null &&
+          <span>
+            Transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
+          </span>
+        }
       </p>
     )
   }

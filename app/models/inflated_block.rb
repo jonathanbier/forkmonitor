@@ -48,7 +48,7 @@ class InflatedBlock < ApplicationRecord
         end
       end
 
-      Rails.logger.info "Check #{ node.coin } inflation for #{ node.name_with_version }..."
+      Rails.logger.info "Check #{ node.coin.to_s.upcase } inflation for #{ node.name_with_version }..."
       if node.ibd
         Rails.logger.info "Node in Initial Blockchain Download"
         next
