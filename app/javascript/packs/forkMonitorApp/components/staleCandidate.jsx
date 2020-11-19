@@ -15,6 +15,9 @@ class StaleCandidate extends React.Component {
             <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{ this.props.root.timestamp }</Moment>
           }
         </td>
+        <td>
+          <Moment format="HH:mm:ss" tz="UTC">{ this.props.root.created_at }</Moment>
+        </td>
         <td>{ this.props.root.pool }</td>
         <td>
           <Explorer blockstream coin={ this.props.coin } block={ this.props.root.hash }/>&nbsp;

@@ -105,6 +105,9 @@ class StaleCandidates extends React.Component {
               Some explorers will forget the stale block(s).
               The timestamp as reported in a block is not necessarily accurate,
               as explained in <a href="https://blog.bitmex.com/bitcoins-block-timestamp-protection-rules/" target="_blank">Bitcoin’s Block Timestamp Protection Rules</a>.
+              We also indicate when we first saw the block. There can
+              be a slight delay between when our nodes first detect a block
+              and when our system processes it.
             </p>
             <Table striped responsive size="sm" className="lightning">
               <thead>
@@ -112,6 +115,7 @@ class StaleCandidates extends React.Component {
                   <th>Length</th>
                   <th>Hash</th>
                   <th>Timestamp</th>
+                  <th>First seen</th>
                   <th>Pool</th>
                   <th>Root</th>
                   <th>Tip</th>
