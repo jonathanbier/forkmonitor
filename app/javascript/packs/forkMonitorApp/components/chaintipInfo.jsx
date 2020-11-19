@@ -11,7 +11,11 @@ class Chaintip extends React.Component {
   render() {
     return(
       <p className="chaintip-info">
-        Height: <NumberFormat value={ this.props.chaintip.block.height } displayType={'text'} thousandSeparator={true} /> (<Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{this.props.chaintip.block.timestamp}</Moment> UTC)
+        Height: <NumberFormat value={ this.props.chaintip.block.height } displayType={'text'} thousandSeparator={true} />
+        <br/>
+        Miner timestamp: <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{this.props.chaintip.block.timestamp}</Moment> UTC
+        <br/>
+        First seen: <Moment format="HH:mm:ss" tz="UTC">{this.props.chaintip.block.created_at}</Moment> UTC
         <br/>
         { this.props.chaintip.block.pool &&
           <span>
