@@ -20,18 +20,9 @@ class StaleCandidate < ApplicationRecord
         n_children: Block.where(coin: coin, height: height).count
       })
     else
-      # Avoid repeating these operations:
-      children = self.children
-      confirmed_in_one_branch = confirmed_in_one_branch(children)
-      double_spent_in_one_branch = double_spent_inputs(children)
-
       super({ only: [:coin, :height] }).merge({
         n_children: children.count,
         children: children,
-        confirmed_in_one_branch: confirmed_in_one_branch,
-        confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
-        double_spent_in_one_branch: double_spent_in_one_branch,
-        double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
         headers_only: children.any? { |child| child[:root].headers_only }
       })
     end
@@ -40,6 +31,29 @@ class StaleCandidate < ApplicationRecord
   def json_cached
     Rails.cache.fetch("StaleCandidate(#{ self.id }).json") {
       self.to_json
+    }
+  end
+
+  def double_spend_info
+    # Avoid repeating these operations:
+    children = self.children
+    confirmed_in_one_branch = confirmed_in_one_branch(children)
+    double_spent_in_one_branch = double_spent_inputs(children)
+
+    {
+      n_children: children.count,
+      children: children,
+      confirmed_in_one_branch: confirmed_in_one_branch,
+      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
+      double_spent_in_one_branch: double_spent_in_one_branch,
+      double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
+      headers_only: children.any? { |child| child[:root].headers_only }
+    }.to_json
+  end
+
+  def double_spend_info_cached
+    Rails.cache.fetch("StaleCandidate(#{ self.id })/double_spend_info.json") {
+      self.double_spend_info
     }
   end
 
@@ -110,6 +124,7 @@ class StaleCandidate < ApplicationRecord
 
   def expire_cache
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
+    Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
     Rails.cache.delete("StaleCandidate.last_updated(#{self.coin})")
     for page in 1...(StaleCandidate.feed.count / PER_PAGE + 1) do
@@ -192,6 +207,7 @@ class StaleCandidate < ApplicationRecord
       unless Rails.cache.exist?("StaleCandidate(#{ s.id }).json")
         Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ s.height }..."
         s.json_cached
+        s.double_spend_info_cached
       end
     end
   end

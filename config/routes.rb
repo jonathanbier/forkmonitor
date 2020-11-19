@@ -25,6 +25,7 @@ Rails.application.routes.draw do
       namespace :stale_candidates do
         get ":coin", action: :index
         get ":coin/:height", action: :show
+        get ":coin/:height/double_spend_info", action: :double_spend_info
       end
       resources :ln_penalties, only: [:index, :show]
       resources :ln_sweeps, only: [:index, :show]

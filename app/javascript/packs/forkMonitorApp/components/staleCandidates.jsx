@@ -39,11 +39,27 @@ class StaleCandidates extends React.Component {
     };
 
     this.getStaleCandidates = this.getStaleCandidates.bind(this);
+    this.getDoubleSpendInfo = this.getDoubleSpendInfo.bind(this);
   }
 
   componentDidMount() {
+    // Sequence shouldn't matter
     this.getStaleCandidates();
+    this.getDoubleSpendInfo();
   }
+
+  getDoubleSpendInfo() {
+    axios.get(`/api/v1/stale_candidates/${ this.state.coin }/${ this.state.height }/double_spend_info.json`).then(function (response) {
+      return response.data;
+    }).then(function (res) {
+      this.setState({
+        confirmedInOneBranch: res.confirmed_in_one_branch,
+        confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
+        doubleSpent: res.double_spent_in_one_branch,
+        doubleSpentTotal: res.double_spent_in_one_branch_total,
+      });
+      }.bind(this)).catch(console.error);
+   }
 
   getStaleCandidates() {
     axios.get(`/api/v1/stale_candidates/${ this.state.coin }/${ this.state.height }.json`).then(function (response) {
@@ -52,10 +68,6 @@ class StaleCandidates extends React.Component {
       this.setState({
         coin: res.coin,
         staleCandidates: res.children,
-        confirmedInOneBranch: res.confirmed_in_one_branch,
-        confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
-        doubleSpent: res.double_spent_in_one_branch,
-        doubleSpentTotal: res.double_spent_in_one_branch_total,
         headersOnly: res.headers_only
       });
       }.bind(this)).catch(function (error) {
@@ -65,7 +77,7 @@ class StaleCandidates extends React.Component {
           console.error(error);
         }
       }.bind(this));
-   }
+  }
 
   render() {
     const { redirect } = this.state;
