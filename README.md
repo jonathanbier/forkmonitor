@@ -68,12 +68,19 @@ rake nodes:poll_repeat[BTC,TBTC]
 To check inflation, you need to run a mirror node and add it in the admin panel.
 
 ```
-rake blocks:check_inflation[BTC]
+rake debug blocks:check_inflation[BTC]
 ```
 
 To run inflation checks continuously, filtered by coin:
+
 ```
-rake nodes:heavy_checks_repeat[BTC]
+rake debug nodes:inflation_check_repeat[BTC]
+```
+
+The other long running heavy work tasks:
+
+```
+rake debug nodes:heavy_checks_repeat[BTC]
 ```
 
 To manually query a node:

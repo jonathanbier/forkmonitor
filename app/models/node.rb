@@ -605,7 +605,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.heavy_checks_repeat!(options)
+  def self.inflation_check_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
       Rails.logger.info "\nShutting down gracefully..."
@@ -621,6 +621,32 @@ class Node < ApplicationRecord
     while true
       options[:coins].each do |coin|
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 20})
+      end
+
+      if Rails.env.test?
+        break
+      else
+        sleep 0.5
+      end
+
+    end
+  end
+
+  def self.heavy_checks_repeat!(options)
+    # Trap ^C
+    Signal.trap("INT") {
+      Rails.logger.info "\nShutting down gracefully..."
+      exit
+    }
+
+    # Trap `Kill `
+    Signal.trap("TERM") {
+      Rails.logger.info "\nShutting down gracefully..."
+      exit
+    }
+
+    while true
+      options[:coins].each do |coin|
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
         Block.match_missing_pools!(coin.downcase.to_sym, 3)

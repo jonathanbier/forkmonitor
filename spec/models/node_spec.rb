@@ -877,22 +877,27 @@ RSpec.describe Node, :type => :model do
 
     end
 
+    describe "inflation_check_repeat!" do
+      before do
+        @node = create(:node_with_mirror)
+        @node.mirror_client.mock_set_height(560176)
+      end
+
+      it "should check inflation" do
+        expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 20})
+        Node.inflation_check_repeat!({coins: ["BTC"]})
+      end
+    end
+
     describe "heavy_checks_repeat!" do
       before do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560176)
         allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
-        allow(InflatedBlock).to receive(:check_inflation!).and_return true
         allow(LightningTransaction).to receive(:check!).and_return true
         allow(LightningTransaction).to receive(:check_public_channels!).and_return true
         allow(Block).to receive(:find_missing).and_return true
         allow(StaleCandidate).to receive(:prime_cache).and_return true
-      end
-
-      it "should call check_inflation!" do
-        expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 20})
-
-        Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 
       it "should run Lightning checks, on BTC only" do
