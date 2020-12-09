@@ -552,9 +552,9 @@ class Block < ApplicationRecord
         end
         peers = special.client.getpeerinfo
         # Ask each peer for the block
+        Rails.logger.debug "Request block #{ block.block_hash } (#{ block.height }) from peers #{ peers.collect{ |peer| peer["id"] }.join(", ")}"
         peers.each do |peer|
           begin
-            Rails.logger.debug "Request block #{ block.block_hash } (#{ block.height }) from peer #{ peer["id"] }"
             special.client.getblockfrompeer(block.block_hash, peer["id"])
           rescue BitcoinClient::Error
             # immedidately disconnect
