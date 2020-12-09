@@ -152,15 +152,23 @@ class BitcoinClient
     end
   end
 
-  def getblockheader(hash_or_height)
+  def getblockfrompeer(hash, peer_id)
+    begin
+      return request("getblockfrompeer", hash, peer_id)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "getblockfrompeer(#{hash},#{peer_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getblockheader(hash_or_height, verbose)
     throw "Must provide a hash or height" if hash_or_height.nil?
     if @client_type != :libbitcoin
       hash = hash_or_height
       begin
-        return request("getblockheader", hash)
+        return request("getblockheader", hash, verbose)
       rescue Bitcoiner::Client::JSONRPCError => e
         raise BlockNotFoundError if e.message.include?("Block not found")
-        raise Error, "getblockheader(#{hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+        raise Error, "getblockheader(#{hash},#{verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
       end
     else
       command = 'blockchain.fetch_block_header'
