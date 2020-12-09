@@ -553,7 +553,7 @@ class Block < ApplicationRecord
         sleep patience
         begin
           raw_block = special.getblock(block.block_hash, 0)
-        rescue Node::BlockNotFoundError
+        rescue Node::BlockNotFoundError, Node::BlockPrunedError
           # Disconnect all peers if we didn't get the block
           peers.each do |peer|
             begin
