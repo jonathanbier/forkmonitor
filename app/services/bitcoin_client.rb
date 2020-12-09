@@ -162,7 +162,7 @@ class BitcoinClient
     end
   end
 
-  def getblockheader(hash_or_height, verbose)
+  def getblockheader(hash_or_height, verbose = true)
     throw "Must provide a hash or height" if hash_or_height.nil?
     if @client_type != :libbitcoin
       hash = hash_or_height
