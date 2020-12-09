@@ -558,7 +558,7 @@ class Block < ApplicationRecord
           peers.each do |peer|
             begin
               special.client.disconnectnode("", peer["id"])
-            rescue Node::PeerNotConnected
+            rescue BitcoinClient::PeerNotConnected
             end
           end
         end
