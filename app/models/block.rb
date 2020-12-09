@@ -534,6 +534,7 @@ class Block < ApplicationRecord
           special.getblockheader(block.block_hash)
         rescue Node::BlockNotFoundError
           # Feed it the block header
+          next if originally_seen_by.nil?
           raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
           # This requires blocks to be processed in ascending height order
           special.client.submitheader(raw_block_header)
