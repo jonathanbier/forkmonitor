@@ -252,6 +252,14 @@ class BitcoinClient
     end
   end
 
+  def submitheader(header_data)
+    begin
+      return request("submitheader", header_data)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "submitheader failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   private
 
   def request(*args)

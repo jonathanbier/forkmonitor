@@ -302,4 +302,15 @@ class BitcoinClientPython
       raise Error, "submitblock(#{ block }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
+
+  def submitheader(header)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Provide header hex" unless header.present?
+    begin
+        return @node.submitheader(header)
+    rescue Error => e
+      raise Error, "submitheader(#{ header }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
 end
