@@ -63,11 +63,27 @@ class BitcoinClient
     end
   end
 
+  def disconnectnode(address, peer_id)
+    begin
+      return request("disconnectnode", address, peer_id)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "disconnectnode(#{address},#{peer_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getnetworkinfo
     begin
       return request("getnetworkinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getpeerinfo
+    begin
+      return request("getpeerinfo")
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
