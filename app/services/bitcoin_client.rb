@@ -9,6 +9,7 @@ class BitcoinClient
   class BlockNotFoundError < Error; end
   class MethodNotFoundError < Error; end
   class TimeOutError < Error; end
+  class PeerNotConnected < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -67,6 +68,7 @@ class BitcoinClient
     begin
       return request("disconnectnode", address, peer_id)
     rescue Bitcoiner::Client::JSONRPCError => e
+      raise PeerNotConnected if e.message.include?("Node not found in connected nodes")
       raise Error, "disconnectnode(#{address},#{peer_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end

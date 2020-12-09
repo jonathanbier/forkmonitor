@@ -487,18 +487,19 @@ class Block < ApplicationRecord
     return block
   end
 
-  def self.find_missing(coin, max_depth)
+  def self.find_missing(coin, max_depth, patience)
     throw "Invalid coin argument #{ coin }" unless Node::SUPPORTED_COINS.include?(coin)
     Node.where(mirror_rpchost: "").update_all mirror_rpchost: nil
 
     # Find recent headers_only blocks
-    blocks = Block.where(coin: coin, headers_only: true).where("height >= ?", Block.where(coin: coin).maximum(:height) - max_depth)
+    tip_height = Block.where(coin: coin).maximum(:height)
+    blocks = Block.where(coin: coin, headers_only: true).where("height >= ?", tip_height - max_depth).order(height: :asc)
     return if blocks.count == 0
 
     blocks.each do |block|
-      # Try to fetch from other nodes
       block_info = nil
       raw_block = nil
+      # Try to fetch from other nodes.
       nodes_to_try = case coin.to_sym
       when :btc
         Node.bitcoin_core_by_version
@@ -510,15 +511,55 @@ class Block < ApplicationRecord
       # Keep track of the original first seen node
       # To make mocks easier, require that it's part of nodes_to_try:
       originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
-      nodes_to_try.each do |node|
+      # Don't bother checking nodes for old blocks; they won't ask for them
+      if tip_height - block.height < 10
+        nodes_to_try.each do |node|
+          begin
+            block_info = node.getblock(block.block_hash, 1)
+            raw_block = node.getblock(block.block_hash, 0)
+            block.update_fields(block_info)
+            block.update headers_only: false, first_seen_by: node
+            break
+          rescue Node::BlockNotFoundError
+          rescue Node::TimeOutError
+          end
+        end
+      end
+      # Try getblockfrompeer on the special node
+      unless raw_block.present?
+        special = Node.find_by(coin: coin, special: true)
+        next if special.nil?
+        # Does the special node have the header?
         begin
-          block_info = node.getblock(block.block_hash, 1)
-          raw_block = node.getblock(block.block_hash, 0)
-          block.update_fields(block_info)
-          block.update headers_only: false, first_seen_by: node
-          break
+          special.getblockheader(block.block_hash)
         rescue Node::BlockNotFoundError
-        rescue Node::TimeOutError
+          # Feed it the block header
+          raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
+          # This requires blocks to be processed in ascending height order
+          special.client.submitheader(raw_block_header)
+        end
+        peers = special.client.getpeerinfo
+        # Ask each peer for the block
+        peers.each do |peer|
+          begin
+            special.client.getblockfrompeer(block.block_hash, peer["id"])
+          rescue BitcoinClient::Error
+            # immedidately disconnect
+            special.client.disconnectnode("", peer["id"])
+          end
+        end
+        # Wait for responses
+        sleep patience
+        begin
+          raw_block = special.getblock(block.block_hash, 0)
+        rescue Node::BlockNotFoundError
+          # Disconnect all peers if we didn't get the block
+          peers.each do |peer|
+            begin
+              special.client.disconnectnode("", peer["id"])
+            rescue Node::PeerNotConnected
+            end
+          end
         end
       end
 
