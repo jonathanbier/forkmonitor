@@ -556,12 +556,12 @@ class Block < ApplicationRecord
           begin
             Rails.logger.debug "Request block #{ block.block_hash } (#{ block.height }) from peer #{ peer["id"] }"
             special.client.getblockfrompeer(block.block_hash, peer["id"])
-            getblockfrompeer_blocks << block
           rescue BitcoinClient::Error
             # immedidately disconnect
             special.client.disconnectnode("", peer["id"])
           end
         end
+        getblockfrompeer_blocks << block
       end
     end
 
@@ -578,11 +578,11 @@ class Block < ApplicationRecord
           Rails.logger.info "Retrieved block #{ block.block_hash } (#{ block.height }) on the special node"
           found_block = true
           # Feed block to original node
-          if block.originally_seen_by.present?
+          if block.first_seen_by.present?
             # Except for pre-segwit nodes
-            unless block.originally_seen_by.core? && block.originally_seen_by.version < 130100
-              Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.originally_seen_by.name_with_version }"
-              block.originally_seen_by.client.submitblock(raw_block)
+            unless block.first_seen_by.core? && block.first_seen_by.version < 130100
+              Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.first_seen_by.name_with_version }"
+              block.first_seen_by.client.submitblock(raw_block)
               # On the next run of find_missing this block will be processed
             end
           end
