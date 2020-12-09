@@ -496,6 +496,9 @@ class Block < ApplicationRecord
     blocks = Block.where(coin: coin, headers_only: true).where("height >= ?", tip_height - max_depth).order(height: :asc)
     return if blocks.count == 0
 
+    getblockfrompeer_blocks = []
+    special = Node.find_by(coin: coin, special: true)
+
     blocks.each do |block|
       block_info = nil
       raw_block = nil
@@ -524,10 +527,18 @@ class Block < ApplicationRecord
           rescue Node::TimeOutError
           end
         end
+
+        # Feed block to original node
+        if raw_block.present? && originally_seen_by.present?
+          # Except for pre-segwit nodes
+          unless originally_seen_by.core? && originally_seen_by.version < 130100
+            originally_seen_by.client.submitblock(raw_block)
+          end
+        end
       end
+
       # Try getblockfrompeer on the special node
       unless raw_block.present?
-        special = Node.find_by(coin: coin, special: true)
         next if special.nil?
         # Does the special node have the header?
         begin
@@ -543,32 +554,53 @@ class Block < ApplicationRecord
         # Ask each peer for the block
         peers.each do |peer|
           begin
+            Rails.logger.debug "Request block #{ block.block_hash } (#{ block.height }) from peer #{ peer["id"] }"
             special.client.getblockfrompeer(block.block_hash, peer["id"])
+            getblockfrompeer_blocks << block
           rescue BitcoinClient::Error
             # immedidately disconnect
             special.client.disconnectnode("", peer["id"])
           end
         end
-        # Wait for responses
-        sleep patience
+      end
+    end
+
+    if getblockfrompeer_blocks.count > 0
+      Rails.logger.debug "Wait #{ patience } seconds and check if the special node retrieved any of the #{ getblockfrompeer_blocks.count } blocks..."
+      # Wait for getblockfrompeer responses
+      sleep patience
+
+      found_block = false
+      raw_block = nil
+      getblockfrompeer_blocks.each do |block|
         begin
           raw_block = special.getblock(block.block_hash, 0)
-        rescue Node::BlockNotFoundError, Node::BlockPrunedError
-          # Disconnect all peers if we didn't get the block
-          peers.each do |peer|
-            begin
-              special.client.disconnectnode("", peer["id"])
-            rescue BitcoinClient::PeerNotConnected
+          Rails.logger.info "Retrieved block #{ block.block_hash } (#{ block.height }) on the special node"
+          found_block = true
+          # Feed block to original node
+          if block.originally_seen_by.present?
+            # Except for pre-segwit nodes
+            unless block.originally_seen_by.core? && block.originally_seen_by.version < 130100
+              Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.originally_seen_by.name_with_version }"
+              block.originally_seen_by.client.submitblock(raw_block)
+              # On the next run of find_missing this block will be processed
             end
           end
+        rescue Node::BlockNotFoundError
+          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) not found on the special node"
+        rescue Node::BlockPrunedError
+          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) was pruned from the special node"
         end
       end
+    end
 
-      # Feed block to original node
-      if raw_block.present? && originally_seen_by.present?
-        # Except for pre-segwit nodes
-        unless originally_seen_by.core? && originally_seen_by.version < 130100
-          originally_seen_by.client.submitblock(raw_block)
+    if !found_block
+      # Disconnect all peers if we didn't get any block
+      peers = special.client.getpeerinfo;
+      peers.each do |peer|
+        begin
+          special.client.disconnectnode("", peer["id"])
+        rescue BitcoinClient::PeerNotConnected
         end
       end
     end
