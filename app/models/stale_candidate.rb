@@ -69,7 +69,7 @@ class StaleCandidate < ApplicationRecord
         tip: chain[-1], # TODO: this and the next line cause two very slow queries
         length: chain.count
       }
-    }.sort_by {|b| b[:root].timestamp || b[:root].created_at}
+    }.sort_by {|b| b[:root].timestamp || b[:root].created_at.to_i}
   end
 
   def confirmed_in_one_branch(children)
