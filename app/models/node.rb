@@ -404,11 +404,11 @@ class Node < ApplicationRecord
     end
   end
 
-  def getblockheader(block_hash, use_mirror = false)
+  def getblockheader(block_hash, verbose = true, use_mirror = false)
     throw "Specify block hash" if block_hash.nil?
     client = use_mirror ? self.mirror_client : self.client
     begin
-      client.getblockheader(block_hash)
+      client.getblockheader(block_hash, verbose)
     rescue BitcoinClient::ConnectionError
       raise ConnectionError
     rescue BitcoinClient::PartialFileError
