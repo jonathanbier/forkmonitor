@@ -594,7 +594,7 @@ class Block < ApplicationRecord
       end
     end
 
-    if !found_block
+    if !found_block && !special.nil?
       # Disconnect all peers if we didn't get any block
       peers = special.client.getpeerinfo;
       peers.each do |peer|
