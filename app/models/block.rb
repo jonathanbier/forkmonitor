@@ -583,7 +583,9 @@ class Block < ApplicationRecord
             unless block.first_seen_by.core? && block.first_seen_by.version < 130100
               Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.first_seen_by.name_with_version }"
               block.first_seen_by.client.submitblock(raw_block)
-              # On the next run of find_missing this block will be processed
+              block_info = special.getblock(block.block_hash, 1)
+              block.update_fields(block_info)
+              block.update headers_only: false
             end
           end
         rescue Node::BlockNotFoundError
