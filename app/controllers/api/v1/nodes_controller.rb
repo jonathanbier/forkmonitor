@@ -7,7 +7,7 @@ class Api::V1::NodesController < ApplicationController
   def index_coin
     latest = Node.last_updated_cached(@coin.upcase)
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-      @nodes = Node.where(enabled: true, coin: @coin).order(client_type: :asc ,name: :asc, version: :desc)
+      @nodes = Node.where(enabled: true, special: false, coin: @coin).order(client_type: :asc ,name: :asc, version: :desc)
       render json: @nodes
     end
   end
@@ -59,6 +59,6 @@ class Api::V1::NodesController < ApplicationController
   end
 
   def node_params
-    params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport, :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :enabled, :link, :link_text)
+    params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport, :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :enabled, :link, :link_text, :special)
   end
 end

@@ -62,7 +62,7 @@ class FeedsController < ApplicationController
   def unreachable_nodes
     respond_to do |format|
       format.rss do
-        enabled_nodes = Node.where(enabled: true).order(unreachable_since: :desc, mirror_unreachable_since: :desc)
+        enabled_nodes = Node.where(enabled: true, special: false).order(unreachable_since: :desc, mirror_unreachable_since: :desc)
         @unreachable_nodes = enabled_nodes.where.not(unreachable_since: nil).or(enabled_nodes.where.not(mirror_unreachable_since: nil))
         latest = @unreachable_nodes.first
         if stale?(etag: latest.try(:unreachable_since), last_modified: latest.try(:unreachable_since))
