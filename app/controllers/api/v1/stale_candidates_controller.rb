@@ -1,6 +1,6 @@
 class Api::V1::StaleCandidatesController < ApplicationController
   before_action :set_coin
-  before_action :set_stale_candidate, except: [:info]
+  before_action :set_stale_candidate, except: [:index]
 
   def index
     render json: StaleCandidate.index_json_cached(@coin)

@@ -43,7 +43,7 @@ class StaleBlockAlerts extends React.Component {
   }
 
    getStaleBlocks(coin) {
-     axios.get(`/api/v1/stale_candidates/${ coin }`).then(function (response) {
+     axios.get(`/api/v1/stale_candidates/${ coin }.json`).then(function (response) {
        return response.data;
      }).then(function (stale_candidates) {
        this.setState({
