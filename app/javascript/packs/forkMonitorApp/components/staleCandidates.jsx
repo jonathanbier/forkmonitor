@@ -193,7 +193,8 @@ class StaleCandidates extends React.Component {
                   <p>
                     { this.state.confirmedInOneBranch.length } transactions
                     involving { this.state.confirmedInOneBranchTotal } BTC
-                    have been detected that don't occur on both sides of the split.
+                    have been detected that occur on the shortest side of the split,
+                    but not on the longest (except if they are the same length).
                     Usually this happens because different miners select a slightly
                     different set of transactions for their block. In that case they
                     should appear in future blocks.
