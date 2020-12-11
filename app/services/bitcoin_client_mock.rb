@@ -439,7 +439,8 @@ class BitcoinClientMock
     end
   end
 
-  def getblockheader(hash_or_height)
+  def getblockheader(hash_or_height, verbose = true)
+    # TODO: return (mock) raw header if verbose is false
     if @client_type == :libbitcoin
       raise Error, "Must provide height or hash" unless hash_or_height.present?
       if hash_or_height.is_a?(Numeric)
