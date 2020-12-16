@@ -549,6 +549,8 @@ class Block < ApplicationRecord
           raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
           # This requires blocks to be processed in ascending height order
           special.client.submitheader(raw_block_header)
+        rescue BitcoinClient::NodeInitializingError
+          next
         end
         peers = special.client.getpeerinfo
         # Ask each peer for the block
