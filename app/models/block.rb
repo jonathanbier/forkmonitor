@@ -522,6 +522,7 @@ class Block < ApplicationRecord
             raw_block = node.getblock(block.block_hash, 0)
             block.update_fields(block_info)
             block.update headers_only: false, first_seen_by: node
+            Node.set_pool_for_block!(coin, block, block_info)
             break
           rescue Node::BlockNotFoundError
           rescue Node::TimeOutError
@@ -592,6 +593,7 @@ class Block < ApplicationRecord
               block_info = special.getblock(block.block_hash, 1)
               block.update_fields(block_info)
               block.update headers_only: false
+              Node.set_pool_for_block!(coin, block, block_info)
             end
           end
         rescue Node::BlockNotFoundError
