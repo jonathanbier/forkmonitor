@@ -16,7 +16,7 @@ function flushPromises() {
 }
 
 axios.get.mockImplementation(url => {
-  if (url == "/api/v1/stale_candidates/btc") {
+  if (url == "/api/v1/stale_candidates/btc.json") {
     return Promise.resolve({data: [{
       height: 10,
       blocks: [
