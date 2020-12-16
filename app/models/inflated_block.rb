@@ -2,6 +2,9 @@ class InflatedBlock < ApplicationRecord
   belongs_to :block
   belongs_to :node
 
+  class Error < StandardError; end
+  class TooFarBehindError < Error; end
+
   def as_json(options = nil)
     super({ only: [:id, :max_inflation, :actual_inflation, :dismissed_at] }).merge({
       coin: block.coin.upcase,
@@ -58,6 +61,7 @@ class InflatedBlock < ApplicationRecord
         next
       end
 
+      Thread.report_on_exception=false if Rails.env.test?
       threads << Thread.new {
         ActiveRecord::Base.connection_pool.with_connection do
           begin # catch errors
@@ -137,7 +141,7 @@ class InflatedBlock < ApplicationRecord
               # Check that inflation does not exceed the maximum permitted miner award per block
               prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
               if prev_tx_outset.nil?
-                Rails.logger.error "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..."
+                Rails.logger.error "No previous TxOutset to compare against, skipping inflation check for height #{ block.height }..." unless Rails.env.test?
                 next
               end
 
@@ -187,7 +191,7 @@ class InflatedBlock < ApplicationRecord
             if options[:coin] == :tbtc # Don't send error emails for testnet
               Rails.logger.error message
             else
-              raise message
+              raise TooFarBehindError, message
             end
           end
         end # ActiveRecord::Base.with_connection

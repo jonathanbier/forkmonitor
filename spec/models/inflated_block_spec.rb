@@ -44,7 +44,7 @@ RSpec.describe InflatedBlock, type: :model do
       allow(Node).to receive(:with_mirror).with(:btc).and_return [@node]
 
       # throw the first time for lacking a comparison block
-      expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error(/More than 0 blocks behind for inflation check, please manually check 5/)
+      expect { InflatedBlock.check_inflation!({coin: :btc, max: 0}) }.to raise_error(InflatedBlock::TooFarBehindError)
       expect(TxOutset.count).to eq(1)
       expect(@node.mirror_rest_until).not_to be_nil
       @node.update mirror_rest_until: nil
