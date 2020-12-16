@@ -6,6 +6,7 @@ class BitcoinClientPython
   class BlockPrunedError < Error; end
   class BlockNotFoundError < Error; end
   class MethodNotFoundError < Error; end
+  class NodeInitializingError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version)
     @client_type = client_type

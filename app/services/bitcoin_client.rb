@@ -10,6 +10,7 @@ class BitcoinClient
   class MethodNotFoundError < Error; end
   class TimeOutError < Error; end
   class PeerNotConnected < Error; end
+  class NodeInitializingError < Error; end
 
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
@@ -295,6 +296,8 @@ class BitcoinClient
       raise MethodNotFoundError if e.message.include?("Method not found")
       raise TimeOutError if e.message.include?("operation_timedout")
       raise ConnectionError if e.message.include?("couldnt_connect")
+      raise NodeInitializingError if e.message.include?("Verifying blocks")
+      raise NodeInitializingError if e.message.include?("Loading block index")
       raise
     end
   end
