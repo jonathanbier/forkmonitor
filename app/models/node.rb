@@ -99,7 +99,8 @@ class Node < ApplicationRecord
       :mempool_bytes,
       :mempool_max,
       :mirror_ibd,
-      :special
+      :special,
+      :to_destroy
     ]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
@@ -656,6 +657,7 @@ class Node < ApplicationRecord
         StaleCandidate.prime_cache(coin.downcase.to_sym)
         Rpush.apns_feedback unless Rails.env.test?
         Rpush.push unless Rails.env.test?
+        Node.destroy_if_requested(coin.downcase.to_sym)
       end
 
       if Rails.env.test?
@@ -680,6 +682,14 @@ class Node < ApplicationRecord
       throw Error, "Unknown coin"
     end
     InvalidBlock.check!(coin)
+  end
+
+  # Deleting a node takes very long, causing a timeout when done from the admin panel
+  def self.destroy_if_requested(coin)
+    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    Node.where(coin: coin, to_destroy: true).limit(1).each do |node|
+      node.destroy
+    end
   end
 
   # Sometimes an empty chaintip is left over

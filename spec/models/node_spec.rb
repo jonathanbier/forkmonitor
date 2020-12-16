@@ -894,6 +894,7 @@ RSpec.describe Node, :type => :model do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560176)
         allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
+        allow(Node).to receive(:destroy_if_requested).and_return true
         allow(LightningTransaction).to receive(:check!).and_return true
         allow(LightningTransaction).to receive(:check_public_channels!).and_return true
         allow(Block).to receive(:find_missing).and_return true

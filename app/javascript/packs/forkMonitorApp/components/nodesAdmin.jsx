@@ -75,6 +75,7 @@ export const NodeEdit = props => (
             <BooleanInput source="special" />
             <DateInput source="released" />
             <BooleanInput source="enabled" />
+            <BooleanField source="to_destroy" readOnly />
         </SimpleForm>
     </Edit>
 );
