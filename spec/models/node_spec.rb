@@ -923,7 +923,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call find_missing" do
-        expect(Block).to receive(:find_missing).with(:btc, 10)
+        expect(Block).to receive(:find_missing).with(:btc, 40000, 20)
 
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end

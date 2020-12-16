@@ -451,7 +451,7 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should obtain block from other node if available" do
-      Block.find_missing(:btc, 1)
+      Block.find_missing(:btc, 1, 1)
       @headers_only_block.reload
       expect(@headers_only_block.headers_only).to eq(false)
       expect(@headers_only_block.first_seen_by).to eq(@nodeB)
@@ -459,7 +459,7 @@ RSpec.describe Block, :type => :model do
 
     it "should submit block to original node" do
       expect { @nodeA.client.getblock(@headers_only_block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
-      Block.find_missing(:btc, 1)
+      Block.find_missing(:btc, 1, 1)
       res = @nodeA.client.getblock(@headers_only_block.block_hash, 1)
       expect(res["confirmations"]).to eq(-1)
     end
