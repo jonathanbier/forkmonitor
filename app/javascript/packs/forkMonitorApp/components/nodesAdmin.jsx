@@ -55,6 +55,7 @@ export const NodeEdit = props => (
         <SimpleForm>
             <TextField source="coin" />
             <TextField source="name_with_version" readOnly />
+            <TextInput source="name" />
             <TextInput source="version_extra" />
             <TextInput source="link" />
             <TextInput source="link_text" />
