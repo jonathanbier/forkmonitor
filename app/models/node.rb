@@ -688,6 +688,7 @@ class Node < ApplicationRecord
   def self.destroy_if_requested(coin)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     Node.where(coin: coin, to_destroy: true).limit(1).each do |node|
+      Rails.logger.info "Deleting #{ node.coin.upcase } node #{ node.id }: #{ node.name_with_version }"
       node.destroy
     end
   end
