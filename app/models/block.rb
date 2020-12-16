@@ -558,7 +558,11 @@ class Block < ApplicationRecord
             special.client.getblockfrompeer(block.block_hash, peer["id"])
           rescue BitcoinClient::Error
             # immedidately disconnect
-            special.client.disconnectnode("", peer["id"])
+            begin
+              special.client.disconnectnode("", peer["id"])
+            rescue BitcoinClient::PeerNotConnected
+              # Ignore if already disconnected for some reason
+            end
           end
         end
         getblockfrompeer_blocks << block
@@ -603,6 +607,7 @@ class Block < ApplicationRecord
         begin
           special.client.disconnectnode("", peer["id"])
         rescue BitcoinClient::PeerNotConnected
+          # Ignore if already disconnected, e.g. by us above
         end
       end
     end
