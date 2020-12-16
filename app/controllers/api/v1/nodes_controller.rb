@@ -14,7 +14,7 @@ class Api::V1::NodesController < ApplicationController
 
   # Authenticated list of nodes, for all coins
   def index
-    @nodes = Node.all
+    @nodes = Node.where(to_destroy: false)
     response.headers['Content-Range'] = @nodes.count
     render json: @nodes.reorder(id: :asc).as_json(admin: true)
   end
@@ -45,7 +45,7 @@ class Api::V1::NodesController < ApplicationController
 
   def destroy
     @node.update enabled: false, to_destroy: true
-    render json: @node.as_json(admin: true)
+    head :no_content
   end
 
   def delete
