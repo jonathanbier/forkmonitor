@@ -16,12 +16,9 @@ class StaleCandidate < ApplicationRecord
 
   def as_json(options = nil)
     if options[:short]
-      super({ only: [:coin, :height] }).merge({
-        n_children: Block.where(coin: coin, height: height).count
-      })
+      super({ only: [:coin, :height, :n_children] })
     else
-      super({ only: [:coin, :height] }).merge({
-        n_children: children.count,
+      super({ only: [:coin, :height, :n_children] }).merge({
         children: children,
         headers_only: children.any? { |child| child[:root].headers_only }
       })
@@ -127,6 +124,8 @@ class StaleCandidate < ApplicationRecord
   end
 
   def expire_cache
+    self.n_children = nil
+    self.save if self.changed? # this can cause this function to be called again (once)
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
     Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
@@ -199,6 +198,16 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
+  def prime_cache
+    unless Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
+      Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+      self.n_children = Block.where(coin: coin, height: self.height).count
+      self.save if self.changed? # this can cause this function to be called again (once)
+      self.json_cached
+      self.double_spend_info_cached
+    end
+  end
+
   def self.prime_cache(coin)
     raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
     unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{ coin }).json")
@@ -208,11 +217,7 @@ class StaleCandidate < ApplicationRecord
 
     min_height = Block.where(coin: coin).maximum(:height) - 20000
     StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).each do |s|
-      unless Rails.cache.exist?("StaleCandidate(#{ s.id }).json")
-        Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ s.height }..."
-        s.json_cached
-        s.double_spend_info_cached
-      end
+      s.prime_cache
     end
   end
 
