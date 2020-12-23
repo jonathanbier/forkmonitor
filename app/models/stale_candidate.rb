@@ -207,9 +207,10 @@ class StaleCandidate < ApplicationRecord
         end
         self.update n_children: self.children.count
         self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
-        self.update confirmed_in_one_branch_total: self.confirmed_in_one_branch.count == 0 ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
-        self.update double_spent_in_one_branch: self.get_double_spent_inputs.collect{|tx| tx.tx_id}
-        self.update double_spent_in_one_branch_total: self.get_double_spent_inputs.sum(:amount)
+        self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+        txs = self.get_double_spent_inputs
+        self.update double_spent_in_one_branch: txs.nil? ? nil : txs.collect{|tx| tx.tx_id}
+        self.update double_spent_in_one_branch_total: txs.nil? ? nil : self.get_double_spent_inputs.sum(:amount)
       end
       self.json_cached
       self.double_spend_info_cached
