@@ -154,7 +154,7 @@ class StaleCandidate < ApplicationRecord
 
   def self.find_or_generate(coin, height)
     throw "Expected at least two #{ coin } blocks at height #{ height }" unless Block.where(coin: coin, height: height).count > 1
-    s = StaleCandidate.find_or_create_by(coin: coin, height: height, n_children: Block.where(coin: coin, height: height).count)
+    s = StaleCandidate.find_or_create_by(coin: coin, height: height).create_with(n_children: Block.where(coin: coin, height: height).count)
     # Fetch transactions for all blocks at this height
     Block.where(coin: coin, height: height).each do |block|
       block.fetch_transactions!
