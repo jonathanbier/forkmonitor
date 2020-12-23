@@ -593,7 +593,7 @@ class Block < ApplicationRecord
       getblockfrompeer_blocks.each do |block|
         begin
           raw_block = special.getblock(block.block_hash, 0)
-          Rails.logger.info "Retrieved block #{ block.block_hash } (#{ block.height }) on the special node"
+          Rails.logger.info "Retrieved #{ block.coin.upcase } block #{ block.block_hash } (#{ block.height }) on the special node"
           found_block = true
           # Feed block to original node
           if block.first_seen_by.present?
