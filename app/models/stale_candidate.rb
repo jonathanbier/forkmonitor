@@ -203,6 +203,8 @@ class StaleCandidate < ApplicationRecord
           length: chain.count
         )
       end
+      # Make this cache available early:
+      self.json_cached
       Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
       self.update n_children: self.children.count
       self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
