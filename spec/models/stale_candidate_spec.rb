@@ -64,6 +64,7 @@ RSpec.describe StaleCandidate, :type => :model do
     it "should create StaleCandidate" do
       s = StaleCandidate.find_or_generate(:btc, 103)
       expect(s).to_not be_nil
+      s.prime_cache
       expect(s.children.count).to eq(2)
     end
 

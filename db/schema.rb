@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_23_165152) do
+ActiveRecord::Schema.define(version: 2020_12_23_171301) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -238,13 +238,24 @@ ActiveRecord::Schema.define(version: 2020_12_23_165152) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "stale_candidate_children", force: :cascade do |t|
+    t.bigint "stale_candidate_id"
+    t.bigint "root_id"
+    t.bigint "tip_id"
+    t.integer "length"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["root_id"], name: "index_stale_candidate_children_on_root_id"
+    t.index ["stale_candidate_id"], name: "index_stale_candidate_children_on_stale_candidate_id"
+    t.index ["tip_id"], name: "index_stale_candidate_children_on_tip_id"
+  end
+
   create_table "stale_candidates", force: :cascade do |t|
     t.integer "height"
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "coin"
-    t.integer "n_children"
     t.index ["coin", "height"], name: "index_stale_candidates_on_coin_and_height", unique: true
   end
 
@@ -312,6 +323,9 @@ ActiveRecord::Schema.define(version: 2020_12_23_165152) do
   add_foreign_key "inflated_blocks", "blocks"
   add_foreign_key "inflated_blocks", "nodes"
   add_foreign_key "lightning_transactions", "blocks"
+  add_foreign_key "stale_candidate_children", "blocks", column: "root_id"
+  add_foreign_key "stale_candidate_children", "blocks", column: "tip_id"
+  add_foreign_key "stale_candidate_children", "stale_candidates"
   add_foreign_key "transactions", "blocks"
   add_foreign_key "tx_outsets", "nodes"
 end

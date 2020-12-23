@@ -5,6 +5,8 @@ class StaleCandidate < ApplicationRecord
 
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
+  has_many :children, class_name: "StaleCandidateChild", dependent: :destroy
+
   after_commit :expire_cache
 
   scope :feed, -> {
@@ -16,11 +18,14 @@ class StaleCandidate < ApplicationRecord
 
   def as_json(options = nil)
     if options[:short]
-      super({ only: [:coin, :height, :n_children] })
+      super({ only: [:coin, :height] }).merge({
+        n_children: children.count
+      })
     else
       super({ only: [:coin, :height, :n_children] }).merge({
-        children: children,
-        headers_only: children.any? { |child| child[:root].headers_only }
+        n_children: children.count,
+        children: children.sort_by {|c| c.root.timestamp || c.root.created_at.to_i },
+        headers_only: children.any? { |c| c.root.headers_only }
       })
     end
   end
@@ -46,7 +51,7 @@ class StaleCandidate < ApplicationRecord
       confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
       double_spent_in_one_branch: double_spent_in_one_branch,
       double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
-      headers_only: children.any? { |child| child[:root].headers_only }
+      headers_only: children.any? { |child| child.root.headers_only }
     }.to_json
   end
 
@@ -58,21 +63,6 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
-  def children
-    Block.where(coin: coin, height: height).collect{ | child |
-      chain = Block.where("height <= ?", height + 100).join_recursive {
-        start_with(block_hash: child.block_hash).
-        connect_by(id: :parent_id).
-        order_siblings(:work)
-      }
-      {
-        root: child,
-        tip: chain[-1], # TODO: this and the next line cause two very slow queries
-        length: chain.count
-      }
-    }.sort_by {|b| b[:root].timestamp || b[:root].created_at.to_i}
-  end
-
   def confirmed_in_one_branch(children)
     return nil if children.length < 2
     # TODO: handle more than 2 branches:
@@ -80,9 +70,9 @@ class StaleCandidate < ApplicationRecord
     # If branches are of different length, potential double spends are transactions
     # in the shortest chain that are missing in the longest chain.
     (shortest, longest) = children.sort_by {|c| c[:length] }
-    return nil if shortest[:root].headers_only || longest[:root].headers_only
-    shortest_tx_ids = shortest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
-    longest_tx_ids = longest[:root].block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    return nil if shortest.root.headers_only || longest.root.headers_only
+    shortest_tx_ids = shortest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
+    longest_tx_ids = longest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     if shortest[:length] < longest[:length]
       # Transactions that were created on the shortest side, but not on the longest:
       tx_ids = shortest_tx_ids - longest_tx_ids
@@ -104,9 +94,9 @@ class StaleCandidate < ApplicationRecord
     # If branches are of different length, double spends are inputs spent
     # in the shortest chain that also spent by a different transaction in the longest chain
     (shortest, longest) = children.sort_by {|c| c[:length] }
-    return nil if shortest[:root].headers_only || longest[:root].headers_only
-    shortest_txs = shortest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
-    longest_txs = longest[:root].block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
+    return nil if shortest.root.headers_only || longest.root.headers_only
+    shortest_txs = shortest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
+    longest_txs = longest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
     return nil if shortest_txs.nil? || longest_txs.nil?
 
     longest_spent_coins_with_tx = longest_txs.collect { | tx |
@@ -124,8 +114,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def expire_cache
-    self.n_children = nil
-    self.save if self.changed? # this can cause this function to be called again (once)
+    self.children.destroy_all
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
     Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
@@ -201,8 +190,20 @@ class StaleCandidate < ApplicationRecord
   def prime_cache
     unless Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
       Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      self.n_children = Block.where(coin: coin, height: self.height).count
-      self.save if self.changed? # this can cause this function to be called again (once)
+      if self.children.count == 0
+        Block.where(coin: coin, height: self.height).each do |root|
+          chain = Block.where("height <= ?", height + 100).join_recursive {
+            start_with(block_hash: root.block_hash).
+            connect_by(id: :parent_id).
+            order_siblings(:work)
+          }
+          self.children.create(
+            root: root,
+            tip: chain[-1], # TODO: this and the next line cause two very slow queries
+            length: chain.count
+          )
+        end
+      end
       self.json_cached
       self.double_spend_info_cached
     end
