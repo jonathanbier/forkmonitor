@@ -65,7 +65,7 @@ RSpec.describe StaleCandidate, :type => :model do
       s = StaleCandidate.find_or_generate(:btc, 103)
       expect(s).to_not be_nil
       s.prime_cache
-      expect(s.children.count).to eq(2)
+      expect(s.n_children).to eq(2)
     end
 
     it "should add transactions" do
