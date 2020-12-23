@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 
 import { Redirect } from 'react-router'
 
@@ -22,6 +23,17 @@ import StaleCandidate from "./staleCandidate"
 import Explorer from "./explorer"
 
 axios.defaults.headers.post['Content-Type'] = 'application/json'
+
+axiosRetry(axios, {
+  retries: 1000,
+  retryDelay: (retryCount, error) => {
+    var delay =  error.response.headers['retry-after'];
+    return delay * 1000;
+  },
+  retryCondition: (error) => {
+    return error.response.status == 503;
+  }
+});
 
 class StaleCandidates extends React.Component {
   constructor(props) {

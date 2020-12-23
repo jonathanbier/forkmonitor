@@ -7,11 +7,23 @@ class Api::V1::StaleCandidatesController < ApplicationController
   end
 
   def show
-    render json: @stale_candidate.json_cached
+    info = @stale_candidate.json_cached(fetch=false)
+    if info.present?
+      render json: info
+    else
+      response.headers['Retry-After'] = "5"
+      render json: "", status: 503
+    end
   end
 
   def double_spend_info
-    render json: @stale_candidate.double_spend_info_cached
+    info = @stale_candidate.double_spend_info_cached(fetch=false)
+    if info.present?
+      render json: info
+    else
+      response.headers['Retry-After'] = "5"
+      render json: "", status: 503
+    end
   end
 
   private

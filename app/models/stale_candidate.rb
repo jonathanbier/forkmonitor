@@ -28,8 +28,10 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
-  def json_cached
-    Rails.cache.fetch("StaleCandidate(#{ self.id }).json") {
+  def json_cached(fetch=true)
+    cache_key = "StaleCandidate(#{ self.id }).json"
+    return nil if !fetch && !Rails.cache.exist?(cache_key)
+    Rails.cache.fetch(cache_key) {
       self.to_json
     }
   end
@@ -51,8 +53,10 @@ class StaleCandidate < ApplicationRecord
     }.to_json
   end
 
-  def double_spend_info_cached
-    Rails.cache.fetch("StaleCandidate(#{ self.id })/double_spend_info.json") {
+  def double_spend_info_cached(fetch=true)
+    cache_key = "StaleCandidate(#{ self.id })/double_spend_info.json"
+    return nil if !fetch && !Rails.cache.exist?(cache_key)
+    Rails.cache.fetch(cache_key) {
       self.double_spend_info
     }
   end
