@@ -185,36 +185,36 @@ class StaleCandidate < ApplicationRecord
   end
 
   def prime_cache
-    unless Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
-      Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      # This check prevents wasting time on each deploy reprocessing old stale
-      # blocks. For recent stale blocks, the children are cleared in expire_cache.
-      # In order to repopulate this data for older blocks, clear the StaleCandidateChild table.
-      if self.children.count == 0
-        Block.where(coin: coin, height: self.height).each do |root|
-          chain = Block.where("height <= ?", height + 100).join_recursive {
-            start_with(block_hash: root.block_hash).
-            connect_by(id: :parent_id).
-            order_siblings(:work)
-          }
-          self.children.create(
-            root: root,
-            tip: chain[-1], # TODO: this and the next line cause two very slow queries
-            length: chain.count
-          )
-        end
-        Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-        self.update n_children: self.children.count
-        self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
-        self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
-        Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-        txs = self.get_double_spent_inputs
-        self.update double_spent_in_one_branch: txs.nil? ? nil : txs.collect{|tx| tx.tx_id}
-        self.update double_spent_in_one_branch_total: txs.nil? ? nil : txs.sum(:amount)
+    return false if Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
+    Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+    # This check prevents wasting time on each deploy reprocessing old stale
+    # blocks. For recent stale blocks, the children are cleared in expire_cache.
+    # In order to repopulate this data for older blocks, clear the StaleCandidateChild table.
+    if self.children.count == 0
+      Block.where(coin: coin, height: self.height).each do |root|
+        chain = Block.where("height <= ?", height + 100).join_recursive {
+          start_with(block_hash: root.block_hash).
+          connect_by(id: :parent_id).
+          order_siblings(:work)
+        }
+        self.children.create(
+          root: root,
+          tip: chain[-1], # TODO: this and the next line cause two very slow queries
+          length: chain.count
+        )
       end
-      self.json_cached
-      self.double_spend_info_cached
+      Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+      self.update n_children: self.children.count
+      self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
+      self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+      Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+      txs = self.get_double_spent_inputs
+      self.update double_spent_in_one_branch: txs.nil? ? nil : txs.collect{|tx| tx.tx_id}
+      self.update double_spent_in_one_branch_total: txs.nil? ? nil : txs.sum(:amount)
     end
+    self.json_cached
+    self.double_spend_info_cached
+    true
   end
 
   def self.prime_cache(coin)
@@ -225,8 +225,9 @@ class StaleCandidate < ApplicationRecord
     end
 
     min_height = Block.where(coin: coin).maximum(:height) - 20000
-    StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).each do |s|
-      s.prime_cache
+    StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).each do |s|
+      # Prime cache one at a time
+      return if s.prime_cache
     end
   end
 
