@@ -529,11 +529,18 @@ class Block < ApplicationRecord
           end
         end
 
-        # Feed block to original node
-        if raw_block.present? && originally_seen_by.present?
-          # Except for pre-segwit nodes
-          unless originally_seen_by.core? && originally_seen_by.version < 130100
-            originally_seen_by.client.submitblock(raw_block)
+        if raw_block.present?
+          # Feed block to original node
+          if originally_seen_by.present?
+            # Except for pre-segwit nodes
+            unless originally_seen_by.core? && originally_seen_by.version < 130100
+              originally_seen_by.client.submitblock(raw_block)
+            end
+          end
+          # Feed block to node with transaction index:
+          begin
+            Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block)
+          rescue Node::NoTxIndexError
           end
         end
       end
