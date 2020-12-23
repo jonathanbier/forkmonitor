@@ -117,6 +117,10 @@ class Block < ApplicationRecord
       rescue Node::BlockPrunedError
         self.update pruned: true
         return
+      rescue Node::BlockNotFoundError
+        # This is occasionally thrown instead, assuming that's also due to pruning:
+        self.update pruned: true
+        return
       end
       throw "Missing transaction data for #{ self.coin.upcase } block #{ self.height } (#{ self.block_hash }) on #{ node.name_with_version }" if block_info["tx"].nil?
       block_info["tx"].each_with_index do |tx, i|
