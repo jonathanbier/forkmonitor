@@ -7,8 +7,6 @@ class StaleCandidate < ApplicationRecord
 
   has_many :children, class_name: "StaleCandidateChild", dependent: :destroy
 
-  after_commit :expire_cache
-
   scope :feed, -> {
     # RSS feed switched to new GUID. Drop old items to prevent spurious notifications.
     where(
@@ -38,19 +36,22 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
-  def double_spend_info
-    # Avoid repeating these operations:
-    children = self.children
-    confirmed_in_one_branch = confirmed_in_one_branch(children)
-    double_spent_in_one_branch = double_spent_inputs(children)
+  def confirmed_in_one_branch_txs
+    Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+  end
 
+  def double_spent_in_one_branch_txs
+    Transaction.where("tx_id in (?)", double_spent_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+  end
+
+  def double_spend_info
     {
-      n_children: children.count,
-      children: children,
-      confirmed_in_one_branch: confirmed_in_one_branch,
-      confirmed_in_one_branch_total: confirmed_in_one_branch.nil? ? 0 : confirmed_in_one_branch.sum { |tx| tx["amount"] },
-      double_spent_in_one_branch: double_spent_in_one_branch,
-      double_spent_in_one_branch_total: double_spent_in_one_branch.nil? ? 0 : double_spent_in_one_branch.sum { |tx| tx.amount },
+      n_children: self.children.count,
+      children: self.children,
+      confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
+      confirmed_in_one_branch_total: self.confirmed_in_one_branch_total,
+      double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
+      double_spent_in_one_branch_total: self.double_spent_in_one_branch_total,
       headers_only: children.any? { |child| child.root.headers_only }
     }.to_json
   end
@@ -63,13 +64,13 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
-  def confirmed_in_one_branch(children)
-    return nil if children.length < 2
+  def get_confirmed_in_one_branch
+    return nil if self.children.length < 2
     # TODO: handle more than 2 branches:
-    return nil if children.length > 2
+    return nil if self.children.length > 2
     # If branches are of different length, potential double spends are transactions
     # in the shortest chain that are missing in the longest chain.
-    (shortest, longest) = children.sort_by {|c| c.length }
+    (shortest, longest) = self.children.sort_by {|c| c.length }
     return nil if shortest.root.headers_only || longest.root.headers_only
     shortest_tx_ids = shortest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_tx_ids = longest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
@@ -84,16 +85,16 @@ class StaleCandidate < ApplicationRecord
     # TODO: take RBF into account (fee bump is not a double spend)
 
     # Return transaction details (database id is omitted)
-    Transaction.where("tx_id in (?)", tx_ids).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+    return tx_ids
   end
 
-  def double_spent_inputs(children)
-    return nil if children.length < 2
+  def get_double_spent_inputs
+    return nil if self.children.length < 2
     # TODO: handle more than 2 branches:
-    return nil if children.length > 2
+    return nil if self.children.length > 2
     # If branches are of different length, double spends are inputs spent
     # in the shortest chain that also spent by a different transaction in the longest chain
-    (shortest, longest) = children.sort_by {|c| c.length }
+    (shortest, longest) = self.children.sort_by {|c| c.length }
     return nil if shortest.root.headers_only || longest.root.headers_only
     shortest_txs = shortest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
     longest_txs = longest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
@@ -115,6 +116,7 @@ class StaleCandidate < ApplicationRecord
 
   def expire_cache
     self.children.destroy_all
+    self.update confirmed_in_one_branch: [], confirmed_in_one_branch_total: nil, double_spent_in_one_branch: [], double_spent_in_one_branch_total: nil
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
     Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
@@ -190,6 +192,9 @@ class StaleCandidate < ApplicationRecord
   def prime_cache
     unless Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
       Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+      # This check prevents wasting time on each deploy reprocessing old stale
+      # blocks. For recent stale blocks, the children are cleared in expire_cache.
+      # In order to repopulate this data for older blocks, clear the StaleCandidateChild table.
       if self.children.count == 0
         Block.where(coin: coin, height: self.height).each do |root|
           chain = Block.where("height <= ?", height + 100).join_recursive {
@@ -203,6 +208,10 @@ class StaleCandidate < ApplicationRecord
             length: chain.count
           )
         end
+        self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
+        self.update confirmed_in_one_branch_total: self.confirmed_in_one_branch.count == 0 ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+        self.update double_spent_in_one_branch: self.get_double_spent_inputs.collect{|tx| tx.tx_id}
+        self.update double_spent_in_one_branch_total: self.get_double_spent_inputs.sum(:amount)
       end
       self.json_cached
       self.double_spend_info_cached
