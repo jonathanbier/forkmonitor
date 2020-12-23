@@ -69,11 +69,11 @@ class StaleCandidate < ApplicationRecord
     return nil if children.length > 2
     # If branches are of different length, potential double spends are transactions
     # in the shortest chain that are missing in the longest chain.
-    (shortest, longest) = children.sort_by {|c| c[:length] }
+    (shortest, longest) = children.sort_by {|c| c.length }
     return nil if shortest.root.headers_only || longest.root.headers_only
     shortest_tx_ids = shortest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_tx_ids = longest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
-    if shortest[:length] < longest[:length]
+    if shortest.length < longest.length
       # Transactions that were created on the shortest side, but not on the longest:
       tx_ids = shortest_tx_ids - longest_tx_ids
     else
@@ -93,7 +93,7 @@ class StaleCandidate < ApplicationRecord
     return nil if children.length > 2
     # If branches are of different length, double spends are inputs spent
     # in the shortest chain that also spent by a different transaction in the longest chain
-    (shortest, longest) = children.sort_by {|c| c[:length] }
+    (shortest, longest) = children.sort_by {|c| c.length }
     return nil if shortest.root.headers_only || longest.root.headers_only
     shortest_txs = shortest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
     longest_txs = longest.root.block_and_descendant_transactions(DOUBLE_SPEND_RANGE)
