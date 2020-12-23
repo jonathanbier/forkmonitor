@@ -16,12 +16,9 @@ class StaleCandidate < ApplicationRecord
 
   def as_json(options = nil)
     if options[:short]
-      super({ only: [:coin, :height] }).merge({
-        n_children: children.count
-      })
+      super({ only: [:coin, :height, :n_children] })
     else
       super({ only: [:coin, :height, :n_children] }).merge({
-        n_children: children.count,
         children: children.sort_by {|c| c.root.timestamp || c.root.created_at.to_i },
         headers_only: children.any? { |c| c.root.headers_only }
       })
@@ -157,7 +154,7 @@ class StaleCandidate < ApplicationRecord
 
   def self.find_or_generate(coin, height)
     throw "Expected at least two #{ coin } blocks at height #{ height }" unless Block.where(coin: coin, height: height).count > 1
-    s = StaleCandidate.find_or_create_by(coin: coin, height: height)
+    s = StaleCandidate.find_or_create_by(coin: coin, height: height, n_children: Block.where(coin: coin, height: height).count)
     # Fetch transactions for all blocks at this height
     Block.where(coin: coin, height: height).each do |block|
       block.fetch_transactions!
@@ -208,6 +205,7 @@ class StaleCandidate < ApplicationRecord
             length: chain.count
           )
         end
+        self.update n_children: self.children.count
         self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch
         self.update confirmed_in_one_branch_total: self.confirmed_in_one_branch.count == 0 ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
         self.update double_spent_in_one_branch: self.get_double_spent_inputs.collect{|tx| tx.tx_id}

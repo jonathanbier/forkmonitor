@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_12_23_183835) do
+ActiveRecord::Schema.define(version: 2020_12_23_193653) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -260,6 +260,7 @@ ActiveRecord::Schema.define(version: 2020_12_23_183835) do
     t.decimal "confirmed_in_one_branch_total", precision: 16, scale: 8
     t.string "double_spent_in_one_branch", default: [], array: true
     t.decimal "double_spent_in_one_branch_total", precision: 16, scale: 8
+    t.integer "n_children"
     t.index ["coin", "height"], name: "index_stale_candidates_on_coin_and_height", unique: true
   end
 
