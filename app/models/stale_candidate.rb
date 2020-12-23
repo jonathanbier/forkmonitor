@@ -223,7 +223,7 @@ class StaleCandidate < ApplicationRecord
     end
 
     min_height = Block.where(coin: coin).maximum(:height) - 20000
-    StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).each do |s|
+    StaleCandidate.where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).each do |s|
       s.prime_cache
     end
   end
