@@ -272,11 +272,11 @@ class BitcoinClient
     end
   end
 
-  def submitblock(block_data)
+  def submitblock(block_data, block_hash)
     begin
       return request("submitblock", block_data)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "submitblock failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "submitblock #{ block_hash } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

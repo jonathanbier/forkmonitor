@@ -294,14 +294,15 @@ class BitcoinClientPython
     end
   end
 
-  def submitblock(block)
+  def submitblock(block, block_hash)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     raise Error, "Specify block" unless block.present?
+    raise Error, "Specify block hash" unless block_hash.present?
     begin
         return @node.submitblock(block)
     rescue Error => e
-      raise Error, "submitblock(#{ block }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "submitblock(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

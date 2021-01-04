@@ -538,12 +538,12 @@ class Block < ApplicationRecord
           if originally_seen_by.present?
             # Except for pre-segwit nodes
             unless originally_seen_by.core? && originally_seen_by.version < 130100
-              originally_seen_by.client.submitblock(raw_block)
+              originally_seen_by.client.submitblock(raw_block, block.block_hash)
             end
           end
           # Feed block to node with transaction index:
           begin
-            Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block)
+            Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
           rescue Node::NoTxIndexError
           end
         end
@@ -600,7 +600,7 @@ class Block < ApplicationRecord
             # Except for pre-segwit nodes
             unless block.first_seen_by.core? && block.first_seen_by.version < 130100
               Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.first_seen_by.name_with_version }"
-              block.first_seen_by.client.submitblock(raw_block)
+              block.first_seen_by.client.submitblock(raw_block, block.block_hash)
               block_info = special.getblock(block.block_hash, 1)
               block.update_fields(block_info)
               block.update headers_only: false
