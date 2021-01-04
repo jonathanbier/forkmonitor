@@ -45,8 +45,8 @@ class StaleCandidate < ApplicationRecord
     {
       n_children: self.children.count,
       children: self.children,
-      confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
-      confirmed_in_one_branch_total: self.confirmed_in_one_branch_total,
+      confirmed_in_one_branch: self.confirmed_in_one_branch_txs - self.double_spent_in_one_branch_txs,
+      confirmed_in_one_branch_total: (self.confirmed_in_one_branch_total || 0) - (self.double_spent_in_one_branch_total || 0),
       double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
       double_spent_in_one_branch_total: self.double_spent_in_one_branch_total,
       headers_only: children.any? { |child| child.root.headers_only }
