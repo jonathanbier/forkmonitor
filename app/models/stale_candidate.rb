@@ -33,8 +33,9 @@ class StaleCandidate < ApplicationRecord
     }
   end
 
+  # Exclude double_spent_in_one_branch
   def confirmed_in_one_branch_txs
-    Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+    Transaction.where("tx_id in (?)", confirmed_in_one_branch - double_spent_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
   end
 
   def double_spent_in_one_branch_txs
@@ -45,7 +46,7 @@ class StaleCandidate < ApplicationRecord
     {
       n_children: self.children.count,
       children: self.children,
-      confirmed_in_one_branch: self.confirmed_in_one_branch_txs - self.double_spent_in_one_branch_txs,
+      confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
       confirmed_in_one_branch_total: (self.confirmed_in_one_branch_total || 0) - (self.double_spent_in_one_branch_total || 0),
       double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
       double_spent_in_one_branch_total: self.double_spent_in_one_branch_total,
