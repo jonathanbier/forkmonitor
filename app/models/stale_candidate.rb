@@ -212,8 +212,8 @@ class StaleCandidate < ApplicationRecord
       self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
       Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
       txs = self.get_double_spent_inputs
-      self.update double_spent_in_one_branch: txs.nil? ? nil : txs.collect{|tx| tx.tx_id}
-      self.update double_spent_in_one_branch_total: txs.nil? ? nil : txs.collect{|tx| tx.amount}.inject(:+)
+      self.update double_spent_in_one_branch: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+      self.update double_spent_in_one_branch_total: txs.nil? ? [] : txs.collect{|tx| tx.amount}.inject(:+)
     end
     self.json_cached
     self.double_spend_info_cached
