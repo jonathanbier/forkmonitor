@@ -24,10 +24,9 @@ RSpec.describe StaleCandidate, :type => :model do
     address_a = @nodeA.client.getnewaddress()
     address_b = @nodeB.client.getnewaddress()
 
+
     # Transasction shared between nodes
     tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
-    tx1 = @nodeA.client.getrawtransaction(tx1_id ,1)
-    # puts tx1
     test.sync_mempools()
 
     test.disconnect_nodes(@nodeA.client, 1)
@@ -43,12 +42,20 @@ RSpec.describe StaleCandidate, :type => :model do
     @tx3_bumped_id = @nodeA.client.bumpfee(@tx3_id)["txid"]
     @nodeB.client.sendrawtransaction(@tx3_raw)
 
-    # Transaction to be bumped and mined in block 105 by node A. Node B will use the unbumped version.
-    # Add in preperation for a followup where this because a proper doublespend, rather than RBF
-    @tx4_id = @nodeA.client.sendtoaddress(address_b, 1, "", "", false, true)
-    @tx4_raw = @nodeA.getrawtransaction(@tx4_id)
-    @tx4_replaced_id = @nodeA.client.bumpfee(@tx4_id)["txid"]
-    @nodeB.client.sendrawtransaction(@tx4_raw)
+    # Transaction to be doublespent
+    @tx4_id = @nodeA.client.sendtoaddress(address_a, 1, "", "", false, true) # marked RBF, but that's irrelevant
+    tx4 = @nodeA.client.getrawtransaction(@tx4_id ,1)
+    # TODO: use 'send' RPC (with addtowallet=false) after rebasing vendor/bitcoin
+    psbt = @nodeA.client.walletcreatefundedpsbt(
+      [{"txid": tx4["vin"][0]["txid"], "vout": tx4["vin"][0]["vout"]}],
+      [{address_b => 1}],
+    )["psbt"]
+    psbt = @nodeA.client.walletprocesspsbt(psbt, true)
+    assert(psbt["complete"])
+    psbt = @nodeA.client.finalizepsbt(psbt["psbt"])
+    @tx4_replaced_id = @nodeB.client.sendrawtransaction(psbt["hex"])
+
+    # puts "tx4: #{ @tx4_id } -> #{ @tx4_replaced_id }"
 
     @nodeA.client.generate(2)
     @nodeB.client.generate(2) # alternative chain with same length
@@ -122,10 +129,10 @@ RSpec.describe StaleCandidate, :type => :model do
         @s.prime_cache
       end
 
-      it "should contain original tx3 and tx4" do
+      it "should contain original tx3 and replaced tx4" do
         expect(@s.confirmed_in_one_branch.count).to eq(2)
         expect(@s.confirmed_in_one_branch).to include(@tx3_id)
-        expect(@s.confirmed_in_one_branch).to include(@tx4_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
       end
     end
   end
@@ -140,7 +147,7 @@ RSpec.describe StaleCandidate, :type => :model do
     it "should contain tx3 and tx4" do
       expect(@s.double_spent_in_one_branch.count).to eq(2)
       expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
-      expect(@s.double_spent_in_one_branch).to include(@tx4_replaced_id)
+      expect(@s.double_spent_in_one_branch).to include(@tx4_id)
     end
   end
 

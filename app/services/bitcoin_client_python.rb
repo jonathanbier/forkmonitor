@@ -274,6 +274,16 @@ class BitcoinClientPython
     end
   end
 
+  def send(outputs, conf_target, estimate_mode, fee_rate, options)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+        return @node.send(:send, outputs.to_json, conf_target, estimate_mode, fee_rate, options.to_json)
+    rescue Error => e
+      raise Error, "send failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def sendrawtransaction(tx)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
@@ -294,6 +304,36 @@ class BitcoinClientPython
       return @node.sendtoaddress(address=destination, amount=amount.to_s, comment=comment, comment_to=comment_to, subtractfeefromamount=subtractfeefromamount, replaceable=replaceable)
     rescue Error => e
       raise Error, "sendtoaddress(#{ destination }, #{ amount }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def walletcreatefundedpsbt(inputs, outputs)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+        return @node.walletcreatefundedpsbt(inputs, outputs)
+    rescue Error => e
+      raise Error, "walletcreatefundedpsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def walletprocesspsbt(psbt, sign)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+        return @node.walletprocesspsbt(psbt, sign)
+    rescue Error => e
+      raise Error, "walletprocesspsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def finalizepsbt(psbt)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+        return @node.finalizepsbt(psbt)
+    rescue Error => e
+      raise Error, "finalizepsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
