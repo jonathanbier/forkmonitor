@@ -55,6 +55,20 @@ class BitcoinClientPython
     end
   end
 
+  # Only used in tests
+  def bumpfee(tx_id)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise PartialFileError if @mock_partial_file_error
+    raise BlockPrunedError if @mock_block_pruned_error
+    raise Error, "Specify transaction id" unless tx_id.present?
+    begin
+      return @node.bumpfee(tx_id)
+    rescue Error => e
+      raise Error, "bumpfee(#{ tx_id }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   # TODO: add address, node_id params, this can only be called from Python atm
   def disconnectnode(params)
     address = params["address"]
@@ -271,13 +285,13 @@ class BitcoinClientPython
     end
   end
 
-  def sendtoaddress(destination, amount)
+  def sendtoaddress(destination, amount, comment="", comment_to="", subtractfeefromamount=false, replaceable=false)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     raise Error, "Specify destination" unless destination.present?
     raise Error, "Specify amount" unless amount.present?
     begin
-      return @node.sendtoaddress(address=destination, amount=amount.to_s)
+      return @node.sendtoaddress(address=destination, amount=amount.to_s, comment=comment, comment_to=comment_to, subtractfeefromamount=subtractfeefromamount, replaceable=replaceable)
     rescue Error => e
       raise Error, "sendtoaddress(#{ destination }, #{ amount }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

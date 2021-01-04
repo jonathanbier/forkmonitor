@@ -14,7 +14,7 @@ RSpec.describe StaleCandidate, :type => :model do
     test.setup(num_nodes: 2, extra_args: [['-whitelist=noban@127.0.0.1']] * 2)
     @nodeA = create(:node_python)
     @nodeA.client.set_python_node(test.nodes[0])
-    @nodeA.client.generate(102) # Mature coins
+    @nodeA.client.generate(104) # Mature coins
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[1])
@@ -26,15 +26,29 @@ RSpec.describe StaleCandidate, :type => :model do
 
     # Transasction shared between nodes
     tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
+    tx1 = @nodeA.client.getrawtransaction(tx1_id ,1)
+    # puts tx1
     test.sync_mempools()
 
     test.disconnect_nodes(@nodeA.client, 1)
     assert_equal(0, @nodeA.client.getpeerinfo().count)
 
-
-    # Transaction to be mined in block 102 by node A, and later by node B
+    # Transaction to be mined in block 105 by node A, and later by node B
     @tx2_id = @nodeA.client.sendtoaddress(address_b, 1)
     @tx2_raw = @nodeA.getrawtransaction(@tx2_id)
+
+    # Transaction to be bumped and mined in block 105 by node A. Node B will use the unbumped version.
+    @tx3_id = @nodeA.client.sendtoaddress(address_b, 1, "", "", false, true)
+    @tx3_raw = @nodeA.getrawtransaction(@tx3_id)
+    @tx3_bumped_id = @nodeA.client.bumpfee(@tx3_id)["txid"]
+    @nodeB.client.sendrawtransaction(@tx3_raw)
+
+    # Transaction to be bumped and mined in block 105 by node A. Node B will use the unbumped version.
+    # Add in preperation for a followup where this because a proper doublespend, rather than RBF
+    @tx4_id = @nodeA.client.sendtoaddress(address_b, 1, "", "", false, true)
+    @tx4_raw = @nodeA.getrawtransaction(@tx4_id)
+    @tx4_replaced_id = @nodeA.client.bumpfee(@tx4_id)["txid"]
+    @nodeB.client.sendrawtransaction(@tx4_raw)
 
     @nodeA.client.generate(2)
     @nodeB.client.generate(2) # alternative chain with same length
@@ -62,34 +76,71 @@ RSpec.describe StaleCandidate, :type => :model do
 
   describe "find_or_generate" do
     it "should create StaleCandidate" do
-      s = StaleCandidate.find_or_generate(:btc, 103)
+      s = StaleCandidate.find_or_generate(:btc, 105)
       expect(s).to_not be_nil
       s.prime_cache
       expect(s.n_children).to eq(2)
     end
 
     it "should add transactions" do
-      s = StaleCandidate.find_or_generate(:btc, 103)
-      # Node A block 103 should contain both tx1 and tx2
-      block = Block.find_by!(height: 103, first_seen_by: @nodeA)
-      expect(block.transactions.where(is_coinbase: false).count).to eq(2)
+      s = StaleCandidate.find_or_generate(:btc, 105)
+      # Node A block 105 should contain tx1, tx2, tx3 (bumped) and  tx4 (bumped)
+      block = Block.find_by!(height: 105, first_seen_by: @nodeA)
+      expect(block.transactions.where(is_coinbase: false).count).to eq(4)
 
-      # Node B block 103 should only contain tx1
-      block = Block.find_by!(height: 103, first_seen_by: @nodeB)
-      expect(block.transactions.where(is_coinbase: false).count).to eq(1)
+      # Node B block 105 should only contain tx1, tx3 and tx4
+      block = Block.find_by!(height: 105, first_seen_by: @nodeB)
+      expect(block.transactions.where(is_coinbase: false).count).to eq(3)
     end
 
   end
 
   describe "confirmed_in_one_branch" do
     before do
-      @s = StaleCandidate.find_or_generate(:btc, 103)
+      @s = StaleCandidate.find_or_generate(:btc, 105)
       expect(@s).to_not be_nil
       @s.prime_cache
     end
 
-    it "should contain tx2" do
-      expect(@s.get_confirmed_in_one_branch).to eq([@tx2_id])
+    it "should contain tx2, tx3&4 and bumped tx3&4" do
+      expect(@s.confirmed_in_one_branch.count).to eq(5)
+      expect(@s.confirmed_in_one_branch).to include(@tx2_id)
+      expect(@s.confirmed_in_one_branch).to include(@tx3_id)
+      expect(@s.confirmed_in_one_branch).to include(@tx3_bumped_id)
+      expect(@s.confirmed_in_one_branch).to include(@tx4_id)
+      expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
+    end
+
+    describe "when one chain is longer" do
+      before do
+        test.disconnect_nodes(@nodeA.client, 1)
+        assert_equal(0, @nodeA.client.getpeerinfo().count)
+        # this mines tx2
+        @nodeA.client.generate(1)
+        @nodeA.poll!
+        @s.expire_cache
+        @s.prime_cache
+      end
+
+      it "should contain original tx3 and tx4" do
+        expect(@s.confirmed_in_one_branch.count).to eq(2)
+        expect(@s.confirmed_in_one_branch).to include(@tx3_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx4_id)
+      end
+    end
+  end
+
+  describe "double_spent_in_one_branch" do
+    before do
+      @s = StaleCandidate.find_or_generate(:btc, 105)
+      expect(@s).to_not be_nil
+      @s.prime_cache
+    end
+
+    it "should contain tx3 and tx4" do
+      expect(@s.double_spent_in_one_branch.count).to eq(2)
+      expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
+      expect(@s.double_spent_in_one_branch).to include(@tx4_replaced_id)
     end
   end
 
@@ -147,9 +198,9 @@ RSpec.describe StaleCandidate, :type => :model do
 
   describe "self.process!" do
     before do
-      StaleCandidate.check!(:btc) # Create stale candidate entry at height 103
+      StaleCandidate.check!(:btc) # Create stale candidate entry at height 105
       expect(StaleCandidate.count).to eq(1)
-      expect(StaleCandidate.first.height).to eq(103)
+      expect(StaleCandidate.first.height).to eq(105)
       StaleCandidate.process!(:btc) # Fetch transactions from descendant blocks
 
     end
@@ -163,21 +214,21 @@ RSpec.describe StaleCandidate, :type => :model do
       @nodeA.client.sendrawtransaction(@tx2_raw)
       test.sync_mempools()
       # Transaction 2 should be in the new block
-      @nodeA.client.generate(1) # 106
+      @nodeA.client.generate(1) # 108
       test.sync_blocks()
 
       @nodeA.poll!
       @nodeB.poll!
 
       StaleCandidate.process!(:btc) # Fetch transactions from descendant blocks
-      # Node B block 106 should contain tx2
-      block = Block.find_by!(height: 106)
+      # Node B block 108 should contain tx2
+      block = Block.find_by!(height: 108)
       expect(block.transactions.where(is_coinbase: false).count).to eq(1)
     end
 
     it "should stop adding transactions after N descendant blocks" do
       # Make node B chain win:
-      @nodeB.client.generate(11) # 105
+      @nodeB.client.generate(11)
       test.sync_blocks()
 
       # Transaction 2 should be in mempool A now, but it won't broadcast
@@ -191,8 +242,8 @@ RSpec.describe StaleCandidate, :type => :model do
       @nodeB.poll!
 
       StaleCandidate.process!(:btc) # Fetch transactions from descendant blocks
-      # Node B block 106 should contain tx2
-      block = Block.find_by!(height: 116)
+      # Node B block 118 should contain tx2
+      block = Block.find_by!(height: 118)
       expect(block.transactions.where(is_coinbase: false).count).to eq(0)
     end
   end
