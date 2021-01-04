@@ -12,7 +12,8 @@ class BitcoinClient
   class PeerNotConnected < Error; end
   class NodeInitializingError < Error; end
 
-  def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
+  def initialize(node_id, name_with_version, coin, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
+    @coin = coin
     @client_type = client_type
     @client_version = client_version
     if @client_type == :libbitcoin
@@ -70,7 +71,7 @@ class BitcoinClient
       return request("disconnectnode", address, peer_id)
     rescue Bitcoiner::Client::JSONRPCError => e
       raise PeerNotConnected if e.message.include?("Node not found in connected nodes")
-      raise Error, "disconnectnode(#{address},#{peer_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "disconnectnode(#{address},#{peer_id}) failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -78,7 +79,7 @@ class BitcoinClient
     begin
       return request("getnetworkinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getnetworkinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -86,7 +87,7 @@ class BitcoinClient
     begin
       return request("getpeerinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getpeerinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -94,7 +95,7 @@ class BitcoinClient
     begin
       return request("getblockcount")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getblockcount failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getblockcount failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -108,7 +109,7 @@ class BitcoinClient
     return nil if res.nil?
 
     error_code = res[2][0..3].unpack("L<")[0]
-    throw "#{ command } failed with error code: #{ error_code }" if error_code > 0
+    throw "#{ command } failed #{ @coin } with error code: #{ error_code }" if error_code > 0
     return res[2][4..-1].unpack("L<")[0]
   end
 
@@ -116,7 +117,7 @@ class BitcoinClient
     begin
       return request("getinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -124,7 +125,7 @@ class BitcoinClient
     begin
       return request("getblockchaininfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getblockchaininfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getblockchaininfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -132,7 +133,7 @@ class BitcoinClient
     begin
       return request("getblockhash", height)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getblockhash #{ height } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getblockhash #{ height } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -140,7 +141,7 @@ class BitcoinClient
     begin
       return request("getbestblockhash")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getbestblockhash failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -151,7 +152,7 @@ class BitcoinClient
       raise PartialFileError if e.message.include?("partial_file")
       raise BlockPrunedError if e.message.include?("pruned data")
       raise BlockNotFoundError if e.message.include?("Block not found")
-      raise Error, "getblock(#{hash},#{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getblock(#{hash},#{verbosity}) failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -159,7 +160,7 @@ class BitcoinClient
     begin
       return request("getblockfrompeer", hash, peer_id)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getblockfrompeer(#{hash},#{peer_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getblockfrompeer(#{hash},#{peer_id}) failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -171,7 +172,7 @@ class BitcoinClient
         return request("getblockheader", hash, verbose)
       rescue Bitcoiner::Client::JSONRPCError => e
         raise BlockNotFoundError if e.message.include?("Block not found")
-        raise Error, "getblockheader(#{hash},#{verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+        raise Error, "getblockheader(#{hash},#{verbose}) failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
       end
     else
       command = 'blockchain.fetch_block_header'
@@ -213,7 +214,7 @@ class BitcoinClient
     begin
       return request("getchaintips")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getchaintips failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getchaintips failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -221,7 +222,7 @@ class BitcoinClient
     begin
       return request("getmempoolinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getmempoolinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getmempoolinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -229,7 +230,7 @@ class BitcoinClient
     begin
       return request("gettxoutsetinfo")
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "gettxoutsetinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -241,7 +242,7 @@ class BitcoinClient
         return request("getrawtransaction", hash, verbose)
       end
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "getrawtransaction failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "getrawtransaction failed #{ @coin } for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -249,7 +250,7 @@ class BitcoinClient
     begin
       return request("setnetworkactive", status)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "setnetworkactive #{ status } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "setnetworkactive #{ status } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -257,7 +258,7 @@ class BitcoinClient
     begin
       return request("invalidateblock", block_hash)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "invalidateblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "invalidateblock #{ block_hash } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -266,7 +267,7 @@ class BitcoinClient
       return request("reconsiderblock", block_hash)
     rescue Bitcoiner::Client::JSONRPCError => e
       # TODO: intercept specific error messages (e.g. block not found vs. connection error)
-      puts "reconsiderblock #{ block_hash } failed for #{@name_with_version} (id=#{@node_id}): block not found" unless Rails.env.test?
+      puts "reconsiderblock #{ block_hash } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): block not found" unless Rails.env.test?
       return
     end
   end
@@ -275,7 +276,7 @@ class BitcoinClient
     begin
       return request("submitblock", block_data)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "submitblock failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "submitblock failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -283,7 +284,7 @@ class BitcoinClient
     begin
       return request("submitheader", header_data)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise Error, "submitheader failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "submitheader failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

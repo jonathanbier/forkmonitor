@@ -8,7 +8,7 @@ class BitcoinClientMock
   class MethodNotFoundError < Error; end
   class NodeInitializingError < Error; end
 
-  def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
+  def initialize(node_id, name_with_version, coin, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @height = 560176
     @block_hash = "0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab"
     @best_height = 560176
@@ -16,7 +16,7 @@ class BitcoinClientMock
     @ibd = false
     @peer_count = 100
     @version = 170100
-    @coin = :btc
+    @coin = coin
     @client_type = client_type
     @client_version = client_version
     @extra_inflation = 0

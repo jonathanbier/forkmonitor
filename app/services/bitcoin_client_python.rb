@@ -8,7 +8,8 @@ class BitcoinClientPython
   class MethodNotFoundError < Error; end
   class NodeInitializingError < Error; end
 
-  def initialize(node_id, name_with_version, client_type, client_version)
+  def initialize(node_id, name_with_version, coin, client_type, client_version)
+    @coin = coin
     @client_type = client_type
     @client_version = client_version
     @node_id = node_id
