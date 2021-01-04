@@ -24,7 +24,6 @@ RSpec.describe StaleCandidate, :type => :model do
     address_a = @nodeA.client.getnewaddress()
     address_b = @nodeB.client.getnewaddress()
 
-
     # Transasction shared between nodes
     tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
     test.sync_mempools()
@@ -55,10 +54,10 @@ RSpec.describe StaleCandidate, :type => :model do
     psbt = @nodeA.client.finalizepsbt(psbt["psbt"])
     @tx4_replaced_id = @nodeB.client.sendrawtransaction(psbt["hex"])
 
-    puts "tx1: #{ tx1_id }"
-    puts "tx2: #{ @tx2_id }"
-    puts "tx3: #{ @tx3_id } -> #{ @tx3_bumped_id }"
-    puts "tx4: #{ @tx4_id } -> #{ @tx4_replaced_id }"
+    # puts "tx1: #{ tx1_id }"
+    # puts "tx2: #{ @tx2_id }"
+    # puts "tx3: #{ @tx3_id } -> #{ @tx3_bumped_id }"
+    # puts "tx4: #{ @tx4_id } -> #{ @tx4_replaced_id }"
 
     @nodeA.client.generate(2)
     @nodeB.client.generate(2) # alternative chain with same length

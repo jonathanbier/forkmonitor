@@ -259,6 +259,7 @@ class StaleCandidate < ApplicationRecord
       txs = self.get_double_spent_inputs
       self.update double_spent_in_one_branch: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
       self.update double_spent_in_one_branch_total: txs.nil? ? [] : txs.collect{|tx| tx.amount}.inject(:+)
+      Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
       txs = self.get_rbf
       self.update rbf: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
       self.update rbf_total: txs.nil? ? [] : txs.collect{|tx| tx.amount}.inject(:+)
