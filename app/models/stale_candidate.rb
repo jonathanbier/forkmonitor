@@ -39,7 +39,11 @@ class StaleCandidate < ApplicationRecord
   end
 
   def double_spent_in_one_branch_txs
-    Transaction.where("tx_id in (?)", double_spent_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+    Transaction.where("tx_id in (?)", double_spent_in_one_branch - rbf).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+  end
+
+  def rbf_txs
+    Transaction.where("tx_id in (?)", rbf).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
   end
 
   def double_spend_info
@@ -49,7 +53,9 @@ class StaleCandidate < ApplicationRecord
       confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
       confirmed_in_one_branch_total: (self.confirmed_in_one_branch_total || 0) - (self.double_spent_in_one_branch_total || 0),
       double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
-      double_spent_in_one_branch_total: self.double_spent_in_one_branch_total,
+      double_spent_in_one_branch_total: (self.double_spent_in_one_branch_total || 0) - (self.rbf_total || 0),
+      rbf: self.rbf_txs,
+      rbf_total: self.rbf_total,
       headers_only: children.any? { |child| child.root.headers_only }
     }.to_json
   end
@@ -80,13 +86,11 @@ class StaleCandidate < ApplicationRecord
       tx_ids = (shortest_tx_ids - longest_tx_ids) | (longest_tx_ids - shortest_tx_ids)
     end
 
-    # TODO: take RBF into account (fee bump is not a double spend)
-
     # Return transaction details (database id is omitted)
     return tx_ids
   end
 
-  def get_double_spent_inputs
+  def get_spent_coins_with_tx
     return nil if self.children.length < 2
     # TODO: handle more than 2 branches:
     return nil if self.children.length > 2
@@ -105,16 +109,57 @@ class StaleCandidate < ApplicationRecord
       tx.spent_coins_map
     }.inject(&:merge)
     return nil if longest_spent_coins_with_tx.nil? || shortest_spent_coins_with_tx.nil?
+
+    return shortest_spent_coins_with_tx, longest_spent_coins_with_tx
+  end
+
+  def get_double_spent_inputs
+    spent_coins_with_tx = get_spent_coins_with_tx
+    return nil if get_spent_coins_with_tx.nil?
+    (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
+
     # Filter coins that are spent with a different tx in the longest chain
     txs = shortest_spent_coins_with_tx.filter { |txout, tx|
       longest_spent_coins_with_tx.key?(txout) && tx.tx_id != longest_spent_coins_with_tx[txout].tx_id
-      # TODO: take RBF into account (fee bump is not a double spend)
+    }.collect{|txout, tx| tx}.uniq
+  end
+
+  def get_rbf
+    spent_coins_with_tx = get_spent_coins_with_tx
+    return nil if get_spent_coins_with_tx.nil?
+    (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
+
+    # Filter coins that are spent with a different tx in the longest chain
+    txs = shortest_spent_coins_with_tx.filter { |txout, tx|
+      if !longest_spent_coins_with_tx.key?(txout)
+        false
+      elsif tx.tx_id == longest_spent_coins_with_tx[txout].tx_id
+        false
+      else
+      # Check for fee bump (regardless of RBF flag):
+      # Check that:
+      # * none of the destinations changed
+      # * none of the outputs varied by more than 0.0001 BTC
+      # TODO:
+      # * don't sort by output; it's brittle. Just check if the same output
+      #   exists on the other side.
+      # * be more flexible if a change output is added
+        replacement = longest_spent_coins_with_tx[txout]
+        # puts "#{ tx.tx_id } vs #{ replacement.tx_id }"
+        sorted_outputs = tx.outputs.sort_by{ |output| output.pk_script }
+        replacement_sorted_outputs = replacement.outputs.sort_by{ |output| output.pk_script }
+        sorted_outputs.map.with_index { |output, i|
+          # puts "#{i}: #{ output.pk_script == replacement_sorted_outputs[i].pk_script } #{ (output.value - replacement_sorted_outputs[i].value).abs }"
+          output.pk_script != replacement_sorted_outputs[i].pk_script ||
+          (output.value - replacement_sorted_outputs[i].value).abs > 10000
+        }.none? { |res| res }
+      end
     }.collect{|txout, tx| tx}.uniq
   end
 
   def expire_cache
     self.children.destroy_all
-    self.update confirmed_in_one_branch: [], confirmed_in_one_branch_total: nil, double_spent_in_one_branch: [], double_spent_in_one_branch_total: nil
+    self.update confirmed_in_one_branch: [], confirmed_in_one_branch_total: nil, double_spent_in_one_branch: [], double_spent_in_one_branch_total: nil, rbf: [], rbf_total: nil
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
     Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
@@ -214,6 +259,10 @@ class StaleCandidate < ApplicationRecord
       txs = self.get_double_spent_inputs
       self.update double_spent_in_one_branch: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
       self.update double_spent_in_one_branch_total: txs.nil? ? [] : txs.collect{|tx| tx.amount}.inject(:+)
+      txs = self.get_rbf
+      self.update rbf: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+      self.update rbf_total: txs.nil? ? [] : txs.collect{|tx| tx.amount}.inject(:+)
+
     end
     self.json_cached
     self.double_spend_info_cached

@@ -69,6 +69,9 @@ class StaleCandidates extends React.Component {
         confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
         doubleSpent: res.double_spent_in_one_branch,
         doubleSpentTotal: res.double_spent_in_one_branch_total,
+        rbf: res.rbf,
+        rbfTotal: res.rbf_total,
+
       });
       }.bind(this)).catch(console.error);
    }
@@ -180,6 +183,45 @@ class StaleCandidates extends React.Component {
                     </thead>
                     <tbody>
                       {this.state.doubleSpent.map(function (tx, index) {
+                        return (
+                          <tr key={ index }>
+                            <td>
+                              { tx.tx_id }
+                            </td>
+                            <td>
+                              { tx.amount }
+                            </td>
+                            <td>
+                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
+                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </Table>
+                </div>
+              }
+              { this.state.rbf != null && this.state.rbf.length == 0 &&
+                <p>No (RBF) fee bumps have been detected</p>
+              }
+              { this.state.rbf != null && this.state.rbf.length > 0 &&
+                <div>
+                    <p>{ this.state.rbf.length } transaction(s)
+                    involving { this.state.rbfTotal } BTC have been fee bumped
+                    on the longest chain. Presence of an RBF flag is not considered here.
+                    For each output, we check if was changed by less than 0.0001 BTC.
+                  </p>
+                  <Table striped responsive size="sm" className="lightning">
+                    <thead>
+                      <tr align="left">
+                        <th>Hash</th>
+                        <th>BTC</th>
+                        <th>Explorer</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {this.state.rbf.map(function (tx, index) {
                         return (
                           <tr key={ index }>
                             <td>

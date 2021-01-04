@@ -15,4 +15,9 @@ class Transaction < ApplicationRecord
     end
     return map
   end
+
+  def outputs
+    tx = Bitcoin::Protocol::Tx.new([self.raw].pack('H*'))
+    return tx.out
+  end
 end
