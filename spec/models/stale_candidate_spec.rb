@@ -33,8 +33,8 @@ RSpec.describe StaleCandidate, :type => :model do
 
 
     # Transaction to be mined in block 102 by node A, and later by node B
-    tx2_id = @nodeA.client.sendtoaddress(address_b, 1)
-    @tx2_raw = @nodeA.getrawtransaction(tx2_id)
+    @tx2_id = @nodeA.client.sendtoaddress(address_b, 1)
+    @tx2_raw = @nodeA.getrawtransaction(@tx2_id)
 
     @nodeA.client.generate(2)
     @nodeB.client.generate(2) # alternative chain with same length
@@ -79,6 +79,18 @@ RSpec.describe StaleCandidate, :type => :model do
       expect(block.transactions.where(is_coinbase: false).count).to eq(1)
     end
 
+  end
+
+  describe "confirmed_in_one_branch" do
+    before do
+      @s = StaleCandidate.find_or_generate(:btc, 103)
+      expect(@s).to_not be_nil
+      @s.prime_cache
+    end
+
+    it "should contain tx2" do
+      expect(@s.get_confirmed_in_one_branch).to eq([@tx2_id])
+    end
   end
 
   describe "self.check!" do
