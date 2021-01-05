@@ -115,7 +115,7 @@ class StaleCandidate < ApplicationRecord
 
   def get_double_spent_inputs
     spent_coins_with_tx = get_spent_coins_with_tx
-    return nil if get_spent_coins_with_tx.nil?
+    return nil if spent_coins_with_tx.nil?
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
     # Filter coins that are spent with a different tx in the longest chain
@@ -126,7 +126,7 @@ class StaleCandidate < ApplicationRecord
 
   def get_rbf
     spent_coins_with_tx = get_spent_coins_with_tx
-    return nil if get_spent_coins_with_tx.nil?
+    return nil if spent_coins_with_tx.nil?
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
     # Filter coins that are spent with a different tx in the longest chain
