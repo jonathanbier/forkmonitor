@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_01_04_164212) do
+ActiveRecord::Schema.define(version: 2021_01_05_120812) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -40,7 +40,9 @@ ActiveRecord::Schema.define(version: 2021_01_04_164212) do
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
+    t.index ["height"], name: "index_blocks_on_height"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
+    t.index ["work"], name: "index_blocks_on_work"
   end
 
   create_table "chaintips", force: :cascade do |t|
@@ -283,6 +285,7 @@ ActiveRecord::Schema.define(version: 2021_01_04_164212) do
     t.decimal "amount", precision: 16, scale: 8, null: false
     t.binary "raw", null: false
     t.index ["block_id"], name: "index_transactions_on_block_id"
+    t.index ["is_coinbase"], name: "index_transactions_on_is_coinbase"
     t.index ["tx_id"], name: "index_transactions_on_tx_id"
   end
 
