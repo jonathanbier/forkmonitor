@@ -124,7 +124,6 @@ class StaleCandidate < ApplicationRecord
   end
 
   def get_rbf(spent_coins_with_tx)
-    spent_coins_with_tx = get_spent_coins_with_tx
     return nil if spent_coins_with_tx.nil?
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
