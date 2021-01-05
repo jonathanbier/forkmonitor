@@ -113,8 +113,7 @@ class StaleCandidate < ApplicationRecord
     return shortest_spent_coins_with_tx, longest_spent_coins_with_tx
   end
 
-  def get_double_spent_inputs
-    spent_coins_with_tx = get_spent_coins_with_tx
+  def get_double_spent_inputs(spent_coins_with_tx)
     return nil if spent_coins_with_tx.nil?
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
@@ -124,7 +123,7 @@ class StaleCandidate < ApplicationRecord
     }.collect{|txout, tx| tx}.uniq
   end
 
-  def get_rbf
+  def get_rbf(spent_coins_with_tx)
     spent_coins_with_tx = get_spent_coins_with_tx
     return nil if spent_coins_with_tx.nil?
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
@@ -256,11 +255,12 @@ class StaleCandidate < ApplicationRecord
       self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch || []
       self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
       Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      txs = self.get_double_spent_inputs
+      spent_coins_with_tx = get_spent_coins_with_tx()
+      txs = self.get_double_spent_inputs(spent_coins_with_tx)
       self.update double_spent_in_one_branch: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
       self.update double_spent_in_one_branch_total: txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
       Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      txs = self.get_rbf
+      txs = self.get_rbf(spent_coins_with_tx)
       self.update rbf: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
       self.update rbf_total: txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
 
