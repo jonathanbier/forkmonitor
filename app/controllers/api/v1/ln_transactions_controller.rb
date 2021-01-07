@@ -1,7 +1,7 @@
 class Api::V1::LnTransactionsController < ApplicationController
 
   def index
-    latest = LightningTransaction.last_updated_cached
+    latest = @resource_class.last_updated_cached
     if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
       respond_to do |format|
         format.json {
