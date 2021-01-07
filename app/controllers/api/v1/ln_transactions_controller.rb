@@ -1,4 +1,5 @@
 class Api::V1::LnTransactionsController < ApplicationController
+  before_action :resource_class
 
   def index
     latest = @resource_class.last_updated_cached
