@@ -41,6 +41,13 @@ class Penalty extends React.Component {
           <Explorer blockstream coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>&nbsp;
           <Explorer btcCom coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>
         </td>
+        <td>
+          { this.props.penalty.channel_age &&
+            <span>
+              { Math.round(this.props.penalty.channel_age / 60 / 60 / 24) } days
+            </span>
+          }
+        </td>
       </tr>
     );
   }

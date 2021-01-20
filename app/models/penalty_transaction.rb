@@ -1,5 +1,5 @@
 class PenaltyTransaction < LightningTransaction
-  def get_opening_tx_id!()
+  def get_opening_tx_id_and_block_hash!()
     justice_tx = Bitcoin::Protocol::Tx.new([self.raw_tx].pack('H*'))
     close_tx_id = justice_tx.in[self.input].prev_out_hash.reverse.unpack("H*")[0]
     close_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(close_tx_id)

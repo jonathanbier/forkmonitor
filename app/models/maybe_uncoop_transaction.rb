@@ -61,9 +61,11 @@ class MaybeUncoopTransaction < LightningTransaction
         raw_tx: tx.payload.unpack('H*')[0],
         amount: tx.out.count == 1 ? tx.out[0].value / 100000000.0 : 0
       )
-      ln.opening_tx_id = ln.get_opening_tx_id!(tx)
+      tx_id, block_hash = ln.get_opening_tx_id_and_block_hash!(tx)
+      coin = node.coin.to_sym
+      ln.opening_tx_id = tx_id
+      ln.opening_block = Block.find_by coin: coin, block_hash: block_hash
       ln.save
-
 
     end
   end

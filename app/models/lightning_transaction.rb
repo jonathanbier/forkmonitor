@@ -9,17 +9,19 @@ class LightningTransaction < ApplicationRecord
 
   belongs_to :block
   belongs_to :parent, class_name: 'LightningTransaction', foreign_key: 'parent_id', optional: true
+  belongs_to :opening_block, class_name: 'Block', foreign_key: 'opening_block_id', optional: true
   has_one :child, class_name: 'LightningTransaction', foreign_key: 'parent_id'
 
   def as_json(options = nil)
     fields = [:id, :tx_id, :amount, :opening_tx_id, :channel_is_public]
     super({ only: fields }.merge(options || {})).merge({
       block: block,
-      channel_id_1ml: channel_id_1ml.present? ? channel_id_1ml.to_s : nil
+      channel_id_1ml: channel_id_1ml.present? ? channel_id_1ml.to_s : nil,
+      channel_age: (self.PenaltyTransaction? && opening_block) ? block.timestamp - opening_block.timestamp : nil
     })
   end
 
-  def get_opening_tx_id!(close_tx)
+  def get_opening_tx_id_and_block_hash!(close_tx)
     prev_out_hash = nil
     close_tx.in.each do |tx_in|
       if prev_out_hash.present? && tx_in.prev_out_hash != prev_out_hash
@@ -28,9 +30,8 @@ class LightningTransaction < ApplicationRecord
       prev_out_hash = tx_in.prev_out_hash
     end
     opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
-    # Sanity check, raw transction is unused:
-    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id)
-    return opening_tx_id
+    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id,true)
+    return opening_tx_id, opening_tx_raw["blockhash"]
   end
 
   def find_parent!
@@ -158,6 +159,16 @@ class LightningTransaction < ApplicationRecord
       eager_load(:block, :parent).order(height: :desc).each do |tx|
         csv << attributes.map{ |attr| tx.send(attr) }
       end
+    end
+  end
+
+  # Used once for migration
+  def self.get_opening_blocks!
+    PenaltyTransaction.all.each do |penalty|
+      coin = penalty.block.coin.to_sym
+      opening_tx = Node.first_with_txindex(coin).getrawtransaction(penalty.opening_tx_id, true)
+      block = Block.find_by coin: coin, block_hash: opening_tx["blockhash"]
+      penalty.update opening_block: block
     end
   end
 

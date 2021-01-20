@@ -67,6 +67,7 @@ class Lightning extends React.Component {
                     <th>BTC</th>
                     <th>Channel Opening</th>
                     <th>Penalty Transaction</th>
+                    <th>Channel age</th>
                   </tr>
                 </thead>
                 <tbody>
