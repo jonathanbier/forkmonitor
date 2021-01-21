@@ -7,7 +7,7 @@ class Api::V1::StaleCandidatesController < ApplicationController
   end
 
   def show
-    info = @stale_candidate.json_cached(fetch=false)
+    info = @stale_candidate.json_cached
     if info.present?
       render json: info
     else
@@ -17,7 +17,7 @@ class Api::V1::StaleCandidatesController < ApplicationController
   end
 
   def double_spend_info
-    info = @stale_candidate.double_spend_info_cached(fetch=false)
+    info = @stale_candidate.double_spend_info_cached
     if info.present?
       render json: info
     else

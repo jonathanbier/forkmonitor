@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_01_20_103529) do
+ActiveRecord::Schema.define(version: 2021_01_20_114414) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -267,6 +267,7 @@ ActiveRecord::Schema.define(version: 2021_01_20_103529) do
     t.integer "n_children"
     t.string "rbf", default: [], null: false, array: true
     t.decimal "rbf_total", precision: 16, scale: 8
+    t.integer "height_processed"
     t.index ["coin", "height"], name: "index_stale_candidates_on_coin_and_height", unique: true
   end
 

@@ -25,9 +25,9 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
-  def json_cached(fetch=true)
+  def json_cached
     cache_key = "StaleCandidate(#{ self.id }).json"
-    return nil if !fetch && !Rails.cache.exist?(cache_key)
+    return nil if self.height_processed.nil?
     Rails.cache.fetch(cache_key) {
       self.to_json
     }
@@ -48,6 +48,7 @@ class StaleCandidate < ApplicationRecord
 
   def double_spend_info
     {
+      height_processed: self.height_processed,
       n_children: self.children.count,
       children: self.children,
       confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
@@ -60,9 +61,9 @@ class StaleCandidate < ApplicationRecord
     }.to_json
   end
 
-  def double_spend_info_cached(fetch=true)
+  def double_spend_info_cached
     cache_key = "StaleCandidate(#{ self.id })/double_spend_info.json"
-    return nil if !fetch && !Rails.cache.exist?(cache_key)
+    return nil if self.height_processed.nil?
     Rails.cache.fetch(cache_key) {
       self.double_spend_info
     }
@@ -156,8 +157,6 @@ class StaleCandidate < ApplicationRecord
   end
 
   def expire_cache
-    self.children.destroy_all
-    self.update confirmed_in_one_branch: [], confirmed_in_one_branch_total: nil, double_spent_in_one_branch: [], double_spent_in_one_branch_total: nil, rbf: [], rbf_total: nil
     Rails.cache.delete("StaleCandidate(#{ self.id }).json")
     Rails.cache.delete("StaleCandidate(#{ self.id })/double_spend_info.json")
     Rails.cache.delete("StaleCandidate.index.for_coin(#{ self.coin }).json")
@@ -168,14 +167,64 @@ class StaleCandidate < ApplicationRecord
     Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
   end
 
-  # Iterate over descendant blocks to add their transactions
   def process!
+    # Iterate over descendant blocks to add their transactions
     Block.where(coin: self.coin, height: self.height).each do |candidate_block|
       candidate_block.fetch_transactions!
       candidate_block.descendants.where("height <= ?", self.height + DOUBLE_SPEND_RANGE).each do |block|
         block.fetch_transactions!
       end
     end
+
+    # When a new block comes in (up to a maximum height) calculate the new branch
+    # lengths, and scan for duplicate transactions. This is a slow operation,
+    # so we wait with updating database records and expiring JSON cache until it's complete.
+    ActiveRecord::Base.transaction do
+      tip_height = Block.where(coin: coin).maximum(:height)
+      if self.children.count == 0 ||
+         self.height_processed.nil? ||
+         (self.height_processed < tip_height && self.height_processed <= self.height + STALE_BLOCK_WINDOW)
+        Rails.logger.info "Update #{ coin.to_s.upcase } stale candidate #{ self.height } for tip at #{ tip_height }..."
+        self.children.destroy_all # TODO: update records instead
+        Block.where(coin: coin, height: self.height).each do |root|
+          chain = Block.where("height <= ?", height + STALE_BLOCK_WINDOW).join_recursive {
+            start_with(block_hash: root.block_hash).
+            connect_by(id: :parent_id).
+            order_siblings(:work)
+          }
+          tip = chain[-1]
+          self.children.create(
+            root: root,
+            tip: tip,
+            length: chain.count
+          )
+        end
+        # Make this cache available early:
+        self.json_cached
+        Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+        self.update n_children: self.children.count
+        confirmed_in_one_branch = self.get_confirmed_in_one_branch || []
+        confirmed_in_one_branch_total = (confirmed_in_one_branch.nil? || confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+        Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+        spent_coins_with_tx = self.get_spent_coins_with_tx
+        txs = self.get_double_spent_inputs(spent_coins_with_tx)
+        double_spent_in_one_branch = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+        double_spent_in_one_branch_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+        Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+        txs = self.get_rbf(spent_coins_with_tx)
+        rbf = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+        rbf_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+
+        self.update confirmed_in_one_branch: confirmed_in_one_branch,
+                    confirmed_in_one_branch_total: confirmed_in_one_branch_total,
+                    double_spent_in_one_branch: double_spent_in_one_branch,
+                    double_spent_in_one_branch_total: double_spent_in_one_branch_total,
+                    rbf: rbf,
+                    rbf_total: rbf_total,
+                    height_processed: tip_height
+        self.expire_cache
+      end # if
+    end # transaction
   end
 
   def self.check!(coin)
@@ -230,40 +279,6 @@ class StaleCandidate < ApplicationRecord
 
   def prime_cache
     return false if Rails.cache.exist?("StaleCandidate(#{ self.id }).json")
-    Rails.logger.info "Prime cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-    # This check prevents wasting time on each deploy reprocessing old stale
-    # blocks. For recent stale blocks, the children are cleared in expire_cache.
-    # In order to repopulate this data for older blocks, clear the StaleCandidateChild table.
-    if self.children.count == 0
-      Block.where(coin: coin, height: self.height).each do |root|
-        chain = Block.where("height <= ?", height + 100).join_recursive {
-          start_with(block_hash: root.block_hash).
-          connect_by(id: :parent_id).
-          order_siblings(:work)
-        }
-        self.children.create(
-          root: root,
-          tip: chain[-1], # TODO: this and the next line cause two very slow queries
-          length: chain.count
-        )
-      end
-      # Make this cache available early:
-      self.json_cached
-      Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      self.update n_children: self.children.count
-      self.update confirmed_in_one_branch: self.get_confirmed_in_one_branch || []
-      self.update confirmed_in_one_branch_total: (self.confirmed_in_one_branch.nil? || self.confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", self.confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
-      Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      spent_coins_with_tx = get_spent_coins_with_tx()
-      txs = self.get_double_spent_inputs(spent_coins_with_tx)
-      self.update double_spent_in_one_branch: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-      self.update double_spent_in_one_branch_total: txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
-      Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-      txs = self.get_rbf(spent_coins_with_tx)
-      self.update rbf: txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-      self.update rbf_total: txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
-
-    end
     self.json_cached
     self.double_spend_info_cached
     true

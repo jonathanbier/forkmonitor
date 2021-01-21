@@ -101,8 +101,8 @@ class Block < ApplicationRecord
   end
 
   def fetch_transactions!
-    Rails.logger.debug "Fetch transactions at height #{ self.height } (#{ self.block_hash })..."
     if self.transactions.count == 0 && !self.pruned && !self.headers_only
+      Rails.logger.debug "Fetch transactions at height #{ self.height } (#{ self.block_hash })..."
       # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
       # Workaround for test framework, needed in order to mock first_seen_by
       this_block = Rails.env.test? ? Block.find_by(block_hash: self.block_hash) : self
