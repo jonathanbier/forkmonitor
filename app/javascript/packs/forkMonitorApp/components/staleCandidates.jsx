@@ -161,8 +161,8 @@ class StaleCandidates extends React.Component {
               <h3>Conflicting Transactions</h3>
               <p>
                 If a transaction occurs in one branch <i>and a conflicting
-                transaction occurs in the other branch</i>, then it may be an RBF
-                fee increase or a double-spend.
+                transaction occurs in the other branch</i>, then it could be an RBF
+                fee increase or a double-spend attempt.
               </p>
               { this.state.doubleSpent != null && this.state.doubleSpent.length == 0 &&
                 <p>No double spends have been detected</p>
