@@ -22,7 +22,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
   describe "self.check!" do
     before do
       allow(MaybeUncoopTransaction).to receive(:check!).and_call_original
-      allow_any_instance_of(MaybeUncoopTransaction).to receive(:get_opening_tx_id!).and_return nil
+      allow_any_instance_of(MaybeUncoopTransaction).to receive(:get_opening_tx_id_and_block_hash!).and_return nil
       @block = Block.find_by(height: 560177)
       raw_block = @node.client.getblock(@block.block_hash, 0)
       @parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
