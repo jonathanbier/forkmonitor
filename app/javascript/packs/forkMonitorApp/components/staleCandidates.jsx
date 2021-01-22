@@ -56,6 +56,7 @@ class StaleCandidates extends React.Component {
 
   componentDidMount() {
     // Sequence shouldn't matter
+    this.getMaxHeight();
     this.getStaleCandidates();
     this.getDoubleSpendInfo();
   }
@@ -71,7 +72,7 @@ class StaleCandidates extends React.Component {
         doubleSpentTotal: res.double_spent_in_one_branch_total,
         rbf: res.rbf,
         rbfTotal: res.rbf_total,
-
+        heightProcessed: res.height_processed
       });
       }.bind(this)).catch(console.error);
    }
@@ -92,6 +93,16 @@ class StaleCandidates extends React.Component {
           console.error(error);
         }
       }.bind(this));
+  }
+
+  getMaxHeight() {
+    axios.get(`/api/v1/blocks/${ this.state.coin }/max_height.json`).then(function (response) {
+      return response.data;
+    }).then(function (res) {
+      this.setState({
+        maxHeight: res
+      });
+      }.bind(this)).catch(console.error);
   }
 
   render() {
@@ -124,6 +135,23 @@ class StaleCandidates extends React.Component {
               be a slight delay between when our nodes first detect a block
               and when our system processes it.
             </p>
+            <p>
+              The data on this page includes blocks up to { this.state.heightProcessed }.&nbsp;
+              { this.state.heightProcessed - this.state.height > 100 &&
+                <span>
+                  We do not check for conflicting transactions beyond 100 blocks.
+                </span>
+              }
+              { this.state.maxHeight - this.state.heightProcessed > 0 && this.state.heightProcessed - this.state.height <= 100 &&
+                <span>
+                  Processing newly detected block(s) up to { this.state.maxHeight }...&nbsp;
+                  <FontAwesomeIcon
+                    className="fa-pulse"
+                    icon={ faSpinner }
+                  />
+                </span>
+              }
+            </p>
             <Table striped responsive size="sm" className="lightning">
               <thead>
                 <tr align="left">
@@ -139,7 +167,7 @@ class StaleCandidates extends React.Component {
               <tbody>
                 {this.state.staleCandidates.map(function (child, index) {
                   return (
-                    <StaleCandidate coin={ coin } root={ child.root } tip={ child.tip } length={ child.length } key={index}/>
+                    <StaleCandidate coin={ coin } root={ child.root } tip={ child.tip } length={ child.length } key={index} />
                   )
                 })}
               </tbody>
