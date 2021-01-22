@@ -15,6 +15,7 @@ Rails.application.routes.draw do
 
   namespace :api, {format: ['json', 'csv']} do
     namespace :v1 do
+      match '/blocks/:coin/max_height', :to => 'blocks#max_height', :as => "api_max_height_for_coin", :via => :get
       match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]

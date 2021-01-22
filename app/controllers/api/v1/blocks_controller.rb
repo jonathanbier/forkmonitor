@@ -1,5 +1,6 @@
 class Api::V1::BlocksController < ApplicationController
   before_action :authenticate_user!, only: :show
+  before_action :set_coin, only: :max_height
 
   # List of blocks, Bitcoin only
   def index
@@ -22,6 +23,11 @@ class Api::V1::BlocksController < ApplicationController
 
   def show
     render json: @block
+  end
+
+  def max_height
+    @max_height = Block.where(coin: @coin).maximum(:height)
+    render json: @max_height
   end
 
 end
