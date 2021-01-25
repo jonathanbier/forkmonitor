@@ -25,7 +25,7 @@ RSpec.describe StaleCandidate, :type => :model do
     address_b = @nodeB.client.getnewaddress()
 
     # Transasction shared between nodes
-    tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
+    @tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
     test.sync_mempools()
 
     test.disconnect_nodes(@nodeA.client, 1)
@@ -139,7 +139,24 @@ RSpec.describe StaleCandidate, :type => :model do
     end
   end
 
-  describe "double_spent_in_one_branch" do
+  describe "get_spent_coins_with_tx" do
+    before do
+      @s = StaleCandidate.find_or_generate(:btc, 105)
+      @s.fetch_transactions_for_descendants!
+      @s.set_children!
+    end
+
+    it "should return tx ids for long and short side" do
+      res = @s.get_spent_coins_with_tx
+      expect(res).to_not be_nil
+      shortest_tx_ids, longest_tx_ids = res
+      expect(shortest_tx_ids.values.collect{|t| t.tx_id}.sort).to eq(
+            [@tx1_id, @tx2_id, @tx3_bumped_id, @tx4_id].sort)
+      expect(longest_tx_ids.values.collect{|t| t.tx_id}.sort).to eq(
+            [@tx1_id, @tx3_id, @tx4_replaced_id].sort)
+    end
+  end
+
     before do
       @s = StaleCandidate.find_or_generate(:btc, 105)
       expect(@s).to_not be_nil
