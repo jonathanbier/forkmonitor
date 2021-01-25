@@ -54,7 +54,7 @@ RSpec.describe StaleCandidate, :type => :model do
     psbt = @nodeA.client.finalizepsbt(psbt["psbt"])
     @tx4_replaced_id = @nodeB.client.sendrawtransaction(psbt["hex"])
 
-    # puts "tx1: #{ tx1_id }"
+    # puts "tx1: #{ @tx1_id }"
     # puts "tx2: #{ @tx2_id }"
     # puts "tx3: #{ @tx3_id } -> #{ @tx3_bumped_id }"
     # puts "tx4: #{ @tx4_id } -> #{ @tx4_replaced_id }"
@@ -104,41 +104,6 @@ RSpec.describe StaleCandidate, :type => :model do
 
   end
 
-  describe "confirmed_in_one_branch" do
-    before do
-      @s = StaleCandidate.find_or_generate(:btc, 105)
-      expect(@s).to_not be_nil
-      @s.prime_cache
-    end
-
-    it "should contain tx2, tx3&4 and bumped tx3&4" do
-      expect(@s.confirmed_in_one_branch.count).to eq(5)
-      expect(@s.confirmed_in_one_branch).to include(@tx2_id)
-      expect(@s.confirmed_in_one_branch).to include(@tx3_id)
-      expect(@s.confirmed_in_one_branch).to include(@tx3_bumped_id)
-      expect(@s.confirmed_in_one_branch).to include(@tx4_id)
-      expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
-    end
-
-    describe "when one chain is longer" do
-      before do
-        test.disconnect_nodes(@nodeA.client, 1)
-        assert_equal(0, @nodeA.client.getpeerinfo().count)
-        # this mines tx2
-        @nodeA.client.generate(1)
-        @nodeA.poll!
-        @s.expire_cache
-        @s.prime_cache
-      end
-
-      it "should contain original tx3 and replaced tx4" do
-        expect(@s.confirmed_in_one_branch.count).to eq(2)
-        expect(@s.confirmed_in_one_branch).to include(@tx3_id)
-        expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
-      end
-    end
-  end
-
   describe "get_spent_coins_with_tx" do
     before do
       @s = StaleCandidate.find_or_generate(:btc, 105)
@@ -157,46 +122,78 @@ RSpec.describe StaleCandidate, :type => :model do
     end
   end
 
+  describe "set_conflicting_tx_info!" do
     before do
       @s = StaleCandidate.find_or_generate(:btc, 105)
       expect(@s).to_not be_nil
-      @s.prime_cache
+      @s.fetch_transactions_for_descendants!
+      @s.set_children!
+      @s.set_conflicting_tx_info!(@nodeA.block.height)
     end
 
-    it "should contain tx3 and tx4" do
-      expect(@s.double_spent_in_one_branch.count).to eq(2)
-      expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
-      expect(@s.double_spent_in_one_branch).to include(@tx4_id)
-    end
-  end
+    describe "confirmed_in_one_branch" do
 
-  describe "rbf" do
-    before do
-      @s = StaleCandidate.find_or_generate(:btc, 105)
-      expect(@s).to_not be_nil
-      @s.prime_cache
-    end
-
-    it "should contain tx3 bumped" do
-      # It picks an arbitrary "shortest" chain when both are the same length
-      expect(@s.rbf.count).to eq(1)
-      expect(@s.rbf).to include(@tx3_bumped_id)
-    end
-
-    describe "when one chain is longer" do
-      before do
-        test.disconnect_nodes(@nodeA.client, 1)
-        assert_equal(0, @nodeA.client.getpeerinfo().count)
-        # this mines tx2
-        @nodeA.client.generate(1)
-        @nodeA.poll!
-        @s.expire_cache
-        @s.prime_cache
+      it "should contain tx2, tx3&4 and bumped tx3&4" do
+        expect(@s.confirmed_in_one_branch.count).to eq(5)
+        expect(@s.confirmed_in_one_branch).to include(@tx2_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx3_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx3_bumped_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx4_id)
+        expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
       end
 
-      it "should contain tx3" do
+      describe "when one chain is longer" do
+        before do
+          test.disconnect_nodes(@nodeA.client, 1)
+          assert_equal(0, @nodeA.client.getpeerinfo().count)
+          # this mines tx2
+          @nodeA.client.generate(1)
+          @nodeA.poll!
+          @s.fetch_transactions_for_descendants!
+          @s.set_children!
+          @s.set_conflicting_tx_info!(@nodeA.block.height)
+        end
+
+        it "should contain original tx3 and replaced tx4" do
+          expect(@s.confirmed_in_one_branch.count).to eq(2)
+          expect(@s.confirmed_in_one_branch).to include(@tx3_id)
+          expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
+        end
+      end
+    end
+
+
+    describe "double_spent_inputs" do
+      it "should contain tx3 and tx4" do
+        expect(@s.double_spent_in_one_branch.count).to eq(2)
+        expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
+        expect(@s.double_spent_in_one_branch).to include(@tx4_id)
+      end
+    end
+
+    describe "rbf" do
+      it "should contain tx3 bumped" do
+        # It picks an arbitrary "shortest" chain when both are the same length
         expect(@s.rbf.count).to eq(1)
-        expect(@s.rbf).to include(@tx3_id)
+        expect(@s.rbf).to include(@tx3_bumped_id)
+      end
+
+      describe "when one chain is longer" do
+        before do
+          test.disconnect_nodes(@nodeA.client, 1)
+          assert_equal(0, @nodeA.client.getpeerinfo().count)
+          # this mines tx2
+          @nodeA.client.generate(1)
+          @nodeA.poll!
+          @s.fetch_transactions_for_descendants!
+          @s.set_children!
+          @s.set_conflicting_tx_info!(@nodeA.block.height)
+        end
+
+        it "should contain tx3" do
+          expect(@s.rbf.count).to eq(1)
+          expect(@s.rbf).to include(@tx3_id)
+        end
       end
     end
   end
