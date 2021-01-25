@@ -91,6 +91,7 @@ class Block < ApplicationRecord
     raise "same block" if self == other_block
     candidate_branch_start = self
     while !candidate_branch_start.nil?
+      raise "parent of #{ self.coin.upcase } block #{ candidate_branch_start.block_hash } (#{ candidate_branch_start.height }) missing" if candidate_branch_start.parent.nil?
       if candidate_branch_start.parent.descendants.include? other_block
         raise "same branch" if self == candidate_branch_start
         return candidate_branch_start
