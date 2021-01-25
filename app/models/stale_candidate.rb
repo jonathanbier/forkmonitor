@@ -194,6 +194,30 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
+  def set_conflicting_tx_info!(tip_height)
+    Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+    self.update n_children: self.children.count
+    confirmed_in_one_branch = self.get_confirmed_in_one_branch || []
+    confirmed_in_one_branch_total = (confirmed_in_one_branch.nil? || confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+    Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+    spent_coins_with_tx = self.get_spent_coins_with_tx
+    txs = self.get_double_spent_inputs(spent_coins_with_tx)
+    double_spent_in_one_branch = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+    double_spent_in_one_branch_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+    Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+    txs = self.get_rbf(spent_coins_with_tx)
+    rbf = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
+    rbf_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+
+    self.update confirmed_in_one_branch: confirmed_in_one_branch,
+                confirmed_in_one_branch_total: confirmed_in_one_branch_total,
+                double_spent_in_one_branch: double_spent_in_one_branch,
+                double_spent_in_one_branch_total: double_spent_in_one_branch_total,
+                rbf: rbf,
+                rbf_total: rbf_total,
+                height_processed: tip_height
+  end
+
   def process!
     self.fetch_transactions_for_descendants!
 
@@ -207,27 +231,7 @@ class StaleCandidate < ApplicationRecord
          (self.height_processed < tip_height && self.height_processed <= self.height + STALE_BLOCK_WINDOW)
         Rails.logger.info "Update #{ coin.to_s.upcase } stale candidate #{ self.height } for tip at #{ tip_height }..."
         self.set_children!
-        Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-        self.update n_children: self.children.count
-        confirmed_in_one_branch = self.get_confirmed_in_one_branch || []
-        confirmed_in_one_branch_total = (confirmed_in_one_branch.nil? || confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
-        Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-        spent_coins_with_tx = self.get_spent_coins_with_tx
-        txs = self.get_double_spent_inputs(spent_coins_with_tx)
-        double_spent_in_one_branch = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-        double_spent_in_one_branch_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
-        Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-        txs = self.get_rbf(spent_coins_with_tx)
-        rbf = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-        rbf_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
-
-        self.update confirmed_in_one_branch: confirmed_in_one_branch,
-                    confirmed_in_one_branch_total: confirmed_in_one_branch_total,
-                    double_spent_in_one_branch: double_spent_in_one_branch,
-                    double_spent_in_one_branch_total: double_spent_in_one_branch_total,
-                    rbf: rbf,
-                    rbf_total: rbf_total,
-                    height_processed: tip_height
+        self.set_conflicting_tx_info!(tip_height)
         self.expire_cache
       end # if
     end # transaction
