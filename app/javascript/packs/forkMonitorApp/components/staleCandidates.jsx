@@ -19,6 +19,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons'
 
+import ConflictingTransaction from "./conflictingTransaction"
 import StaleCandidate from "./staleCandidate"
 import Explorer from "./explorer"
 
@@ -45,7 +46,10 @@ class StaleCandidates extends React.Component {
       confirmedInOneBranch: null,
       confirmedInOneBranchTotal: null,
       doubleSpent: null,
+      doubleSpentBy: null,
       doubleSpentTotal: null,
+      rfb: null,
+      rbfBy: null,
       coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
@@ -70,7 +74,9 @@ class StaleCandidates extends React.Component {
         confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
         doubleSpent: res.double_spent_in_one_branch,
         doubleSpentTotal: res.double_spent_in_one_branch_total,
+        doubleSpentBy: res.double_spent_by,
         rbf: res.rbf,
+        rbfBy: res.rbf_by,
         rbfTotal: res.rbf_total,
         heightProcessed: res.height_processed
       });
@@ -108,6 +114,8 @@ class StaleCandidates extends React.Component {
   render() {
     const { redirect } = this.state;
     const coin = this.state.coin;
+    const doubleSpentBy = this.state.doubleSpentBy;
+    const rbfBy = this.state.rbfBy;
 
     if (redirect) {
       return <Redirect to={ `/nodes/${ coin }` } />;
@@ -203,29 +211,18 @@ class StaleCandidates extends React.Component {
                     involving { this.state.doubleSpentTotal } BTC have been doublespent
                     on the longest chain.
                   </p>
-                  <Table striped responsive size="sm" className="lightning">
+                  <Table striped responsive className="conflicting-transactions">
                     <thead>
                       <tr align="left">
-                        <th>Hash</th>
-                        <th>BTC</th>
-                        <th>Explorer</th>
+                        <th style={ {width: "100pt"} }>BTC</th>
+                        <th>In shortest branch</th>
+                        <th>In longest branch</th>
                       </tr>
                     </thead>
                     <tbody>
                       {this.state.doubleSpent.map(function (tx, index) {
                         return (
-                          <tr key={ index }>
-                            <td>
-                              { tx.tx_id }
-                            </td>
-                            <td>
-                              { tx.amount }
-                            </td>
-                            <td>
-                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
-                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
-                            </td>
-                          </tr>
+                          <ConflictingTransaction key={index} coin={ coin } tx={ tx } conflict={ doubleSpentBy[index] }/>
                         )
                       })}
                     </tbody>
@@ -245,27 +242,19 @@ class StaleCandidates extends React.Component {
                   <Table striped responsive size="sm" className="lightning">
                     <thead>
                       <tr align="left">
-                        <th>Hash</th>
-                        <th>BTC</th>
-                        <th>Explorer</th>
+                        <th style={ {width: "100pt"} }>BTC</th>
+                        <th>In shortest branch</th>
+                        <th>In longest branch</th>
                       </tr>
                     </thead>
                     <tbody>
                       {this.state.rbf.map(function (tx, index) {
-                        return (
-                          <tr key={ index }>
-                            <td>
-                              { tx.tx_id }
-                            </td>
-                            <td>
-                              { tx.amount }
-                            </td>
-                            <td>
-                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
-                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
-                            </td>
-                          </tr>
-                        )
+                        return (<ConflictingTransaction
+                            key={index}
+                            coin={ coin }
+                            tx={ tx }
+                            conflict={ rbfBy[index] }
+                          />)
                       })}
                     </tbody>
                   </Table>

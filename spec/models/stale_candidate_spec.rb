@@ -168,6 +168,9 @@ RSpec.describe StaleCandidate, :type => :model do
         expect(@s.double_spent_in_one_branch.count).to eq(2)
         expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
         expect(@s.double_spent_in_one_branch).to include(@tx4_id)
+        expect(@s.double_spent_by.count).to eq(2)
+        expect(@s.double_spent_by).to include(@tx3_id)
+        expect(@s.double_spent_by).to include(@tx4_replaced_id)
       end
     end
 
@@ -193,6 +196,11 @@ RSpec.describe StaleCandidate, :type => :model do
         it "should contain tx3" do
           expect(@s.rbf.count).to eq(1)
           expect(@s.rbf).to include(@tx3_id)
+        end
+
+        it "should track replacement" do
+          expect(@s.rbf_by.count).to eq(1)
+          expect(@s.rbf_by).to include(@tx3_bumped_id)
         end
       end
     end

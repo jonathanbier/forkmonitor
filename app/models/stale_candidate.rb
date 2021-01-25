@@ -42,8 +42,16 @@ class StaleCandidate < ApplicationRecord
     Transaction.where("tx_id in (?)", double_spent_in_one_branch - rbf).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
   end
 
+  def double_spent_by_txs
+    Transaction.where("tx_id in (?)", double_spent_by - rbf_by).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+  end
+
   def rbf_txs
     Transaction.where("tx_id in (?)", rbf).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
+  end
+
+  def rbf_by_txs
+    Transaction.where("tx_id in (?)", rbf_by).select("tx_id, max(amount) as amount").group(:tx_id).order("amount DESC")
   end
 
   def double_spend_info
@@ -54,8 +62,10 @@ class StaleCandidate < ApplicationRecord
       confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
       confirmed_in_one_branch_total: (self.confirmed_in_one_branch_total || 0) - (self.double_spent_in_one_branch_total || 0),
       double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
+      double_spent_by: self.double_spent_by_txs,
       double_spent_in_one_branch_total: (self.double_spent_in_one_branch_total || 0) - (self.rbf_total || 0),
       rbf: self.rbf_txs,
+      rbf_by: self.rbf_by_txs,
       rbf_total: self.rbf_total,
       headers_only: children.any? { |child| child.root.headers_only }
     }.to_json
@@ -119,9 +129,10 @@ class StaleCandidate < ApplicationRecord
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
     # Filter coins that are spent with a different tx in the longest chain
+    # unique is used because a transaction may doublespend multiple inputs
     txs = shortest_spent_coins_with_tx.filter { |txout, tx|
       longest_spent_coins_with_tx.key?(txout) && tx.tx_id != longest_spent_coins_with_tx[txout].tx_id
-    }.collect{|txout, tx| tx}.uniq
+    }.collect{|txout, tx| [tx, longest_spent_coins_with_tx[txout]]}.uniq.transpose()
   end
 
   def get_rbf(spent_coins_with_tx)
@@ -153,7 +164,7 @@ class StaleCandidate < ApplicationRecord
           (output.value - replacement_sorted_outputs[i].value).abs > 10000
         }.none? { |res| res }
       end
-    }.collect{|txout, tx| tx}.uniq
+    }.collect{|txout, tx| [tx, longest_spent_coins_with_tx[txout]]}.uniq.transpose()
   end
 
   def expire_cache
@@ -201,19 +212,23 @@ class StaleCandidate < ApplicationRecord
     confirmed_in_one_branch_total = (confirmed_in_one_branch.nil? || confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
     Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
     spent_coins_with_tx = self.get_spent_coins_with_tx
-    txs = self.get_double_spent_inputs(spent_coins_with_tx)
-    double_spent_in_one_branch = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-    double_spent_in_one_branch_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+    txs_short, txs_long = self.get_double_spent_inputs(spent_coins_with_tx)
+    double_spent_in_one_branch = txs_short.nil? ? [] : txs_short.collect{|tx| tx.tx_id}
+    double_spent_in_one_branch_total = txs_short.nil? ? 0 : txs_short.collect{|tx| tx.amount}.inject(:+)
+    double_spent_by = txs_long.nil? ? [] : txs_long.collect{|tx| tx.tx_id}
     Rails.logger.info "Prime fee-bump cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
-    txs = self.get_rbf(spent_coins_with_tx)
-    rbf = txs.nil? ? [] : txs.collect{|tx| tx.tx_id}
-    rbf_total = txs.nil? ? 0 : txs.collect{|tx| tx.amount}.inject(:+)
+    txs_short, txs_long = self.get_rbf(spent_coins_with_tx)
+    rbf = txs_short.nil? ? [] : txs_short.collect{|tx| tx.tx_id}
+    rbf_by = txs_long.nil? ? [] : txs_long.collect{|tx| tx.tx_id}
+    rbf_total = txs_short.nil? ? 0 : txs_short.collect{|tx| tx.amount}.inject(:+)
 
     self.update confirmed_in_one_branch: confirmed_in_one_branch,
                 confirmed_in_one_branch_total: confirmed_in_one_branch_total,
                 double_spent_in_one_branch: double_spent_in_one_branch,
                 double_spent_in_one_branch_total: double_spent_in_one_branch_total,
+                double_spent_by: double_spent_by,
                 rbf: rbf,
+                rbf_by: rbf_by,
                 rbf_total: rbf_total,
                 height_processed: tip_height
   end

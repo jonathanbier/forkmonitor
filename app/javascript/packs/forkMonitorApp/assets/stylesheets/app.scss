@@ -24,3 +24,13 @@
 table.lightning {
   white-space: nowrap;
 }
+
+table.conflicting-transactions {
+  table-layout: fixed;
+
+  th, td {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+}

@@ -21,7 +21,7 @@ class StaleCandidate extends React.Component {
         <td>{ this.props.root.pool }</td>
         <td>
           <Explorer blockstream coin={ this.props.coin } block={ this.props.root.hash }/>&nbsp;
-          <Explorer btcCom coin={ this.props.coin }  block={ this.props.root.hash }/>
+          <Explorer btcCom coin={ this.props.coin } block={ this.props.root.hash }/>
         </td>
           <td>
             { this.props.length != 1 && this.props.length <= 100 &&
