@@ -167,7 +167,7 @@ class StaleCandidate < ApplicationRecord
     Rails.cache.delete("StaleCandidate.feed.count(#{self.coin})")
   end
 
-  def process!
+  def fetch_transactions_for_descendants!
     # Iterate over descendant blocks to add their transactions
     Block.where(coin: self.coin, height: self.height).each do |candidate_block|
       candidate_block.fetch_transactions!
@@ -175,32 +175,38 @@ class StaleCandidate < ApplicationRecord
         block.fetch_transactions!
       end
     end
+  end
+
+  def set_children!
+    self.children.destroy_all # TODO: update records instead
+    Block.where(coin: self.coin, height: self.height).each do |root|
+      chain = Block.where("height <= ?", height + STALE_BLOCK_WINDOW).join_recursive {
+        start_with(block_hash: root.block_hash).
+        connect_by(id: :parent_id).
+        order_siblings(:work)
+      }
+      tip = chain[-1]
+      self.children.create(
+        root: root,
+        tip: tip,
+        length: chain.count
+      )
+    end
+  end
+
+  def process!
+    self.fetch_transactions_for_descendants!
 
     # When a new block comes in (up to a maximum height) calculate the new branch
     # lengths, and scan for duplicate transactions. This is a slow operation,
     # so we wait with updating database records and expiring JSON cache until it's complete.
     ActiveRecord::Base.transaction do
-      tip_height = Block.where(coin: coin).maximum(:height)
+      tip_height = Block.where(coin: self.coin).maximum(:height)
       if self.children.count == 0 ||
          self.height_processed.nil? ||
          (self.height_processed < tip_height && self.height_processed <= self.height + STALE_BLOCK_WINDOW)
         Rails.logger.info "Update #{ coin.to_s.upcase } stale candidate #{ self.height } for tip at #{ tip_height }..."
-        self.children.destroy_all # TODO: update records instead
-        Block.where(coin: coin, height: self.height).each do |root|
-          chain = Block.where("height <= ?", height + STALE_BLOCK_WINDOW).join_recursive {
-            start_with(block_hash: root.block_hash).
-            connect_by(id: :parent_id).
-            order_siblings(:work)
-          }
-          tip = chain[-1]
-          self.children.create(
-            root: root,
-            tip: tip,
-            length: chain.count
-          )
-        end
-        # Make this cache available early:
-        self.json_cached
+        self.set_children!
         Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
         self.update n_children: self.children.count
         confirmed_in_one_branch = self.get_confirmed_in_one_branch || []
