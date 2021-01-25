@@ -135,23 +135,25 @@ class StaleCandidates extends React.Component {
               be a slight delay between when our nodes first detect a block
               and when our system processes it.
             </p>
-            <p>
-              The data on this page includes blocks up to { this.state.heightProcessed }.&nbsp;
-              { this.state.heightProcessed - this.state.height > 100 &&
-                <span>
-                  We do not check for conflicting transactions beyond 100 blocks.
-                </span>
-              }
-              { this.state.maxHeight - this.state.heightProcessed > 0 && this.state.heightProcessed - this.state.height <= 100 &&
-                <span>
-                  Processing newly detected block(s) up to { this.state.maxHeight }...&nbsp;
-                  <FontAwesomeIcon
-                    className="fa-pulse"
-                    icon={ faSpinner }
-                  />
-                </span>
-              }
-            </p>
+            { this.state.heightProcessed != null &&
+              <p>
+                The data on this page includes blocks up to { this.state.heightProcessed }.&nbsp;
+                { this.state.heightProcessed - this.state.height > 100 &&
+                  <span>
+                    We do not check for conflicting transactions beyond 100 blocks.
+                  </span>
+                }
+                { this.state.maxHeight - this.state.heightProcessed > 0 && this.state.heightProcessed - this.state.height <= 100 &&
+                  <span>
+                    Processing newly detected block(s) up to { this.state.maxHeight }...&nbsp;
+                    <FontAwesomeIcon
+                      className="fa-pulse"
+                      icon={ faSpinner }
+                    />
+                  </span>
+                }
+              </p>
+            }
             <Table striped responsive size="sm" className="lightning">
               <thead>
                 <tr align="left">
