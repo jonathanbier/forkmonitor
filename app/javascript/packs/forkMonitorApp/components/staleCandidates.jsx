@@ -273,17 +273,6 @@ class StaleCandidates extends React.Component {
                     should appear in future blocks.
                   </p>
                   <p>
-                    It is unsafe to consider these transactions confirmed, because
-                    an opportunistic sender could still broadcast a conflicting
-                    replacement transaction which, if it ends up in the heaviest chain,
-                    would doublespend the original. We may add detection for this later.
-                  </p>
-                  <p>
-                    Another possiblity is that a transaction fee was increased using
-                    RBF and that one miner didn't receive the fee increase in time.
-                    We may add detection for this later.
-                  </p>
-                  <p>
                     The list below is updated every block until 30 blocks after the split.
                   </p>
                   <Table striped responsive size="sm" className="lightning">
