@@ -608,7 +608,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def getblocktemplate
+  def rpc_getblocktemplate
     if self.version >= 130100
       return client.getblocktemplate({rules: ["segwit"]})
     else
@@ -732,7 +732,7 @@ class Node < ApplicationRecord
     nodes.each do |node|
       threads << Thread.new {
         ActiveRecord::Base.connection_pool.with_connection do
-          template = node.getblocktemplate
+          template = node.rpc_getblocktemplate
           BlockTemplate.create_with(node, template)
         end
       }
