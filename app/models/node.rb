@@ -733,7 +733,7 @@ class Node < ApplicationRecord
       threads << Thread.new {
         ActiveRecord::Base.connection_pool.with_connection do
           template = node.getblocktemplate
-          fee_total = template["transactions"].inject(0) {|sum, hash| sum + hash["fee"]}
+          BlockTemplate.create_with(node, template)
         end
       }
     end

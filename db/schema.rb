@@ -10,10 +10,22 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_03_143823) do
+ActiveRecord::Schema.define(version: 2021_02_03_154735) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "block_templates", force: :cascade do |t|
+    t.bigint "parent_block_id"
+    t.bigint "node_id"
+    t.decimal "fee_total", precision: 16, scale: 8
+    t.datetime "timestamp"
+    t.integer "height"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["node_id"], name: "index_block_templates_on_node_id"
+    t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
+  end
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -333,6 +345,7 @@ ActiveRecord::Schema.define(version: 2021_02_03_143823) do
     t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
+  add_foreign_key "block_templates", "nodes"
   add_foreign_key "chaintips", "blocks"
   add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
   add_foreign_key "chaintips", "nodes"

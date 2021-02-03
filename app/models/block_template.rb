@@ -1,0 +1,14 @@
+class BlockTemplate < ApplicationRecord
+  belongs_to :parent_block, class_name: 'Block'
+  belongs_to :node
+
+  def self.create_with(node, template)
+    self.create!(
+      height: template["height"],
+      parent_block: Block.find_by(block_hash: template["previousblockhash"]),
+      node: node,
+      fee_total: (template["coinbasevalue"] - Block.max_inflation(template["height"])) / 100000000.0,
+      timestamp: Time.at(template["curtime"]).utc
+    )
+  end
+end

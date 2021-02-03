@@ -72,6 +72,12 @@ class Block < ApplicationRecord
     return reward >> interval # as opposed to (reward / 2**interval)
   end
 
+  def self.max_inflation(height)
+    interval = height / 210000
+    reward = 50 * 100000000
+    return reward >> interval
+  end
+
   def descendants(depth_limit=nil)
     block_hash = self.block_hash
     height = self.height
