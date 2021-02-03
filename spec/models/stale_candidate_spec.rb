@@ -178,7 +178,7 @@ RSpec.describe StaleCandidate, :type => :model do
       it "should contain tx3 bumped" do
         # It picks an arbitrary "shortest" chain when both are the same length
         expect(@s.rbf.count).to eq(1)
-        expect(@s.rbf).to include(@tx3_bumped_id)
+        expect([@tx3_id, @tx3_bumped_id]).to include(@s.rbf[0])
       end
 
       describe "when one chain is longer" do
