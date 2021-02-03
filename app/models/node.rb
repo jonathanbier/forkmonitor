@@ -608,6 +608,14 @@ class Node < ApplicationRecord
     end
   end
 
+  def getblocktemplate
+    if self.version >= 130100
+      return client.getblocktemplate({rules: ["segwit"]})
+    else
+      return client.getblocktemplate({rules: []})
+    end
+  end
+
   def self.inflation_check_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
@@ -687,8 +695,9 @@ class Node < ApplicationRecord
 
     while true
       if @last_checked.nil? || @last_checked < 20.seconds.ago
+        @last_checked = Time.now
         options[:coins].each do |coin|
-          Node.getblocktemplate!({coin: coin.downcase.to_sym})
+          Node.getblocktemplate!(coin.downcase.to_sym)
         end
       end
 
@@ -717,6 +726,18 @@ class Node < ApplicationRecord
   end
 
   def self.getblocktemplate!(coin)
+    nodes = Node.where(coin: coin, enabled: true, getblocktemplate: true, unreachable_since: nil)
+    throw "Increase RAILS_MAX_THREADS to match #{ nodes.count } #{ coin } nodes." if nodes.count > (ENV["RAILS_MAX_THREADS"] || "5").to_i
+    threads = []
+    nodes.each do |node|
+      threads << Thread.new {
+        ActiveRecord::Base.connection_pool.with_connection do
+          template = node.getblocktemplate
+          fee_total = template["transactions"].inject(0) {|sum, hash| sum + hash["fee"]}
+        end
+      }
+    end
+    threads.each(&:join)
   end
 
   # Deleting a node takes very long, causing a timeout when done from the admin panel

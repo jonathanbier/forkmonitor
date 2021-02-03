@@ -288,6 +288,14 @@ class BitcoinClient
     end
   end
 
+  def getblocktemplate(rules)
+    begin
+      return request("getblocktemplate", rules)
+    rescue Bitcoiner::Client::JSONRPCError => e
+      raise Error, "getblocktemplate failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   private
 
   def request(*args)
