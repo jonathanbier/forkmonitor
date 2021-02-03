@@ -938,7 +938,7 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should call getblocktemplate" do
-        expect(Node).to receive(:getblocktemplate!).with({coin: :btc})
+        expect(Node).to receive(:getblocktemplate!).with(:btc)
 
         Node.getblocktemplate_repeat!({coins: ["BTC"]})
       end

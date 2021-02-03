@@ -118,6 +118,9 @@ class BitcoinClientMock
     end
   end
 
+  def getblocktemplate(rules)
+  end
+
   def getinfo
     raise Error if !@reachable
     if @coin == :btc
