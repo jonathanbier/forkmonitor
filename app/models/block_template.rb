@@ -11,4 +11,16 @@ class BlockTemplate < ApplicationRecord
       timestamp: Time.at(template["curtime"]).utc
     )
   end
+
+  def self.to_csv
+    attributes = %w{height node_id timestamp fee_total }
+
+    CSV.generate(headers: true) do |csv|
+      csv << attributes
+
+      order(height: :desc).each do |template|
+        csv << attributes.map{ |attr| template.send(attr) }
+      end
+    end
+  end
 end

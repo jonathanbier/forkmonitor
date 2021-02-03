@@ -34,6 +34,7 @@ Rails.application.routes.draw do
       resources :ln_stats, only: [:index]
       resources :blocks, only: [:index, :show]
       resources :subscriptions, only: [:create]
+      resources :block_templates, only: [:index]
     end
   end
 
