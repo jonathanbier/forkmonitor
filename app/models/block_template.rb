@@ -3,9 +3,21 @@ class BlockTemplate < ApplicationRecord
   belongs_to :node
 
   def self.create_with(node, template)
+    parent_block = nil
+    begin
+      retries ||= 0
+      parent_block = Block.find_by!(block_hash: template["previousblockhash"])
+    rescue ActiveRecord::RecordNotFound
+      Rails.logger.warn "Parent block #{ template["previousblockhash"] } not found yet..."
+      retries += 1
+      sleep 1
+      retry if retries < 20
+      # This can only happen if we failed to poll the node in 20 seconds
+      raise "Parent block #{ template["previousblockhash"] } not found after 20 seconds"
+    end
     self.create!(
       height: template["height"],
-      parent_block: Block.find_by(block_hash: template["previousblockhash"]),
+      parent_block: parent_block,
       node: node,
       fee_total: (template["coinbasevalue"] - Block.max_inflation(template["height"])) / 100000000.0,
       timestamp: Time.at(template["curtime"]).utc
