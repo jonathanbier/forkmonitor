@@ -574,7 +574,7 @@ class Node < ApplicationRecord
   def restore_mirror
     begin
       mirror_client.setnetworkactive(true)
-    rescue BitcoinClient::ConnectionError
+    rescue BitcoinClient::ConnectionError, BitcoinClient::NodeInitializingError
       self.update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
       return false
     end
