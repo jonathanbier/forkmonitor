@@ -533,7 +533,7 @@ class Node < ApplicationRecord
         node = Node.first_newer_than(coin, 210000, :abc)
       end
     rescue Node::NoMatchingNodeError
-      Rails.logger.warning "Unable to find suitable #{ coin } node in get_coinbase_for_block"
+      Rails.logger.warn "Unable to find suitable #{ coin } node in get_coinbase_for_block"
       return nil
     end
     client = node.client
