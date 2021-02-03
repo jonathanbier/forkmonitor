@@ -73,6 +73,7 @@ export const NodeEdit = props => (
             <TextInput source="storage" />
             <BooleanInput source="cve_2018_17144" />
             <BooleanInput source="special" />
+            <BooleanInput source="getblocktemplate" />
             <DateInput source="released" />
             <BooleanInput source="enabled" />
         </SimpleForm>
@@ -102,6 +103,7 @@ export const NodeCreate = props => (
             <TextInput source="storage" />
             <BooleanInput source="cve_2018_17144" />
             <BooleanInput source="special" />
+            <BooleanInput source="getblocktemplate" />
             <DateInput source="released" />
         </SimpleForm>
     </Create>

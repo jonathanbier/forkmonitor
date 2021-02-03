@@ -59,6 +59,6 @@ class Api::V1::NodesController < ApplicationController
   end
 
   def node_params
-    params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport, :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :enabled, :link, :link_text, :special, :to_destroy)
+    params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport, :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :enabled, :link, :link_text, :special, :getblocktemplate, :to_destroy)
   end
 end

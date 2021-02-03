@@ -100,7 +100,8 @@ class Node < ApplicationRecord
       :mempool_max,
       :mirror_ibd,
       :special,
-      :to_destroy
+      :to_destroy,
+      :getblocktemplate
     ]
     if options && options[:admin]
       fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
