@@ -20,12 +20,13 @@ class BlockTemplate < ApplicationRecord
       parent_block: parent_block,
       node: node,
       fee_total: (template["coinbasevalue"] - Block.max_inflation(template["height"])) / 100000000.0,
-      timestamp: Time.at(template["curtime"]).utc
+      timestamp: Time.at(template["curtime"]).utc,
+      n_transactions: template["transactions"].count
     )
   end
 
   def self.to_csv
-    attributes = %w{height node_id timestamp fee_total }
+    attributes = %w{height node_id timestamp fee_total n_transactions }
 
     CSV.generate(headers: true) do |csv|
       csv << attributes

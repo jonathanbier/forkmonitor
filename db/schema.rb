@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_03_154735) do
+ActiveRecord::Schema.define(version: 2021_02_03_191944) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,6 +23,7 @@ ActiveRecord::Schema.define(version: 2021_02_03_154735) do
     t.integer "height"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "n_transactions", null: false
     t.index ["node_id"], name: "index_block_templates_on_node_id"
     t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
   end
