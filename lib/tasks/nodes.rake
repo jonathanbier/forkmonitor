@@ -24,4 +24,9 @@ namespace 'nodes' do :env
     Node.heavy_checks_repeat!({coins: args.extras})
   end
 
+  desc "Continuous getblocktemplate checks"
+  task :getblocktemplate_repeat, [] => :environment do |action, args|
+    Node.getblocktemplate_repeat!({coins: args.extras})
+  end
+
 end

@@ -670,6 +670,37 @@ class Node < ApplicationRecord
     end
   end
 
+  def self.getblocktemplate_repeat!(options)
+    # Trap ^C
+    Signal.trap("INT") {
+      Rails.logger.info "\nShutting down gracefully..."
+      exit
+    }
+
+    # Trap `Kill `
+    Signal.trap("TERM") {
+      Rails.logger.info "\nShutting down gracefully..."
+      exit
+    }
+
+    @last_checked = nil
+
+    while true
+      if @last_checked.nil? || @last_checked < 20.seconds.ago
+        options[:coins].each do |coin|
+          Node.getblocktemplate!({coin: coin.downcase.to_sym})
+        end
+      end
+
+      if Rails.env.test?
+        break
+      else
+        sleep 0.5
+      end
+
+    end
+  end
+
   def self.check_chaintips!(coin)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     case coin
@@ -683,6 +714,9 @@ class Node < ApplicationRecord
       throw Error, "Unknown coin"
     end
     InvalidBlock.check!(coin)
+  end
+
+  def self.getblocktemplate!(coin)
   end
 
   # Deleting a node takes very long, causing a timeout when done from the admin panel

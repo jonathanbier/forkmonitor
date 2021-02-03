@@ -1,3 +1,4 @@
+require 'rails_helper'
 require 'spec_helper'
 
 describe "nodes:poll" do
@@ -52,6 +53,20 @@ describe "nodes:inflation_check_repeat" do
 
   it "should call :inflation_check_repeat! on Node with a list of coins" do
     expect(Node).to receive(:inflation_check_repeat!).with({:coins=>["BTC", "TBTC"]})
+    subject.invoke("BTC", "TBTC")
+  end
+end
+
+describe "nodes:getblocktemplate_repeat" do
+  include_context "rake"
+
+  it "should call :getblocktemplate_repeat! on Node" do
+    expect(Node).to receive(:getblocktemplate_repeat!)
+    subject.invoke
+  end
+
+  it "should call :getblocktemplate_repeat! on Node with a list of coins" do
+    expect(Node).to receive(:getblocktemplate_repeat!).with({:coins=>["BTC", "TBTC"]})
     subject.invoke("BTC", "TBTC")
   end
 end

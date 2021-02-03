@@ -931,6 +931,19 @@ RSpec.describe Node, :type => :model do
 
     end
 
+    describe "getblocktemplate_repeat!" do
+      before do
+        @node = create(:node)
+        allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
+      end
+
+      it "should call getblocktemplate" do
+        expect(Node).to receive(:getblocktemplate!).with({coin: :btc})
+
+        Node.getblocktemplate_repeat!({coins: ["BTC"]})
+      end
+    end
+
     describe "check_laggards!" do
       before do
         @A = build(:node)
