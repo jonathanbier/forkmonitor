@@ -562,7 +562,7 @@ class Block < ApplicationRecord
           raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
           # This requires blocks to be processed in ascending height order
           special.client.submitheader(raw_block_header)
-        rescue BitcoinClient::NodeInitializingError
+        rescue Node::ConnectionError, BitcoinClient::NodeInitializingError
           next
         end
         peers = special.client.getpeerinfo
@@ -618,13 +618,17 @@ class Block < ApplicationRecord
 
     if !found_block && !special.nil?
       # Disconnect all peers if we didn't get any block
-      peers = special.client.getpeerinfo;
-      peers.each do |peer|
-        begin
-          special.client.disconnectnode("", peer["id"])
-        rescue BitcoinClient::PeerNotConnected
-          # Ignore if already disconnected, e.g. by us above
+      begin
+        peers = special.client.getpeerinfo;
+        peers.each do |peer|
+          begin
+            special.client.disconnectnode("", peer["id"])
+          rescue BitcoinClient::PeerNotConnected
+            # Ignore if already disconnected, e.g. by us above
+          end
         end
+      rescue BitcoinClient::NodeInitializingError, BitcoinClient::ConnectionError
+        # Ignore if special node can't be reached or is restarting
       end
     end
   end
