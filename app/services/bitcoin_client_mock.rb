@@ -465,12 +465,21 @@ class BitcoinClientMock
   end
 
   def getrawtransaction(tx_hash, verbose = false, block_hash = nil)
+    # raise Error, "Transaction hash missing" if tx_hash.nil?
     raw_tx = @transactions[tx_hash]
     if !verbose
       raise Error, "Unable to find #{ tx_hash  }" if raw_tx.nil?
       return raw_tx
     else
-      return {}
+      if tx_hash == "74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085"
+        return {
+            "vout" => [
+              {"value" => 13}
+            ]
+        }
+      else
+        return {}
+      end
     end
   end
 

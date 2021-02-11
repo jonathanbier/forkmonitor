@@ -33,6 +33,13 @@ class Chaintip extends React.Component {
             Transaction count: <NumberFormat value={ this.props.chaintip.block.tx_count } displayType={'text'} thousandSeparator={true} />
           </span>
         }
+        <br />
+        {
+          this.props.chaintip.block.total_fee != null &&
+          <span>
+            Fees: <NumberFormat value={ this.props.chaintip.block.total_fee } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC
+          </span>
+        }
       </p>
     )
   }

@@ -558,11 +558,12 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.set_pool_for_block!(coin, block, block_info = nil)
+  def self.set_pool_and_fee_total_for_block!(coin, block, block_info = nil)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
-    return if coinbase.nil?
+    return if coinbase.nil? || coinbase == {}
     block.pool = Block.pool_from_coinbase_tx(coinbase)
+    block.total_fee = (coinbase["vout"].sum { |vout| vout["value"] } * 100000000.0 - block.max_inflation) / 100000000.0
     if block.pool.nil?
       coinbase_message = Block.coinbase_message(coinbase)
       return if coinbase_message.nil?
