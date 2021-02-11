@@ -38,7 +38,14 @@ class BlockTemplate < ApplicationRecord
     if parent_block.present? && self.where(parent_block: parent_block, node: node).count == 1
       last_template = BlockTemplate.where(height: height - 1, node: node).where.not(tx_ids: nil).last
       unless last_template.nil? || parent_block.total_fee.nil?
-        parent_block.update template_txs_fee_diff: parent_block.total_fee - last_template.fee_total
+        template_tx_ids = BlockTemplate.get_binary_chunks(last_template.tx_ids,32)
+        block_tx_ids = BlockTemplate.get_binary_chunks(parent_block.tx_ids,32)
+        # * fee difference
+        # * transactions in template that are missing in the block, and;
+        # * those in the block that were not in the template:
+        parent_block.update template_txs_fee_diff: parent_block.total_fee - last_template.fee_total,
+                            tx_ids_added: (block_tx_ids - template_tx_ids).join(),
+                            tx_ids_omitted: (template_tx_ids - block_tx_ids).join()
       end
     end
   end
