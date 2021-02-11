@@ -37,7 +37,7 @@ class Block < ApplicationRecord
   end
 
   def self.to_csv
-    attributes = %w{height block_hash timestamp mediantime work version tx_count size pool total_fee }
+    attributes = %w{height block_hash timestamp mediantime work version tx_count size pool total_fee template_txs_fee_diff }
 
     CSV.generate(headers: true) do |csv|
       csv << attributes
