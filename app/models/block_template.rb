@@ -31,6 +31,15 @@ class BlockTemplate < ApplicationRecord
     )
     # Safe space by cleaning up transaction ids from earlier templates at this height:
     self.where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil
+
+    # If this is the first template at a new height, and we have the parent block,
+    # process stats for the previous block:
+    if parent_block.present? && self.where(parent_block: parent_block, node: node).count == 1
+      last_template = BlockTemplate.where(height: height - 1, node: node).where.not(tx_ids: nil).last
+      unless last_template.nil? || parent_block.total_fee.nil?
+        parent_block.update template_txs_fee_diff: parent_block.total_fee - last_template.fee_total
+      end
+    end
   end
 
   def self.to_csv

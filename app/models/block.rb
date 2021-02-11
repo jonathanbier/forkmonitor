@@ -26,7 +26,7 @@ class Block < ApplicationRecord
   after_initialize :set_invalidated_block_hashes
 
   def as_json(options = nil)
-    super({ only: [:id, :coin, :height, :timestamp, :created_at, :pool, :tx_count, :size, :total_fee] }.merge(options || {})).merge({
+    super({ only: [:id, :coin, :height, :timestamp, :created_at, :pool, :tx_count, :size, :total_fee, :template_txs_fee_diff] }.merge(options || {})).merge({
       hash: block_hash,
       work: log2_pow,
       first_seen_by: first_seen_by ? {
