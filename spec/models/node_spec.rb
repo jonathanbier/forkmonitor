@@ -151,7 +151,7 @@ RSpec.describe Node, :type => :model do
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
           @node.client.generate(2)
-          allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+          allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         end
 
         it "should save the node" do
@@ -222,7 +222,7 @@ RSpec.describe Node, :type => :model do
         @node = create(:node_python)
         @node.client.set_python_node(test.nodes[0])
         @node.client.generate(2)
-        expect(Node).to receive("set_pool_and_fee_total_for_block!").at_least(:once).and_return(nil)
+        expect(Node).to receive("set_pool_tx_ids_fee_total_for_block!").at_least(:once).and_return(nil)
         @node.poll! # stores the block and node entry
       end
 
@@ -304,7 +304,7 @@ RSpec.describe Node, :type => :model do
 
     describe "Bitcoin Core 0.13.0" do
       before do
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = build(:node)
         @node.client.mock_version(130000)
         @node.client.mock_set_height(560177)
@@ -337,7 +337,7 @@ RSpec.describe Node, :type => :model do
 
     describe "Bitcoin Core 0.10.3" do
       before do
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = build(:node)
         @node.client.mock_version(100300)
         @node.poll!
@@ -396,7 +396,7 @@ RSpec.describe Node, :type => :model do
 
     describe "btcd" do
       before do
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = build(:node, client_type: :btcd)
         @node.client.mock_client_type(:btcd)
         @node.client.mock_version(120000)
@@ -420,7 +420,7 @@ RSpec.describe Node, :type => :model do
 
     describe "Bitcoin ABC" do
       before do
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = build(:node, coin: :bch)
         @node.client.mock_coin(:bch)
         @node.client.mock_version(180500)
@@ -530,7 +530,7 @@ RSpec.describe Node, :type => :model do
       let(:user) { create(:user) }
 
       before do
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
 
         test.disconnect_nodes(@nodeA.client, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
@@ -774,7 +774,7 @@ RSpec.describe Node, :type => :model do
   end
 
   describe "class" do
-    describe "set_pool_and_fee_total_for_block!" do
+    describe "set_pool_tx_ids_fee_total_for_block!" do
       before do
         @block = create(:block, block_hash: "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
         @node = create(:node, coin: :btc, block: @block, version: 160000)
@@ -788,27 +788,27 @@ RSpec.describe Node, :type => :model do
 
       it "should fetch the block" do
         expect(@modernNode.client).to receive("getblock").and_call_original
-        Node.set_pool_and_fee_total_for_block!(:btc, @block)
+        Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
 
       it "should not fetch the block if getblock is cached" do
         expect(@modernNode.client).not_to receive("getblock")
-        Node.set_pool_and_fee_total_for_block!(:btc, @block, {"height": 1 ,"tx" => ["74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085"]})
+        Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block, {"height": 1 ,"tx" => ["74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085"]})
       end
 
       it "should call getrawtransaction on the coinbase" do
         expect(@modernNode.client).to receive("getrawtransaction").and_call_original
-        Node.set_pool_and_fee_total_for_block!(:btc, @block)
+        Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
       it "should pass getrawtransaction output to pool_from_coinbase_tx" do
         expect(Block).to receive(:pool_from_coinbase_tx)
-        Node.set_pool_and_fee_total_for_block!(:btc, @block)
+        Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
       it "should calculate the total fee" do
-        Node.set_pool_and_fee_total_for_block!(:btc, @block)
+        Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
         expect(@block.total_fee).to eq(0.5)
       end
     end
@@ -864,7 +864,7 @@ RSpec.describe Node, :type => :model do
 
       before do
         test.setup()
-        allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+        allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = create(:node_python_with_mirror)
         @node.client.set_python_node(test.nodes[0])
         @node.mirror_client.set_python_node(test.nodes[0]) # use same node for mirror

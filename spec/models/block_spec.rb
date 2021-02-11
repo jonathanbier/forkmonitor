@@ -278,7 +278,7 @@ RSpec.describe Block, :type => :model do
         "nTx" => 3024,
         "previousblockhash" => "00000000000000000005b127b27cc0771e1b0fcb18dcba4c0644f2bb4dc90597"
       }
-      allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+      allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
     end
 
     it "should store the version" do
@@ -403,7 +403,7 @@ RSpec.describe Block, :type => :model do
     end
 
     it "should be updated by find_or_create_by" do
-      allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+      allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
       block = Block.create_headers_only(@node, 560182, "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377")
       Block.create_or_update_with({
         "hash" => "0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377",

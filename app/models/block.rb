@@ -277,7 +277,7 @@ class Block < ApplicationRecord
      end
    end
    # Set pool:
-   Node.set_pool_and_fee_total_for_block!(node.coin.to_sym, block, block_info)
+   Node.set_pool_tx_ids_fee_total_for_block!(node.coin.to_sym, block, block_info)
 
    # Fetch transactions if there was a stale block recently
    if StaleCandidate.where(coin: node.coin).where("height >= ?", block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count > 0
@@ -464,7 +464,7 @@ class Block < ApplicationRecord
 
   def self.match_missing_pools!(coin, n)
     Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
-      Node.set_pool_and_fee_total_for_block!(coin, b)
+      Node.set_pool_tx_ids_fee_total_for_block!(coin, b)
     end
   end
 
@@ -533,7 +533,7 @@ class Block < ApplicationRecord
             raw_block = node.getblock(block.block_hash, 0)
             block.update_fields(block_info)
             block.update headers_only: false, first_seen_by: node
-            Node.set_pool_and_fee_total_for_block!(coin, block, block_info)
+            Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
             break
           rescue Node::BlockNotFoundError
           rescue Node::TimeOutError
@@ -611,7 +611,7 @@ class Block < ApplicationRecord
               block_info = special.getblock(block.block_hash, 1)
               block.update_fields(block_info)
               block.update headers_only: false
-              Node.set_pool_and_fee_total_for_block!(coin, block, block_info)
+              Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
             end
           end
         rescue Node::BlockNotFoundError

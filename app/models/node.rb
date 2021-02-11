@@ -1,4 +1,6 @@
 class Node < ApplicationRecord
+  include ::TxIdConcern
+
   SUPPORTED_COINS=[:btc, :tbtc, :bch]
 
   # BSV support has been removed, but enums are stored as integer in the database.
@@ -521,7 +523,8 @@ class Node < ApplicationRecord
   # with a blockhash argument, so a txindex is not required.
   # For older nodes it could process the raw block instead of using getrawtransaction,
   # but that has not been implemented.
-  def self.get_coinbase_for_block!(coin, block_hash, block_info = nil)
+  # Also returns array with tx ids
+  def self.get_coinbase_and_tx_ids_for_block!(coin, block_hash, block_info = nil)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     node = nil
     begin
@@ -534,7 +537,7 @@ class Node < ApplicationRecord
         node = Node.first_newer_than(coin, 210000, :abc)
       end
     rescue Node::NoMatchingNodeError
-      Rails.logger.warn "Unable to find suitable #{ coin } node in get_coinbase_for_block"
+      Rails.logger.warn "Unable to find suitable #{ coin } node in get_coinbase_and_tx_ids_for_block"
       return nil
     end
     client = node.client
@@ -552,16 +555,17 @@ class Node < ApplicationRecord
     return nil if block_info["tx"].nil?
     tx_id = block_info["tx"].first
     begin
-      return node.getrawtransaction(tx_id, true, block_hash)
+      return node.getrawtransaction(tx_id, true, block_hash), block_info["tx"]
     rescue TxNotFoundError
       return nil
     end
   end
 
-  def self.set_pool_and_fee_total_for_block!(coin, block, block_info = nil)
+  def self.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info = nil)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
+    coinbase, tx_ids = get_coinbase_and_tx_ids_for_block!(coin, block.block_hash, block_info)
     return if coinbase.nil? || coinbase == {}
+    block.tx_ids = hashes_to_binary(tx_ids)
     block.pool = Block.pool_from_coinbase_tx(coinbase)
     block.total_fee = (coinbase["vout"].sum { |vout| vout["value"] } * 100000000.0 - block.max_inflation) / 100000000.0
     if block.pool.nil?

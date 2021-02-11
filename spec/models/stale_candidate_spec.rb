@@ -10,7 +10,7 @@ RSpec.describe StaleCandidate, :type => :model do
     stub_const("BitcoinClient::PartialFileError", BitcoinClientPython::PartialFileError)
     stub_const("BitcoinClient::BlockPrunedError", BitcoinClientPython::BlockPrunedError)
 
-    allow(Node).to receive("set_pool_and_fee_total_for_block!").and_return(nil)
+    allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
     test.setup(num_nodes: 2, extra_args: [['-whitelist=noban@127.0.0.1']] * 2)
     @nodeA = create(:node_python)
     @nodeA.client.set_python_node(test.nodes[0])
