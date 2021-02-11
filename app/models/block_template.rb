@@ -31,7 +31,7 @@ class BlockTemplate < ApplicationRecord
         n_transactions: tx_ids.length / 32,
         tx_ids: tx_ids
       )
-      # Safe space by cleaning up transaction ids from earlier templates at this height:
+      # Save space by cleaning up transaction ids from earlier templates at this height:
       self.where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil
 
       # If this is the first template at a new height, and we have the parent block,
