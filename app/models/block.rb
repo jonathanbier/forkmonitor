@@ -253,7 +253,7 @@ class Block < ApplicationRecord
   def set_template_diff!
     # Transactions and total fee may be missing e.g. if this is a headers only block:
     return if self.total_fee.nil? || self.tx_ids.nil?
-    last_template = BlockTemplate.where(height: self.height).last
+    last_template = BlockTemplate.where(height: self.height).where.not(tx_ids: nil).last
     return if last_template.nil?
     template_tx_ids = BlockTemplate.get_binary_chunks(last_template.tx_ids,32)
     block_tx_ids = BlockTemplate.get_binary_chunks(self.tx_ids,32)

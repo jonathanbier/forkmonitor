@@ -11,5 +11,17 @@ describe TxIdConcern do
       binary = test_class.hashes_to_binary(tx_hashes)
       expect(test_class.binary_to_hashes(binary)).to eq(tx_hashes)
     end
+
+    describe "get_binary_chunks" do
+      it "should reject nil data" do
+        expect { test_class.get_binary_chunks(nil, 2) }.to raise_error(TxIdConcern::NilError)
+      end
+    end
+
+    describe "binary_to_hashes" do
+      it "should reject nil binary" do
+        expect { test_class.binary_to_hashes(nil) }.to raise_error(TxIdConcern::NilError)
+      end
+    end
   end
 end
