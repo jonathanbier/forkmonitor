@@ -114,10 +114,14 @@ RSpec.describe StaleCandidate, :type => :model do
     it "should return tx ids for long and short side" do
       res = @s.get_spent_coins_with_tx
       expect(res).to_not be_nil
-      shortest_tx_ids, longest_tx_ids = res
-      expect(shortest_tx_ids.values.collect{|t| t.tx_id}.sort).to eq(
-            [@tx1_id, @tx2_id, @tx3_bumped_id, @tx4_id].sort)
+      # Chains are equal length, so the result will be arbitrary depending
+      # on details of the chain. This can cause a local test to pass while the
+      # CI test fails. Note that the number of transactions is unrelated to
+      # the length of the chain. We just use txs.length to get deterministic behavior.
+      shortest_tx_ids, longest_tx_ids = res.sort_by{ |txs| txs.length }
       expect(longest_tx_ids.values.collect{|t| t.tx_id}.sort).to eq(
+            [@tx1_id, @tx2_id, @tx3_bumped_id, @tx4_id].sort)
+      expect(shortest_tx_ids.values.collect{|t| t.tx_id}.sort).to eq(
             [@tx1_id, @tx3_id, @tx4_replaced_id].sort)
     end
   end
