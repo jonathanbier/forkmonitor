@@ -62,9 +62,6 @@ class Block extends React.Component {
                 the real block contains the same transactions. Usually any difference
                 is due to timing coincidence and variations for how transactions
                 propagate between nodes.</p>
-                <p>See also our
-                <a href="https://blog.bitmex.com/bitcoin-miner-transaction-fee-gathering-capability/">blog post</a>.
-                </p>
                 <h3>Transactions we expected in block</h3>
                 <p>
                   The transactions below were present in our most recent block template,
