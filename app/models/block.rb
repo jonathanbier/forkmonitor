@@ -1,6 +1,8 @@
 require 'csv'
 
 class Block < ApplicationRecord
+  include ::TxIdConcern
+
   MINIMUM_BLOCK_HEIGHTS = {
     btc: Rails.env.test? ? 0 : 500000, # Mid December 2017, around Lightning network launch
     tbtc: 1600000,
@@ -32,7 +34,9 @@ class Block < ApplicationRecord
       first_seen_by: first_seen_by ? {
         id: first_seen_by.id,
         name_with_version: first_seen_by.name_with_version
-      } : nil
+      } : nil,
+      tx_ids_added: options && options[:tx_diff] && tx_ids_added ? Block::binary_to_hashes(tx_ids_added) : nil,
+      tx_ids_omitted: options && options[:tx_diff] && tx_ids_omitted ? Block::binary_to_hashes(tx_ids_omitted) : nil
     })
   end
 

@@ -27,7 +27,7 @@ class Api::V1::BlocksController < ApplicationController
 
   def with_hash
     @block = Block.find_by!(block_hash: params["block_hash"])
-    render json: @block
+    render json: @block.as_json(tx_diff: true)
   end
 
   def max_height
