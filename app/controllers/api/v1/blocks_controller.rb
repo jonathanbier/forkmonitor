@@ -25,6 +25,11 @@ class Api::V1::BlocksController < ApplicationController
     render json: @block
   end
 
+  def with_hash
+    @block = Block.find_by!(block_hash: params["block_hash"])
+    render json: @block
+  end
+
   def max_height
     @max_height = Block.where(coin: @coin).maximum(:height)
     render json: @max_height

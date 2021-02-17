@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   namespace :api, {format: ['json', 'csv']} do
     namespace :v1 do
       match '/blocks/:coin/max_height', :to => 'blocks#max_height', :as => "api_max_height_for_coin", :via => :get
+      match '/blocks/hash/:block_hash', :to => 'blocks#with_hash', :as => "api_block_with_hash", :via => :get
       match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
       match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
       resources :nodes, only: [:index, :show, :update, :destroy, :create]
@@ -60,6 +61,7 @@ Rails.application.routes.draw do
     end
   end
 
+  get 'blocks/:coin/:block_hash', to: "pages#root"
   get 'lightning', to: "pages#root"
   get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
   get 'stale/:coin/:height', to: "pages#root", :as => "stale_candidate"

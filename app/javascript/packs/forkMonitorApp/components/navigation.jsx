@@ -37,6 +37,7 @@ import LogoImage from '../assets/images/logo.png'
 
 import classnames from 'classnames';
 
+import Block from './block';
 import Lightning from './lightning';
 import Nodes from './nodes';
 import StaleCandidates from './staleCandidates';
@@ -94,10 +95,19 @@ class Navigation extends React.Component {
                   </LinkContainer>
                 </NavItem>
               }
+              {
+                window.location.pathname.startsWith("/blocks") &&
+                <NavItem className="NavItem">
+                  <LinkContainer to={ window.location.pathname }>
+                    <NavLink>Block</NavLink>
+                  </LinkContainer>
+                </NavItem>
+              }
             </Nav>
             <TabContent>
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
+                <Route path='/blocks/:coin/:hash' component={withTracker(Block, { /* additional attributes */ })} />
                 <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ }, {cableApp: CableApp} )} />
                 <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
