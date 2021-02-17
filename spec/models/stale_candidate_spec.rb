@@ -166,18 +166,6 @@ RSpec.describe StaleCandidate, :type => :model do
       end
     end
 
-
-    describe "double_spent_inputs" do
-      it "should contain tx3 and tx4" do
-        expect(@s.double_spent_in_one_branch.count).to eq(2)
-        expect(@s.double_spent_in_one_branch).to include(@tx3_bumped_id)
-        expect(@s.double_spent_in_one_branch).to include(@tx4_id)
-        expect(@s.double_spent_by.count).to eq(2)
-        expect(@s.double_spent_by).to include(@tx3_id)
-        expect(@s.double_spent_by).to include(@tx4_replaced_id)
-      end
-    end
-
     describe "rbf" do
       it "should contain tx3 bumped" do
         # It picks an arbitrary "shortest" chain when both are the same length
