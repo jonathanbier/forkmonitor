@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_11_173754) do
+ActiveRecord::Schema.define(version: 2021_02_17_102510) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -25,6 +25,7 @@ ActiveRecord::Schema.define(version: 2021_02_11_173754) do
     t.datetime "updated_at", null: false
     t.integer "n_transactions", null: false
     t.binary "tx_ids"
+    t.integer "coin", null: false
     t.index ["node_id"], name: "index_block_templates_on_node_id"
     t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
   end

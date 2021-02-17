@@ -930,7 +930,11 @@ RSpec.describe Node, :type => :model do
 
       it "should call find_missing" do
         expect(Block).to receive(:find_missing).with(:btc, 40000, 20)
+        Node.heavy_checks_repeat!({coins: ["BTC"]})
+      end
 
+      it "should call process_templates" do
+        expect(Block).to receive(:process_templates!).with(:btc)
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 

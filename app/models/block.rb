@@ -250,6 +250,21 @@ class Block < ApplicationRecord
     return true
   end
 
+  def set_template_diff!
+    # Transactions and total fee may be missing e.g. if this is a headers only block:
+    return if self.total_fee.nil? || self.tx_ids.nil?
+    last_template = BlockTemplate.where(height: self.height).last
+    return if last_template.nil?
+    template_tx_ids = BlockTemplate.get_binary_chunks(last_template.tx_ids,32)
+    block_tx_ids = BlockTemplate.get_binary_chunks(self.tx_ids,32)
+    # * fee difference
+    # * transactions in template that are missing in the block, and;
+    # * those in the block that were not in the template:
+    self.update template_txs_fee_diff: self.total_fee - last_template.fee_total,
+                tx_ids_added: (block_tx_ids - template_tx_ids).join(),
+                tx_ids_omitted: (template_tx_ids - block_tx_ids).join()
+  end
+
   def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
 
     block = Block.find_or_create_by(
@@ -719,6 +734,14 @@ class Block < ApplicationRecord
       error += "\nBlocks to invalidate: #{ blocks_to_invalidate.collect { |b| "#{ b.block_hash } (#{ b.height })" }.join(", ")}"
     end
     raise RollbackError.new(error)
+  end
+
+  def self.process_templates!(coin)
+    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    min_height = BlockTemplate.where(coin: coin).minimum(:height)
+    Block.where(coin: coin, template_txs_fee_diff: nil).where("height >= ?", min_height).where.not(total_fee: nil).each do |block|
+      block.set_template_diff!
+    end
   end
 
 end

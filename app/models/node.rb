@@ -666,6 +666,7 @@ class Node < ApplicationRecord
         LightningTransaction.check!({coin: coin.downcase.to_sym, max: 1000}) if coin == "BTC"
         LightningTransaction.check_public_channels! if coin == "BTC"
         Block.match_missing_pools!(coin.downcase.to_sym, 3)
+        Block.process_templates!(coin.downcase.to_sym)
         Block.find_missing(coin.downcase.to_sym, 40000, 20) # waits 20 seconds for blocks
         StaleCandidate.process!(coin.downcase.to_sym)
         StaleCandidate.prime_cache(coin.downcase.to_sym)

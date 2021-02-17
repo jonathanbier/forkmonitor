@@ -1,5 +1,6 @@
 class BlockTemplate < ApplicationRecord
   include ::TxIdConcern
+  enum coin: [:btc, :bch, :bsv, :tbtc]
   belongs_to :parent_block, class_name: 'Block', optional: true
   belongs_to :node
 
@@ -23,6 +24,7 @@ class BlockTemplate < ApplicationRecord
       height = template["height"]
       tx_ids = hashes_to_binary(template["transactions"].collect{|tx| tx["txid"] })
       template = self.create!(
+        coin: node.coin,
         height: template["height"],
         parent_block: parent_block,
         node: node,
@@ -35,22 +37,6 @@ class BlockTemplate < ApplicationRecord
       #       block will use whatever we processed last.
       # Save space by cleaning up transaction ids from earlier templates at this height:
       self.where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil
-
-      # If this is the first template at a new height, and we have the parent block,
-      # process stats for the previous block:
-      if parent_block.present? && self.where(parent_block: parent_block, node: node).count == 1
-        last_template = BlockTemplate.where(height: height - 1, node: node).where.not(tx_ids: nil).last
-        unless last_template.nil? || parent_block.total_fee.nil?
-          template_tx_ids = BlockTemplate.get_binary_chunks(last_template.tx_ids,32)
-          block_tx_ids = BlockTemplate.get_binary_chunks(parent_block.tx_ids,32)
-          # * fee difference
-          # * transactions in template that are missing in the block, and;
-          # * those in the block that were not in the template:
-          parent_block.update template_txs_fee_diff: parent_block.total_fee - last_template.fee_total,
-                              tx_ids_added: (block_tx_ids - template_tx_ids).join(),
-                              tx_ids_omitted: (template_tx_ids - block_tx_ids).join()
-        end
-      end
     end
   end
 
