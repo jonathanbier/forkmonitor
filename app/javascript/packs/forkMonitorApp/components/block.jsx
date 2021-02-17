@@ -51,9 +51,9 @@ class Block extends React.Component {
                 { this.state.hash } ({ this.state.coin.toUpperCase() })
               </BreadcrumbItem>
             </Breadcrumb>
-          { this.state.block &&
-            <p>Height: { this.state.block.height }</p>
-          }
+            { this.state.block &&
+              <BlockInfo block={ this.state.block } />
+            }
           </Col></Row>
         </Container>
       </TabPane>
