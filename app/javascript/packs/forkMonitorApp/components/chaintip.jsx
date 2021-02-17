@@ -11,7 +11,7 @@ import {
 } from 'reactstrap';
 
 import Node from './node';
-import ChaintipInfo from './chaintipInfo';
+import BlockInfo from './blockInfo';
 
 class Chaintip extends React.Component {
   render() {
@@ -22,7 +22,7 @@ class Chaintip extends React.Component {
               Chaintip: { this.props.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
-          <ChaintipInfo chaintip={ this.props.chaintip }/>
+          <BlockInfo block={ this.props.chaintip.block }/>
           <small>
             <Table striped>
               <tbody>

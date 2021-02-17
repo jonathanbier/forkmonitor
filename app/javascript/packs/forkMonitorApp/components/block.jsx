@@ -2,7 +2,7 @@ import React from 'react';
 import axios from 'axios';
 
 import Explorer from './explorer';
-import ChaintipInfo from './chaintipInfo';
+import BlockInfo from './blockInfo';
 
 import {
     Breadcrumb,
