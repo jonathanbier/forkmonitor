@@ -112,7 +112,7 @@ class Block < ApplicationRecord
   end
 
   def fetch_transactions!
-    if self.transactions.count == 0 && !self.pruned && !self.headers_only
+    if self.transactions.count == 0 && !self.headers_only
       Rails.logger.debug "Fetch transactions at height #{ self.height } (#{ self.block_hash })..."
       # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
       # Workaround for test framework, needed in order to mock first_seen_by
@@ -121,7 +121,7 @@ class Block < ApplicationRecord
         node = this_block.first_seen_by
         # getblock argument verbosity 2 was added in v0.16.0
         # Knots doesn't return the transaction hash
-        if node.nil? || (node.core? && node.version < 160000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
+        if self.pruned? || node.nil? || (node.core? && node.version < 160000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
           node = Node.newest_node(this_block.coin.to_sym)
         end
         block_info = node.getblock(self.block_hash, 2)
@@ -129,8 +129,7 @@ class Block < ApplicationRecord
         self.update pruned: true
         return
       rescue Node::BlockNotFoundError
-        # This is occasionally thrown instead, assuming that's also due to pruning:
-        self.update pruned: true
+        # Perhaps the newest node hasn't seen this block yet, just try again later
         return
       end
       throw "Missing transaction data for #{ self.coin.upcase } block #{ self.height } (#{ self.block_hash }) on #{ node.name_with_version }" if block_info["tx"].nil?
