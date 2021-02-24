@@ -59,6 +59,7 @@ class StaleCandidate < ApplicationRecord
       height_processed: self.height_processed,
       n_children: self.children.count,
       children: self.children,
+      missing_transactions: self.missing_transactions,
       confirmed_in_one_branch: self.confirmed_in_one_branch_txs,
       confirmed_in_one_branch_total: (self.confirmed_in_one_branch_total || 0) - (self.double_spent_in_one_branch_total || 0),
       double_spent_in_one_branch: self.double_spent_in_one_branch_txs,
@@ -87,6 +88,9 @@ class StaleCandidate < ApplicationRecord
     # in the shortest chain that are missing in the longest chain.
     (shortest, longest) = self.children.sort_by {|c| c.length }
     return nil if shortest.root.headers_only || longest.root.headers_only
+    # Ensure we have transactions for all child blocks
+    return nil if ([shortest.root] + shortest.root.descendants(DOUBLE_SPEND_RANGE)).any? { |block| block.transactions.count == 0 }
+    return nil if ([longest.root] + longest.root.descendants(DOUBLE_SPEND_RANGE)).any? { |block| block.transactions.count == 0 }
     shortest_tx_ids = shortest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     longest_tx_ids = longest.root.block_and_descendant_transaction_ids(DOUBLE_SPEND_RANGE)
     if shortest.length < longest.length
@@ -207,9 +211,15 @@ class StaleCandidate < ApplicationRecord
 
   def set_conflicting_tx_info!(tip_height)
     Rails.logger.info "Prime confirmed in one branch cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
+    missing_transactions = false
     self.update n_children: self.children.count
-    confirmed_in_one_branch = self.get_confirmed_in_one_branch || []
-    confirmed_in_one_branch_total = (confirmed_in_one_branch.nil? || confirmed_in_one_branch.count == 0) ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
+    confirmed_in_one_branch = self.get_confirmed_in_one_branch
+    # TODO: check missing_transactions seperately and avoid expensive calls below
+    if confirmed_in_one_branch.nil?
+      confirmed_in_one_branch = []
+      missing_transactions = true
+    end
+    confirmed_in_one_branch_total = confirmed_in_one_branch.count == 0 ? 0 : Transaction.where("tx_id in (?)", confirmed_in_one_branch).select("tx_id, max(amount) as amount").group(:tx_id).collect{|tx| tx.amount}.inject(:+)
     Rails.logger.info "Prime doublespend cache for #{ coin.to_s.upcase } stale candidate #{ self.height }..."
     spent_coins_with_tx = self.get_spent_coins_with_tx
     txs_short, txs_long = self.get_double_spent_inputs(spent_coins_with_tx)
@@ -222,7 +232,8 @@ class StaleCandidate < ApplicationRecord
     rbf_by = txs_long.nil? ? [] : txs_long.collect{|tx| tx.tx_id}
     rbf_total = txs_short.nil? ? 0 : txs_short.collect{|tx| tx.amount}.inject(:+)
 
-    self.update confirmed_in_one_branch: confirmed_in_one_branch,
+    self.update missing_transactions: missing_transactions,
+                confirmed_in_one_branch: confirmed_in_one_branch,
                 confirmed_in_one_branch_total: confirmed_in_one_branch_total,
                 double_spent_in_one_branch: double_spent_in_one_branch,
                 double_spent_in_one_branch_total: double_spent_in_one_branch_total,
@@ -230,7 +241,7 @@ class StaleCandidate < ApplicationRecord
                 rbf: rbf,
                 rbf_by: rbf_by,
                 rbf_total: rbf_total,
-                height_processed: tip_height
+                height_processed: missing_transactions ? nil : tip_height
   end
 
   def process!

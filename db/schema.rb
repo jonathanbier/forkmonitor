@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_02_17_102510) do
+ActiveRecord::Schema.define(version: 2021_02_24_111354) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -291,6 +291,7 @@ ActiveRecord::Schema.define(version: 2021_02_17_102510) do
     t.integer "height_processed"
     t.string "double_spent_by", default: [], null: false, array: true
     t.string "rbf_by", default: [], null: false, array: true
+    t.boolean "missing_transactions", default: false, null: false
     t.index ["coin", "height"], name: "index_stale_candidates_on_coin_and_height", unique: true
   end
 

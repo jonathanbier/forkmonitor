@@ -41,8 +41,10 @@ class StaleCandidates extends React.Component {
     super(props);
 
     this.state = {
+      loading: true,
       redirect: false,
       staleCandidates: [],
+      missingTransactions: null,
       confirmedInOneBranch: null,
       confirmedInOneBranchTotal: null,
       doubleSpent: null,
@@ -70,6 +72,8 @@ class StaleCandidates extends React.Component {
       return response.data;
     }).then(function (res) {
       this.setState({
+        loading: false,
+        missingTransactions: res.missing_transactions,
         confirmedInOneBranch: res.confirmed_in_one_branch,
         confirmedInOneBranchTotal: res.confirmed_in_one_branch_total,
         doubleSpent: res.double_spent_in_one_branch,
@@ -182,19 +186,6 @@ class StaleCandidates extends React.Component {
                 })}
               </tbody>
             </Table>
-            { this.state.confirmedInOneBranch == null &&
-              <span>
-                { this.state.headersOnly &&
-                  <p>Due to missing block data we are currently unable to check for potential double spends.</p>
-                }
-                { !this.state.headersOnly &&
-                  <FontAwesomeIcon
-                    className="fa-pulse"
-                    icon={ faSpinner }
-                  />
-                }
-              </span>
-            }
             <div>
               <h3>Conflicting Transactions</h3>
               <p>
@@ -202,65 +193,78 @@ class StaleCandidates extends React.Component {
                 transaction occurs in the other branch</i>, then it could be an RBF
                 fee increase or a double-spend attempt.
               </p>
-              { this.state.doubleSpent != null && this.state.doubleSpent.length == 0 &&
-                <p>No double spends have been detected</p>
+              { this.state.loading &&
+                <FontAwesomeIcon
+                  className="fa-pulse"
+                  icon={ faSpinner }
+                />
               }
-              { this.state.doubleSpent != null && this.state.doubleSpent.length > 0 &&
-                <div>
-                    <p>{ this.state.doubleSpent.length } transaction(s)
-                    involving { this.state.doubleSpentTotal } BTC have been doublespent
-                    on the longest chain.
-                  </p>
-                  <Table striped responsive className="conflicting-transactions">
-                    <thead>
-                      <tr align="left">
-                        <th style={ {width: "100pt"} }>BTC</th>
-                        <th>In shortest branch</th>
-                        <th>In longest branch</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {this.state.doubleSpent.map(function (tx, index) {
-                        return (
-                          <ConflictingTransaction key={index} coin={ coin } tx={ tx } conflict={ doubleSpentBy[index] }/>
-                        )
-                      })}
-                    </tbody>
-                  </Table>
-                </div>
+              { !this.state.loading &&
+                <span>
+                  { (this.state.headersOnly || this.state.missingTransactions ) &&
+                    <p>Due to missing block data we are currently unable to check this.</p>
+                  }
+                  { !this.state.missingTransactions && this.state.doubleSpent.length == 0 &&
+                    <p>No double spends have been detected</p>
+                  }
+                  { !this.state.missingTransactions && this.state.doubleSpent.length > 0 &&
+                    <div>
+                        <p>{ this.state.doubleSpent.length } transaction(s)
+                        involving { this.state.doubleSpentTotal } BTC have been doublespent
+                        on the longest chain.
+                      </p>
+                      <Table striped responsive className="conflicting-transactions">
+                        <thead>
+                          <tr align="left">
+                            <th style={ {width: "100pt"} }>BTC</th>
+                            <th>In shortest branch</th>
+                            <th>In longest branch</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {this.state.doubleSpent.map(function (tx, index) {
+                            return (
+                              <ConflictingTransaction key={index} coin={ coin } tx={ tx } conflict={ doubleSpentBy[index] }/>
+                            )
+                          })}
+                        </tbody>
+                      </Table>
+                    </div>
+                  }
+                  { !this.state.missingTransactions && this.state.rbf.length == 0 &&
+                    <p>No (RBF) fee bumps have been detected</p>
+                  }
+                  { !this.state.missingTransactions && this.state.rbf.length > 0 &&
+                    <div>
+                        <p>{ this.state.rbf.length } transaction(s)
+                        involving { this.state.rbfTotal } BTC have been fee bumped
+                        on the longest chain. Presence of an RBF flag is not considered here.
+                        For each output, we check if was changed by less than 0.0001 BTC.
+                      </p>
+                      <Table striped responsive size="sm" className="lightning">
+                        <thead>
+                          <tr align="left">
+                            <th style={ {width: "100pt"} }>BTC</th>
+                            <th>In shortest branch</th>
+                            <th>In longest branch</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {this.state.rbf.map(function (tx, index) {
+                            return (<ConflictingTransaction
+                                key={index}
+                                coin={ coin }
+                                tx={ tx }
+                                conflict={ rbfBy[index] }
+                              />)
+                          })}
+                        </tbody>
+                      </Table>
+                    </div>
+                  }
+                </span>
               }
-              { this.state.rbf != null && this.state.rbf.length == 0 &&
-                <p>No (RBF) fee bumps have been detected</p>
-              }
-              { this.state.rbf != null && this.state.rbf.length > 0 &&
-                <div>
-                    <p>{ this.state.rbf.length } transaction(s)
-                    involving { this.state.rbfTotal } BTC have been fee bumped
-                    on the longest chain. Presence of an RBF flag is not considered here.
-                    For each output, we check if was changed by less than 0.0001 BTC.
-                  </p>
-                  <Table striped responsive size="sm" className="lightning">
-                    <thead>
-                      <tr align="left">
-                        <th style={ {width: "100pt"} }>BTC</th>
-                        <th>In shortest branch</th>
-                        <th>In longest branch</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {this.state.rbf.map(function (tx, index) {
-                        return (<ConflictingTransaction
-                            key={index}
-                            coin={ coin }
-                            tx={ tx }
-                            conflict={ rbfBy[index] }
-                          />)
-                      })}
-                    </tbody>
-                  </Table>
-                </div>
-              }
-              { this.state.confirmedInOneBranch != null && this.state.confirmedInOneBranch.length > 0 &&
+              { this.state.missingTransactions == false && this.state.confirmedInOneBranch.length > 0 &&
                 <div>
                   <h3>Transactions not seen in both branches</h3>
                   <p>
