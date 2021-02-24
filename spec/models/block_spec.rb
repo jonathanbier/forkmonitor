@@ -240,17 +240,17 @@ RSpec.describe Block, :type => :model do
       expect(@block.transactions.count).to eq(1)
     end
 
-    it "should mark block as pruned if it can't be fetched" do
+    it "should mark block as pruned if it can't be fetched due to pruning" do
       @block = create(:block, block_hash: "0000000000000000000000000000000000000000000000000000000000000001", first_seen_by: @node)
       @block.fetch_transactions!
       expect(@block.pruned).to eq(true)
     end
 
-    it "should not try a pruned block again" do
+    it "should try the modern node if a block was pruned" do
       @block = create(:block, block_hash: "0000000000000000000000000000000000000000000000000000000000000001", first_seen_by: @node)
       @block.fetch_transactions!
-      expect(Block).not_to receive(:find_by)
-      @block.fetch_transactions!
+      expect(Block).to receive(:find_by).and_call_original
+      expect{ @block.fetch_transactions! }.to raise_error Node::NoMatchingNodeError
     end
   end
 
