@@ -14,10 +14,12 @@ RSpec.describe StaleCandidate, :type => :model do
     test.setup(num_nodes: 2, extra_args: [['-whitelist=noban@127.0.0.1']] * 2)
     @nodeA = create(:node_python)
     @nodeA.client.set_python_node(test.nodes[0])
+    @nodeA.client.createwallet()
     @nodeA.client.generate(104) # Mature coins
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[1])
+    @nodeB.client.createwallet()
 
     test.sync_blocks()
 
@@ -28,7 +30,7 @@ RSpec.describe StaleCandidate, :type => :model do
     @tx1_id = @nodeA.client.sendtoaddress(address_a, 1)
     test.sync_mempools()
 
-    test.disconnect_nodes(@nodeA.client, 1)
+    test.disconnect_nodes(0, 1)
     assert_equal(0, @nodeA.client.getpeerinfo().count)
 
     # Transaction to be mined in block 105 by node A, and later by node B
@@ -66,7 +68,7 @@ RSpec.describe StaleCandidate, :type => :model do
     @nodeA.reload
     expect(@nodeA.block.height).to eq(@nodeB.block.height)
     expect(@nodeA.block.block_hash).not_to eq(@nodeB.block.block_hash)
-    test.connect_nodes(@nodeA.client, 1)
+    test.connect_nodes(0, 1)
     # Don't sync, because there's no winning chain, so test framework times out
     # test.sync_blocks()
 
@@ -148,7 +150,7 @@ RSpec.describe StaleCandidate, :type => :model do
 
       describe "when one chain is longer" do
         before do
-          test.disconnect_nodes(@nodeA.client, 1)
+          test.disconnect_nodes(0, 1)
           assert_equal(0, @nodeA.client.getpeerinfo().count)
           # this mines tx2
           @nodeA.client.generate(1)
@@ -175,7 +177,7 @@ RSpec.describe StaleCandidate, :type => :model do
 
       describe "when one chain is longer" do
         before do
-          test.disconnect_nodes(@nodeA.client, 1)
+          test.disconnect_nodes(0, 1)
           assert_equal(0, @nodeA.client.getpeerinfo().count)
           # this mines tx2
           @nodeA.client.generate(1)
@@ -235,7 +237,7 @@ RSpec.describe StaleCandidate, :type => :model do
     end
 
     it "should not also create one if the race continues 1 more block" do
-      test.disconnect_nodes(@nodeA.client, 1)
+      test.disconnect_nodes(0, 1)
       assert_equal(0, @nodeA.client.getpeerinfo().count)
       @nodeA.client.generate(1)
       @nodeB.client.generate(1)
@@ -244,7 +246,7 @@ RSpec.describe StaleCandidate, :type => :model do
       @nodeA.reload
       expect(@nodeA.block.height).to eq(@nodeB.block.height)
       expect(@nodeA.block.block_hash).not_to eq(@nodeB.block.block_hash)
-      test.connect_nodes(@nodeA.client, 1)
+      test.connect_nodes(0, 1)
 
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end

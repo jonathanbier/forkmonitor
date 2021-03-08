@@ -27,7 +27,6 @@ RSpec.describe InflatedBlock, type: :model do
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[2])
-
   end
 
   after do
@@ -49,8 +48,8 @@ RSpec.describe InflatedBlock, type: :model do
       expect(@node.mirror_rest_until).not_to be_nil
       @node.update mirror_rest_until: nil
       # reconnect node with mirror node after network is restored
-      test.connect_nodes(@node.client, 1)
-      test.connect_nodes(@node.client, 2)
+      test.connect_nodes(0, 1)
+      test.connect_nodes(0, 2)
 
       @node.client.generate(1)
       test.sync_blocks()
@@ -136,15 +135,15 @@ RSpec.describe InflatedBlock, type: :model do
 
     describe "BTC mirror node has a valid-headers tip" do
       before do
-        test.disconnect_nodes(@nodeB.client, 0)
-        test.disconnect_nodes(@nodeB.client, 1)
+        test.disconnect_nodes(2, 0)
+        test.disconnect_nodes(2, 1)
         assert_equal(0, @nodeB.client.getpeerinfo().count)
         @node.client.generate(1)
         # Block at same height, but seen later by @node. It will be fetched,
         # but only validated up to valid-headers.
         @nodeB.client.generate(1)
-        test.connect_nodes(@nodeB.client, 0)
-        test.connect_nodes(@nodeB.client, 1)
+        test.connect_nodes(2, 0)
+        test.connect_nodes(2, 1)
         chaintips = @node.client.getchaintips()
         expect(chaintips.count).to eq(2)
         expect(chaintips.select{|tip| tip["status"] == "valid-headers"}.count).to eq(1)
@@ -159,8 +158,8 @@ RSpec.describe InflatedBlock, type: :model do
 
     describe "BTC mirror node has a valid-fork" do
       before do
-        test.disconnect_nodes(@nodeB.client, 0)
-        test.disconnect_nodes(@nodeB.client, 1)
+        test.disconnect_nodes(2, 0)
+        test.disconnect_nodes(2, 1)
         assert_equal(0, @nodeB.client.getpeerinfo().count)
         # This will be the active tip until sync, when it's replaced with the
         # longer chain from node B. It then becomes a valid-fork.
@@ -168,8 +167,8 @@ RSpec.describe InflatedBlock, type: :model do
         # Block at same height, but seen later by @node. It will be fetched,
         # but only validated up to valid-headers.
         @nodeB.client.generate(2)
-        test.connect_nodes(@nodeB.client, 0)
-        test.connect_nodes(@nodeB.client, 1)
+        test.connect_nodes(2, 0)
+        test.connect_nodes(2, 1)
         chaintips = @node.client.getchaintips()
         expect(chaintips.count).to eq(2)
         expect(chaintips.select{|tip| tip["status"] == "valid-fork"}.count).to eq(1)
@@ -190,8 +189,8 @@ RSpec.describe InflatedBlock, type: :model do
         expect(@node.mirror_rest_until).not_to be_nil
         @node.update mirror_rest_until: nil
         # reconnect node with mirror node after network is restored
-        test.connect_nodes(@node.client, 1)
-        test.connect_nodes(@node.client, 2)
+        test.connect_nodes(0, 1)
+        test.connect_nodes(0, 2)
         @node.client.generate(1)
         test.sync_blocks()
         @node.poll!

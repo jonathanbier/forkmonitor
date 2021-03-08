@@ -20,7 +20,6 @@ RSpec.describe Block, :type => :model do
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[2])
-
     @nodeA.client.generate(2)
     test.sync_blocks()
 
@@ -302,9 +301,9 @@ RSpec.describe Block, :type => :model do
     before do
       setup_python_nodes()
 
-      test.disconnect_nodes(@nodeA.client, 1) # disconnect A from mirror (A')
-      test.disconnect_nodes(@nodeA.client, 2) # disconnect A from B
-      test.disconnect_nodes(@nodeA.mirror_client, 2) # disconnect A' from B
+      test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
+      test.disconnect_nodes(0, 2) # disconnect A from B
+      test.disconnect_nodes(1, 2) # disconnect A' from B
       assert_equal(0, @nodeA.client.getpeerinfo().count)
       assert_equal(0, @nodeA.mirror_client.getpeerinfo().count)
 
@@ -312,9 +311,9 @@ RSpec.describe Block, :type => :model do
       @nodeB.client.generate(2) # active one node B
       @nodeA.poll!
       @nodeB.poll!
-      test.connect_nodes(@nodeA.client, 1)
-      test.connect_nodes(@nodeA.client, 2)
-      test.connect_nodes(@nodeA.mirror_client, 2)
+      test.connect_nodes(0, 1)
+      test.connect_nodes(0, 2)
+      test.connect_nodes(1, 2)
 
       test.sync_blocks()
 
@@ -425,18 +424,18 @@ RSpec.describe Block, :type => :model do
     before do
       setup_python_nodes()
 
-      test.disconnect_nodes(@nodeA.client, 1) # disconnect A from mirror (A')
-      test.disconnect_nodes(@nodeA.client, 2) # disconnect A from B
-      test.disconnect_nodes(@nodeA.mirror_client, 2) # disconnect A' from B
+      test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
+      test.disconnect_nodes(0, 2) # disconnect A from B
+      test.disconnect_nodes(1, 2) # disconnect A' from B
       assert_equal(0, @nodeA.client.getpeerinfo().count)
       assert_equal(0, @nodeA.mirror_client.getpeerinfo().count)
 
       @nodeA.client.generate(2) # this is and remains active
       @nodeB.client.generate(1) # Node A will see this as valid-headers after reconnect
       @nodeA.poll!
-      test.connect_nodes(@nodeA.client, 1)
-      test.connect_nodes(@nodeA.client, 2)
-      test.connect_nodes(@nodeA.mirror_client, 2)
+      test.connect_nodes(0, 1)
+      test.connect_nodes(0, 2)
+      test.connect_nodes(1, 2)
 
       test.sync_blocks()
 

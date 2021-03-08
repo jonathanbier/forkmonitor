@@ -55,6 +55,26 @@ class BitcoinClientPython
     end
   end
 
+  def createwallet(wallet_name:"", disable_private_keys: false, blank: false, passphrase:"", avoid_reuse: false, descriptors: true)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      return @node.createwallet(wallet_name, disable_private_keys, blank, passphrase, avoid_reuse, descriptors)
+    rescue PyCall::PyError => e
+      raise Error, "createwallet failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def importdescriptors(descriptors)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      return @node.importdescriptors(descriptors)
+    rescue PyCall::PyError => e
+      raise Error, "importdescriptors failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   # Only used in tests
   def bumpfee(tx_id)
     raise Error, "Set Python node" unless @node != nil
@@ -173,10 +193,18 @@ class BitcoinClientPython
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     begin
-      n.times do
-        coinbase_dest = @node.getnewaddress()
-        @node.generatetoaddress(1, coinbase_dest)
-      end
+      coinbase_dest = @node.get_deterministic_priv_key().address
+      @node.generatetoaddress(n, coinbase_dest)
+    rescue Error => e
+      raise Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def generatetoaddress(n, address)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+      @node.generatetoaddress(n, address)
     rescue Error => e
       raise Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -274,13 +302,13 @@ class BitcoinClientPython
     end
   end
 
-  def send(outputs, conf_target, estimate_mode, fee_rate, options)
+  def listtransactions
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     begin
-        return @node.send(:send, outputs.to_json, conf_target, estimate_mode, fee_rate, options.to_json)
+        return @node.listtransactions()
     rescue Error => e
-      raise Error, "send failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "listtransactions failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -295,6 +323,28 @@ class BitcoinClientPython
     end
   end
 
+  def gettransaction(tx)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Specify transaction" unless tx.present?
+    begin
+        return @node.gettransaction(tx)
+    rescue Error => e
+      raise Error, "gettransaction(#{ tx }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def abandontransaction(tx)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    raise Error, "Specify transaction" unless tx.present?
+    begin
+        return @node.abandontransaction(tx)
+    rescue Error => e
+      raise Error, "abandontransaction(#{ tx }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def sendtoaddress(destination, amount, comment="", comment_to="", subtractfeefromamount=false, replaceable=false)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
@@ -304,6 +354,16 @@ class BitcoinClientPython
       return @node.sendtoaddress(address=destination, amount=amount.to_s, comment=comment, comment_to=comment_to, subtractfeefromamount=subtractfeefromamount, replaceable=replaceable)
     rescue Error => e
       raise Error, "sendtoaddress(#{ destination }, #{ amount }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def testmempoolaccept(txs)
+    raise Error, "Set Python node" unless @node != nil
+    raise ConnectionError if @mock_connection_error
+    begin
+        return @node.testmempoolaccept(txs)
+    rescue Error => e
+      raise Error, "testmempoolaccept failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -348,15 +408,14 @@ class BitcoinClientPython
     end
   end
 
-  def submitblock(block, block_hash)
+  def submitblock(block, block_hash=nil)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     raise Error, "Specify block" unless block.present?
-    raise Error, "Specify block hash" unless block_hash.present?
     begin
         return @node.submitblock(block)
     rescue Error => e
-      raise Error, "submitblock(#{ block_hash }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+      raise Error, "submitblock(#{ block_hash.present? ? block_hash : block }) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

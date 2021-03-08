@@ -82,6 +82,7 @@ RSpec.describe Node, :type => :model do
       test.setup()
       @node = create(:node_python)
       @node.client.set_python_node(test.nodes[0])
+      @node.client.createwallet()
       @node.client.generate(2)
       @block_hash = @node.client.getbestblockhash()
     end
@@ -117,6 +118,7 @@ RSpec.describe Node, :type => :model do
       test.setup()
       @node = create(:node_python)
       @node.client.set_python_node(test.nodes[0])
+      @node.client.createwallet()
       @node.client.generate(2)
       @block_hash = @node.client.getbestblockhash()
     end
@@ -150,6 +152,7 @@ RSpec.describe Node, :type => :model do
           test.setup()
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
+          @node.client.createwallet()
           @node.client.generate(2)
           allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         end
@@ -161,7 +164,7 @@ RSpec.describe Node, :type => :model do
 
         it "should store the node version" do
           @node.poll!
-          expect(@node.version).to be 199900
+          expect(@node.version).to be 219900
         end
 
         it "should get IBD status" do
@@ -221,6 +224,7 @@ RSpec.describe Node, :type => :model do
         test.setup()
         @node = create(:node_python)
         @node.client.set_python_node(test.nodes[0])
+        @node.client.createwallet()
         @node.client.generate(2)
         expect(Node).to receive("set_pool_tx_ids_fee_total_for_block!").at_least(:once).and_return(nil)
         @node.poll! # stores the block and node entry
@@ -514,10 +518,12 @@ RSpec.describe Node, :type => :model do
       test.setup(num_nodes: 2)
       @nodeA = create(:node_python)
       @nodeA.client.set_python_node(test.nodes[0])
+      @nodeA.client.createwallet()
       @nodeA.client.generate(2)
 
       @nodeB = create(:node_python)
       @nodeB.client.set_python_node(test.nodes[1])
+      @nodeB.client.createwallet()
 
       test.sync_blocks()
     end
@@ -532,7 +538,7 @@ RSpec.describe Node, :type => :model do
       before do
         allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
 
-        test.disconnect_nodes(@nodeA.client, 1)
+        test.disconnect_nodes(0, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
 
         @nodeB.client.generate(1)
@@ -867,6 +873,7 @@ RSpec.describe Node, :type => :model do
         allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         @node = create(:node_python_with_mirror)
         @node.client.set_python_node(test.nodes[0])
+        @node.client.createwallet()
         @node.mirror_client.set_python_node(test.nodes[0]) # use same node for mirror
         @node.mirror_client.generate(2)
         @block_hash = @node.client.getbestblockhash()

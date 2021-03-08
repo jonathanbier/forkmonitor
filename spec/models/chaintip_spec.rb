@@ -9,11 +9,30 @@ RSpec.describe Chaintip, type: :model do
 
     stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
-    test.setup(num_nodes: 2, extra_args: [[], ["-con_nsubsidyhalvinginterval=10"]])
-    @nodeA = create(:node_python)
+    # The current commit of Bitcoin Core has wallet taproot descriptor support,
+    # even when taproot is not active. We take advantage of this by creating
+    # a transaction in the non-taproot wallet and then calling abandontransaction.
+    #
+    # TOOD: figure out how to get the "send" RPC to work ('send' is a reserved
+    # keyword in Ruby and Python and this seems to confuse the wrapper)
+    #
+    # Once a release with Taproot support is available, it's best to use that
+    # for the second node, so that this test still works when Taproot deployment
+    # is burried (at which point vbparams won't work).
+    test.setup(num_nodes: 2, extra_args: [[],["-vbparams=taproot:1:1"]])
+    @nodeA = create(:node_python) # Taproot enabled
     @nodeA.client.set_python_node(test.nodes[0])
-    @nodeB = create(:node_python)
+    @nodeA.client.createwallet()
+    @nodeB = create(:node_python) # Taproot disabled
     @nodeB.client.set_python_node(test.nodes[1])
+    @nodeB.client.createwallet(blank: true)
+    @nodeB.client.importdescriptors([
+      {"desc": "tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse", "active": true, "internal": false, "timestamp": "now", "range": 10},
+      {"desc": "tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*)#fnmy82qp", "active": true, "internal": true, "timestamp": "now", "range": 10}
+    ])
+    @addr1 = @nodeB.client.getnewaddress()
+    @addr2 = @nodeB.client.getnewaddress()
+    @r_addr = @nodeA.client.getnewaddress()
 
     @nodeA.client.generate(2)
     test.sync_blocks()
@@ -250,14 +269,14 @@ RSpec.describe Chaintip, type: :model do
 
     describe "one active and one valid-fork chaintip" do
       before do
-        test.disconnect_nodes(@nodeA.client, 1)
+        test.disconnect_nodes(0, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
 
         @nodeA.client.generate(2) # this will be a valid-fork after reorg
         @nodeB.client.generate(3) # reorg to this upon reconnect
         @nodeA.poll!
         @nodeB.poll!
-        test.connect_nodes(@nodeA.client, 1)
+        test.connect_nodes(0, 1)
         test.sync_blocks()
       end
 
@@ -281,14 +300,14 @@ RSpec.describe Chaintip, type: :model do
 
       it "should ignore forks more than 1000 blocks ago" do
         # 10 on regtest
-        test.disconnect_nodes(@nodeA.client, 1)
+        test.disconnect_nodes(0, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
 
         @nodeA.client.generate(11) # this will be a valid-fork after reorg
         @nodeB.client.generate(12) # reorg to this upon reconnect
         @nodeA.poll!
         @nodeB.poll!
-        test.connect_nodes(@nodeA.client, 1)
+        test.connect_nodes(0, 1)
 
         Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(2)
@@ -301,7 +320,7 @@ RSpec.describe Chaintip, type: :model do
         @nodeA.poll!
         @nodeB.poll!
         # Disconnect nodes and produce one more block for A
-        test.disconnect_nodes(@nodeA.client, 1)
+        test.disconnect_nodes(0, 1)
         assert_equal(0, @nodeA.client.getpeerinfo().count)
         @nodeA.client.generate(1)
         @nodeA.poll!
@@ -318,43 +337,74 @@ RSpec.describe Chaintip, type: :model do
 
     describe "invalid chaintip" do
       before do
-        # Node B expects the first halving at block 10 instead of block 150.
-        # Generate blocks up to that point:
-        @nodeA.client.generate(7)
-        test.sync_blocks()
-        test.disconnect_nodes(@nodeA.client, 1)
-        assert_equal(0, @nodeA.client.getpeerinfo().count)
-        # Node A will have the longest chain, but its considered invalid by B
-        # because it expects the first halving at height 10.
-        @nodeA.client.generate(3)
-        @nodeB.client.generate(2) # active chaintip
-        test.connect_nodes(@nodeA.client, 1)
+        # Reach coinbase maturity
+        @nodeA.client.generatetoaddress(99, @r_addr)
+
+        # Fund a taproot address and mine it
+        @nodeA.client.sendtoaddress(@addr1, 1)
+        @nodeA.client.generate(1)
+
+        # Spend from taproot address (this node has taproot disabled, so it won't broadcast)
+        tx_id = @nodeB.client.sendtoaddress(@r_addr, 0.1)
+        tx_hex = @nodeB.client.gettransaction(tx_id)["hex"]
+        @nodeB.client.abandontransaction(tx_id)
+
+        txs = @nodeB.client.listtransactions()
+        assert_equal(txs[1]['txid'], tx_id)
+        assert_equal(txs[1]['abandoned'], true)
+
+        mempool_tap = @nodeA.client.testmempoolaccept([tx_hex])[0]
+        mempool_no_tap = @nodeB.client.testmempoolaccept([tx_hex])[0]
+        expect(mempool_tap['allowed']).to eq(true)
+        expect(mempool_no_tap['allowed']).to eq(false)
+        expect(mempool_no_tap['reject-reason']).to eq("bad-txns-nonstandard-inputs")
+
+        # Cripple transaction so that it's invalid under taproot rules
+        if tx_hex[-20] == "0" then
+          tx_hex[-20] = "f"
+        else
+          tx_hex[-20] = "0"
+        end
+
+        mempool_broken_tap = @nodeA.client.testmempoolaccept([tx_hex])[0]
+        mempool_broken_no_tap = @nodeB.client.testmempoolaccept([tx_hex])[0]
+
+        expect(mempool_broken_no_tap['allowed']).to eq(false)
+        expect(mempool_broken_no_tap['reject-reason']).to eq('bad-txns-nonstandard-inputs')
+
+        expect(mempool_broken_tap['allowed']).to eq(false)
+        expect(mempool_broken_tap['reject-reason']).to eq('non-mandatory-script-verify-flag (Invalid Schnorr signature)')
+
+        # @nodeA.client.sendrawtransaction(tx_hex)
+        block_hex = test.createtaprootblock([tx_hex])
+        @nodeB.client.submitblock(block_hex)
         sleep(1)
-        @disputed_block_hash = @nodeA.client.getbestblockhash
+
+        @disputed_block_hash = @nodeB.client.getbestblockhash
       end
 
       describe "not in our db" do
         before do
-          # Don't poll node A, so our DB won't contain the disputed block
-          @nodeB.poll!
+          # Don't poll node B, so our DB won't contain the disputed block
+          @nodeA.poll!
         end
 
         it "should store the block" do
-          Chaintip.check!(:btc, [@nodeB])
+          Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
         end
 
         it "should mark the block as invalid" do
-          Chaintip.check!(:btc, [@nodeB])
+          Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
-          expect(block.marked_invalid_by).to include(@nodeB.id)
+          expect(block.marked_invalid_by).to include(@nodeA.id)
         end
 
         it "should store invalid tip" do
-          Chaintip.check!(:btc, [@nodeB])
-          expect(@nodeB.chaintips.where(status: "invalid").count).to eq(1)
+          Chaintip.check!(:btc, [@nodeA])
+          expect(@nodeA.chaintips.where(status: "invalid").count).to eq(1)
         end
       end
 
@@ -365,22 +415,22 @@ RSpec.describe Chaintip, type: :model do
         end
 
         it "should mark the block as invalid" do
-          Chaintip.check!(:btc, [@nodeB])
+          Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
-          expect(block.marked_invalid_by).to include(@nodeB.id)
+          expect(block.marked_invalid_by).to include(@nodeA.id)
         end
 
         it "should store invalid tip" do
-          Chaintip.check!(:btc, [@nodeB])
-          expect(@nodeB.chaintips.where(status: "invalid").count).to eq(1)
+          Chaintip.check!(:btc, [@nodeA])
+          expect(@nodeA.chaintips.where(status: "invalid").count).to eq(1)
         end
 
         it "should be nil if the node is unreachable" do
-          @nodeB.client.mock_connection_error(true)
-          @nodeB.poll!
-          Chaintip.check!(:btc, [@nodeB])
-          expect(@nodeB.chaintips.count).to eq(0)
+          @nodeA.client.mock_connection_error(true)
+          @nodeA.poll!
+          Chaintip.check!(:btc, [@nodeA])
+          expect(@nodeA.chaintips.count).to eq(0)
         end
 
       end
