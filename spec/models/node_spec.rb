@@ -83,7 +83,8 @@ RSpec.describe Node, :type => :model do
       @node = create(:node_python)
       @node.client.set_python_node(test.nodes[0])
       @node.client.createwallet()
-      @node.client.generate(2)
+      @miner_addr = @node.client.getnewaddress()
+      @node.client.generatetoaddress(2, @miner_addr)
       @block_hash = @node.client.getbestblockhash()
     end
 
@@ -119,7 +120,8 @@ RSpec.describe Node, :type => :model do
       @node = create(:node_python)
       @node.client.set_python_node(test.nodes[0])
       @node.client.createwallet()
-      @node.client.generate(2)
+      @miner_addr = @node.client.getnewaddress()
+      @node.client.generatetoaddress(2, @miner_addr)
       @block_hash = @node.client.getbestblockhash()
     end
 
@@ -153,7 +155,8 @@ RSpec.describe Node, :type => :model do
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
           @node.client.createwallet()
-          @node.client.generate(2)
+          @miner_addr = @node.client.getnewaddress()
+          @node.client.generatetoaddress(2, @miner_addr)
           allow(Node).to receive("set_pool_tx_ids_fee_total_for_block!").and_return(nil)
         end
 
@@ -193,7 +196,7 @@ RSpec.describe Node, :type => :model do
         end
 
         it "should get mempool size" do
-          @node.client.generate(100)
+          @node.client.generatetoaddress(100, @miner_addr)
           @node.client.sendtoaddress(@node.client.getnewaddress(), 0.1)
           @node.poll!
           expect(@node.mempool_bytes).to be_within(2).of(141)
@@ -225,7 +228,8 @@ RSpec.describe Node, :type => :model do
         @node = create(:node_python)
         @node.client.set_python_node(test.nodes[0])
         @node.client.createwallet()
-        @node.client.generate(2)
+        @miner_addr = @node.client.getnewaddress()
+        @node.client.generatetoaddress(@miner_addr, 2)
         expect(Node).to receive("set_pool_tx_ids_fee_total_for_block!").at_least(:once).and_return(nil)
         @node.poll! # stores the block and node entry
       end

@@ -27,6 +27,8 @@ RSpec.describe InflatedBlock, type: :model do
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[2])
+    @nodeB.client.createwallet()
+    @miner_addr = @nodeB.client.getnewaddress()
   end
 
   after do
@@ -141,7 +143,8 @@ RSpec.describe InflatedBlock, type: :model do
         @node.client.generate(1)
         # Block at same height, but seen later by @node. It will be fetched,
         # but only validated up to valid-headers.
-        @nodeB.client.generate(1)
+        # Use a new address so the block is different
+        @nodeB.client.generatetoaddress(1, @miner_addr)
         test.connect_nodes(2, 0)
         test.connect_nodes(2, 1)
         chaintips = @node.client.getchaintips()
@@ -166,7 +169,8 @@ RSpec.describe InflatedBlock, type: :model do
         @node.client.generate(1)
         # Block at same height, but seen later by @node. It will be fetched,
         # but only validated up to valid-headers.
-        @nodeB.client.generate(2)
+        # Use a new address so the block is different
+        @nodeB.client.generatetoaddress(2, @miner_addr)
         test.connect_nodes(2, 0)
         test.connect_nodes(2, 1)
         chaintips = @node.client.getchaintips()

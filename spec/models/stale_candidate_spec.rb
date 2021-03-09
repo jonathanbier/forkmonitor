@@ -15,7 +15,8 @@ RSpec.describe StaleCandidate, :type => :model do
     @nodeA = create(:node_python)
     @nodeA.client.set_python_node(test.nodes[0])
     @nodeA.client.createwallet()
-    @nodeA.client.generate(104) # Mature coins
+    @miner_addr = @nodeA.client.getnewaddress()
+    @nodeA.client.generatetoaddress(104, @miner_addr) # Mature coins
 
     @nodeB = create(:node_python)
     @nodeB.client.set_python_node(test.nodes[1])
