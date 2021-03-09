@@ -229,7 +229,7 @@ RSpec.describe Node, :type => :model do
         @node.client.set_python_node(test.nodes[0])
         @node.client.createwallet()
         @miner_addr = @node.client.getnewaddress()
-        @node.client.generatetoaddress(@miner_addr, 2)
+        @node.client.generatetoaddress(2, @miner_addr)
         expect(Node).to receive("set_pool_tx_ids_fee_total_for_block!").at_least(:once).and_return(nil)
         @node.poll! # stores the block and node entry
       end
