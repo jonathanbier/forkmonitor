@@ -34,7 +34,7 @@ RSpec.describe Chaintip, type: :model do
     @addr2 = @nodeB.client.getnewaddress()
     @r_addr = @nodeA.client.getnewaddress()
 
-    @nodeA.client.generate(2)
+    @nodeA.client.generatetoaddress(2, @r_addr)
     test.sync_blocks()
 
     @nodeA.poll!
@@ -343,6 +343,7 @@ RSpec.describe Chaintip, type: :model do
         # Fund a taproot address and mine it
         @nodeA.client.sendtoaddress(@addr1, 1)
         @nodeA.client.generate(1)
+        test.sync_blocks()
 
         # Spend from taproot address (this node has taproot disabled, so it won't broadcast)
         tx_id = @nodeB.client.sendtoaddress(@r_addr, 0.1)
