@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_17_090808) do
+ActiveRecord::Schema.define(version: 2021_03_17_132459) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -27,6 +27,7 @@ ActiveRecord::Schema.define(version: 2021_03_17_090808) do
     t.binary "tx_ids"
     t.integer "coin", null: false
     t.integer "tx_fee_rates", array: true
+    t.integer "lowest_fee_rate"
     t.index ["node_id"], name: "index_block_templates_on_node_id"
     t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
   end
@@ -59,6 +60,7 @@ ActiveRecord::Schema.define(version: 2021_03_17_090808) do
     t.binary "tx_ids_added"
     t.binary "tx_ids_omitted"
     t.integer "tx_omitted_fee_rates", array: true
+    t.integer "lowest_template_fee_rate"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"

@@ -33,7 +33,8 @@ class BlockTemplate < ApplicationRecord
         timestamp: Time.at(template["curtime"]).utc,
         n_transactions: tx_ids.length / 32,
         tx_ids: tx_ids,
-        tx_fee_rates: tx_fee_rates
+        tx_fee_rates: tx_fee_rates,
+        lowest_fee_rate: tx_fee_rates.sort[0]
       )
       # TODO: when polling multiple nodes, the code below is repeated, and the
       #       block will use whatever we processed last.

@@ -68,6 +68,10 @@ class Block extends React.Component {
                   but not found in the final block. If a pool systematically leaves out certain
                   transactions, this could indicate censorship.
                 </p>
+                <p>
+                  The lowest fee in the block template was { this.state.block.lowest_template_fee_rate }
+                  sat / vbyte. We ignore transactions less than 5 sat / byte above this.
+                </p>
                 <Table striped responsive className="conflicting-transactions">
                   <thead>
                     <tr align="left">

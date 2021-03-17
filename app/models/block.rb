@@ -36,7 +36,8 @@ class Block < ApplicationRecord
         name_with_version: first_seen_by.name_with_version
       } : nil,
       tx_ids_added: options && options[:tx_diff] && tx_ids_added ? [Block::binary_to_hashes(tx_ids_added), Array.new(Block::binary_to_hashes(tx_ids_added).length)].transpose : nil,
-      tx_ids_omitted: options && options[:tx_diff] && tx_ids_omitted ? [Block::binary_to_hashes(tx_ids_omitted), tx_omitted_fee_rates].transpose : nil
+      tx_ids_omitted: options && options[:tx_diff] && tx_ids_omitted ? [Block::binary_to_hashes(tx_ids_omitted), tx_omitted_fee_rates].transpose.filter {|a| a[1] >= lowest_template_fee_rate + 5 } : nil,
+      lowest_template_fee_rate: lowest_template_fee_rate
     })
   end
 
@@ -267,7 +268,8 @@ class Block < ApplicationRecord
     self.update template_txs_fee_diff: self.total_fee - last_template.fee_total,
                 tx_ids_added: (block_tx_ids - template_tx_ids).join(),
                 tx_ids_omitted: (template_tx_ids - block_tx_ids).join(),
-                tx_omitted_fee_rates: last_template.tx_fee_rates.values_at(*tx_pos_omitted)
+                tx_omitted_fee_rates: last_template.tx_fee_rates.values_at(*tx_pos_omitted),
+                lowest_template_fee_rate: last_template.lowest_fee_rate
   end
 
   def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
