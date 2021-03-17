@@ -69,8 +69,8 @@ class Block extends React.Component {
                   transactions, this could indicate censorship.
                 </p>
                 <p>
-                  The lowest fee in the block template was { this.state.block.lowest_template_fee_rate }
-                  sat / vbyte. We ignore transactions less than 5 sat / byte above this.
+                  The lowest fee in the block template was { this.state.block.lowest_template_fee_rate } sat / vbyte.
+                  We ignore transactions less than 5 sat / byte above this.
                 </p>
                 <Table striped responsive className="conflicting-transactions">
                   <thead>
