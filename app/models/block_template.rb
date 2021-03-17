@@ -23,6 +23,7 @@ class BlockTemplate < ApplicationRecord
       end
       height = template["height"]
       tx_ids = hashes_to_binary(template["transactions"].collect{|tx| tx["txid"] })
+      tx_fee_rates = template["transactions"].collect{|tx| tx["fee"] / (tx["weight"] / 4) }
       template = self.create!(
         coin: node.coin,
         height: template["height"],
@@ -31,7 +32,8 @@ class BlockTemplate < ApplicationRecord
         fee_total: (template["coinbasevalue"] - Block.max_inflation(template["height"])) / 100000000.0,
         timestamp: Time.at(template["curtime"]).utc,
         n_transactions: tx_ids.length / 32,
-        tx_ids: tx_ids
+        tx_ids: tx_ids,
+        tx_fee_rates: tx_fee_rates
       )
       # TODO: when polling multiple nodes, the code below is repeated, and the
       #       block will use whatever we processed last.

@@ -13,6 +13,11 @@ class Transaction extends React.Component {
           <Explorer blockstream coin={ this.props.coin } tx={ this.props.tx_id }/>&nbsp;
           <Explorer btcCom coin={ this.props.coin } tx={ this.props.tx_id }/>&nbsp;
         </td>
+        { this.props.fee_rate != null &&
+          <td>
+            { this.props.fee_rate }
+          </td>
+        }
         <td>
           { this.props.tx_id }
         </td>
@@ -23,7 +28,8 @@ class Transaction extends React.Component {
 
 Transaction.propTypes = {
   coin: PropTypes.string.isRequired,
-  tx_id: PropTypes.string.isRequired
+  tx_id: PropTypes.string.isRequired,
+  fee_rate: PropTypes.number
 }
 
 export default Transaction

@@ -72,13 +72,14 @@ class Block extends React.Component {
                   <thead>
                     <tr align="left">
                       <th style={ {width: "75pt"} }>Explorer</th>
+                      <th style={ {width: "75pt"} }>sat / byte</th>
                       <th>Transaction id</th>
                     </tr>
                   </thead>
                   <tbody>
                     {this.state.block.tx_ids_omitted.map(function (tx, index) {
                       return (
-                        <Transaction key={index} coin={ coin } tx_id={ tx } />
+                        <Transaction key={index} coin={ coin } tx_id={ tx[0] } fee_rate={ tx[1] }/>
                       )
                     })}
                   </tbody>
@@ -102,7 +103,7 @@ class Block extends React.Component {
                   <tbody>
                     {this.state.block.tx_ids_added.map(function (tx, index) {
                       return (
-                        <Transaction key={index} coin={ coin } tx_id={ tx } />
+                        <Transaction key={index} coin={ coin } tx_id={ tx[0] } />
                       )
                     })}
                   </tbody>
