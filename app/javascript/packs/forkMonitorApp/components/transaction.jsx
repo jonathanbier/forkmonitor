@@ -21,4 +21,9 @@ class Transaction extends React.Component {
   }
 }
 
+Transaction.propTypes = {
+  coin: PropTypes.string.isRequired,
+  tx_id: PropTypes.string.isRequired
+}
+
 export default Transaction

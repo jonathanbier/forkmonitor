@@ -4,6 +4,9 @@ import Moment from 'react-moment';
 import 'moment-timezone'
 import NumberFormat from 'react-number-format';
 
+import PropTypes from 'prop-types';
+import { Link } from "react-router-dom";
+
 import {
 } from 'reactstrap';
 
@@ -40,8 +43,21 @@ class BlockInfo extends React.Component {
             Fees: <NumberFormat value={ this.props.block.total_fee } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC
           </span>
         }
+        <br />
+        { this.props.link &&
+          <Link to={ `/blocks/${ this.props.block.coin }/${ this.props.block.hash }` }>More info...</Link>
+        }
       </p>
     )
   }
 }
+
+BlockInfo.propTypes = {
+  link: PropTypes.bool
+}
+
+BlockInfo.defaultProps = {
+  link: false
+}
+
 export default BlockInfo

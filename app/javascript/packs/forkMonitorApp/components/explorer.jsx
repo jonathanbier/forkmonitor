@@ -53,7 +53,9 @@ class Explorer extends React.Component {
 }
 
 Explorer.propTypes = {
-  coin: PropTypes.string.isRequired
+  coin: PropTypes.string.isRequired,
+  tx: PropTypes.string,
+  channelId: PropTypes.string
 }
 
 export default Explorer

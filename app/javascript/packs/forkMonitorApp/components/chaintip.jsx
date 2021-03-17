@@ -22,7 +22,7 @@ class Chaintip extends React.Component {
               Chaintip: { this.props.chaintip.block.hash }
             </BreadcrumbItem>
           </Breadcrumb>
-          <BlockInfo block={ this.props.chaintip.block }/>
+          <BlockInfo block={ this.props.chaintip.block } link={ true }/>
           <small>
             <Table striped>
               <tbody>
