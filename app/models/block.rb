@@ -268,8 +268,8 @@ class Block < ApplicationRecord
     self.update template_txs_fee_diff: self.total_fee - last_template.fee_total,
                 tx_ids_added: (block_tx_ids - template_tx_ids).join(),
                 tx_ids_omitted: (template_tx_ids - block_tx_ids).join(),
-                tx_omitted_fee_rates: last_template.tx_fee_rates.values_at(*tx_pos_omitted),
-                lowest_template_fee_rate: last_template.lowest_fee_rate
+                tx_omitted_fee_rates: last_template ? last_template.tx_fee_rates.values_at(*tx_pos_omitted) : nil,
+                lowest_template_fee_rate: last_template ? last_template.lowest_fee_rate : nil
   end
 
   def self.create_or_update_with(block_info, use_mirror, node, mark_valid)
