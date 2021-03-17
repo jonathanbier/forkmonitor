@@ -37,8 +37,8 @@ class BlockTemplate < ApplicationRecord
       )
       # TODO: when polling multiple nodes, the code below is repeated, and the
       #       block will use whatever we processed last.
-      # Save space by cleaning up transaction ids from earlier templates at this height:
-      self.where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil
+      # Save space by cleaning up transaction ids and fees from earlier templates at this height:
+      self.where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil, tx_fee_rates: nil
     end
   end
 
