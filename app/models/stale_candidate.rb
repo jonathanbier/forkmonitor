@@ -290,8 +290,8 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.process!(coin)
-    # Only process the most recent stale candidate
-    StaleCandidate.where(coin: coin).order(height: :desc).limit(1).each do |c|
+    # Only process the 3 most recent stale candidates
+    StaleCandidate.where(coin: coin).order(height: :desc).limit(3).each do |c|
       c.process!
     end
   end
