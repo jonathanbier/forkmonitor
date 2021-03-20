@@ -340,7 +340,7 @@ class StaleCandidate < ApplicationRecord
     raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
     Rails.cache.fetch("StaleCandidate.index.for_coin(#{ coin }).json") {
       min_height = Block.where(coin: coin).maximum(:height) - 1000
-      where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(1).to_json({short: true})
+      where(coin: coin).where("height > ?", min_height).order(height: :desc).limit(3).to_json({short: true})
     }
   end
 
