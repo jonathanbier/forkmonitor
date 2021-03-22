@@ -23,7 +23,8 @@ describe('InflationTooltip', () => {
     txouts: 63265720,
     total_amount: "17993054.82194891",
     created_at: "2019-10-15T09:42:54.919Z",
-    inflated: false
+    inflated: false,
+    height: 500000
   };
 
   const node = {
@@ -41,6 +42,7 @@ describe('InflationTooltip', () => {
     wrapper = mount(<InflationTooltip
       node={ node }
       txOutset={ txOutset }
+      lastTxOutset={ txOutset }
     />)
   });
 

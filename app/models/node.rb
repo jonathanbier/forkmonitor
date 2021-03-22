@@ -114,6 +114,7 @@ class Node < ApplicationRecord
       height: active_chaintip && active_chaintip.block.height,
       name_with_version: name_with_version,
       tx_outset: self.tx_outset,
+      last_tx_outset: self.tx_outsets.last,
       has_mirror_node: self.mirror_rpchost.present?
     })
   end

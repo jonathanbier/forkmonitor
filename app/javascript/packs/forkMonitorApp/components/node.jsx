@@ -37,6 +37,7 @@ class Node extends React.Component {
             <NodeInflation
               node={ this.props.node }
               txOutset={ this.props.node.tx_outset }
+              lastTxOutset={ this.props.node.last_tx_outset }
               cableApp={ this.props.cableApp }
             />
           }

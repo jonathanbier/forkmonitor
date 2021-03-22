@@ -22,7 +22,8 @@ class NodeInflation extends React.Component {
     this.toggle = this.toggle.bind(this);
     this.state = {
       tooltipOpen: false,
-      txOutset: props.txOutset
+      txOutset: props.txOutset,
+      lastTxOutset: props.lastTxOutset
     };
   }
 
@@ -35,7 +36,8 @@ class NodeInflation extends React.Component {
   updateTxOutset = (newTxOutset) => {
     if (newTxOutset.height == this.props.node.height) {
       this.setState({
-        txOutset: newTxOutset
+        txOutset: newTxOutset,
+        lastTxOutset: newTxOutset
       })
     }
   }
@@ -54,7 +56,11 @@ class NodeInflation extends React.Component {
             />&nbsp;
           </span>
         }
-        { ((this.props.node.mirror_unreachable_since == null && !this.props.node.mirror_ibd) || this.state.txOutset != null) &&
+        { // Node should either:
+          // * have an up to date tx outset; or
+          // * be reachable, not in IBD and have at least one recent tx outset
+        }
+        { ((this.props.node.mirror_unreachable_since == null && !this.props.node.mirror_ibd && this.state.lastTxOutset != null) || this.state.txOutset != null) &&
           <span>
             <FontAwesomeIcon
               className={ this.state.txOutset == null ? "fa-pulse" : (!this.state.txOutset.inflated ? "text-success" : "text-danger") }
@@ -69,7 +75,7 @@ class NodeInflation extends React.Component {
                 modifiers={{preventOverflow: { enabled: false } }, {hide: { enabled: false } } }
                 style={{maxWidth: "100%", textAlign: "left"}}
               >
-                <InflationTooltip node={ this.props.node } txOutset={ this.state.txOutset }  />
+                <InflationTooltip node={ this.props.node } txOutset={ this.state.txOutset } lastTxOutset={ this.state.lastTxOutset }  />
               </Tooltip>
             }
           </span>
