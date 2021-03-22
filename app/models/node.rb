@@ -6,6 +6,8 @@ class Node < ApplicationRecord
   # BSV support has been removed, but enums are stored as integer in the database.
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
+  nilify_blanks only: [:mirror_rpchost]
+
   after_commit :expire_cache
 
   class Error < StandardError; end
@@ -128,7 +130,7 @@ class Node < ApplicationRecord
   end
 
   def mirror_client
-    return nil if !self.mirror_rpchost || self.mirror_rpchost == ""
+    return nil if !self.mirror_rpchost
     if !@mirror_client
       if self.python
         @mirror_client = BitcoinClientPython.new(self.id, self.name_with_version, self.coin.to_sym, self.client_type.to_sym, self.version)

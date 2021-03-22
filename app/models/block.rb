@@ -522,7 +522,6 @@ class Block < ApplicationRecord
 
   def self.find_missing(coin, max_depth, patience)
     throw "Invalid coin argument #{ coin }" unless Node::SUPPORTED_COINS.include?(coin)
-    Node.where(mirror_rpchost: "").update_all mirror_rpchost: nil
 
     # Find recent headers_only blocks
     tip_height = Block.where(coin: coin).maximum(:height)

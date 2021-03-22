@@ -83,6 +83,7 @@ gem 'dalli'
  gem 'capistrano-rake'
  gem 'ed25519'
  gem 'bcrypt_pbkdf'
+ gem 'nilify_blanks'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
