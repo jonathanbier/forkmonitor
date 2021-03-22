@@ -54,8 +54,10 @@ class Block extends React.Component {
               </BreadcrumbItem>
             </Breadcrumb>
             { this.state.block &&
+              <BlockInfo block={ this.state.block } />
+            }
+            { this.state.block && this.state.block.tx_ids_omitted &&
               <div>
-                <BlockInfo block={ this.state.block } />
                 <h3>Predicted block transactions</h3>
                 <p>We call <code>getblocktemplate</code> on our node several times
                 per minute to construct a candidate block. We then check to see if
@@ -68,10 +70,12 @@ class Block extends React.Component {
                   but not found in the final block. If a pool systematically leaves out certain
                   transactions, this could indicate censorship.
                 </p>
-                <p>
-                  The lowest fee in the block template was { this.state.block.lowest_template_fee_rate } sat / vbyte.
-                  We ignore transactions less than 5 sat / byte above this.
-                </p>
+                { this.state.block.lowest_template_fee_rate != null &&
+                  <p>
+                    The lowest fee in the block template was { this.state.block.lowest_template_fee_rate } sat / vbyte.
+                    We ignore transactions less than 5 sat / byte above this.
+                  </p>
+                }
                 <Table striped responsive className="conflicting-transactions">
                   <thead>
                     <tr align="left">
