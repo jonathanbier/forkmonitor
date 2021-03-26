@@ -639,7 +639,7 @@ class Node < ApplicationRecord
 
     while true
       options[:coins].each do |coin|
-        InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 20})
+        InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 10})
       end
 
       if Rails.env.test?
