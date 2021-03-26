@@ -150,23 +150,28 @@ class StaleCandidate < ApplicationRecord
       elsif tx.tx_id == longest_spent_coins_with_tx[txout].tx_id
         false
       else
-      # Check for fee bump (regardless of RBF flag):
-      # Check that:
-      # * none of the destinations changed
-      # * none of the outputs varied by more than 0.0001 BTC
-      # TODO:
-      # * don't sort by output; it's brittle. Just check if the same output
-      #   exists on the other side.
-      # * be more flexible if a change output is added
+        # Check for fee bump (regardless of RBF flag):
+        # Check that:
+        # * the number of destinations is the same
+        # * none of the destinations changed
+        # * none of the outputs varied by more than 0.0001 BTC
+        # TODO:
+        # * don't sort by output; it's brittle. Just check if the same output
+        #   exists on the other side.
+        # * be more flexible if a change output is added
         replacement = longest_spent_coins_with_tx[txout]
         # puts "#{ tx.tx_id } vs #{ replacement.tx_id }"
         sorted_outputs = tx.outputs.sort_by{ |output| output.pk_script }
         replacement_sorted_outputs = replacement.outputs.sort_by{ |output| output.pk_script }
-        sorted_outputs.map.with_index { |output, i|
-          # puts "#{i}: #{ output.pk_script == replacement_sorted_outputs[i].pk_script } #{ (output.value - replacement_sorted_outputs[i].value).abs }"
-          output.pk_script != replacement_sorted_outputs[i].pk_script ||
-          (output.value - replacement_sorted_outputs[i].value).abs > 10000
-        }.none? { |res| res }
+        if sorted_outputs.length != replacement_sorted_outputs.length
+          false
+        else
+          sorted_outputs.map.with_index { |output, i|
+            # puts "#{i}: #{ output.pk_script == replacement_sorted_outputs[i].pk_script } #{ (output.value - replacement_sorted_outputs[i].value).abs }"
+            output.pk_script != replacement_sorted_outputs[i].pk_script ||
+            (output.value - replacement_sorted_outputs[i].value).abs > 10000
+          }.none? { |res| res }
+        end
       end
     }.collect{|txout, tx| [tx, longest_spent_coins_with_tx[txout]]}.uniq.transpose()
   end
