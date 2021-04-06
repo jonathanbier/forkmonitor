@@ -22,16 +22,23 @@ class LightningTransaction < ApplicationRecord
   end
 
   def get_opening_tx_id_and_block_hash!(close_tx)
-    prev_out_hash = nil
+    # Fetch all input transactions and return the first one that could be a channel
+    # opening transaction.
+    #
+    # Previously we would check that all inputs to the closing transaction refer
+    # to the same opening transaction id (but different outputs). But this isn't
+    # always the case, e.g. 1c88ad14b349989a600745d47a743effa9385a1d738c5d755f1c74fe955a9a75
+    # spends from two different opening(?) transactions.
     close_tx.in.each do |tx_in|
-      if prev_out_hash.present? && tx_in.prev_out_hash != prev_out_hash
-        throw "Unexpected reference to multiple transactions for closing transaction #{ self.tx_id }"
-      end
-      prev_out_hash = tx_in.prev_out_hash
+      # Must have a witness
+      next if tx_in.script_witness.empty?
+
+      opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
+      opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id,true)
+      return opening_tx_id, opening_tx_raw["blockhash"]
     end
-    opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack("H*")[0]
-    opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id,true)
-    return opening_tx_id, opening_tx_raw["blockhash"]
+    # Could not find an opening transaction
+    throw "Unable to find opening transaction for closing transaction #{ close_tx.hash }"
   end
 
   def find_parent!

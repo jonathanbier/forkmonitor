@@ -47,19 +47,19 @@ class SweepTransaction < LightningTransaction
 
         puts "Sweep: #{ tx.hash }" unless Rails.env.test?
 
-        ln = block.sweep_transactions.build(
+        sweep_tx = block.sweep_transactions.build(
           tx_id: tx.hash,
           input: input,
           raw_tx: tx.payload.unpack('H*')[0],
           amount: get_input_amount(node, tx, input)
         )
         coin = node.coin.to_sym
-        tx_id, block_hash = ln.get_opening_tx_id_and_block_hash!
-        ln.opening_tx_id = tx_id
-        ln.opening_block = Block.find_by coin: coin, block_hash: block_hash
-        ln.save
+        tx_id, block_hash = sweep_tx.get_opening_tx_id_and_block_hash!
+        sweep_tx.opening_tx_id = tx_id
+        sweep_tx.opening_block = Block.find_by coin: coin, block_hash: block_hash
+        sweep_tx.save
 
-        ln.find_parent!
+        sweep_tx.find_parent!
       end
     end
   end
