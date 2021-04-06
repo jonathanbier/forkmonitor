@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_04_06_121113) do
+ActiveRecord::Schema.define(version: 2021_04_06_142616) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -277,6 +277,7 @@ ActiveRecord::Schema.define(version: 2021_04_06_121113) do
     t.integer "since"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "notified_at"
     t.index ["node_id"], name: "index_softforks_on_node_id"
   end
 

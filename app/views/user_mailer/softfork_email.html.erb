@@ -1,0 +1,8 @@
+<p>
+  The <%= @softfork.name %> <%= @softfork.fork_type.to_s.upcase %> softfork status switched to <%= @softfork.status %>
+  at height <%= @softfork.since.to_s(:delimited) %> according to <%= @softfork.node.name_with_version %>.
+</p>
+
+<p>
+  For more information, see: <%= nodes_for_coin_url(@softfork.coin.downcase) %>
+</p>

@@ -676,6 +676,7 @@ class Node < ApplicationRecord
         Block.find_missing(coin.downcase.to_sym, 40000, 20) # waits 20 seconds for blocks
         StaleCandidate.process!(coin.downcase.to_sym)
         StaleCandidate.prime_cache(coin.downcase.to_sym)
+        Softfork.notify!
         Rpush.apns_feedback unless Rails.env.test?
         Rpush.push unless Rails.env.test?
         Node.destroy_if_requested(coin.downcase.to_sym)

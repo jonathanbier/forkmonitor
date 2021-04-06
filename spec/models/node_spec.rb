@@ -915,6 +915,7 @@ RSpec.describe Node, :type => :model do
         allow(LightningTransaction).to receive(:check_public_channels!).and_return true
         allow(Block).to receive(:find_missing).and_return true
         allow(StaleCandidate).to receive(:prime_cache).and_return true
+        allow(Softfork).to receive(:notify!).and_return true
       end
 
       it "should run Lightning checks, on BTC only" do

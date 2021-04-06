@@ -31,6 +31,10 @@ RSpec.describe Softfork, type: :model do
       Softfork.process(node, blockchaininfo)
       expect(Softfork.count).to eq(1)
 
+      # If a softfork status is not "defined" when a node is first polled, consider
+      # it a status change and send notification:
+      expect(Softfork.first.notified_at).to be_nil
+
       # And not more than once
       Softfork.process(node, blockchaininfo)
       expect(Softfork.count).to eq(1)
@@ -53,6 +57,8 @@ RSpec.describe Softfork, type: :model do
       Softfork.process(node, blockchaininfo)
       expect(Softfork.count).to eq(1)
       expect(Softfork.first.status).to eq("defined")
+      # Don't notify when status is defined
+      expect(Softfork.first.notified_at).not_to be_nil
 
       blockchaininfo = {
         "chain" => "main",
@@ -70,6 +76,8 @@ RSpec.describe Softfork, type: :model do
       Softfork.process(node, blockchaininfo)
       expect(Softfork.count).to eq(1)
       expect(Softfork.first.status).to eq("active")
+      # Status change should trigger notification
+      expect(Softfork.first.notified_at).to be_nil
     end
 
     it "should parse pre 0.19 format" do

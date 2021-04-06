@@ -55,4 +55,14 @@ class UserMailer < ApplicationMailer
     )
   end
 
+  def softfork_email
+    @user = params[:user]
+    @softfork = params[:softfork]
+
+    mail(
+      to: @user.email,
+      subject: "[ForkMonitor] #{ @softfork.name.capitalize } #{ @softfork.fork_type.to_s.upcase } status became #{ @softfork.status } at height #{ @softfork.since.to_s(:delimited) }"
+    )
+  end
+
 end

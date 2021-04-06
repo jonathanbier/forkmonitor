@@ -8,6 +8,25 @@ class Softfork < ApplicationRecord
     super({ only: [:type, :name, :bit, :status, :since]})
   end
 
+  def notify!
+    if self.notified_at.nil?
+      User.all.each do |user|
+        UserMailer.with(user: user, softfork: self).softfork_email.deliver
+      end
+      self.update notified_at: Time.now
+      Subscription.blast("softfork-#{ self.id }",
+                         "#{ self.coin.upcase } #{ self.name } softfork #{ self.status }",
+                         "#{ self.name.capitalize } #{ self.fork_type.to_s.upcase } status became #{ self.status } at height #{ self.since.to_s(:delimited) } according to #{ self.node.name_with_version }."
+      )
+    end
+  end
+
+  def self.notify!
+    Softfork.where(notified_at: nil).each do |softfork|
+      softfork.notify!
+    end
+  end
+
   # Only supported on Bitcoin mainnet
   # Only tested with v0.18.1 and up
   def self.process(node, blockchaininfo)
@@ -28,11 +47,15 @@ class Softfork < ApplicationRecord
             name: key,
             bit: nil,
             status: value["status"].to_sym,
-            since: value["since"]
+            since: value["since"],
+            notified_at: value["status"].to_sym == :defined ? Time.now : nil
           )
         else
           fork.status = value["status"].to_sym
           fork.since = value["since"]
+          if fork.status_changed?
+            fork.notified_at = nil
+          end
           fork.save if fork.changed?
         end
       end
@@ -55,12 +78,16 @@ class Softfork < ApplicationRecord
               name: key,
               bit: bip9["bit"],
               status: bip9["status"].to_sym,
-              since: bip9["since"]
+              since: bip9["since"],
+              notified_at: bip9["status"].to_sym == :defined ? Time.now : nil
             )
           else
             fork.bit = bip9["bit"] # in case a node is upgraded to 0.19 or newer
             fork.status = bip9["status"].to_sym
             fork.since = bip9["since"]
+            if fork.status_changed?
+              fork.notified_at = nil
+            end
             fork.save if fork.changed?
           end
         end
