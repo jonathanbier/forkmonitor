@@ -61,6 +61,18 @@ class NodeInfo extends React.Component {
                 MB)
               </li>
             }
+            { this.props.node.softforks != null && this.props.node.softforks.length > 0 &&
+              <div>
+              <li>BIP 9 softforks</li>
+              <ul>
+                { this.props.node.softforks.map(function (fork, index) { return (
+                  <li key={ index }>
+                    { fork.name }: { fork.status } since block <NumberFormat value={ fork.since } displayType={'text'} thousandSeparator={true} />
+                  </li>
+                )})}
+              </ul>
+              </div>
+            }
           </ul>
         </Tooltip>
       </span>

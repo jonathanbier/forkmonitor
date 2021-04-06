@@ -116,7 +116,8 @@ class Node < ApplicationRecord
       name_with_version: name_with_version,
       tx_outset: self.tx_outset,
       last_tx_outset: self.tx_outsets.last,
-      has_mirror_node: self.mirror_rpchost.present?
+      has_mirror_node: self.mirror_rpchost.present?,
+      softforks: self.softforks
     })
   end
 

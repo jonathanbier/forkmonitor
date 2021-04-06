@@ -4,6 +4,10 @@ class Softfork < ApplicationRecord
   enum status: [:defined, :started, :locked_in, :active, :failed]
   belongs_to :node
 
+  def as_json(options = nil)
+    super({ only: [:type, :name, :bit, :status, :since]})
+  end
+
   # Only supported on Bitcoin mainnet
   # Only tested with v0.18.1 and up
   def self.process(node, blockchaininfo)
