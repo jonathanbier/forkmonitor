@@ -203,7 +203,7 @@ class Node < ApplicationRecord
 
     if blockchaininfo.present?
       best_block_hash = blockchaininfo["bestblockhash"]
-      Softfork.process(self, blockchaininfo) if self.btc?
+      Softfork.process(self, blockchaininfo) if self.btc? && (self.core? || self.knots?)
     elsif info.present?
       best_block_hash = client.getblockhash(info["blocks"])
     end
