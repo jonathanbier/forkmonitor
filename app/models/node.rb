@@ -32,6 +32,7 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, required: false, class_name: "Block"
   has_one :active_chaintip, -> { where(status: "active") }, class_name: "Chaintip"
+  has_many :softforks
 
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
   before_destroy :clear_references
@@ -201,6 +202,7 @@ class Node < ApplicationRecord
 
     if blockchaininfo.present?
       best_block_hash = blockchaininfo["bestblockhash"]
+      Softfork.process(self, blockchaininfo) if self.btc?
     elsif info.present?
       best_block_hash = client.getblockhash(info["blocks"])
     end

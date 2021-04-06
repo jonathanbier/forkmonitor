@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_03_17_132459) do
+ActiveRecord::Schema.define(version: 2021_04_06_121113) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -265,6 +265,19 @@ ActiveRecord::Schema.define(version: 2021_03_17_132459) do
     t.string "device_token"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "softforks", force: :cascade do |t|
+    t.integer "coin"
+    t.bigint "node_id"
+    t.integer "fork_type"
+    t.string "name"
+    t.integer "bit"
+    t.integer "status"
+    t.integer "since"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["node_id"], name: "index_softforks_on_node_id"
   end
 
   create_table "stale_candidate_children", force: :cascade do |t|
