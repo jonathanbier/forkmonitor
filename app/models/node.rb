@@ -571,6 +571,7 @@ class Node < ApplicationRecord
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
     coinbase, tx_ids = get_coinbase_and_tx_ids_for_block!(coin, block.block_hash, block_info)
     return if coinbase.nil? || coinbase == {}
+    tx_ids.shift # skip coinbase
     block.tx_ids = hashes_to_binary(tx_ids)
     block.pool = Block.pool_from_coinbase_tx(coinbase)
     block.total_fee = (coinbase["vout"].sum { |vout| vout["value"] } * 100000000.0 - block.max_inflation) / 100000000.0
