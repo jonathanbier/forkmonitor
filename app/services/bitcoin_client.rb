@@ -115,7 +115,13 @@ class BitcoinClient
 
   def getinfo
     begin
-      return request("getinfo")
+      # TODO: patch https://github.com/NARKOZ/bitcoiner (which uses https://github.com/typhoeus/typhoeus)
+      # to check for timeout.
+      Timeout::timeout(10) {
+        return request("getinfo")
+      }
+    rescue Timeout::Error
+      raise TimeOutError
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -123,7 +129,11 @@ class BitcoinClient
 
   def getblockchaininfo
     begin
-      return request("getblockchaininfo")
+      Timeout::timeout(10) {
+        return request("getblockchaininfo")
+      }
+    rescue Timeout::Error
+      raise TimeOutError
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getblockchaininfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
