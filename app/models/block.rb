@@ -21,6 +21,7 @@ class Block < ApplicationRecord
   has_many :penalty_transactions, dependent: :destroy
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
+  has_many :chaintips, dependent: :destroy
   enum coin: [:btc, :bch, :bsv, :tbtc]
 
   # Used to trigger and restore reorgs on the mirror node
