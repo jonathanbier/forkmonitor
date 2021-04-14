@@ -36,6 +36,9 @@ Rails.application.routes.draw do
       resources :blocks, only: [:index, :show]
       resources :subscriptions, only: [:create]
       resources :block_templates, only: [:index]
+      namespace :softforks do
+        get ":coin", action: :index
+      end
     end
   end
 

@@ -5,7 +5,11 @@ class Softfork < ApplicationRecord
   belongs_to :node
 
   def as_json(options = nil)
-    super({ only: [:type, :name, :bit, :status, :since]})
+    super({ only: [:id, :name, :bit, :status]}).merge({
+      fork_type: self.fork_type.upcase,
+      node_name: self.node.name_with_version,
+      height: since
+    })
   end
 
   def notify!
@@ -16,7 +20,7 @@ class Softfork < ApplicationRecord
       self.update notified_at: Time.now
       Subscription.blast("softfork-#{ self.id }",
                          "#{ self.coin.upcase } #{ self.name } softfork #{ self.status }",
-                         "#{ self.name.capitalize } #{ self.fork_type.to_s.upcase } status became #{ self.status } at height #{ self.since.to_s(:delimited) } according to #{ self.node.name_with_version }."
+                         "#{ self.name.capitalize } #{ self.fork_type.to_s.upcase } status became <b>#{ self.status }</b> at height #{ self.since.to_s(:delimited) } according to #{ self.node.name_with_version }."
       )
     end
   end
