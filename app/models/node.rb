@@ -159,6 +159,14 @@ class Node < ApplicationRecord
       header = client.getblockheader(block_height)
       best_block_hash = header["hash"]
       previousblockhash = header["previousblockhash"]
+    elsif self.btcd?
+      begin
+        blockchaininfo = client.getblockchaininfo
+        info = client.getinfo
+      rescue BitcoinClient::Error
+        self.update unreachable_since: self.unreachable_since || DateTime.now
+        return
+      end
     elsif self.core? && self.version.present? && self.version < 100000
       begin
         info = client.getinfo
