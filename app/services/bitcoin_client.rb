@@ -119,7 +119,7 @@ class BitcoinClient
       # to check for timeout.
       # See also: https://adamhooper.medium.com/in-ruby-dont-use-timeout-77d9d4e5a001
       Timeout::timeout(10, TimeOutError) {
-        return request("getinfo")
+        Thread.new{ return request("getinfo") }.value
       }
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
@@ -129,7 +129,7 @@ class BitcoinClient
   def getblockchaininfo
     begin
       Timeout::timeout(10, TimeOutError) {
-        return request("getblockchaininfo")
+        Thread.new{ return request("getblockchaininfo") }.value
       }
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getblockchaininfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
