@@ -117,11 +117,10 @@ class BitcoinClient
     begin
       # TODO: patch https://github.com/NARKOZ/bitcoiner (which uses https://github.com/typhoeus/typhoeus)
       # to check for timeout.
-      Timeout::timeout(10) {
+      # See also: https://adamhooper.medium.com/in-ruby-dont-use-timeout-77d9d4e5a001
+      Timeout::timeout(10, TimeOutError) {
         return request("getinfo")
       }
-    rescue Timeout::Error
-      raise TimeOutError
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -129,11 +128,9 @@ class BitcoinClient
 
   def getblockchaininfo
     begin
-      Timeout::timeout(10) {
+      Timeout::timeout(10, TimeOutError) {
         return request("getblockchaininfo")
       }
-    rescue Timeout::Error
-      raise TimeOutError
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getblockchaininfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
