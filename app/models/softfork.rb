@@ -8,7 +8,7 @@ class Softfork < ApplicationRecord
     super({ only: [:id, :name, :bit, :status]}).merge({
       fork_type: self.fork_type.upcase,
       node_name: self.node.name_with_version,
-      height: since
+      height: self.defined? ? nil : since
     })
   end
 
