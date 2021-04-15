@@ -68,8 +68,8 @@ class NodeInfo extends React.Component {
                 { this.props.node.softforks.map(function (fork, index) { return (
                   <li key={ index }>
                     { fork.name }: { fork.status }
-                    { fork.since != null &&
-                      <span>&nbsp;since block <NumberFormat value={ fork.since } displayType={'text'} thousandSeparator={true} /></span>
+                    { fork.height != null &&
+                      <span>&nbsp;since block <NumberFormat value={ fork.height } displayType={'text'} thousandSeparator={true} /></span>
                     }
                   </li>
                 )})}
