@@ -118,7 +118,7 @@ class BitcoinClient
       # TODO: patch https://github.com/NARKOZ/bitcoiner (which uses https://github.com/typhoeus/typhoeus)
       # to check for timeout.
       # See also: https://adamhooper.medium.com/in-ruby-dont-use-timeout-77d9d4e5a001
-      Timeout::timeout(10, TimeOutError) {
+      Timeout::timeout(30, TimeOutError) {
         Thread.new{ request("getinfo") }.value
       }
     rescue Bitcoiner::Client::JSONRPCError => e
@@ -128,7 +128,7 @@ class BitcoinClient
 
   def getblockchaininfo
     begin
-      Timeout::timeout(10, TimeOutError) {
+      Timeout::timeout(30, TimeOutError) {
         Thread.new{ request("getblockchaininfo") }.value
       }
     rescue Bitcoiner::Client::JSONRPCError => e
