@@ -1,7 +1,7 @@
 class Softfork < ApplicationRecord
   enum coin: [:btc, :bch, :bsv, :tbtc]
-  enum fork_type: [:bip9]
-  enum status: [:defined, :started, :locked_in, :active, :failed]
+  enum fork_type: [:bip9, :bip8]
+  enum status: [:defined, :started, :locked_in, :active, :failed, :must_signal]
   belongs_to :node
 
   def as_json(options = nil)
@@ -89,6 +89,35 @@ class Softfork < ApplicationRecord
             fork.bit = bip9["bit"] # in case a node is upgraded to 0.19 or newer
             fork.status = bip9["status"].to_sym
             fork.since = bip9["since"]
+            if fork.status_changed?
+              fork.notified_at = nil
+            end
+            fork.save if fork.changed?
+          end
+        end
+        if value["bip8"].present?
+          bip8 = value["bip8"]
+          fork = Softfork.find_by(
+            coin: :btc,
+            node: node,
+            fork_type: :bip8,
+            name: key
+          )
+          if fork.nil?
+            Softfork.create(
+              coin: :btc,
+              node: node,
+              fork_type: :bip8,
+              name: key,
+              bit: bip8["bit"],
+              status: bip8["status"].to_sym,
+              since: bip8["since"],
+              notified_at: bip8["status"].to_sym == :defined ? Time.now : nil
+            )
+          else
+            fork.bit = bip8["bit"] # in case a node is upgraded to 0.19 or newer
+            fork.status = bip8["status"].to_sym
+            fork.since = bip8["since"]
             if fork.status_changed?
               fork.notified_at = nil
             end

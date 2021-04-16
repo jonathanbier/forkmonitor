@@ -117,7 +117,8 @@ class Node < ApplicationRecord
       tx_outset: self.tx_outset,
       last_tx_outset: self.tx_outsets.last,
       has_mirror_node: self.mirror_rpchost.present?,
-      softforks: self.softforks
+      bip9_softforks: self.softforks.where(fork_type: :bip9),
+      bip8_softforks: self.softforks.where(fork_type: :bip8)
     })
   end
 

@@ -61,11 +61,26 @@ class NodeInfo extends React.Component {
                 MB)
               </li>
             }
-            { this.props.node.softforks != null && this.props.node.softforks.length > 0 &&
+            { this.props.node.bip9_softforks != null && this.props.node.bip9_softforks.length > 0 &&
               <div>
               <li>BIP 9 softforks</li>
               <ul>
-                { this.props.node.softforks.map(function (fork, index) { return (
+                { this.props.node.bip9_softforks.map(function (fork, index) { return (
+                  <li key={ index }>
+                    { fork.name }: { fork.status }
+                    { fork.height != null &&
+                      <span>&nbsp;since block <NumberFormat value={ fork.height } displayType={'text'} thousandSeparator={true} /></span>
+                    }
+                  </li>
+                )})}
+              </ul>
+              </div>
+            }
+            { this.props.node.bip8_softforks != null && this.props.node.bip8_softforks.length > 0 &&
+              <div>
+              <li>BIP 8 softforks</li>
+              <ul>
+                { this.props.node.bip8_softforks.map(function (fork, index) { return (
                   <li key={ index }>
                     { fork.name }: { fork.status }
                     { fork.height != null &&
