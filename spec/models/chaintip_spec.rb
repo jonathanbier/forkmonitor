@@ -19,12 +19,20 @@ RSpec.describe Chaintip, type: :model do
     # Once a release with Taproot support is available, it's best to use that
     # for the second node, so that this test still works when Taproot deployment
     # is burried (at which point vbparams won't work).
-    test.setup(num_nodes: 2, extra_args: [[],["-vbparams=taproot:1:1"]])
+    test.setup(num_nodes: 3, extra_args: [[],["-vbparams=taproot:1:1"],["-vbparams=taproot:1:1"]])
     @nodeA = create(:node_python) # Taproot enabled
     @nodeA.client.set_python_node(test.nodes[0])
-    @nodeA.client.createwallet()
     @nodeB = create(:node_python) # Taproot disabled
     @nodeB.client.set_python_node(test.nodes[1])
+    @nodeC = create(:node_python) # Taproot disabled (doesn't really matter)
+    @nodeC.client.set_python_node(test.nodes[2])
+
+    # Disconnect Node C so we can give it a an independent chain
+    @nodeC.client.setnetworkactive(false)
+    test.disconnect_nodes(0, 2)
+    test.disconnect_nodes(1, 2)
+
+    @nodeA.client.createwallet()
     @nodeB.client.createwallet(blank: true)
     @nodeB.client.importdescriptors([
       {"desc": "tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse", "active": true, "internal": false, "timestamp": "now", "range": 10},
@@ -35,7 +43,7 @@ RSpec.describe Chaintip, type: :model do
     @r_addr = @nodeA.client.getnewaddress()
 
     @nodeA.client.generatetoaddress(2, @r_addr)
-    test.sync_blocks()
+    test.sync_blocks([@nodeA.client, @nodeB.client])
 
     @nodeA.poll!
     @nodeA.reload
@@ -49,6 +57,11 @@ RSpec.describe Chaintip, type: :model do
     assert_equal(@nodeB.block.height, 2)
     assert_equal(@nodeB.block.parent.height, 1)
     assert_equal(Chaintip.count, 0)
+
+    @nodeC.client.createwallet()
+    @addr3 = @nodeC.client.getnewaddress()
+    @nodeC.client.generatetoaddress(3, @addr3) # longer chain than A and B, so it won't validate those blocks
+    # Node C intentionally remains disconnected from A and B
   end
 
   after do
@@ -277,7 +290,7 @@ RSpec.describe Chaintip, type: :model do
         @nodeA.poll!
         @nodeB.poll!
         test.connect_nodes(0, 1)
-        test.sync_blocks()
+        test.sync_blocks([@nodeA.client,@nodeB.client])
       end
 
       it "should add chaintip entries" do
@@ -343,7 +356,7 @@ RSpec.describe Chaintip, type: :model do
         # Fund a taproot address and mine it
         @nodeA.client.sendtoaddress(@addr1, 1)
         @nodeA.client.generate(1)
-        test.sync_blocks()
+        test.sync_blocks([@nodeA.client,@nodeB.client])
 
         # Spend from taproot address (this node has taproot disabled, so it won't broadcast)
         tx_id = @nodeB.client.sendtoaddress(@r_addr, 0.1)
