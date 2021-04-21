@@ -124,6 +124,14 @@ class BitcoinClientPython
     end
   end
 
+  def getblockhash(height)
+    begin
+      return @node.getblockhash(height=height)
+    rescue Error => e
+      raise Error, "getblockhash #{ height } failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getblockheader(block_hash, verbose=true)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
