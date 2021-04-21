@@ -169,7 +169,7 @@ class InflatedBlock < ApplicationRecord
             Rails.logger.debug "Resume p2p networking..."
             node.mirror_client.setnetworkactive(true)
             # Have node return to tip, by reconsidering all invalid chaintips
-            node.client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
+            node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
               Rails.logger.debug "Reconsider block #{ tip["hash"] }"
               node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
               sleep 1 # But wait anyway
