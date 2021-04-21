@@ -223,6 +223,17 @@ class Chaintip < ApplicationRecord
     end
   end
 
+  def self.validate_forks!(node, max_depth)
+    raise "Only implemented for (modern) Bitcoin Core nodes" unless node.core? && node.version >= 100000
+    return nil if node.unreachable_since || node.ibd
+    chaintips = node.client.getchaintips()
+    active_tip_height = chaintips.filter{|t| t["status"] == "active" }.first["height"]
+    chaintips.filter{|t| t["status"] == "valid-headers" }.each do |tip|
+      break if tip["height"] < active_tip_height - max_depth
+      Block.find_by(block_hash: tip["hash"]).validate_fork!
+    end
+  end
+
   private
 
   def expire_cache

@@ -450,4 +450,36 @@ RSpec.describe Chaintip, type: :model do
       end
     end
   end
+
+
+  describe "self.validate_forks!" do
+    before do
+      setup_python_nodes()
+
+      # Feed blocks from node B to node C so their status changes from 'headers-only'
+      # to 'valid-headers'
+      assert_equal(@nodeC.client.submitblock(@nodeB.client.getblock(@nodeB.client.getblockhash(1), 0)), "inconclusive")
+      assert_equal(@nodeC.client.submitblock(@nodeB.client.getblock(@nodeB.client.getblockhash(2), 0)), "inconclusive")
+
+      # Now connect them (nodeB will reorg)
+      @nodeC.client.setnetworkactive(true)
+      test.connect_nodes(1, 2)
+      test.sync_blocks([@nodeB.client, @nodeC.client])
+    end
+
+    it "should call block.validate_fork! on 'valid-headers' tips" do
+      # pp @nodeC.client.getchaintips()
+      block = Block.new
+      expect(Block).to receive(:find_by).and_return block
+      expect(block).to receive(:validate_fork!)
+      Chaintip.validate_forks!(@nodeC, 100)
+    end
+
+    it "should ignore old tips" do
+      # pp @nodeC.client.getchaintips()
+      expect(Block).not_to receive(:find_by)
+      @nodeC.client.generatetoaddress(1, @addr3)
+      Chaintip.validate_forks!(@nodeC, 1)
+    end
+  end
 end

@@ -743,6 +743,10 @@ class Block < ApplicationRecord
     raise RollbackError.new(error)
   end
 
+  def validate_fork!
+    # TODO
+  end
+
   def self.process_templates!(coin)
     raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
     min_height = BlockTemplate.where(coin: coin).minimum(:height)
