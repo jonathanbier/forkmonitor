@@ -334,6 +334,72 @@ RSpec.describe Block, :type => :model do
     end
   end
 
+  describe "validate_fork!" do
+    before do
+      setup_python_nodes()
+
+      test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
+      test.disconnect_nodes(0, 2) # disconnect A from B
+      test.disconnect_nodes(1, 2) # disconnect A' from B
+      assert_equal(0, @nodeA.client.getpeerinfo().count)
+      assert_equal(0, @nodeA.mirror_client.getpeerinfo().count)
+
+      @nodeA.client.generate(2) # this is and remains active
+      @nodeB.client.generate(1) # Node A will see this as valid-headers after reconnect
+      @nodeA.poll!
+      @nodeB.poll!
+      test.connect_nodes(0, 1)
+      test.connect_nodes(0, 2)
+      test.connect_nodes(1, 2)
+
+      test.sync_blocks()
+
+      chaintipsA = @nodeA.client.getchaintips()
+
+      expect(chaintipsA.length).to eq(2)
+      expect(chaintipsA[-1]["status"]).to eq("headers-only")
+      @block = Block.find_by(block_hash: chaintipsA[-1]["hash"])
+    end
+
+    it "should skip if the node already marked it as (in)valid" do
+      @block.update marked_valid_by: [@nodeA.id]
+      expect(@block).not_to receive(:make_active_on_mirror!)
+      @block.validate_fork!(@nodeA)
+    end
+
+    it "should skip if the node doesn't have a mirror" do
+      @nodeA.update mirror_rpchost: nil
+      expect(@block).not_to receive(:make_active_on_mirror!)
+      @block.validate_fork!(@nodeA)
+    end
+
+    it "should skip if the mirror node doesn't have the block" do
+      expect { @nodeA.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
+    end
+
+    describe "when mirror client has block" do
+      before do
+        assert_equal(@nodeA.mirror_client.submitblock(@nodeB.client.getblock(@block.block_hash, 0)), "inconclusive")
+      end
+
+      it "should roll the mirror back" do
+        expect(@block).to receive(:make_active_on_mirror!).with(@nodeA).and_call_original
+        @block.validate_fork!(@nodeA)
+      end
+
+      it "should mark the block as considered valid" do
+        @block.validate_fork!(@nodeA)
+        expect(@block.marked_valid_by).to include(@nodeA.id)
+      end
+
+      it "should roll the mirror forward" do
+        expect(@nodeA.mirror_client).to receive(:reconsiderblock)
+        @block.validate_fork!(@nodeA)
+      end
+
+    end
+  end
+
   describe "self.pool_from_coinbase_tx" do
     it "should find Antpool" do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true

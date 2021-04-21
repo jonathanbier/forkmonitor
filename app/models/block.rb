@@ -743,8 +743,6 @@ class Block < ApplicationRecord
     raise RollbackError.new(error)
   end
 
-  def validate_fork!
-    # TODO
   def undo_rollback!(node)
     unless self.invalidated_block_hashes.empty?
       Rails.logger.debug "Restore chain to tip on #{ node.name_with_version }..."
@@ -757,6 +755,68 @@ class Block < ApplicationRecord
     end
   end
 
+  def validate_fork!(node)
+    return nil unless node.mirror_rpchost.present?
+    return nil if self.marked_valid_by.include?(node.id) || self.marked_invalid_by.include?(node.id)
+
+    # Feed block to mirror node if needed:
+    begin
+      node.mirror_client.getblock(self.block_hash, 1)
+    rescue BitcoinClient::BlockNotFoundError
+      raw_block = node.client.getblock(self.block_hash, 0)
+      node.mirror_client.submitblock(raw_block, self.block_hash)
+      sleep 1
+    end
+
+    Rails.logger.debug "Stop p2p networking to prevent the chain from updating underneath us"
+    node.mirror_client.setnetworkactive(false)
+
+    begin
+      self.make_active_on_mirror!(node)
+      # Check that mirror considers this the active (and therefor valid) chaintip
+      chaintips = node.mirror_client.getchaintips()
+      if self.block_hash == chaintips.filter{|t| t["status"] == "active" }.first["hash"]
+        self.update marked_valid_by: self.marked_valid_by | [node.id]
+        self.undo_rollback!(node)
+      else
+        # If something went wrong, first ask the node to reconsider all "invalid" blocks,
+        # to avoid false alarm:
+        node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
+          Rails.logger.debug "Reconsider block #{ tip["hash"] }"
+          node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
+          sleep 1 # But wait anyway
+        end
+      end
+    rescue StandardError => e
+      # If anything went wrong with make_active_on_mirror! or undo_rollback!
+      Rails.logger.error "Rescued: #{e.inspect}"
+      Rails.logger.error "Restoring node before bailing out..."
+      Rails.logger.debug "Resume p2p networking..."
+      node.mirror_client.setnetworkactive(true)
+      # Have node return to tip, by reconsidering all invalid chaintips
+      node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
+        Rails.logger.debug "Reconsider block #{ tip["hash"] }"
+        node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
+        sleep 1 # But wait anyway
+      end
+      Rails.logger.debug "Node restored"
+      # Give node some time to catch up:
+      node.update mirror_rest_until: 60.seconds.from_now
+      raise # continue throwing error
+    end
+
+    # Check if this block is still considered invalid:
+    if chaintips.filter{|t| t["status"] == "invalid" && t["hash"] == self.block_hash }.count > 0
+      self.update marked_invalid_by: self.marked_invalid_by | [node.id]
+      Rails.logger.info "Mirror node #{ node.id } block #{ self.block_hash } invalid"
+      return nil
+    end
+
+    Rails.logger.debug "Resume p2p networking..."
+    node.mirror_client.setnetworkactive(true)
+    # Leave node alone for a bit:
+    node.update mirror_rest_until: 60.seconds.from_now
+    return nil
   end
 
   def self.process_templates!(coin)
