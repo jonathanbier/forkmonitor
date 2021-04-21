@@ -897,10 +897,18 @@ RSpec.describe Node, :type => :model do
       before do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560176)
+        allow(Chaintip).to receive(:validate_forks!).and_return nil
+        allow(InflatedBlock).to receive(:check_inflation!).and_return nil
       end
 
       it "should check inflation" do
         expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 10})
+        Node.rollback_checks_repeat!({coins: ["BTC"]})
+      end
+
+      it "should check for valid-headers chaintips" do
+        allow(Chaintip).to receive(:validate_forks!).and_return nil
+        expect(Chaintip).to receive(:validate_forks!)
         Node.rollback_checks_repeat!({coins: ["BTC"]})
       end
     end

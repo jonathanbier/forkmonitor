@@ -653,6 +653,9 @@ class Node < ApplicationRecord
     while true
       options[:coins].each do |coin|
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 10})
+        Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).each do |node|
+          Chaintip.validate_forks!(node, 50)
+        end
       end
 
       if Rails.env.test?
