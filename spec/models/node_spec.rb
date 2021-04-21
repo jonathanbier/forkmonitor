@@ -893,7 +893,7 @@ RSpec.describe Node, :type => :model do
 
     end
 
-    describe "inflation_check_repeat!" do
+    describe "rollback_checks_repeat!" do
       before do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560176)
@@ -901,7 +901,7 @@ RSpec.describe Node, :type => :model do
 
       it "should check inflation" do
         expect(InflatedBlock).to receive(:check_inflation!).with({coin: :btc, max: 10})
-        Node.inflation_check_repeat!({coins: ["BTC"]})
+        Node.rollback_checks_repeat!({coins: ["BTC"]})
       end
     end
 

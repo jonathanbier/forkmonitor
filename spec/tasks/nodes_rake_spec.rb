@@ -43,16 +43,16 @@ describe "nodes:heavy_checks_repeat" do
   end
 end
 
-describe "nodes:inflation_check_repeat" do
+describe "nodes:rollback_checks_repeat" do
   include_context "rake"
 
-  it "should call :inflation_check_repeat! on Node" do
-    expect(Node).to receive(:inflation_check_repeat!)
+  it "should call :rollback_checks_repeat! on Node" do
+    expect(Node).to receive(:rollback_checks_repeat!)
     subject.invoke
   end
 
-  it "should call :inflation_check_repeat! on Node with a list of coins" do
-    expect(Node).to receive(:inflation_check_repeat!).with({:coins=>["BTC", "TBTC"]})
+  it "should call :rollback_checks_repeat! on Node with a list of coins" do
+    expect(Node).to receive(:rollback_checks_repeat!).with({:coins=>["BTC", "TBTC"]})
     subject.invoke("BTC", "TBTC")
   end
 end

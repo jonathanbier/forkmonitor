@@ -74,7 +74,7 @@ rake debug blocks:check_inflation[BTC]
 To run inflation checks continuously, filtered by coin:
 
 ```
-rake debug nodes:inflation_check_repeat[BTC]
+rake debug nodes:rollback_checks_repeat[BTC]
 ```
 
 The other long running heavy work tasks:

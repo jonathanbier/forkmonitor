@@ -637,7 +637,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def self.inflation_check_repeat!(options)
+  def self.rollback_checks_repeat!(options)
     # Trap ^C
     Signal.trap("INT") {
       Rails.logger.info "\nShutting down gracefully..."

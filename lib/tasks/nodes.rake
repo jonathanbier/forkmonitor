@@ -14,9 +14,9 @@ namespace 'nodes' do :env
     Node.poll_repeat!({coins: args.extras})
   end
 
-  desc "Continuous inflation checks"
-  task :inflation_check_repeat, [] => :environment do |action, args|
-    Node.inflation_check_repeat!({coins: args.extras})
+  desc "Continuous checks that require rollbacks"
+  task :rollback_checks_repeat, [] => :environment do |action, args|
+    Node.rollback_checks_repeat!({coins: args.extras})
   end
 
   desc "Heavy duty continuous checks"
