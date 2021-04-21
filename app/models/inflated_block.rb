@@ -119,15 +119,7 @@ class InflatedBlock < ApplicationRecord
               Rails.logger.debug "Get the total UTXO balance at height #{ block.height } on #{ node.name_with_version }..."
               txoutsetinfo = node.mirror_client.gettxoutsetinfo
 
-              unless block.invalidated_block_hashes.empty?
-                Rails.logger.debug "Restore chain to tip on #{ node.name_with_version }..."
-                block.invalidated_block_hashes.each do |block_hash|
-                  Rails.logger.debug "Reconsider block #{ block_hash } (#{ block.height }) on #{ node.name_with_version }"
-                  node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
-                  sleep 1 # But wait anyway
-                end
-                block.invalidated_block_hashes = []
-              end
+              block.undo_rollback!(node)
 
               # Make sure we got the block we expected
               throw "TxOutset #{ txoutsetinfo["bestblock"] } is not for block #{ block.block_hash }" unless txoutsetinfo["bestblock"] == block.block_hash

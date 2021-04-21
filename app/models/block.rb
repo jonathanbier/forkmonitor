@@ -745,6 +745,18 @@ class Block < ApplicationRecord
 
   def validate_fork!
     # TODO
+  def undo_rollback!(node)
+    unless self.invalidated_block_hashes.empty?
+      Rails.logger.debug "Restore chain to tip on #{ node.name_with_version }..."
+      self.invalidated_block_hashes.each do |block_hash|
+        Rails.logger.debug "Reconsider block #{ block_hash } (#{ self.height }) on #{ node.name_with_version }"
+        node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
+        sleep 1 # But wait anyway
+      end
+      self.invalidated_block_hashes = []
+    end
+  end
+
   end
 
   def self.process_templates!(coin)
