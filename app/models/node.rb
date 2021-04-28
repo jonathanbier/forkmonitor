@@ -807,7 +807,7 @@ class Node < ApplicationRecord
 
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where(coin: coin, txindex: true, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true, special: false).first or raise NoTxIndexError
+    node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false, enabled: true, special: false).first or raise NoTxIndexError
   end
 
   def self.newest(coin, client_type)
