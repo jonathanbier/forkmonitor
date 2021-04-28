@@ -511,6 +511,7 @@ class Node < ApplicationRecord
     }
 
     while true
+      Rails.logger.info "Polling #{ options[:coins].join(", ") } nodes..."
       sleep 5
 
       self.poll!(options.merge({repeat: true}))
