@@ -230,7 +230,9 @@ class Chaintip < ApplicationRecord
     active_tip_height = chaintips.filter{|t| t["status"] == "active" }.first["height"]
     chaintips.filter{|t| t["status"] == "valid-headers" }.each do |tip|
       break if tip["height"] < active_tip_height - max_depth
-      Block.find_by(block_hash: tip["hash"]).validate_fork!(node)
+      block = Block.find_by(block_hash: tip["hash"])
+      break if block.nil?
+      block.validate_fork!(node)
     end
   end
 
