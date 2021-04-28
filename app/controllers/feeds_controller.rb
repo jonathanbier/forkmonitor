@@ -42,7 +42,7 @@ class FeedsController < ApplicationController
         # Blocks are marked invalid during chaintip check
         latest = Block.where(coin: Block.coins[@coin], pool: nil).where.not(coinbase_message: nil).order(height: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @unknown_pools = Block.where(coin: Block.coins[@coin], pool: nil).where.not(coinbase_message: nil).order(height: :desc).limit(50)
+          @unknown_pools = Block.where(coin: Block.coins[@coin], pool: nil).where("height > ?", latest.height - 10000).where.not(coinbase_message: nil).order(height: :desc).limit(50)
         end
       end
     end
