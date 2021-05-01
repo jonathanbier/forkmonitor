@@ -20,7 +20,7 @@ class Softfork < ApplicationRecord
       self.update notified_at: Time.now
       Subscription.blast("softfork-#{ self.id }",
                          "#{ self.coin.upcase } #{ self.name } softfork #{ self.status }",
-                         "#{ self.name.capitalize } #{ self.fork_type.to_s.upcase } status became <b>#{ self.status }</b> at height #{ self.since.to_s(:delimited) } according to #{ self.node.name_with_version }."
+                         "#{ self.name.capitalize } #{ self.fork_type.to_s.upcase } status became #{ self.status.to_s.upcase } at height #{ self.since.to_s(:delimited) } according to #{ self.node.name_with_version }."
       )
     end
   end
