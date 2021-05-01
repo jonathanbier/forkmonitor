@@ -636,6 +636,8 @@ class Block < ApplicationRecord
               Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
             end
           end
+        rescue Node::TimeOutError
+          Rails.logger.error "Timeout on special node while trying to fetch #{ block.block_hash } (#{ block.height })"
         rescue Node::BlockNotFoundError
           Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) not found on the special node"
         rescue Node::BlockPrunedError
