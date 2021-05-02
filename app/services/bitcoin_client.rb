@@ -77,7 +77,9 @@ class BitcoinClient
 
   def getnetworkinfo
     begin
-      return request("getnetworkinfo")
+      Timeout::timeout(30, TimeOutError) {
+        Thread.new{ request("getnetworkinfo") }.value
+      }
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getnetworkinfo failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
