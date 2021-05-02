@@ -175,6 +175,14 @@ class Node < ApplicationRecord
         self.update unreachable_since: self.unreachable_since || DateTime.now
         return
       end
+    elsif self.core? && self.version.present?
+      begin
+        blockchaininfo = client.getblockchaininfo
+        networkinfo = client.getnetworkinfo
+      rescue BitcoinClient::Error
+        self.update unreachable_since: self.unreachable_since || DateTime.now
+        return
+      end
     else # Version is not known the first time
       begin
         blockchaininfo = client.getblockchaininfo
