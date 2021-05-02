@@ -282,6 +282,8 @@ class Block < ApplicationRecord
     )
     tx_count = extract_tx_count(block_info)
 
+    Rails.logger.error "Missing version for #{ node.coin.to_s.upcase } #{ block.block_hash } (#{block.height}) from #{ node.name_with_version }}" if block_info["version"].nil?
+
     block.update(
       mediantime: block_info["mediantime"],
       timestamp: block_info["time"],
