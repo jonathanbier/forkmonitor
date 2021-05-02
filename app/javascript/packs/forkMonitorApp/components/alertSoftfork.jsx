@@ -11,7 +11,7 @@ class AlertSoftfork extends React.Component {
     return(
       <UncontrolledAlert color="info">
         { this.props.softfork.fork_type } { this.props.softfork.name } softfork
-        status became { this.props.softfork.status } at height { this.props.softfork.height }
+        status became { this.props.softfork.status } at height { this.props.softfork.height }&nbsp;
         according to { this.props.softfork.node_name }
       </UncontrolledAlert>
     );
