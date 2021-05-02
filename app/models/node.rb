@@ -368,8 +368,8 @@ class Node < ApplicationRecord
 
     while block.height >= until_height
       if !block.version.present?
-        logger.error "Missing version for block #{ block.height }"
-        exit(1)
+        Rails.logger.error "Missing version for block #{ block.height }"
+        return nil
       end
 
       versions_window.push(block.version_bits)
