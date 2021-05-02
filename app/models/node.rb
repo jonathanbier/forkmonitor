@@ -381,7 +381,9 @@ class Node < ApplicationRecord
     versions_tally = versions_window.transpose.map(&:sum)
     throw "Unexpected versions_tally = #{ versions_tally.length } != 29"  if versions_tally.length != 29
     current_alerts = VersionBit.where(deactivate: nil).map{ |vb| [vb.bit, vb] }.to_h
+    known_softforks = Softfork.all.collect{|s| s.bit}.uniq
     versions_tally.each_with_index do |tally, bit|
+      next if known_softforks.include?(bit)
       if tally >= threshold
         if current_alerts[bit].nil?
           Rails.logger.info "Bit #{ bit } exceeds threshold"
