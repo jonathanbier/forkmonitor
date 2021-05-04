@@ -871,6 +871,7 @@ RSpec.describe Node, :type => :model do
         allow(Chaintip).to receive(:validate_forks!).and_return nil
         allow(InflatedBlock).to receive(:check_inflation!).and_return nil
         allow(Block).to receive(:find_missing).and_return nil
+        allow(Chaintip).to receive(:validate_forks!).and_return nil
       end
 
       it "should check inflation" do
@@ -879,8 +880,12 @@ RSpec.describe Node, :type => :model do
       end
 
       it "should check for valid-headers chaintips" do
-        allow(Chaintip).to receive(:validate_forks!).and_return nil
         expect(Chaintip).to receive(:validate_forks!)
+        Node.rollback_checks_repeat!({coins: ["BTC"]})
+      end
+
+      it "should call find_missing" do
+        expect(Block).to receive(:find_missing).with(:btc, 40000, 20)
         Node.rollback_checks_repeat!({coins: ["BTC"]})
       end
     end
@@ -917,11 +922,6 @@ RSpec.describe Node, :type => :model do
 
       it "should call process_stale_candidates" do
         expect(StaleCandidate).to receive(:process!).with(:btc)
-        Node.heavy_checks_repeat!({coins: ["BTC"]})
-      end
-
-      it "should call find_missing" do
-        expect(Block).to receive(:find_missing).with(:btc, 40000, 20)
         Node.heavy_checks_repeat!({coins: ["BTC"]})
       end
 
