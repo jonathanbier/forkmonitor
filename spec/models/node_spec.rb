@@ -870,6 +870,7 @@ RSpec.describe Node, :type => :model do
         @node.mirror_client.mock_set_height(560176)
         allow(Chaintip).to receive(:validate_forks!).and_return nil
         allow(InflatedBlock).to receive(:check_inflation!).and_return nil
+        allow(Block).to receive(:find_missing).and_return nil
       end
 
       it "should check inflation" do
