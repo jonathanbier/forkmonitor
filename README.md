@@ -12,7 +12,7 @@ To use Rails cache, install memcacher, e.g. on macOS: `brew install memcached`. 
 
 Install Python. When using pyenv, use `env PYTHON_CONFIGURE_OPTS='--enable-shared' pyenv install VERSION` in order for [PyCall](https://github.com/mrkn/pycall.rb) to work.
 
-Install Ruby 2.7.2 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
+Install Ruby 3.0.1 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
 the bundler and foreman gems, then run bundler:
 
 ```

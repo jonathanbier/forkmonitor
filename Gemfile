@@ -1,9 +1,9 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '2.7.2'
+ruby '3.0.1'
 
-gem 'rails', '~> 5.2.3'
+gem 'rails', '~> 6.1.3'
 # Use Puma as the app server
 gem 'puma', '~> 3.12.6'
 # Transpile app-like JavaScript. Read more: https://github.com/rails/webpacker
@@ -46,7 +46,7 @@ gem 'serviceworker-rails'
 gem 'webpush'
 
 # Safari notifications
-gem 'rpush'
+gem 'rpush', '~> 5.4.0'
 gem 'push_package'
 
 # Email when something breaks
@@ -70,14 +70,15 @@ gem '0mq', '~> 0.5.3'
 
 # Use Postgres as the database for Active Record
 gem 'pg'
-gem 'activerecord-hierarchical_query'
+# Switch to release after merge: https://github.com/take-five/activerecord-hierarchical_query/pull/32
+gem 'activerecord-hierarchical_query', :github => 'walski/activerecord-hierarchical_query', :branch => "rails-6-1"
 
 # Memcachier
 gem 'dalli'
 
 # Deployment
- gem 'capistrano', '~> 3.14'
- gem 'capistrano-rails', '~> 1.5'
+ gem 'capistrano', '~> 3.16'
+ gem 'capistrano-rails', '~> 1.6.1'
  gem 'capistrano-passenger', '>= 0.2.1'
  gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
  gem 'capistrano-rake'
@@ -89,7 +90,7 @@ group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
 
-  gem 'rspec-rails', '~> 3.8'
+  gem 'rspec-rails'
   gem 'factory_bot'
   gem 'ffaker'
   gem 'timecop'
@@ -103,17 +104,17 @@ group :development, :test do
 
   gem 'redis-rails'
 
-  # Call Python, e.g. Bitcoin Core test framework (switch to 1.3.1 release when ready)
-  gem 'pycall', :github => 'mrkn/pycall.rb', :ref => "b9de184825b3bd0ab7ffb991d2b2f462f55227c4"
+  # Call Python, e.g. Bitcoin Core test framework
+  gem 'pycall', '>= 1.3.1'
 
   gem 'parallel_tests'
 end
 
 group :development do
-  gem 'listen', '>= 3.0.5', '< 3.2'
+  gem 'listen'
   # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'spring'
-  gem 'spring-watcher-listen', '~> 2.0.0'
+  gem 'spring-watcher-listen'
 
   # Automatically run tests, etc:
   gem 'guard'
