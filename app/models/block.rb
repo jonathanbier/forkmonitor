@@ -532,7 +532,9 @@ class Block < ApplicationRecord
     return if blocks.count == 0
 
     getblockfrompeer_blocks = []
-    special = Node.find_by(coin: coin, special: true)
+    # Ensure the most recent node supports getblockfrompeer or is patched:
+    # https://github.com/BitMEXResearch/bitcoin/pull/1
+    gbfp_node = coin == :btc ? Node.newest_node(coin) : nil
 
     blocks.each do |block|
       block_info = nil
@@ -580,31 +582,31 @@ class Block < ApplicationRecord
         end
       end
 
-      # Try getblockfrompeer on the special node
+      # Try getblockfrompeer on the gbfp_node (mirror) node
       unless raw_block.present?
-        next if special.nil?
-        # Does the special node have the header?
+        next if gbfp_node.nil?
+        # Does the gbfp mirror node have the header?
         begin
-          special.getblockheader(block.block_hash)
+          gbfp_node.getblockheader(block.block_hash, true, true)
         rescue Node::BlockNotFoundError
           # Feed it the block header
           next if originally_seen_by.nil?
           raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
           # This requires blocks to be processed in ascending height order
-          special.client.submitheader(raw_block_header)
+          gbfp_node.mirror_client.submitheader(raw_block_header)
         rescue Node::ConnectionError, BitcoinClient::NodeInitializingError
           next
         end
-        peers = special.client.getpeerinfo
+        peers = gbfp_node.mirror_client.getpeerinfo
         # Ask each peer for the block
         Rails.logger.debug "Request block #{ block.block_hash } (#{ block.height }) from peers #{ peers.collect{ |peer| peer["id"] }.join(", ")}"
         peers.each do |peer|
           begin
-            special.client.getblockfrompeer(block.block_hash, peer["id"])
+            gbfp_node.mirror_client.getblockfrompeer(block.block_hash, peer["id"])
           rescue BitcoinClient::Error
             # immedidately disconnect
             begin
-              special.client.disconnectnode("", peer["id"])
+              gbfp_node.mirror_client.disconnectnode("", peer["id"])
             rescue BitcoinClient::PeerNotConnected
               # Ignore if already disconnected for some reason
             end
@@ -615,7 +617,7 @@ class Block < ApplicationRecord
     end
 
     if getblockfrompeer_blocks.count > 0
-      Rails.logger.debug "Wait #{ patience } seconds and check if the special node retrieved any of the #{ getblockfrompeer_blocks.count } blocks..."
+      Rails.logger.debug "Wait #{ patience } seconds and check if the mirror node retrieved any of the #{ getblockfrompeer_blocks.count } blocks..."
       # Wait for getblockfrompeer responses
       sleep patience
 
@@ -623,8 +625,8 @@ class Block < ApplicationRecord
       raw_block = nil
       getblockfrompeer_blocks.each do |block|
         begin
-          raw_block = special.getblock(block.block_hash, 0)
-          Rails.logger.info "Retrieved #{ block.coin.upcase } block #{ block.block_hash } (#{ block.height }) on the special node"
+          raw_block = gbfp_node.getblock(block.block_hash, 0, true)
+          Rails.logger.info "Retrieved #{ block.coin.upcase } block #{ block.block_hash } (#{ block.height }) on the mirror node"
           found_block = true
           # Feed block to original node
           if block.first_seen_by.present?
@@ -632,35 +634,35 @@ class Block < ApplicationRecord
             unless block.first_seen_by.core? && block.first_seen_by.version < 130100
               Rails.logger.info "Submit block #{ block.block_hash } (#{ block.height }) to #{ block.first_seen_by.name_with_version }"
               block.first_seen_by.client.submitblock(raw_block, block.block_hash)
-              block_info = special.getblock(block.block_hash, 1)
+              block_info = gbfp_node.getblock(block.block_hash, 1, true)
               block.update_fields(block_info)
               block.update headers_only: false
               Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
             end
           end
         rescue Node::TimeOutError
-          Rails.logger.error "Timeout on special node while trying to fetch #{ block.block_hash } (#{ block.height })"
+          Rails.logger.error "Timeout on mirror node while trying to fetch #{ block.block_hash } (#{ block.height })"
         rescue Node::BlockNotFoundError
-          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) not found on the special node"
+          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) not found on the mirror node"
         rescue Node::BlockPrunedError
-          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) was pruned from the special node"
+          Rails.logger.debug "Block #{ block.block_hash } (#{ block.height }) was pruned from the mirror node"
         end
       end
     end
 
-    if !found_block && !special.nil?
+    if !found_block && !gbfp_node.nil?
       # Disconnect all peers if we didn't get any block
       begin
-        peers = special.client.getpeerinfo;
+        peers = gbfp_node.mirror_client.getpeerinfo;
         peers.each do |peer|
           begin
-            special.client.disconnectnode("", peer["id"])
+            gbfp_node.mirror_client.disconnectnode("", peer["id"])
           rescue BitcoinClient::PeerNotConnected
             # Ignore if already disconnected, e.g. by us above
           end
         end
       rescue BitcoinClient::NodeInitializingError, BitcoinClient::ConnectionError
-        # Ignore if special node can't be reached or is restarting
+        # Ignore if mirror node can't be reached or is restarting
       end
     end
   end

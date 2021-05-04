@@ -44,7 +44,6 @@ export const NodeList = props => (
             <TextField source="coin" />
             <TextField source="name_with_version" />
             <DateField source="unreachable_since" />
-            <BooleanField source="special" />
             <BooleanField source="enabled" />
         </Datagrid>
     </List>
@@ -72,7 +71,6 @@ export const NodeEdit = props => (
             <NumberInput source="ram" />
             <TextInput source="storage" />
             <BooleanInput source="cve_2018_17144" />
-            <BooleanInput source="special" />
             <BooleanInput source="getblocktemplate" />
             <DateInput source="released" />
             <BooleanInput source="enabled" />
@@ -102,7 +100,6 @@ export const NodeCreate = props => (
             <NumberInput source="ram" />
             <TextInput source="storage" />
             <BooleanInput source="cve_2018_17144" />
-            <BooleanInput source="special" />
             <BooleanInput source="getblocktemplate" />
             <DateInput source="released" />
         </SimpleForm>

@@ -37,24 +37,24 @@ class Node < ApplicationRecord
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
   before_destroy :clear_references
 
-  scope :bitcoin_core_by_version, -> { where(enabled: true, special: false, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc) }
-  scope :bitcoin_core_unknown_version, -> { where(enabled: true, special: false, coin: :btc, client_type: :core).where(version: nil) }
-  scope :bitcoin_alternative_implementations, ->{ where(enabled: true, special: false, coin: :btc). where.not(client_type: :core) }
+  scope :bitcoin_core_by_version, -> { where(enabled: true, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc) }
+  scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: :btc, client_type: :core).where(version: nil) }
+  scope :bitcoin_alternative_implementations, ->{ where(enabled: true, coin: :btc). where.not(client_type: :core) }
 
   # Enum is stored as an integer, so do not remove entries from this list:
   enum client_type: [:core, :bcoin, :knots, :btcd, :libbitcoin, :abc, :sv, :bu, :omni, :blockcore]
 
-  scope :testnet_by_version, -> { where(enabled: true, special: false, coin: :tbtc).order(version: :desc) }
-  scope :bch_by_version, -> { where(enabled: true, special: false, coin: :bch).order(version: :desc) }
+  scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
+  scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def self.coin_by_version(coin)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    where(enabled: true, special: false, coin: coin).order(version: :desc)
+    where(enabled: true, coin: coin).order(version: :desc)
   end
 
   def self.with_mirror(coin)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    where(enabled: true, special: false, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
+    where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
   end
 
   def parse_version(v)
@@ -104,7 +104,6 @@ class Node < ApplicationRecord
       :mempool_bytes,
       :mempool_max,
       :mirror_ibd,
-      :special,
       :to_destroy,
       :getblocktemplate
     ]
@@ -663,6 +662,9 @@ class Node < ApplicationRecord
 
     while true
       options[:coins].each do |coin|
+        # TODO: find_missing shouldn't need to use a mirror node, but the current
+        #       pattern of disconecting is not ideal for the main node.
+        Block.find_missing(coin.downcase.to_sym, 40000, 20) # waits 20 seconds for blocks
         InflatedBlock.check_inflation!({coin: coin.downcase.to_sym, max: 10})
         Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).each do |node|
           Chaintip.validate_forks!(node, 50)
@@ -697,7 +699,6 @@ class Node < ApplicationRecord
         LightningTransaction.check_public_channels! if coin == "BTC"
         Block.match_missing_pools!(coin.downcase.to_sym, 3)
         Block.process_templates!(coin.downcase.to_sym)
-        Block.find_missing(coin.downcase.to_sym, 40000, 20) # waits 20 seconds for blocks
         StaleCandidate.process!(coin.downcase.to_sym)
         StaleCandidate.prime_cache(coin.downcase.to_sym)
         Softfork.notify!
@@ -817,17 +818,17 @@ class Node < ApplicationRecord
 
   def self.first_with_txindex(coin, client_type = :core)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false, enabled: true, special: false).first or raise NoTxIndexError
+    node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false, enabled: true).first or raise NoTxIndexError
   end
 
   def self.newest(coin, client_type)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true, special: false).order(version: :desc).first or raise NoMatchingNodeError
+    node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).order(version: :desc).first or raise NoMatchingNodeError
   end
 
   def self.first_newer_than(coin, version, client_type)
     raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
-    node = Node.where("version >= ?", version).where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true, special: false).first or raise NoMatchingNodeError
+    node = Node.where("version >= ?", version).where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false, enabled: true).first or raise NoMatchingNodeError
   end
 
   def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
