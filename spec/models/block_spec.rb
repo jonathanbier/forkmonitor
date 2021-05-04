@@ -11,6 +11,7 @@ RSpec.describe Block, :type => :model do
 
     stub_const("BitcoinClient::Error", BitcoinClientPython::Error)
     stub_const("BitcoinClient::ConnectionError", BitcoinClientPython::ConnectionError)
+    stub_const("BitcoinClient::NodeInitializingError", BitcoinClientPython::NodeInitializingError)
     stub_const("BitcoinClient::TimeOutError", BitcoinClientPython::TimeOutError)
     stub_const("BitcoinClient::BlockNotFoundError", BitcoinClientPython::BlockNotFoundError)
     test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
