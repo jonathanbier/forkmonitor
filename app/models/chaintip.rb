@@ -206,10 +206,9 @@ class Chaintip < ApplicationRecord
       return nil
     else
       # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
-      if node.client_type.to_sym == :libbitcoin ||
-         node.client_type.to_sym == :btcd ||
-         (node.client_type.to_sym == :core && node.version.present? && node.version < 100000)
-
+      if node.libbitcoin? ||
+         node.btcd? ||
+         (node.core? && node.version.present? && node.version < 100000)
         Chaintip.process_active!(node, node.block)
         return nil
       end
