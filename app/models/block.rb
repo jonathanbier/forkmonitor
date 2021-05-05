@@ -534,7 +534,7 @@ class Block < ApplicationRecord
     getblockfrompeer_blocks = []
     # Ensure the most recent node supports getblockfrompeer or is patched:
     # https://github.com/BitMEXResearch/bitcoin/pull/1
-    gbfp_node = coin == :btc ? Node.newest_node(coin) : nil
+    gbfp_node = coin == :btc ? Node.with_mirror(coin).first : nil
     gbfp_node = nil if Rails.env.test? # TODO: add test coverage, maybe after v22.0 release
 
     blocks.each do |block|
