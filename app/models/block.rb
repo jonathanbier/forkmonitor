@@ -37,7 +37,7 @@ class Block < ApplicationRecord
         name_with_version: first_seen_by.name_with_version
       } : nil,
       tx_ids_added: options && options[:tx_diff] && tx_ids_added ? [Block::binary_to_hashes(tx_ids_added), Array.new(Block::binary_to_hashes(tx_ids_added).length)].transpose : nil,
-      tx_ids_omitted: options && options[:tx_diff] && tx_ids_omitted ? [Block::binary_to_hashes(tx_ids_omitted), tx_omitted_fee_rates].transpose.filter {|a| a[1] >= lowest_template_fee_rate + 5 } : nil,
+      tx_ids_omitted: options && options[:tx_diff] && tx_ids_omitted ? [Block::binary_to_hashes(tx_ids_omitted), tx_omitted_fee_rates].transpose.filter {|a| a[1] >= (lowest_template_fee_rate || 0) + 5 } : nil,
       lowest_template_fee_rate: lowest_template_fee_rate
     })
   end
