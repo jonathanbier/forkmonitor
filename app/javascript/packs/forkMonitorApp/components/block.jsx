@@ -5,6 +5,8 @@ import Explorer from './explorer';
 import BlockInfo from './blockInfo';
 import Transaction from './transaction';
 
+import NumberFormat from 'react-number-format';
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -54,16 +56,26 @@ class Block extends React.Component {
               </BreadcrumbItem>
             </Breadcrumb>
             { this.state.block &&
-              <BlockInfo block={ this.state.block } />
+              <BlockInfo block={ this.state.block } extra />
             }
+            <div>
+              <h3>Predicted block transactions</h3>
+              <p>We call <code>getblocktemplate</code> on our node several times
+              per minute to construct a candidate block. We then check to see if
+              the real block contains the same transactions. Usually any difference
+              is due to timing coincidence and variations for how transactions
+              propagate between nodes.</p>
+              { this.state.block && this.state.block.template_txs_fee_diff &&
+                <p>
+                  This block contained <NumberFormat value={ Math.abs(this.state.block.template_txs_fee_diff) } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC {
+                    this.state.block.template_txs_fee_diff > 0 ? "more " : "less "
+                  }
+                  transaction fees than expected from our most recent template.
+                </p>
+              }
+            </div>
             { this.state.block && this.state.block.tx_ids_omitted &&
               <div>
-                <h3>Predicted block transactions</h3>
-                <p>We call <code>getblocktemplate</code> on our node several times
-                per minute to construct a candidate block. We then check to see if
-                the real block contains the same transactions. Usually any difference
-                is due to timing coincidence and variations for how transactions
-                propagate between nodes.</p>
                 <h3>Transactions we expected in block</h3>
                 <p>
                   The transactions below were present in our most recent block template,

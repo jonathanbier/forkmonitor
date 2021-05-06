@@ -47,6 +47,15 @@ class BlockInfo extends React.Component {
         { this.props.link &&
           <Link to={ `/blocks/${ this.props.block.coin }/${ this.props.block.hash }` }>More info...</Link>
         }
+        { this.props.extra &&
+          <span>
+            { this.props.block.total_fee != null && this.props.block.template_txs_fee_diff != null &&
+              <span>
+                Template fee: <NumberFormat value={ parseFloat(this.props.block.total_fee) + parseFloat(this.props.block.template_txs_fee_diff) } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC
+              </span>
+            }
+          </span>
+        }
       </p>
     )
   }
