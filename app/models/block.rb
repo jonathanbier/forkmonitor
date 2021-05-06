@@ -115,7 +115,7 @@ class Block < ApplicationRecord
 
   def fetch_transactions!
     if self.transactions.count == 0 && !self.headers_only
-      rails.logger.info "Fetch transactions at height #{ self.height } (#{ self.block_hash })..."
+      Rails.logger.info "Fetch transactions at height #{ self.height } (#{ self.block_hash })..."
       # TODO: if node doesn't have getblock equivalent (e.g. libbitcoin), try other nodes
       # Workaround for test framework, needed in order to mock first_seen_by
       this_block = Rails.env.test? ? Block.find_by(block_hash: self.block_hash) : self
@@ -600,7 +600,7 @@ class Block < ApplicationRecord
         end
         peers = gbfp_node.mirror_client.getpeerinfo
         # Ask each peer for the block
-        rails.logger.info "Request block #{ block.block_hash } (#{ block.height }) from peers #{ peers.collect{ |peer| peer["id"] }.join(", ")}"
+        Rails.logger.info "Request block #{ block.block_hash } (#{ block.height }) from peers #{ peers.collect{ |peer| peer["id"] }.join(", ")}"
         peers.each do |peer|
           begin
             gbfp_node.mirror_client.getblockfrompeer(block.block_hash, peer["id"])
@@ -618,7 +618,7 @@ class Block < ApplicationRecord
     end
 
     if getblockfrompeer_blocks.count > 0
-      rails.logger.info "Wait #{ patience } seconds and check if the mirror node retrieved any of the #{ getblockfrompeer_blocks.count } blocks..."
+      Rails.logger.info "Wait #{ patience } seconds and check if the mirror node retrieved any of the #{ getblockfrompeer_blocks.count } blocks..."
       # Wait for getblockfrompeer responses
       sleep patience
 
@@ -644,9 +644,9 @@ class Block < ApplicationRecord
         rescue Node::TimeOutError
           Rails.logger.error "Timeout on mirror node while trying to fetch #{ block.block_hash } (#{ block.height })"
         rescue Node::BlockNotFoundError
-          rails.logger.info "Block #{ block.block_hash } (#{ block.height }) not found on the mirror node"
+          Rails.logger.info "Block #{ block.block_hash } (#{ block.height }) not found on the mirror node"
         rescue Node::BlockPrunedError
-          rails.logger.info "Block #{ block.block_hash } (#{ block.height }) was pruned from the mirror node"
+          Rails.logger.info "Block #{ block.block_hash } (#{ block.height }) was pruned from the mirror node"
         end
       end
     end
@@ -682,24 +682,24 @@ class Block < ApplicationRecord
 
   def make_active_on_mirror!(node)
     # Invalidate new blocks, including any forks we don't know of yet
-    rails.logger.info "Roll back the chain to #{ self.block_hash } (#{ self.height }) on #{ node.name_with_version }..."
+    Rails.logger.info "Roll back the chain to #{ self.block_hash } (#{ self.height }) on #{ node.name_with_version }..."
     tally = 0
     while(active_tip = node.get_mirror_active_tip; active_tip.present? && self.block_hash != active_tip["hash"])
       if tally > (Rails.env.test? ? 2 : 100)
         throw_unable_to_roll_back!(node)
       elsif tally > 0
-        rails.logger.info "Fetch blocks for any newly activated chaintips on #{ node.name_with_version }..."
+        Rails.logger.info "Fetch blocks for any newly activated chaintips on #{ node.name_with_version }..."
         node.poll_mirror!
         self.reload
       end
-      rails.logger.info "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] }) on #{ node.name_with_version }"
+      Rails.logger.info "Current tip #{ active_tip["hash"] } (#{ active_tip["height"] }) on #{ node.name_with_version }"
       blocks_to_invalidate = []
       active_tip_block = Block.find_by!(block_hash: active_tip["hash"])
       if self.height == active_tip["height"]
-        rails.logger.info "Invalidate tip to jump to another fork"
+        Rails.logger.info "Invalidate tip to jump to another fork"
         blocks_to_invalidate.append(active_tip_block)
       else
-        rails.logger.info "Check if active chaintip (#{ active_tip["height"] }) descends from target block (#{ self.height }), otherwise invalidate the active chain..."
+        Rails.logger.info "Check if active chaintip (#{ active_tip["height"] }) descends from target block (#{ self.height }), otherwise invalidate the active chain..."
         if !self.descendants.include? active_tip_block
           blocks_to_invalidate.append(active_tip_block.branch_start(self))
         end
@@ -723,7 +723,7 @@ class Block < ApplicationRecord
       end
       blocks_to_invalidate.each do |block|
         @invalidated_block_hashes.append(block.block_hash)
-        rails.logger.info "Invalidate block #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
+        Rails.logger.info "Invalidate block #{ block.block_hash } (#{ block.height }) on #{ node.name_with_version }"
         node.mirror_client.invalidateblock(block.block_hash) # This is a blocking call
       end
       tally += 1
@@ -752,9 +752,9 @@ class Block < ApplicationRecord
 
   def undo_rollback!(node)
     unless self.invalidated_block_hashes.empty?
-      rails.logger.info "Restore chain to tip on #{ node.name_with_version }..."
+      Rails.logger.info "Restore chain to tip on #{ node.name_with_version }..."
       self.invalidated_block_hashes.each do |block_hash|
-        rails.logger.info "Reconsider block #{ block_hash } (#{ self.height }) on #{ node.name_with_version }"
+        Rails.logger.info "Reconsider block #{ block_hash } (#{ self.height }) on #{ node.name_with_version }"
         node.mirror_client.reconsiderblock(block_hash) # This is a blocking call
         sleep 1 # But wait anyway
       end
@@ -775,7 +775,7 @@ class Block < ApplicationRecord
       sleep 1
     end
 
-    rails.logger.info "Stop p2p networking to prevent the chain from updating underneath us"
+    Rails.logger.info "Stop p2p networking to prevent the chain from updating underneath us"
     node.mirror_client.setnetworkactive(false)
 
     begin
@@ -789,7 +789,7 @@ class Block < ApplicationRecord
         # If something went wrong, first ask the node to reconsider all "invalid" blocks,
         # to avoid false alarm:
         node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
-          rails.logger.info "Reconsider block #{ tip["hash"] }"
+          Rails.logger.info "Reconsider block #{ tip["hash"] }"
           node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
           sleep 1 # But wait anyway
         end
@@ -798,15 +798,15 @@ class Block < ApplicationRecord
       # If anything went wrong with make_active_on_mirror! or undo_rollback!
       Rails.logger.error "Rescued: #{e.inspect}"
       Rails.logger.error "Restoring node before bailing out..."
-      rails.logger.info "Resume p2p networking..."
+      Rails.logger.info "Resume p2p networking..."
       node.mirror_client.setnetworkactive(true)
       # Have node return to tip, by reconsidering all invalid chaintips
       node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
-        rails.logger.info "Reconsider block #{ tip["hash"] }"
+        Rails.logger.info "Reconsider block #{ tip["hash"] }"
         node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
         sleep 1 # But wait anyway
       end
-      rails.logger.info "Node restored"
+      Rails.logger.info "Node restored"
       # Give node some time to catch up:
       node.update mirror_rest_until: 60.seconds.from_now
       raise # continue throwing error
@@ -819,7 +819,7 @@ class Block < ApplicationRecord
       return nil
     end
 
-    rails.logger.info "Resume p2p networking..."
+    Rails.logger.info "Resume p2p networking..."
     node.mirror_client.setnetworkactive(true)
     # Leave node alone for a bit:
     node.update mirror_rest_until: 60.seconds.from_now

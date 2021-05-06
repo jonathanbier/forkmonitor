@@ -87,11 +87,11 @@ class InflatedBlock < ApplicationRecord
 
             # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
             if TxOutset.find_by(block: node.mirror_block, node: node).present?
-              rails.logger.info "Already checked #{ node.name_with_version } for current mirror tip"
+              Rails.logger.info "Already checked #{ node.name_with_version } for current mirror tip"
               Thread.exit
             end
 
-            rails.logger.info "Stop p2p networking to prevent the chain from updating underneath us"
+            Rails.logger.info "Stop p2p networking to prevent the chain from updating underneath us"
             node.mirror_client.setnetworkactive(false)
 
             # We want to call gettxoutsetinfo at every height since the last check.
@@ -116,7 +116,7 @@ class InflatedBlock < ApplicationRecord
             blocks_to_check.each do |block|
               block.make_active_on_mirror!(node)
 
-              rails.logger.info "Get the total UTXO balance at height #{ block.height } on #{ node.name_with_version }..."
+              Rails.logger.info "Get the total UTXO balance at height #{ block.height } on #{ node.name_with_version }..."
               txoutsetinfo = node.mirror_client.gettxoutsetinfo
 
               block.undo_rollback!(node)
@@ -158,20 +158,20 @@ class InflatedBlock < ApplicationRecord
           rescue StandardError => e
             Rails.logger.error "Rescued: #{e.inspect}"
             Rails.logger.error "Restoring node before bailing out..."
-            rails.logger.info "Resume p2p networking..."
+            Rails.logger.info "Resume p2p networking..."
             node.mirror_client.setnetworkactive(true)
             # Have node return to tip, by reconsidering all invalid chaintips
             node.mirror_client.getchaintips.filter{|tip| tip["status"] == "invalid"}.each do |tip|
-              rails.logger.info "Reconsider block #{ tip["hash"] }"
+              Rails.logger.info "Reconsider block #{ tip["hash"] }"
               node.mirror_client.reconsiderblock(tip["hash"]) # This is a blocking call
               sleep 1 # But wait anyway
             end
-            rails.logger.info "Node restored"
+            Rails.logger.info "Node restored"
             # Give node some time to catch up:
             node.update mirror_rest_until: 60.seconds.from_now
             raise # continue throwing error
           end
-          rails.logger.info "Resume p2p networking..."
+          Rails.logger.info "Resume p2p networking..."
           # Resume p2p networking
           node.mirror_client.setnetworkactive(true)
           # Leave node alone for a bit:

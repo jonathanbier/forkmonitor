@@ -257,11 +257,11 @@ class Node < ApplicationRecord
   def poll_mirror!
     return if mirror_rpchost.nil?
     return unless self.core?
-    rails.logger.info "Polling mirror node..."
+    Rails.logger.info "Polling mirror node..."
     begin
       blockchaininfo = mirror_client.getblockchaininfo
     rescue BitcoinClient::Error
-      rails.logger.info "Failed to poll mirror node..."
+      Rails.logger.info "Failed to poll mirror node..."
       # Ignore failure
       return
     end
@@ -454,13 +454,13 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BTC")
       self.bitcoin_core_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
       self.bitcoin_core_unknown_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        rails.logger.info "Polling #{ node.coin } node #{node.id} (unknown verison)..."
+        Rails.logger.info "Polling #{ node.coin } node #{node.id} (unknown verison)..."
         node.poll!
       end
 
@@ -468,7 +468,7 @@ class Node < ApplicationRecord
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
         # Skip libbitcoin in repeat poll, due to ZMQ socket errors
         next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-        rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -479,7 +479,7 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("TBTC")
       self.testnet_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -491,7 +491,7 @@ class Node < ApplicationRecord
     if !options[:coins] || options[:coins].empty? || options[:coins].include?("BCH")
       self.bch_by_version.each do |node|
         next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-        rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
+        Rails.logger.info "Polling #{ node.coin } node #{node.id} (#{node.name_with_version})..."
         node.poll!
       end
 
@@ -798,13 +798,13 @@ class Node < ApplicationRecord
       core_nodes = self.bitcoin_core_by_version
       core_nodes.drop(1).each do |node|
         lag  = node.check_if_behind!(core_nodes.first)
-        rails.logger.info "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
+        Rails.logger.info "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
       end
 
       self.bitcoin_alternative_implementations.each do |node|
         next if options[:repeat] && node.client_type.to_sym == :libbitcoin
         lag  = node.check_if_behind!(core_nodes.first)
-        rails.logger.info "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
+        Rails.logger.info "Check if #{ node.name_with_version } is behind #{ core_nodes.first.name_with_version }... #{ lag.present? }"
       end
     end
   end
