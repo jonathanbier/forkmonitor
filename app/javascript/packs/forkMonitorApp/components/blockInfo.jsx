@@ -51,7 +51,7 @@ class BlockInfo extends React.Component {
           <span>
             { this.props.block.total_fee != null && this.props.block.template_txs_fee_diff != null &&
               <span>
-                Template fee: <NumberFormat value={ parseFloat(this.props.block.total_fee) + parseFloat(this.props.block.template_txs_fee_diff) } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC
+                Template fee: <NumberFormat value={ parseFloat(this.props.block.total_fee) - parseFloat(this.props.block.template_txs_fee_diff) } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC
               </span>
             }
           </span>
