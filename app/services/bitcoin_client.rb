@@ -310,7 +310,7 @@ class BitcoinClient
   private
 
   def request(*args)
-    Rails.logger.debug("RPC #{ args.collect{|arg| arg.class == String ? arg.truncate(100) : arg }.join(" ")} on #{ @coin.upcase } #{@name_with_version} (id=#{@node_id})")
+    rails.logger.info("RPC #{ args.collect{|arg| arg.class == String ? arg.truncate(100) : arg }.join(" ")} on #{ @coin.upcase } #{@name_with_version} (id=#{@node_id})")
     begin
       @client.request(*args)
     rescue Bitcoiner::Client::JSONRPCError => e
