@@ -223,7 +223,9 @@ class BitcoinClient
 
   def getchaintips
     begin
-      return request("getchaintips")
+      Timeout::timeout(60, TimeOutError) {
+        Thread.new{ request("getchaintips") }.value
+      }
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getchaintips failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
