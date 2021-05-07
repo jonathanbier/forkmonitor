@@ -73,6 +73,11 @@ class Block extends React.Component {
                   transaction fees than expected from our most recent template.
                 </p>
               }
+              { this.state.block &&
+                <p>
+                  For a similar analysis see <a href={"https://miningpool.observer/template-and-block/" + this.state.block.hash}>miningpool.observer</a>.
+                </p>
+              }
             </div>
             { this.state.block && this.state.block.tx_ids_omitted &&
               <div>
