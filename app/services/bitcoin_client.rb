@@ -223,9 +223,11 @@ class BitcoinClient
 
   def getchaintips
     begin
-      Timeout::timeout(60, TimeOutError) {
+      Timeout::timeout(120, TimeOutError) {
         Thread.new{ request("getchaintips") }.value
       }
+    rescue TimeOutError
+      raise TimeOutError, "getchaintips timed out for #{ @coin } #{@name_with_version} (id=#{@node_id})"
     rescue Bitcoiner::Client::JSONRPCError => e
       raise Error, "getchaintips failed for #{ @coin } #{@name_with_version} (id=#{@node_id}): " + e.message
     end
