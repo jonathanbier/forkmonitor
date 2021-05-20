@@ -126,7 +126,8 @@ class Block < ApplicationRecord
         if self.pruned? || node.nil? || (node.core? && node.version < 160000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
           node = Node.newest_node(this_block.coin.to_sym)
         end
-        block_info = node.getblock(self.block_hash, 2)
+        # Use extra long timeout for BCH blocks
+        block_info = node.getblock(self.block_hash, 2, false, self.bch? ? 120: nil)
       rescue Node::BlockPrunedError
         self.update pruned: true
         return

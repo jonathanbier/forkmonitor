@@ -154,11 +154,13 @@ class BitcoinClient
     end
   end
 
-  def getblock(hash, verbosity)
+  def getblock(hash, verbosity, timeout=30)
     begin
-      Timeout::timeout(30, TimeOutError) {
+      Timeout::timeout(timeout, TimeOutError) {
         Thread.new{ request("getblock", hash, verbosity) }.value
       }
+    rescue TimeOutError
+      raise TimeOutError, "getblock(#{hash},#{verbosity}) timed out for #{ @coin } #{@name_with_version} (id=#{@node_id})"
     rescue Bitcoiner::Client::JSONRPCError => e
       raise PartialFileError if e.message.include?("partial_file")
       raise BlockPrunedError if e.message.include?("pruned data")

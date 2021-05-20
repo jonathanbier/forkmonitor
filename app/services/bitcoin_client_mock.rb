@@ -415,7 +415,7 @@ class BitcoinClientMock
     @block_hash
   end
 
-  def getblock(hash, verbosity)
+  def getblock(hash, verbosity, timeout=30)
     raise Error, "getblock requires block hash" unless hash.present?
 
     if @pruned_blocks.include? hash

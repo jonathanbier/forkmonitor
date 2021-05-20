@@ -109,7 +109,7 @@ class BitcoinClientPython
     end
   end
 
-  def getblock(block_hash, verbosity)
+  def getblock(block_hash, verbosity, timeout=nil)
     raise Error, "Set Python node" unless @node != nil
     raise ConnectionError if @mock_connection_error
     raise PartialFileError if @mock_partial_file_error

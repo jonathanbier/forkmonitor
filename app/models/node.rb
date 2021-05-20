@@ -407,7 +407,7 @@ class Node < ApplicationRecord
     end
   end
 
-  def getblock(block_hash, verbosity, use_mirror = false)
+  def getblock(block_hash, verbosity, use_mirror = false, timeout=nil)
     throw "Specify block hash" if block_hash.nil?
     throw "Specify verbosity" if verbosity.nil?
     client = use_mirror ? self.mirror_client : self.client
@@ -418,7 +418,7 @@ class Node < ApplicationRecord
       verbosity = verbosity > 0
     end
     begin
-      client.getblock(block_hash, verbosity)
+      client.getblock(block_hash, verbosity, timeout)
     rescue BitcoinClient::ConnectionError
       raise ConnectionError
     rescue BitcoinClient::PartialFileError
