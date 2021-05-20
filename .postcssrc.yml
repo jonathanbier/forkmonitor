@@ -1,3 +1,2 @@
 plugins:
-  postcss-import: {}
-  postcss-cssnext: {}
+  postcss-preset-env: {}
