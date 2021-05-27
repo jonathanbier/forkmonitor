@@ -36,6 +36,7 @@ User `crontab`:
 # m h  dom mon dow   command
 * * * * * /usr/bin/flock -n /tmp/pollBTC.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat[BTC]
 * * * * * /usr/bin/flock -n /tmp/pollTBTC.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat[TBTC]
+* * * * * /usr/bin/flock -n /tmp/pollTBTC.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat[BCH]
 # * * * * * /usr/bin/flock -n /tmp/pollBTC_stale.lock /usr/bin/cronic ~/rake.sh nodes:poll_unless_fresh[BTC]
 * * * * * /usr/bin/flock -n /tmp/heavyTBTC.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat[TBTC]
 * * * * * /usr/bin/flock -n /tmp/heavyBTC.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat[BTC]
