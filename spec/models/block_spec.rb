@@ -402,6 +402,11 @@ RSpec.describe Block, :type => :model do
   end
 
   describe "self.pool_from_coinbase_tx" do
+    before do
+      create(:antpool)
+      create(:f2pool)
+    end
+
     it "should find Antpool" do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true
       tx = {

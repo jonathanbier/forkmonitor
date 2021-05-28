@@ -44,6 +44,7 @@ User `crontab`:
 * * * * * /usr/bin/flock -n /tmp/rollbackBTC.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat[BTC]
 * * * * * /usr/bin/flock -n /tmp/rollbackTBTC.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat[TBTC]
 * * * * * /usr/bin/flock -n /tmp/blockTemplate.lock /usr/bin/cronic ~/rake.sh nodes:getblocktemplate_repeat[BTC]
+0 0 * * * ~/rake.sh pools:fetch
 ```
 
 `poll_unless_fresh` is currently unused; it's only needed for Libbitcoin.

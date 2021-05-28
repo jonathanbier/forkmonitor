@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_05_04_114537) do
+ActiveRecord::Schema.define(version: 2021_05_28_112249) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -189,6 +189,15 @@ ActiveRecord::Schema.define(version: 2021_05_04_114537) do
     t.boolean "getblocktemplate", default: false, null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
     t.index ["mirror_block_id"], name: "index_nodes_on_mirror_block_id"
+  end
+
+  create_table "pools", force: :cascade do |t|
+    t.string "tag"
+    t.string "name"
+    t.string "url"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["tag"], name: "index_pools_on_tag"
   end
 
   create_table "rpush_apps", force: :cascade do |t|
