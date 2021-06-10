@@ -88,6 +88,7 @@ gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
 gem 'ed25519'
 gem 'nilify_blanks'
 
+# CI runs with :test, but without :development
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
@@ -110,6 +111,10 @@ group :development, :test do
   gem 'pycall', '>= 1.3.1'
 
   gem 'parallel_tests'
+
+  gem 'rubocop', require: false
+  gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec', require: false
 end
 
 group :development do
@@ -121,8 +126,5 @@ group :development do
   # Automatically run tests, etc:
   gem 'guard'
   gem 'guard-rspec', require: false
-  gem 'rubocop', require: false
-  gem 'rubocop-rails', require: false
-  gem 'rubocop-rspec', require: false
   gem 'terminal-notifier-guard', '~> 1.6.1'
 end
