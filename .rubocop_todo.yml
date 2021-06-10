@@ -398,15 +398,6 @@ Rails/DynamicFindBy:
   Exclude:
     - 'app/models/safari_subscription.rb'
 
-# Offense count: 7
-# Configuration parameters: Include, AllowReads, AllowWrites.
-# Include: app/**/*.rb, lib/**/*.rb
-Rails/EnvironmentVariableAccess:
-  Exclude:
-    - 'app/models/inflated_block.rb'
-    - 'app/models/node.rb'
-    - 'app/models/subscription.rb'
-
 # Offense count: 8
 # Configuration parameters: Include.
 # Include: app/**/*.rb, config/**/*.rb, lib/**/*.rb
