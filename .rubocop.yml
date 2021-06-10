@@ -20,4 +20,4 @@ AllCops:
   NewCops: enable
 
 Rails/EnvironmentVariableAccess:
-  Enabled: False # https://github.com/rubocop/rubocop-rails/pull/442#issuecomment-840458448
+  AllowReads: true # https://github.com/rubocop/rubocop-rails/pull/442#issuecomment-840458448
