@@ -471,6 +471,7 @@ DEPENDENCIES
   redis-rails
   rpush (~> 5.4.0)
   rspec-rails
+  rubocop
   rubocop-rails
   rubocop-rspec
   serviceworker-rails

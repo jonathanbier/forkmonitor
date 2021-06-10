@@ -121,6 +121,7 @@ group :development do
   # Automatically run tests, etc:
   gem 'guard'
   gem 'guard-rspec', require: false
+  gem 'rubocop', require: false
   gem 'rubocop-rails', require: false
   gem 'rubocop-rspec', require: false
   gem 'terminal-notifier-guard', '~> 1.6.1'
