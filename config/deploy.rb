@@ -1,8 +1,10 @@
-# config valid for current version and patch releases of Capistrano
-lock "~> 3.16.0"
+# frozen_string_literal: true
 
-set :application, "forkmonitor"
-set :repo_url, "https://github.com/BitMEXResearch/forkmonitor.git"
+# config valid for current version and patch releases of Capistrano
+lock '~> 3.16.0'
+
+set :application, 'forkmonitor'
+set :repo_url, 'https://github.com/BitMEXResearch/forkmonitor.git'
 
 # Default branch is :master
 set :branch, `git rev-parse --abbrev-ref HEAD`.chomp
@@ -23,7 +25,8 @@ set :deploy_to, "/home/forkmonitor/#{fetch :application}"
 # append :linked_files, "config/database.yml"
 
 # Default value for linked_dirs is []
-append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', '.bundle', 'public/system', 'public/uploads', 'certs'
+append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', '.bundle', 'public/system',
+       'public/uploads', 'certs'
 
 # Default value for default_env is {}
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
@@ -37,5 +40,5 @@ set :keep_releases, 5
 # Uncomment the following to require manually verifying the host key before first deploy.
 # set :ssh_options, verify_host_key: :secure
 
-after :deploy, "restart_rake_tasks"
-after :deploy, "clear_cache"
+after :deploy, 'restart_rake_tasks'
+after :deploy, 'clear_cache'

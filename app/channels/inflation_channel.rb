@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class InflationChannel < ApplicationCable::Channel
   def subscribed
     @node = Node.find(params[:node])

@@ -1,4 +1,6 @@
-# NOTE TO THE CURIOUS.
+# frozen_string_literal: true
+
+# NOTE: TO THE CURIOUS.
 #
 # Congratulations on being a diligent developer and vetting the migrations
 # added to your project!
@@ -33,11 +35,9 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
 
   def self.down
     migrations.reverse.each do |m|
-      begin
-        m.down
-      rescue ActiveRecord::StatementInvalid => e
-        p e
-      end
+      m.down
+    rescue ActiveRecord::StatementInvalid => e
+      p e
     end
   end
 
@@ -46,7 +46,7 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
       create_table :rapns_notifications do |t|
         t.integer   :badge,                 null: true
         t.string    :device_token,          null: false, limit: 64
-        t.string    :sound,                 null: true,  default: "1.aiff"
+        t.string    :sound,                 null: true,  default: '1.aiff'
         t.string    :alert,                 null: true
         t.text      :attributes_for_device, null: true
         t.integer   :expiry,                null: false, default: 1.day.to_i
@@ -60,7 +60,7 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         t.timestamps
       end
 
-      add_index :rapns_notifications, [:delivered, :failed, :deliver_after], name: 'index_rapns_notifications_multi'
+      add_index :rapns_notifications, %i[delivered failed deliver_after], name: 'index_rapns_notifications_multi'
     end
 
     def self.down
@@ -68,10 +68,8 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         if index_name_exists?(:rapns_notifications, 'index_rapns_notifications_multi')
           remove_index :rapns_notifications, name: 'index_rapns_notifications_multi'
         end
-      else
-        if index_name_exists?(:rapns_notifications, 'index_rapns_notifications_multi', true)
-          remove_index :rapns_notifications, name: 'index_rapns_notifications_multi'
-        end
+      elsif index_name_exists?(:rapns_notifications, 'index_rapns_notifications_multi', true)
+        remove_index :rapns_notifications, name: 'index_rapns_notifications_multi'
       end
 
       drop_table :rapns_notifications
@@ -94,10 +92,8 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         if index_name_exists?(:rapns_feedback, :index_rapns_feedback_on_device_token)
           remove_index :rapns_feedback, name: :index_rapns_feedback_on_device_token
         end
-      else
-        if index_name_exists?(:rapns_feedback, :index_rapns_feedback_on_device_token, true)
-          remove_index :rapns_feedback, name: :index_rapns_feedback_on_device_token
-        end
+      elsif index_name_exists?(:rapns_feedback, :index_rapns_feedback_on_device_token, true)
+        remove_index :rapns_feedback, name: :index_rapns_feedback_on_device_token
       end
 
       drop_table :rapns_feedback
@@ -196,20 +192,20 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
       remove_column :rapns_notifications, :app
 
       if ActiveRecord.version >= Gem::Version.new('5.1')
-        if index_name_exists?(:rapns_notifications, "index_rapns_notifications_multi")
-          remove_index :rapns_notifications, name: "index_rapns_notifications_multi"
-        elsif index_name_exists?(:rapns_notifications, "index_rapns_notifications_on_delivered_failed_deliver_after")
-          remove_index :rapns_notifications, name: "index_rapns_notifications_on_delivered_failed_deliver_after"
+        if index_name_exists?(:rapns_notifications, 'index_rapns_notifications_multi')
+          remove_index :rapns_notifications, name: 'index_rapns_notifications_multi'
+        elsif index_name_exists?(:rapns_notifications, 'index_rapns_notifications_on_delivered_failed_deliver_after')
+          remove_index :rapns_notifications, name: 'index_rapns_notifications_on_delivered_failed_deliver_after'
         end
-      else
-        if index_name_exists?(:rapns_notifications, "index_rapns_notifications_multi", true)
-          remove_index :rapns_notifications, name: "index_rapns_notifications_multi"
-        elsif index_name_exists?(:rapns_notifications, "index_rapns_notifications_on_delivered_failed_deliver_after", false)
-          remove_index :rapns_notifications, name: "index_rapns_notifications_on_delivered_failed_deliver_after"
-        end
+      elsif index_name_exists?(:rapns_notifications, 'index_rapns_notifications_multi', true)
+        remove_index :rapns_notifications, name: 'index_rapns_notifications_multi'
+      elsif index_name_exists?(:rapns_notifications, 'index_rapns_notifications_on_delivered_failed_deliver_after',
+                               false)
+        remove_index :rapns_notifications, name: 'index_rapns_notifications_on_delivered_failed_deliver_after'
       end
 
-      add_index :rapns_notifications, [:app_id, :delivered, :failed, :deliver_after], name: "index_rapns_notifications_multi"
+      add_index :rapns_notifications, %i[app_id delivered failed deliver_after],
+                name: 'index_rapns_notifications_multi'
     end
 
     def self.down
@@ -249,15 +245,13 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         if index_name_exists?(:rapns_notifications, :index_rapns_notifications_multi)
           remove_index :rapns_notifications, name: :index_rapns_notifications_multi
         end
-      else
-        if index_name_exists?(:rapns_notifications, :index_rapns_notifications_multi, true)
-          remove_index :rapns_notifications, name: :index_rapns_notifications_multi
-        end
+      elsif index_name_exists?(:rapns_notifications, :index_rapns_notifications_multi, true)
+        remove_index :rapns_notifications, name: :index_rapns_notifications_multi
       end
 
       remove_column :rapns_notifications, :app_id
 
-      add_index :rapns_notifications, [:delivered, :failed, :deliver_after], name: :index_rapns_notifications_multi
+      add_index :rapns_notifications, %i[delivered failed deliver_after], name: :index_rapns_notifications_multi
     end
   end
 
@@ -326,20 +320,16 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         if index_name_exists?(:rpush_notifications, :index_rapns_notifications_multi)
           rename_index :rpush_notifications, :index_rapns_notifications_multi, :index_rpush_notifications_multi
         end
-      else
-        if index_name_exists?(:rpush_notifications, :index_rapns_notifications_multi, true)
-          rename_index :rpush_notifications, :index_rapns_notifications_multi, :index_rpush_notifications_multi
-        end
+      elsif index_name_exists?(:rpush_notifications, :index_rapns_notifications_multi, true)
+        rename_index :rpush_notifications, :index_rapns_notifications_multi, :index_rpush_notifications_multi
       end
 
       if ActiveRecord.version >= Gem::Version.new('5.1')
         if index_name_exists?(:rpush_feedback, :index_rapns_feedback_on_device_token)
           rename_index :rpush_feedback, :index_rapns_feedback_on_device_token, :index_rpush_feedback_on_device_token
         end
-      else
-        if index_name_exists?(:rpush_feedback, :index_rapns_feedback_on_device_token, true)
-          rename_index :rpush_feedback, :index_rapns_feedback_on_device_token, :index_rpush_feedback_on_device_token
-        end
+      elsif index_name_exists?(:rpush_feedback, :index_rapns_feedback_on_device_token, true)
+        rename_index :rpush_feedback, :index_rapns_feedback_on_device_token, :index_rpush_feedback_on_device_token
       end
 
       update_type(RenameRapnsToRpush::Rpush::Notification, 'Rapns::Apns::Notification', 'Rpush::Apns::Notification')
@@ -368,20 +358,16 @@ class AddRpush < ActiveRecord::VERSION::MAJOR >= 5 ? ActiveRecord::Migration[5.0
         if index_name_exists?(:rpush_notifications, :index_rpush_notifications_multi)
           rename_index :rpush_notifications, :index_rpush_notifications_multi, :index_rapns_notifications_multi
         end
-      else
-        if index_name_exists?(:rpush_notifications, :index_rpush_notifications_multi, true)
-          rename_index :rpush_notifications, :index_rpush_notifications_multi, :index_rapns_notifications_multi
-        end
+      elsif index_name_exists?(:rpush_notifications, :index_rpush_notifications_multi, true)
+        rename_index :rpush_notifications, :index_rpush_notifications_multi, :index_rapns_notifications_multi
       end
 
       if ActiveRecord.version >= Gem::Version.new('5.1')
         if index_name_exists?(:rpush_feedback, :index_rpush_feedback_on_device_token)
           rename_index :rpush_feedback, :index_rpush_feedback_on_device_token, :index_rapns_feedback_on_device_token
         end
-      else
-        if index_name_exists?(:rpush_feedback, :index_rpush_feedback_on_device_token, true)
-          rename_index :rpush_feedback, :index_rpush_feedback_on_device_token, :index_rapns_feedback_on_device_token
-        end
+      elsif index_name_exists?(:rpush_feedback, :index_rpush_feedback_on_device_token, true)
+        rename_index :rpush_feedback, :index_rpush_feedback_on_device_token, :index_rapns_feedback_on_device_token
       end
 
       rename_table :rpush_notifications, :rapns_notifications

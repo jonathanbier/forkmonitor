@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddNodeToInflatedBlocks < ActiveRecord::Migration[5.2]
   def change
     add_reference :inflated_blocks, :node, foreign_key: true

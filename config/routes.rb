@@ -1,5 +1,7 @@
+# frozen_string_literal: true
+
 Rails.application.routes.draw do
-  match '(*any)', to: redirect(subdomain: ''), via: :all, constraints: {subdomain: 'www'} if Rails.env.production?
+  match '(*any)', to: redirect(subdomain: ''), via: :all, constraints: { subdomain: 'www' } if Rails.env.production?
 
   devise_for :users,
              path: '',
@@ -11,65 +13,65 @@ Rails.application.routes.draw do
                sessions: 'sessions'
              }
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
-  root to: "pages#root"
+  root to: 'pages#root'
 
-  namespace :api, {format: ['json', 'csv']} do
+  namespace :api, { format: %w[json csv] } do
     namespace :v1 do
-      match '/blocks/:coin/max_height', :to => 'blocks#max_height', :as => "api_max_height_for_coin", :via => :get
-      match '/blocks/hash/:block_hash', :to => 'blocks#with_hash', :as => "api_block_with_hash", :via => :get
-      match '/nodes/coin/:coin', :to => 'nodes#index_coin', :as => "api_nodes_for_coin", :via => :get
-      match '/chaintips/:coin', :to => 'chaintips#index_coin', :as => "chaintips_for_coin", :via => :get
-      resources :nodes, only: [:index, :show, :update, :destroy, :create]
-      resources :inflated_blocks, only: [:index, :show, :destroy]
-      resources :invalid_blocks, only: [:index, :show, :destroy]
+      match '/blocks/:coin/max_height', to: 'blocks#max_height', as: 'api_max_height_for_coin', via: :get
+      match '/blocks/hash/:block_hash', to: 'blocks#with_hash', as: 'api_block_with_hash', via: :get
+      match '/nodes/coin/:coin', to: 'nodes#index_coin', as: 'api_nodes_for_coin', via: :get
+      match '/chaintips/:coin', to: 'chaintips#index_coin', as: 'chaintips_for_coin', via: :get
+      resources :nodes, only: %i[index show update destroy create]
+      resources :inflated_blocks, only: %i[index show destroy]
+      resources :invalid_blocks, only: %i[index show destroy]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
       namespace :stale_candidates do
-        get ":coin", action: :index
-        get ":coin/:height", action: :show
-        get ":coin/:height/double_spend_info", action: :double_spend_info
+        get ':coin', action: :index
+        get ':coin/:height', action: :show
+        get ':coin/:height/double_spend_info', action: :double_spend_info
       end
-      resources :ln_penalties, only: [:index, :show]
-      resources :ln_sweeps, only: [:index, :show]
-      resources :ln_uncoops, only: [:index, :show]
+      resources :ln_penalties, only: %i[index show]
+      resources :ln_sweeps, only: %i[index show]
+      resources :ln_uncoops, only: %i[index show]
       resources :ln_stats, only: [:index]
-      resources :blocks, only: [:index, :show]
+      resources :blocks, only: %i[index show]
       resources :subscriptions, only: [:create]
       resources :block_templates, only: [:index]
       namespace :softforks do
-        get ":coin", action: :index
+        get ':coin', action: :index
       end
     end
   end
 
-  post 'push/:version/log', to: "safari#log"
-  post 'push/:version/pushPackages/web.info.forkmonitor', to: "safari#package"
-  post 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: "safari#registrations"
-  delete 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: "safari#deregister"
+  post 'push/:version/log', to: 'safari#log'
+  post 'push/:version/pushPackages/web.info.forkmonitor', to: 'safari#package'
+  post 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: 'safari#registrations'
+  delete 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: 'safari#deregister'
 
   scope format: true, constraints: { format: /rss/ } do
     namespace :feeds do
-      get ':coin/blocks/invalid', :action => :blocks_invalid
-      get 'inflated_blocks/:coin', :action => :inflated_blocks
-      get 'invalid_blocks/:coin', :action => :invalid_blocks
-      get '/blocks/unknown_pools/:coin', :action => :unknown_pools
+      get ':coin/blocks/invalid', action: :blocks_invalid
+      get 'inflated_blocks/:coin', action: :inflated_blocks
+      get 'invalid_blocks/:coin', action: :invalid_blocks
+      get '/blocks/unknown_pools/:coin', action: :unknown_pools
       get 'lagging_nodes'
-      get 'nodes/unreachable', :action => :unreachable_nodes
+      get 'nodes/unreachable', action: :unreachable_nodes
       get 'version_bits'
-      get 'stale_candidates/:coin', :action => :stale_candidates, as: "stale_candidate"
-      get 'orphan_candidates/:coin', :action => :stale_candidates # deprecated alias
-      get 'ln_penalties/:coin', :action => :ln_penalties
-      get 'ln_sweeps/:coin', :action => :ln_sweeps, as: "ln_sweeps"
-      get 'ln_uncoops/:coin', :action => :ln_uncoops, as: "ln_uncoops"
+      get 'stale_candidates/:coin', action: :stale_candidates, as: 'stale_candidate'
+      get 'orphan_candidates/:coin', action: :stale_candidates # deprecated alias
+      get 'ln_penalties/:coin', action: :ln_penalties
+      get 'ln_sweeps/:coin', action: :ln_sweeps, as: 'ln_sweeps'
+      get 'ln_uncoops/:coin', action: :ln_uncoops, as: 'ln_uncoops'
     end
   end
 
-  get 'blocks/:coin/:block_hash', to: "pages#root"
-  get 'lightning', to: "pages#root"
-  get 'nodes/:coin', to: "pages#root", :as => "nodes_for_coin"
-  get 'stale/:coin/:height', to: "pages#root", :as => "stale_candidate"
-  get 'admin', to: "pages#root"
-  get 'notifications', to: "pages#root"
+  get 'blocks/:coin/:block_hash', to: 'pages#root'
+  get 'lightning', to: 'pages#root'
+  get 'nodes/:coin', to: 'pages#root', as: 'nodes_for_coin'
+  get 'stale/:coin/:height', to: 'pages#root', as: 'stale_candidate'
+  get 'admin', to: 'pages#root'
+  get 'notifications', to: 'pages#root'
 
   mount ActionCable.server => '/cable'
 end

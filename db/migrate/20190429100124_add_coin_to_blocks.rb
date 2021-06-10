@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddCoinToBlocks < ActiveRecord::Migration[5.2]
   def up
     add_column :blocks, :coin, :integer
@@ -6,11 +8,11 @@ class AddCoinToBlocks < ActiveRecord::Migration[5.2]
     remove_column :blocks, :is_btc
 
     # Be sure to change nodes.coin from "BCH" to "BSV" first!
-    Node.where(coin: "BCH").each do |node|
+    Node.where(coin: 'BCH').each do |node|
       Block.where(first_seen_by_id: node.id).update_all(coin: :bch)
     end
 
-    Node.where(coin: "BSV").each do |node|
+    Node.where(coin: 'BSV').each do |node|
       Block.where(first_seen_by_id: node.id).update_all(coin: :bsv)
     end
   end

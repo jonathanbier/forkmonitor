@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateSafariSubscriptions < ActiveRecord::Migration[5.2]
   def change
     create_table :safari_subscriptions do |t|

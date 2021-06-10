@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -41,14 +43,14 @@ Rails.application.configure do
   # Print deprecation notices to the stderr.
   config.active_support.deprecation = :stderr
 
-  config.action_mailer.default_url_options = { host: 'forkmonitor.info', protocol: "https" }
+  config.action_mailer.default_url_options = { host: 'forkmonitor.info', protocol: 'https' }
 
   # Raises error for missing translations
   # config.action_view.raise_on_missing_translations = true
 
   # Enable stdout logger
-  config.logger = Logger.new(STDOUT)
+  config.logger = Logger.new($stdout)
 
   # Set log level
-  config.log_level = ENV.fetch("LOG_LEVEL", "ERROR")
+  config.log_level = ENV.fetch('LOG_LEVEL', 'ERROR')
 end

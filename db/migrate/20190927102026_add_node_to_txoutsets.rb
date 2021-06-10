@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddNodeToTxoutsets < ActiveRecord::Migration[5.2]
   def up
     add_reference :tx_outsets, :node, foreign_key: true

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddIndexToBlocks < ActiveRecord::Migration[5.2]
   def change
     add_index :blocks, :height

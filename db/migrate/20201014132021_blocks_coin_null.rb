@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class BlocksCoinNull < ActiveRecord::Migration[5.2]
   def up
     change_column :blocks, :coin, :integer, null: false

@@ -33,7 +33,13 @@ cp ../bitcoin-config.ini test/config.ini
 test/get_previous_releases.py -b -t .. v0.21.0
 ```
 
-## Javacsript tests
+## Specs
+
+To debug a test, use:
+
+```sh
+LOG_LEVEL=info rspec spec/models/block_spec.rb
+```
 
 To run Rails tests in parallel (optionally set `PARALLEL_TEST_PROCESSORS`):
 
@@ -42,6 +48,8 @@ rake parallel:create
 rake parallel:prepare
 rake parallel:spec
 ```
+
+## Javascript tests
 
 To run Javascript tests and monitor for changes:
 

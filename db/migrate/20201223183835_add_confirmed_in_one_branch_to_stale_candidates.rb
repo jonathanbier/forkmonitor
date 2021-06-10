@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddConfirmedInOneBranchToStaleCandidates < ActiveRecord::Migration[5.2]
   def change
     add_column :stale_candidates, :confirmed_in_one_branch, :string, array: true, default: []

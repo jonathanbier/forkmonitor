@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class TransactionsRawNull < ActiveRecord::Migration[5.2]
   def up
     change_column :transactions, :raw, :binary, null: false

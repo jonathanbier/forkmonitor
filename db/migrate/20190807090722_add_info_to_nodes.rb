@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddInfoToNodes < ActiveRecord::Migration[5.2]
   def change
     add_column :nodes, :pruned, :boolean, default: false, null: false

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddIsBtcToBlocks < ActiveRecord::Migration[5.2]
   def up
     add_column :blocks, :is_btc, :boolean, default: false

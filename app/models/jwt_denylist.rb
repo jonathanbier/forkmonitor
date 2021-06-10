@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class JWTDenylist < ApplicationRecord
   include Devise::JWT::RevocationStrategies::Denylist
 

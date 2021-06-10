@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
@@ -16,8 +18,8 @@ gem 'jbuilder', '~> 2.5'
 # gem 'bcrypt', '~> 3.1.7'
 
 # Rails asset pipeline
-gem 'sprockets-rails'
 gem 'sprockets', '~> 3.7.2' # probably easier to drop Sprockets then to upgrade
+gem 'sprockets-rails'
 
 gem 'rails_real_favicon'
 
@@ -46,8 +48,8 @@ gem 'serviceworker-rails'
 gem 'webpush'
 
 # Safari notifications
-gem 'rpush', '~> 5.4.0'
 gem 'push_package'
+gem 'rpush', '~> 5.4.0'
 
 # Email when something breaks
 gem 'exception_notification'
@@ -57,7 +59,7 @@ gem 'exception_notification-rake', '~> 0.3.0'
 gem 'actionmailer-text'
 
 # There is no request timeout mechanism inside of Puma.
-gem "rack-timeout"
+gem 'rack-timeout'
 
 # Measure test coverage
 gem 'coveralls', require: false
@@ -71,28 +73,28 @@ gem '0mq', '~> 0.5.3'
 # Use Postgres as the database for Active Record
 gem 'pg'
 # Switch to release after merge: https://github.com/take-five/activerecord-hierarchical_query/pull/32
-gem 'activerecord-hierarchical_query', :github => 'walski/activerecord-hierarchical_query', :branch => "rails-6-1"
+gem 'activerecord-hierarchical_query', github: 'walski/activerecord-hierarchical_query', branch: 'rails-6-1'
 
 # Memcachier
 gem 'dalli'
 
 # Deployment
- gem 'capistrano', '~> 3.16'
- gem 'capistrano-rails', '~> 1.6.1'
- gem 'capistrano-passenger', '>= 0.2.1'
- gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
- gem 'capistrano-rake'
- gem 'ed25519'
- gem 'bcrypt_pbkdf'
- gem 'nilify_blanks'
+gem 'bcrypt_pbkdf'
+gem 'capistrano', '~> 3.16'
+gem 'capistrano-passenger', '>= 0.2.1'
+gem 'capistrano-rails', '~> 1.6.1'
+gem 'capistrano-rake'
+gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
+gem 'ed25519'
+gem 'nilify_blanks'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
   gem 'byebug'
 
-  gem 'rspec-rails'
   gem 'factory_bot'
   gem 'ffaker'
+  gem 'rspec-rails'
   gem 'timecop'
 
   gem 'rails-controller-testing'
@@ -119,5 +121,6 @@ group :development do
   # Automatically run tests, etc:
   gem 'guard'
   gem 'guard-rspec', require: false
+  gem 'rubocop-rails', require: false
   gem 'terminal-notifier-guard', '~> 1.6.1'
 end

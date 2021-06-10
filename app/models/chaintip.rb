@@ -1,19 +1,24 @@
+# frozen_string_literal: true
+
 class Chaintip < ApplicationRecord
   belongs_to :block, optional: false
   belongs_to :node, optional: false, touch: true
-  belongs_to :parent_chaintip, class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', optional: true, :dependent => :destroy  # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
-  has_many :children,  class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', :dependent => :nullify
+  belongs_to :parent_chaintip, class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', optional: true, dependent: :destroy # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
+  has_many :children,  class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', dependent: :nullify
 
   after_commit :expire_cache
 
-  enum coin: [:btc, :bch, :bsv, :tbtc]
+  enum coin: %i[btc bch bsv tbtc]
 
-  validates :status, uniqueness: { scope: :node}
+  validates :status, uniqueness: { scope: :node }
 
   def nodes_for_identical_chaintips
-    return nil if status != "active"
-    chaintip_nodes = Chaintip.joins(:node).where("nodes.enabled = ? AND chaintips.status = ? AND chaintips.block_id = ?", true, status, self.block_id).order(client_type: :asc ,name: :asc, version: :desc)
-    res = chaintip_nodes.collect{ | c | c.node }
+    return nil if status != 'active'
+
+    chaintip_nodes = Chaintip.joins(:node).where('nodes.enabled = ? AND chaintips.status = ? AND chaintips.block_id = ?', true, status, block_id).order(
+      client_type: :asc, name: :asc, version: :desc
+    )
+    res = chaintip_nodes.collect(&:node)
     chaintip_nodes.each do |chaintip_node|
       chaintip_node.children.each do |child|
         res.append child.node if child.node.enabled
@@ -22,24 +27,28 @@ class Chaintip < ApplicationRecord
     # Node ordering:
     # * behind nodes at the bottom
     # * order by client type, then version
-    res.uniq.sort_by{ |node| [-node.active_chaintip.block.height, node.core? ? node.client_type_before_type_cast : 1, node.name.downcase, -node.version] }
+    res.uniq.sort_by do |node|
+      [-node.active_chaintip.block.height, node.core? ? node.client_type_before_type_cast : 1, node.name.downcase,
+       -node.version]
+    end
   end
 
   def as_json(options = nil)
     fields = [:id]
-    super({ only: fields }.merge(options || {})).merge({block: block, nodes: nodes_for_identical_chaintips})
+    super({ only: fields }.merge(options || {})).merge({ block: block, nodes: nodes_for_identical_chaintips })
   end
 
   # If chaintip has a parent, find all invalid chaintips above it, traverse down
   # to see if it descends from us. If so, disconnect parent.
   def check_parent!(node)
     if parent_chaintip.present?
-      node.chaintips.joins(:block).where(status: "invalid").where("blocks.height > ?", block.height).each do |candidate_tip|
+      node.chaintips.joins(:block).where(status: 'invalid').where('blocks.height > ?',
+                                                                  block.height).each do |candidate_tip|
         # Traverse candidate tip down
         parent = candidate_tip.block
         while parent.present? && parent.height >= block.height
           if parent == block
-            self.update parent_chaintip: nil
+            update parent_chaintip: nil
             break
           end
           parent = parent.parent
@@ -52,30 +61,36 @@ class Chaintip < ApplicationRecord
     # If we don't already have a parent, check if any of the other nodes are ahead of us.
     # Use their chaintip instead unless we consider it invalid:
     return if parent_chaintip.present?
-    Chaintip.joins(:block, :node).where(coin: self.coin, status: "active").where("blocks.height > ?", block.height).order("client_type asc, name asc, nodes.version desc").each do |candidate_tip|
+
+    Chaintip.joins(:block, :node).where(coin: coin, status: 'active').where('blocks.height > ?',
+                                                                            block.height).order('client_type asc, name asc, nodes.version desc').each do |candidate_tip|
       # Traverse candidate tip down, abort if block is from a chaintip we consider
       # invalid. Abort early if we marked the block invalid.
       parent = candidate_tip.block
       while parent.present? && parent.height >= block.height
-        break if parent.marked_invalid_by.include?(node.id) || node.chaintips.find_by(block: parent, status: "invalid")
+        break if parent.marked_invalid_by.include?(node.id) || node.chaintips.find_by(block: parent, status: 'invalid')
+
         if parent == block
-          self.update parent_chaintip: candidate_tip
+          update parent_chaintip: candidate_tip
           break
         end
         parent = parent.parent
       end
-      break if self.parent_chaintip
+      break if parent_chaintip
     end
   end
 
   def match_children!(node)
     # Check if any of the other nodes are behind of us. If they don't have a parent,
     # mark us their parent chaintip, unless they consider us invalid.
-    Chaintip.joins(:block, :node).where(coin: self.coin, status: "active", parent_chaintip: nil).where("blocks.height < ?", block.height).order("client_type asc, name asc, nodes.version desc").each do |candidate_tip|
+    Chaintip.joins(:block, :node).where(coin: coin, status: 'active', parent_chaintip: nil).where(
+      'blocks.height < ?', block.height
+    ).order('client_type asc, name asc, nodes.version desc').each do |candidate_tip|
       # Traverse down from ourselfves to find candidate tip
-      parent = self.block
+      parent = block
       while parent.present? && parent.height >= candidate_tip.block.height
-        break if node.chaintips.find_by(block: parent, status: "invalid")
+        break if node.chaintips.find_by(block: parent, status: 'invalid')
+
         if parent == candidate_tip.block
           candidate_tip.update parent_chaintip: self
           break
@@ -87,29 +102,31 @@ class Chaintip < ApplicationRecord
   end
 
   def self.process_chaintip_result(chaintip, node)
-    block = Block.find_by(block_hash: chaintip["hash"], coin: node.coin)
-    case chaintip["status"]
-    when "active"
+    block = Block.find_by(block_hash: chaintip['hash'], coin: node.coin)
+    case chaintip['status']
+    when 'active'
       # A block may have arrived between when we called getblockchaininfo and getchaintips.
       # In that case, ignore the new chaintip and get back to it later.
       return nil unless block.present?
+
       block.update marked_valid_by: block.marked_valid_by | [node.id]
       tip = Chaintip.process_active!(node, block)
-    when "headers-only"
+    when 'headers-only'
       # Not all blocks for this branch are available, but the headers are valid
       Chaintip.process_valid_headers!(node, chaintip, block)
-    when "valid-headers"
+    when 'valid-headers'
       # All blocks are available for this branch, but they were never fully validated
       Chaintip.process_valid_headers!(node, chaintip, block)
-    when "valid-fork"
-      return nil if chaintip["height"] < node.block.height - (Rails.env.test? ? 1000 : 10)
-      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false, true)
-      tip = node.chaintips.create(status: "valid-fork", block: block, coin: block.coin) # There can be multiple valid-block chaintips
+    when 'valid-fork'
+      return nil if chaintip['height'] < node.block.height - (Rails.env.test? ? 1000 : 10)
+
+      block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, true)
+      tip = node.chaintips.create(status: 'valid-fork', block: block, coin: block.coin) # There can be multiple valid-block chaintips
       block.update marked_valid_by: block.marked_valid_by | [node.id]
-    when "invalid"
-      block = Block.find_or_create_block_and_ancestors!(chaintip["hash"], node, false, false)
+    when 'invalid'
+      block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, false)
       block.update marked_invalid_by: block.marked_invalid_by | [node.id]
-      tip = node.chaintips.create(status: "invalid", block: block, coin: block.coin)
+      tip = node.chaintips.create(status: 'invalid', block: block, coin: block.coin)
     end
   end
 
@@ -121,7 +138,7 @@ class Chaintip < ApplicationRecord
 
   # Update the existing active chaintip or create a fresh one. Then update parents and children.
   def self.process_active!(node, block)
-    tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: "active")
+    tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: 'active')
     if tip.block != block
       tip.block = block
       tip.parent_chaintip = nil
@@ -130,14 +147,15 @@ class Chaintip < ApplicationRecord
       end
     end
     tip.save
-    return tip
+    tip
   end
 
   def self.process_valid_headers!(node, chaintip, block)
     return unless block.nil?
-    return if chaintip["height"] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.to_sym]
-    return if Block.find_by(block_hash: chaintip["hash"]).present?
-    Block.create_headers_only(node, chaintip["height"], chaintip["hash"])
+    return if chaintip['height'] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.to_sym]
+    return if Block.find_by(block_hash: chaintip['hash']).present?
+
+    Block.create_headers_only(node, chaintip['height'], chaintip['hash'])
   end
 
   def self.check!(coin, nodes)
@@ -148,22 +166,20 @@ class Chaintip < ApplicationRecord
 
     # In order to keep the database transaction lock as short as possible,
     # we first fetch chaintip info from all nodes, and then process that.
-    chaintip_sets = nodes.collect { |node|
+    chaintip_sets = nodes.collect do |node|
       node.reload
       {
         node: node,
         chaintips: Chaintip.fetch!(node)
       }
-    }
-    Chaintip.transaction {
-      result = chaintip_sets.collect { |set|
-        if set.key?(:chaintips) && !set[:chaintips].nil?
-          Chaintip.process_getchaintips(set[:chaintips], set[:node])
-        end
-      }
+    end
+    Chaintip.transaction do
+      result = chaintip_sets.collect do |set|
+        Chaintip.process_getchaintips(set[:chaintips], set[:node]) if set.key?(:chaintips) && !set[:chaintips].nil?
+      end
       # Match children and parent active chaintips
       nodes.each do |node|
-        Chaintip.where(node: node).where(status: "active").each do |chaintip|
+        Chaintip.where(node: node).where(status: 'active').each do |chaintip|
           chaintip.match_children!(node)
           # Ensure newly matched children don't consider their parent invalid
           chaintip.check_parent!(node)
@@ -172,7 +188,7 @@ class Chaintip < ApplicationRecord
         end
       end
       Node.prune_empty_chaintips!(coin)
-    }
+    end
   end
 
   def self.purge!(node)
@@ -181,7 +197,7 @@ class Chaintip < ApplicationRecord
       Chaintip.where(node: node).destroy_all
     else
       # Delete existing chaintip entries, except the active one (which might be unchanged):
-      Chaintip.where(node: node).where.not(status: "active").destroy_all
+      Chaintip.where(node: node).where.not(status: 'active').destroy_all
     end
   end
 
@@ -204,36 +220,37 @@ class Chaintip < ApplicationRecord
   def self.fetch!(node)
     if node.unreachable_since || node.ibd || node.block.nil?
       return nil
-    else
+    elsif node.libbitcoin? ||
+          node.btcd? ||
+          (node.core? && node.version.present? && node.version < 100_000)
       # libbitcoin, btcd and older Bitcoin Core versions don't implement getchaintips, so we mock it:
-      if node.libbitcoin? ||
-         node.btcd? ||
-         (node.core? && node.version.present? && node.version < 100000)
-        Chaintip.process_active!(node, node.block)
-        return nil
-      end
+      Chaintip.process_active!(node, node.block)
+      return nil
     end
 
     begin
-      return node.client.getchaintips
+      node.client.getchaintips
     rescue BitcoinClient::TimeOutError
       node.update unreachable_since: node.unreachable_since || DateTime.now
-      return nil
+      nil
     rescue BitcoinClient::Error
       # Assuming this node doesn't implement it
-      return nil
+      nil
     end
   end
 
   def self.validate_forks!(node, max_depth)
-    raise "Only implemented for (modern) Bitcoin Core nodes" unless node.core? && node.version >= 100000
+    raise 'Only implemented for (modern) Bitcoin Core nodes' unless node.core? && node.version >= 100_000
     return nil if node.unreachable_since || node.ibd
-    chaintips = node.client.getchaintips()
-    active_tip_height = chaintips.filter{|t| t["status"] == "active" }.first["height"]
-    chaintips.filter{|t| t["status"] == "valid-headers" }.each do |tip|
-      break if tip["height"] < active_tip_height - max_depth
-      block = Block.find_by(block_hash: tip["hash"])
+
+    chaintips = node.client.getchaintips
+    active_tip_height = chaintips.filter { |t| t['status'] == 'active' }.first['height']
+    chaintips.filter { |t| t['status'] == 'valid-headers' }.each do |tip|
+      break if tip['height'] < active_tip_height - max_depth
+
+      block = Block.find_by(block_hash: tip['hash'])
       break if block.nil?
+
       block.validate_fork!(node)
     end
   end
@@ -241,7 +258,6 @@ class Chaintip < ApplicationRecord
   private
 
   def expire_cache
-    Rails.cache.delete("Chaintip.#{self.coin}.index.json")
+    Rails.cache.delete("Chaintip.#{coin}.index.json")
   end
-
 end

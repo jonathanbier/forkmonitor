@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddLowestFeeRateToBlockTemplates < ActiveRecord::Migration[5.2]
   def change
     add_column :block_templates, :lowest_fee_rate, :integer

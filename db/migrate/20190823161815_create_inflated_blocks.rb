@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class CreateInflatedBlocks < ActiveRecord::Migration[5.2]
   def change
     create_table :inflated_blocks do |t|

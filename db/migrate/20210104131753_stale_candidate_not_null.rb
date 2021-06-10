@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class StaleCandidateNotNull < ActiveRecord::Migration[5.2]
   def up
     StaleCandidate.where(double_spent_in_one_branch: nil).update_all double_spent_in_one_branch: []

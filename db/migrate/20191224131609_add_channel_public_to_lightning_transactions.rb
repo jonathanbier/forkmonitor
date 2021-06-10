@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddChannelPublicToLightningTransactions < ActiveRecord::Migration[5.2]
   def change
     add_column :lightning_transactions, :channel_is_public, :boolean

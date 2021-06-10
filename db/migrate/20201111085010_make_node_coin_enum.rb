@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MakeNodeCoinEnum < ActiveRecord::Migration[5.2]
   def up
     rename_column :nodes, :coin, :coin_old

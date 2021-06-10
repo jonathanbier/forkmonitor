@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddTypeToLightningTransactions < ActiveRecord::Migration[5.2]
   def up
     add_column :lightning_transactions, :type, :integer

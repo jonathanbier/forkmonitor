@@ -1,14 +1,19 @@
+# frozen_string_literal: true
+
 class FeedsController < ApplicationController
-  before_action :set_coin, only: [:blocks_invalid, :inflated_blocks, :invalid_blocks, :stale_candidates, :ln_penalties, :ln_sweeps, :ln_uncoops, :unknown_pools]
+  before_action :set_coin,
+                only: %i[blocks_invalid inflated_blocks invalid_blocks stale_candidates ln_penalties ln_sweeps
+                         ln_uncoops unknown_pools]
   before_action :set_page
 
   def blocks_invalid
     respond_to do |format|
       format.rss do
         # Blocks are marked invalid during chaintip check
-        latest = Chaintip.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
+        latest = Chaintip.joins(:block).where('blocks.coin = ?', Block.coins[@coin]).order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @blocks_invalid = Block.where("blocks.coin = ?", Block.coins[@coin]).where("array_length(marked_invalid_by,1) > 0").order(height: :desc)
+          @blocks_invalid = Block.where('blocks.coin = ?',
+                                        Block.coins[@coin]).where('array_length(marked_invalid_by,1) > 0').order(height: :desc)
         end
       end
     end
@@ -17,9 +22,10 @@ class FeedsController < ApplicationController
   def inflated_blocks
     respond_to do |format|
       format.rss do
-        latest = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
+        latest = InflatedBlock.joins(:block).where('blocks.coin = ?', Block.coins[@coin]).order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @inflated_blocks = InflatedBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(created_at: :desc)
+          @inflated_blocks = InflatedBlock.joins(:block).where('blocks.coin = ?',
+                                                               Block.coins[@coin]).order(created_at: :desc)
         end
       end
     end
@@ -28,9 +34,9 @@ class FeedsController < ApplicationController
   def invalid_blocks
     respond_to do |format|
       format.rss do
-        latest = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(updated_at: :desc).first
+        latest = InvalidBlock.joins(:block).where('blocks.coin = ?', Block.coins[@coin]).order(updated_at: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @invalid_blocks = InvalidBlock.joins(:block).where("blocks.coin = ?", Block.coins[@coin]).order(height: :desc)
+          @invalid_blocks = InvalidBlock.joins(:block).where('blocks.coin = ?', Block.coins[@coin]).order(height: :desc)
         end
       end
     end
@@ -41,7 +47,8 @@ class FeedsController < ApplicationController
       format.rss do
         latest = Block.where(coin: @coin).order(height: :desc).first
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @unknown_pools = Block.where(coin: @coin, pool: nil).where("height > ?", latest.height - 10000).where.not(coinbase_message: nil).order(height: :desc).limit(50)
+          @unknown_pools = Block.where(coin: @coin, pool: nil).where('height > ?',
+                                                                     latest.height - 10_000).where.not(coinbase_message: nil).order(height: :desc).limit(50)
         end
       end
     end
@@ -102,9 +109,7 @@ class FeedsController < ApplicationController
         latest = PenaltyTransaction.last_updated_cached
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_penalties = []
-          if @coin == :btc
-            @ln_penalties = PenaltyTransaction.all_with_block_cached
-          end
+          @ln_penalties = PenaltyTransaction.all_with_block_cached if @coin == :btc
         end
       end
     end
@@ -117,7 +122,7 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_sweeps = []
           if @coin == :btc
-            @page_count = Rails.cache.fetch "SweepTransaction.count" do
+            @page_count = Rails.cache.fetch 'SweepTransaction.count' do
               (SweepTransaction.count / SweepTransaction::PER_PAGE.to_f).ceil
             end
             @ln_sweeps = SweepTransaction.page_with_block_cached(@page)
@@ -134,7 +139,7 @@ class FeedsController < ApplicationController
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
           @ln_uncoops = []
           if @coin == :btc
-            @page_count = Rails.cache.fetch "MaybeUncoopTransaction.count" do
+            @page_count = Rails.cache.fetch 'MaybeUncoopTransaction.count' do
               (MaybeUncoopTransaction.count / MaybeUncoopTransaction::PER_PAGE.to_f).ceil
             end
             @ln_uncoops = MaybeUncoopTransaction.page_with_block_cached(@page)
@@ -149,8 +154,8 @@ class FeedsController < ApplicationController
   def set_page
     @page = (params[:page] || 1).to_i
     if @page < 1
-      render json: "invalid param", status: :unprocessable_entity
-      return
+      render json: 'invalid param', status: :unprocessable_entity
+      nil
     end
   end
 end

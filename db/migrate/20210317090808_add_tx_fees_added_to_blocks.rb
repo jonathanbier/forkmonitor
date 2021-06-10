@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class AddTxFeesAddedToBlocks < ActiveRecord::Migration[5.2]
   def change
     add_column :blocks, :tx_omitted_fee_rates, :integer, array: true
