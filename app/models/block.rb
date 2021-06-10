@@ -267,14 +267,9 @@ class Block < ApplicationRecord
     begin
       block_info = node.getblockheader(block_hash)
       update_fields(block_info)
-    rescue Node::MethodNotFoundError
-      # Ignore old clients that don't support getblockheader
-      return false
-    rescue Node::BlockNotFoundError
-      # Try another node and/or try again later
-      return false
-    rescue Node::TimeOutError
-      # Try another node and/or try again later
+    rescue Node::MethodNotFoundError, Node::BlockNotFoundError, Node::TimeOutError
+      # Ignore old clients that don't support getblockheader, and try again
+      # later if block is not found or there's a timeout.
       return false
     end
     true

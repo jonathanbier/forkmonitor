@@ -594,9 +594,7 @@ class Node < ApplicationRecord
     client = node.client
     begin
       block_info ||= node.getblock(block_hash, 1)
-    rescue Node::BlockPrunedError
-      return nil
-    rescue Node::BlockNotFoundError
+    rescue Node::BlockPrunedError, Node::BlockNotFoundError
       return nil
     rescue BitcoinClient::Error => e
       logger.error "Unable to fetch block #{block_hash} from #{node.name_with_version} while looking for pool name"

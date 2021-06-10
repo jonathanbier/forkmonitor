@@ -159,9 +159,7 @@ class StaleCandidate < ApplicationRecord
 
     # Filter coins that are spent with a different tx in the longest chain
     txs = shortest_spent_coins_with_tx.filter do |txout, tx|
-      if !longest_spent_coins_with_tx.key?(txout)
-        false
-      elsif tx.tx_id == longest_spent_coins_with_tx[txout].tx_id
+      if !longest_spent_coins_with_tx.key?(txout) || tx.tx_id == longest_spent_coins_with_tx[txout].tx_id
         false
       else
         # Check for fee bump (regardless of RBF flag):

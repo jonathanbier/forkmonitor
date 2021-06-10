@@ -114,7 +114,7 @@ class Chaintip < ApplicationRecord
     when 'headers-only'
       # Not all blocks for this branch are available, but the headers are valid
       Chaintip.process_valid_headers!(node, chaintip, block)
-    when 'valid-headers'
+    when 'valid-headers' # rubocop:disable Lint/DuplicateBranch
       # All blocks are available for this branch, but they were never fully validated
       Chaintip.process_valid_headers!(node, chaintip, block)
     when 'valid-fork'

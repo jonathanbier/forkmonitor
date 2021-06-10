@@ -16,9 +16,7 @@ class Subscription < ApplicationRecord
           private_key: ENV['VAPID_PRIVATE_KEY']
         }
       )
-    rescue Webpush::Unauthorized
-      s.destroy
-    rescue Webpush::ExpiredSubscription
+    rescue Webpush::Unauthorized, Webpush::ExpiredSubscription
       s.destroy
     end
 

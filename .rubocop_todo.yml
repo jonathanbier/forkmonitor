@@ -27,16 +27,6 @@ Lint/ConstantDefinitionInBlock:
   Exclude:
     - 'spec/models/block_spec.rb'
 
-# Offense count: 6
-# Configuration parameters: IgnoreLiteralBranches, IgnoreConstantBranches.
-Lint/DuplicateBranch:
-  Exclude:
-    - 'app/models/block.rb'
-    - 'app/models/chaintip.rb'
-    - 'app/models/node.rb'
-    - 'app/models/stale_candidate.rb'
-    - 'app/models/subscription.rb'
-
 # Offense count: 1
 Lint/DuplicateMethods:
   Exclude:
