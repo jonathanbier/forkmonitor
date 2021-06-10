@@ -10,78 +10,80 @@ describe BitcoinClient do
     end
 
     describe 'help' do
-      it 'should call help rpc method' do
+      it 'calls help rpc method' do
         expect(@client).to receive(:request).with('help')
         @client.help
       end
     end
 
     describe 'getnetworkinfo' do
-      it 'should try getnetworkinfo rpc first' do
+      it 'tries getnetworkinfo rpc first' do
         expect(@client).to receive(:request).with('getnetworkinfo')
         @client.getnetworkinfo
       end
     end
 
     describe 'getblockchaininfo' do
-      it 'should getblockchaininfo rpc method' do
+      it 'getblockchaininfoes rpc method' do
         expect(@client).to receive(:request).with('getblockchaininfo')
         @client.getblockchaininfo
       end
     end
 
     describe 'getbestblockhash' do
-      it 'should getbestblockhash rpc method' do
+      it 'getbestblockhashes rpc method' do
         expect(@client).to receive(:request).with('getbestblockhash')
         @client.getbestblockhash
       end
     end
 
     describe 'getblock' do
-      it 'should getblock rpc method with hash' do
+      it 'getblocks rpc method with hash' do
         expect(@client).to receive(:request).with('getblock', 'hash', 1)
         @client.getblock('hash', 1)
       end
-      it 'should catch connection error' do
+
+      it 'catches connection error' do
         expect(@client.client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'couldnt_connect')
         expect { @client.getblock('hash', 1) }.to raise_error(BitcoinClient::ConnectionError)
       end
-      it 'should catch partial file error' do
+
+      it 'catches partial file error' do
         expect(@client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'partial_file')
         expect { @client.getblock('hash', 1) }.to raise_error(BitcoinClient::PartialFileError)
       end
     end
 
     describe 'getblockheader' do
-      it 'should getblockheader rpc method with hash' do
+      it 'getblockheaders rpc method with hash' do
         expect(@client).to receive(:request).with('getblockheader', 'hash', true)
         @client.getblockheader('hash')
       end
     end
 
     describe 'getmempoolinfo' do
-      it 'should call getmempoolinfo rpc method' do
+      it 'calls getmempoolinfo rpc method' do
         expect(@client).to receive(:request).with('getmempoolinfo')
         @client.getmempoolinfo
       end
     end
 
     describe 'gettxoutsetinfo' do
-      it 'should call gettxoutsetinfo rpc method' do
+      it 'calls gettxoutsetinfo rpc method' do
         expect(@client).to receive(:request).with('gettxoutsetinfo')
         @client.gettxoutsetinfo
       end
     end
 
     describe 'setnetworkactive' do
-      it 'should call setnetworkactive rpc method' do
+      it 'calls setnetworkactive rpc method' do
         expect(@client).to receive(:request).with('setnetworkactive', true)
         @client.setnetworkactive(true)
       end
     end
 
     describe 'invalidateblock' do
-      it 'should call invalidateblock rpc method' do
+      it 'calls invalidateblock rpc method' do
         block_hash = '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377'
         expect(@client).to receive(:request).with('invalidateblock', block_hash)
         @client.invalidateblock(block_hash)
@@ -89,13 +91,13 @@ describe BitcoinClient do
     end
 
     describe 'reconsiderblock' do
-      it 'should call reconsiderblock rpc method' do
+      it 'calls reconsiderblock rpc method' do
         block_hash = '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377'
         expect(@client).to receive(:request).with('reconsiderblock', block_hash)
         @client.reconsiderblock(block_hash)
       end
 
-      it 'should ignore (block not found) error' do
+      it 'ignores (block not found) error' do
         block_hash = '0000000000000000000000000000000000000000000000000000000000000000'
         expect(@client).to receive(:request).with('reconsiderblock', block_hash).and_raise(
           Bitcoiner::Client::JSONRPCError, 'ok'

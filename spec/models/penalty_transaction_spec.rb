@@ -43,29 +43,29 @@ RSpec.describe PenaltyTransaction, type: :model do
       @parsed_block.tx.append(@penalty_tx_2)
     end
 
-    it 'should find penalty transactions' do
+    it 'finds penalty transactions' do
       PenaltyTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.count).to eq(2)
     end
 
-    it 'should find penalty transaction with one input' do
+    it 'finds penalty transaction with one input' do
       PenaltyTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.tx_id).to eq(@penalty_tx_1.hash)
       expect(LightningTransaction.first.raw_tx).to eq(@raw_tx_1)
     end
 
-    it 'should find penalty transaction with two inputs' do
+    it 'finds penalty transaction with two inputs' do
       PenaltyTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.second.tx_id).to eq(@penalty_tx_2.hash)
       expect(LightningTransaction.second.raw_tx).to eq(@raw_tx_2)
     end
 
-    it 'should set the amount based on the output' do
+    it 'sets the amount based on the output' do
       PenaltyTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(0.00396375)
     end
 
-    it 'should find opening transaction' do
+    it 'finds opening transaction' do
       skip
     end
   end

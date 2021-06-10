@@ -7,7 +7,7 @@ RSpec.describe Api::V1::NodesController, type: :controller do
     let!(:node1) { create(:node_with_block, coin: :btc) }
     let!(:node2) { create(:node_with_block, coin: :btc) }
 
-    it 'should list nodes' do
+    it 'lists nodes' do
       get :index_coin, format: :json, params: { coin: 'BTC' }
       expect(response.status).to eq 200
       expect(response_body.length).to eq 2

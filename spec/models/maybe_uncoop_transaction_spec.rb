@@ -39,7 +39,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
       @parsed_block.tx.append(@uncoop_tx)
     end
 
-    it 'should find uncooperative closing transactions' do
+    it 'finds uncooperative closing transactions' do
       MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
       expect(MaybeUncoopTransaction.count).to eq(1)
       expect(MaybeUncoopTransaction.first.tx_id).to eq(@uncoop_tx.hash)
@@ -47,12 +47,12 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
       expect(MaybeUncoopTransaction.first.raw_tx).to eq(@raw_tx)
     end
 
-    it 'should set the amount based on the output' do
+    it 'sets the amount based on the output' do
       MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
       expect(MaybeUncoopTransaction.first.amount).to eq(0.00396375)
     end
 
-    it 'should find opening transaction' do
+    it 'finds opening transaction' do
       skip
     end
   end

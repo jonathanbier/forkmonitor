@@ -310,7 +310,7 @@ class BitcoinClientPython
     begin
       info = @node.gettxoutsetinfo
       if @mock_extra_inflation.positive?
-        info = Hash[info.collect { |k, v| [k, k == 'total_amount' ? (v.to_f + @mock_extra_inflation) : v] }]
+        info = info.collect { |k, v| [k, k == 'total_amount' ? (v.to_f + @mock_extra_inflation) : v] }.to_h
       end
       info
     rescue Error => e
@@ -469,7 +469,7 @@ class BitcoinClientPython
       @node.submitblock(block)
     rescue Error => e
       raise Error,
-            "submitblock(#{block_hash.present? ? block_hash : block}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+            "submitblock(#{block_hash.presence || block}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 

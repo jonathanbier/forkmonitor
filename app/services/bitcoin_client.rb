@@ -172,17 +172,7 @@ class BitcoinClient
 
   def getblockheader(hash_or_height, verbose = true)
     throw 'Must provide a hash or height' if hash_or_height.nil?
-    if @client_type != :libbitcoin
-      hash = hash_or_height
-      begin
-        request('getblockheader', hash, verbose)
-      rescue Bitcoiner::Client::JSONRPCError => e
-        raise BlockNotFoundError if e.message.include?('Block not found')
-
-        raise Error,
-              "getblockheader(#{hash},#{verbose}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
-      end
-    else
+    if @client_type == :libbitcoin
       command = 'blockchain.fetch_block_header'
       zmq_connect unless @zmq_connected
       @socket.send_array [command.b, [1].pack('I'),
@@ -218,6 +208,16 @@ class BitcoinClient
         'hash' => block_hash,
         'previousblockhash' => previousblockhash
       }
+    else
+      hash = hash_or_height
+      begin
+        request('getblockheader', hash, verbose)
+      rescue Bitcoiner::Client::JSONRPCError => e
+        raise BlockNotFoundError if e.message.include?('Block not found')
+
+        raise Error,
+              "getblockheader(#{hash},#{verbose}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+      end
     end
   end
 

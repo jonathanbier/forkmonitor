@@ -3,7 +3,7 @@
 class Subscription < ApplicationRecord
   # Send push notifications to everyone
   def self.blast(tag, subject, body)
-    Subscription.all.each do |s|
+    Subscription.all.find_each do |s|
       Webpush.payload_send(
         endpoint: s.endpoint,
         message: "#{tag}|#{subject}|#{body}",

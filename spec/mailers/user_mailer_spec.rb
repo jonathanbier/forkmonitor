@@ -65,13 +65,13 @@ RSpec.describe UserMailer, type: :mailer do
 
   describe 'stale candidate notify' do
     let(:user) { create(:user) }
+    let(:mail) { UserMailer.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
     let(:stale_candidate) { create(:stale_candidate, coin: :btc, height: 500_000) }
+
     before do
       @block1 = create(:block, height: 500_000)
       @block2 = create(:block, height: 500_000)
     end
-
-    let(:mail) { UserMailer.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
 
     it 'renders the headers' do
       expect(mail.subject).to eq("[ForkMonitor] potential BTC stale block at height #{stale_candidate.height}")

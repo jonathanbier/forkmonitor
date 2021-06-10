@@ -6,10 +6,12 @@ class Node < ApplicationRecord
   SUPPORTED_COINS = %i[btc tbtc bch].freeze
 
   # BSV support has been removed, but enums are stored as integer in the database.
-  enum coin: %i[btc bch bsv tbtc]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   nilify_blanks only: [:mirror_rpchost]
 
+  before_save :clear_chaintips, if: :will_save_change_to_enabled?
+  before_destroy :clear_references
   after_commit :expire_cache
 
   class Error < StandardError; end
@@ -34,7 +36,7 @@ class Node < ApplicationRecord
 
   class TimeOutError < Error; end
 
-  belongs_to :block, required: false
+  belongs_to :block, optional: true
   has_many :chaintips, dependent: :destroy
   has_many :blocks_first_seen, class_name: 'Block', foreign_key: 'first_seen_by_id', dependent: :nullify
   has_many :invalid_blocks, dependent: :restrict_with_exception
@@ -42,12 +44,9 @@ class Node < ApplicationRecord
   has_many :lag_a, class_name: 'Lag', foreign_key: 'node_a_id', dependent: :destroy
   has_many :lag_b, class_name: 'Lag', foreign_key: 'node_b_id', dependent: :destroy
   has_many :tx_outsets, dependent: :destroy
-  belongs_to :mirror_block, required: false, class_name: 'Block'
+  belongs_to :mirror_block, optional: true, class_name: 'Block'
   has_one :active_chaintip, -> { where(status: 'active') }, class_name: 'Chaintip'
   has_many :softforks
-
-  before_save :clear_chaintips, if: :will_save_change_to_enabled?
-  before_destroy :clear_references
 
   scope :bitcoin_core_by_version, lambda {
                                     where(enabled: true, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc)
@@ -56,7 +55,8 @@ class Node < ApplicationRecord
   scope :bitcoin_alternative_implementations, -> { where(enabled: true, coin: :btc).where.not(client_type: :core) }
 
   # Enum is stored as an integer, so do not remove entries from this list:
-  enum client_type: %i[core bcoin knots btcd libbitcoin abc sv bu omni blockcore]
+  enum client_type: { core: 0, bcoin: 1, knots: 2, btcd: 3, libbitcoin: 4, abc: 5, sv: 6, bu: 7,
+                      omni: 8, blockcore: 9 }
 
   scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
@@ -362,7 +362,7 @@ class Node < ApplicationRecord
       # Send email after grace period
       unless lag_entry.notified_at
         lag_entry.update notified_at: Time.now
-        User.all.each do |user|
+        User.all.find_each do |user|
           UserMailer.with(user: user, lag: lag_entry).lag_email.deliver
         end
       end
@@ -399,7 +399,7 @@ class Node < ApplicationRecord
 
     versions_tally = versions_window.transpose.map(&:sum)
     throw "Unexpected versions_tally = #{versions_tally.length} != 29" if versions_tally.length != 29
-    current_alerts = VersionBit.where(deactivate: nil).map { |vb| [vb.bit, vb] }.to_h
+    current_alerts = VersionBit.where(deactivate: nil).index_by { |vb| vb.bit }
     known_softforks = Softfork.all.collect(&:bit).uniq
     versions_tally.each_with_index do |tally, bit|
       next if known_softforks.include?(bit)
@@ -421,7 +421,7 @@ class Node < ApplicationRecord
       current_alert = current_alerts[bit]
       next unless current_alert && !current_alert.deactivate && !current_alert.notified_at
 
-      User.all.each do |user|
+      User.all.find_each do |user|
         UserMailer.with(user: user, bit: bit, tally: tally, window: VersionBit::WINDOW,
                         block: self.block).version_bits_email.deliver
       end
@@ -698,7 +698,7 @@ class Node < ApplicationRecord
         #       pattern of disconecting is not ideal for the main node.
         Block.find_missing(coin.downcase.to_sym, 40_000, 20) # waits 20 seconds for blocks
         InflatedBlock.check_inflation!({ coin: coin.downcase.to_sym, max: 10 })
-        Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).each do |node|
+        Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).find_each do |node|
           Chaintip.validate_forks!(node, 50)
         end
       end
@@ -893,11 +893,11 @@ class Node < ApplicationRecord
   end
 
   def clear_references
-    Block.where(coin: coin).where('? = ANY(marked_valid_by)', id).each do |b|
+    Block.where(coin: coin).where('? = ANY(marked_valid_by)', id).find_each do |b|
       b.update marked_valid_by: b.marked_valid_by - [id]
     end
 
-    Block.where(coin: coin).where('? = ANY(marked_invalid_by)', id).each do |b|
+    Block.where(coin: coin).where('? = ANY(marked_invalid_by)', id).find_each do |b|
       b.update marked_invalid_by: b.marked_invalid_by - [id]
     end
   end

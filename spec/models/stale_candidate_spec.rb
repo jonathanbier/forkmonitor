@@ -51,7 +51,7 @@ RSpec.describe StaleCandidate, type: :model do
     tx4 = @nodeA.client.getrawtransaction(@tx4_id, 1)
     # TODO: use 'send' RPC (with addtowallet=false) after rebasing vendor/bitcoin
     psbt = @nodeA.client.walletcreatefundedpsbt(
-      [{ "txid": tx4['vin'][0]['txid'], "vout": tx4['vin'][0]['vout'] }],
+      [{ txid: tx4['vin'][0]['txid'], vout: tx4['vin'][0]['vout'] }],
       [{ address_b => 1 }]
     )['psbt']
     psbt = @nodeA.client.walletprocesspsbt(psbt, true)
@@ -89,14 +89,14 @@ RSpec.describe StaleCandidate, type: :model do
   end
 
   describe 'find_or_generate' do
-    it 'should create StaleCandidate' do
+    it 'creates StaleCandidate' do
       s = StaleCandidate.find_or_generate(:btc, 105)
-      expect(s).to_not be_nil
+      expect(s).not_to be_nil
       s.prime_cache
       expect(s.n_children).to eq(2)
     end
 
-    it 'should add transactions' do
+    it 'adds transactions' do
       s = StaleCandidate.find_or_generate(:btc, 105)
       # Node A block 105 should contain tx1, tx2, tx3 (bumped) and  tx4 (bumped)
       block = Block.find_by!(height: 105, first_seen_by: @nodeA)
@@ -115,9 +115,9 @@ RSpec.describe StaleCandidate, type: :model do
       @s.set_children!
     end
 
-    it 'should return tx ids for long and short side' do
+    it 'returns tx ids for long and short side' do
       res = @s.get_spent_coins_with_tx
-      expect(res).to_not be_nil
+      expect(res).not_to be_nil
       # Chains are equal length, so the result will be arbitrary depending
       # on details of the chain. This can cause a local test to pass while the
       # CI test fails. Note that the number of transactions is unrelated to
@@ -135,14 +135,14 @@ RSpec.describe StaleCandidate, type: :model do
   describe 'set_conflicting_tx_info!' do
     before do
       @s = StaleCandidate.find_or_generate(:btc, 105)
-      expect(@s).to_not be_nil
+      expect(@s).not_to be_nil
       @s.fetch_transactions_for_descendants!
       @s.set_children!
       @s.set_conflicting_tx_info!(@nodeA.block.height)
     end
 
     describe 'confirmed_in_one_branch' do
-      it 'should contain tx2, tx3&4 and bumped tx3&4' do
+      it 'contains tx2, tx3&4 and bumped tx3&4' do
         expect(@s.confirmed_in_one_branch.count).to eq(5)
         expect(@s.confirmed_in_one_branch).to include(@tx2_id)
         expect(@s.confirmed_in_one_branch).to include(@tx3_id)
@@ -163,7 +163,7 @@ RSpec.describe StaleCandidate, type: :model do
           @s.set_conflicting_tx_info!(@nodeA.block.height)
         end
 
-        it 'should contain original tx3 and replaced tx4' do
+        it 'contains original tx3 and replaced tx4' do
           expect(@s.confirmed_in_one_branch.count).to eq(2)
           expect(@s.confirmed_in_one_branch).to include(@tx3_id)
           expect(@s.confirmed_in_one_branch).to include(@tx4_replaced_id)
@@ -172,7 +172,7 @@ RSpec.describe StaleCandidate, type: :model do
     end
 
     describe 'rbf' do
-      it 'should contain tx3 bumped' do
+      it 'contains tx3 bumped' do
         # It picks an arbitrary "shortest" chain when both are the same length
         expect(@s.rbf.count).to eq(1)
         expect([@tx3_id, @tx3_bumped_id]).to include(@s.rbf[0])
@@ -190,12 +190,12 @@ RSpec.describe StaleCandidate, type: :model do
           @s.set_conflicting_tx_info!(@nodeA.block.height)
         end
 
-        it 'should contain tx3' do
+        it 'contains tx3' do
           expect(@s.rbf.count).to eq(1)
           expect(@s.rbf).to include(@tx3_id)
         end
 
-        it 'should track replacement' do
+        it 'tracks replacement' do
           expect(@s.rbf_by.count).to eq(1)
           expect(@s.rbf_by).to include(@tx3_bumped_id)
         end
@@ -207,40 +207,38 @@ RSpec.describe StaleCandidate, type: :model do
     let(:user) { create(:user) }
 
     before do
-      allow(User).to receive(:all).and_return [user]
+      allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
     end
 
-    it 'should trigger potential stale block alert' do
-      expect(User).to receive(:all).and_return [user]
-
+    it 'triggers potential stale block alert' do
       # One alert for the lowest height:
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
       # Just once...
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
     end
 
-    it 'should be quiet at an invalid block alert' do
+    it 'is quiet at an invalid block alert' do
       i = InvalidBlock.create(block: @nodeA.block, node: @nodeA)
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
     end
 
-    it 'should be quiet after an invalid block alert' do
+    it 'is quiet after an invalid block alert' do
       i = InvalidBlock.create(block: @nodeA.block.parent, node: @nodeA)
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
     end
 
-    it 'should notify again if alert was dismissed' do
+    it 'notifies again if alert was dismissed' do
       InvalidBlock.create(block: @nodeA.block.parent, node: @nodeA, dismissed_at: Time.now)
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
 
-    it 'should work for headers_only block' do
+    it 'works for headers_only block' do
       @nodeB.block.update headers_only: true, pool: nil, tx_count: nil, timestamp: nil, work: nil, parent_id: nil,
                           mediantime: nil, first_seen_by_id: nil
       expect { StaleCandidate.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
 
-    it 'should not also create one if the race continues 1 more block' do
+    it 'does not also create one if the race continues 1 more block' do
       test.disconnect_nodes(0, 1)
       assert_equal(0, @nodeA.client.getpeerinfo.count)
       @nodeA.client.generate(1)
@@ -264,7 +262,7 @@ RSpec.describe StaleCandidate, type: :model do
       StaleCandidate.process!(:btc) # Fetch transactions from descendant blocks
     end
 
-    it 'should add transactions for descendant blocks' do
+    it 'adds transactions for descendant blocks' do
       # Make node B chain win:
       @nodeB.client.generate(1) # 105
       test.sync_blocks
@@ -285,7 +283,7 @@ RSpec.describe StaleCandidate, type: :model do
       expect(block.transactions.where(is_coinbase: false).count).to eq(1)
     end
 
-    it 'should stop adding transactions after N descendant blocks' do
+    it 'stops adding transactions after N descendant blocks' do
       # Make node B chain win:
       @nodeB.client.generate(11)
       test.sync_blocks

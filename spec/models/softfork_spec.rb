@@ -6,7 +6,7 @@ RSpec.describe Softfork, type: :model do
   let(:node) { create(:node_with_block, version: 200_000) }
 
   describe 'process' do
-    it 'should do nothing if no forks are active' do
+    it 'does nothing if no forks are active' do
       blockchaininfo = {
         'chain' => 'main',
         'softforks' => {
@@ -16,7 +16,7 @@ RSpec.describe Softfork, type: :model do
       expect(Softfork.count).to eq(0)
     end
 
-    it 'should add an active bip9 softfork' do
+    it 'adds an active bip9 softfork' do
       blockchaininfo = {
         'chain' => 'main',
         'softforks' => {
@@ -42,7 +42,7 @@ RSpec.describe Softfork, type: :model do
       expect(Softfork.count).to eq(1)
     end
 
-    it 'should handle a status update' do
+    it 'handles a status update' do
       blockchaininfo = {
         'chain' => 'main',
         'softforks' => {
@@ -82,7 +82,7 @@ RSpec.describe Softfork, type: :model do
       expect(Softfork.first.notified_at).to be_nil
     end
 
-    it 'should parse pre 0.19 format' do
+    it 'parses pre 0.19 format' do
       node.version = 180_100
       blockchaininfo = {
         'chain' => 'main',
@@ -101,7 +101,7 @@ RSpec.describe Softfork, type: :model do
       expect(Softfork.count).to eq(1)
     end
 
-    it 'should ignore burried softforks' do
+    it 'ignores burried softforks' do
       blockchaininfo = {
         'chain' => 'main',
         'softforks' => {

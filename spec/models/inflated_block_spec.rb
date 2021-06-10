@@ -58,21 +58,21 @@ RSpec.describe InflatedBlock, type: :model do
       @node.poll!
     end
 
-    it "should skip mirror node that's not synced" do
+    it "skips mirror node that's not synced" do
       @node.update mirror_block: nil
       allow(@node).to receive(:poll_mirror!).and_return nil
       expect(@node.mirror_client).not_to receive('setnetworkactive').with(false)
       InflatedBlock.check_inflation!({ coin: :btc, max: 1 })
     end
 
-    it 'should stop p2p networking and restart it after' do
+    it 'stops p2p networking and restart it after' do
       expect(@node.mirror_client).to receive('setnetworkactive').with(true) # restore
       expect(@node.mirror_client).to receive('setnetworkactive').with(false)
       expect(@node.mirror_client).to receive('setnetworkactive').with(true)
       InflatedBlock.check_inflation!({ coin: :btc, max: 1 })
     end
 
-    it 'should call gettxoutsetinfo on BTC mirror node' do
+    it 'calls gettxoutsetinfo on BTC mirror node' do
       expect(@node).to receive(:poll_mirror!).and_call_original
       expect(@node.mirror_client).to receive('gettxoutsetinfo').and_call_original
 
@@ -82,20 +82,20 @@ RSpec.describe InflatedBlock, type: :model do
       expect(TxOutset.last.block.height).to eq(6)
     end
 
-    it "should not even poll the mirror if main node doesn't have a fresh block" do
+    it "does not even poll the mirror if main node doesn't have a fresh block" do
       InflatedBlock.check_inflation!({ coin: :btc })
       expect(@node).not_to receive(:poll_mirror!)
       expect(@node.mirror_client).not_to receive('gettxoutsetinfo').and_call_original
       InflatedBlock.check_inflation!({ coin: :btc })
     end
 
-    it 'should not call gettxoutsetinfo for block with existing tx outset info' do
+    it 'does not call gettxoutsetinfo for block with existing tx outset info' do
       InflatedBlock.check_inflation!({ coin: :btc })
       expect(@node.mirror_client).not_to receive('gettxoutsetinfo').and_call_original
       InflatedBlock.check_inflation!({ coin: :btc })
     end
 
-    it 'should not create duplicate TxOutset entries' do
+    it 'does not create duplicate TxOutset entries' do
       InflatedBlock.check_inflation!({ coin: :btc })
       InflatedBlock.check_inflation!({ coin: :btc })
       expect(TxOutset.count).to eq(2)
@@ -107,14 +107,14 @@ RSpec.describe InflatedBlock, type: :model do
         test.sync_blocks
       end
 
-      it 'should fetch intermediate BTC blocks' do
+      it 'fetches intermediate BTC blocks' do
         InflatedBlock.check_inflation!({ coin: :btc })
         expect(Block.maximum(:height)).to eq(8)
         expect(Block.find_by(height: 7)).not_to be_nil
         expect(Block.find_by(height: 6)).not_to be_nil
       end
 
-      it 'should invalidate the second block, and later the third block to wind back the tip' do
+      it 'invalidates the second block, and later the third block to wind back the tip' do
         @node.poll!
         block_hash_8 = Block.find_by(height: 8).block_hash
         block_hash_7 = Block.find_by(height: 7).block_hash
@@ -125,7 +125,7 @@ RSpec.describe InflatedBlock, type: :model do
         InflatedBlock.check_inflation!({ coin: :btc })
       end
 
-      it 'should create three new TxOutset entries' do
+      it 'creates three new TxOutset entries' do
         InflatedBlock.check_inflation!({ coin: :btc })
         expect(TxOutset.count).to eq(4)
         expect(TxOutset.fourth.total_amount - TxOutset.third.total_amount).to eq(50)
@@ -151,7 +151,7 @@ RSpec.describe InflatedBlock, type: :model do
         expect(chaintips.select { |tip| tip['status'] == 'valid-headers' }.count).to eq(1)
       end
 
-      it 'should fetch the fork block' do
+      it 'fetches the fork block' do
         InflatedBlock.check_inflation!({ coin: :btc })
         expect(Block.where(height: 7).count).to eq(2)
       end
@@ -176,7 +176,7 @@ RSpec.describe InflatedBlock, type: :model do
         expect(chaintips.select { |tip| tip['status'] == 'valid-fork' }.count).to eq(1)
       end
 
-      it 'should fetch the fork block' do
+      it 'fetches the fork block' do
         InflatedBlock.check_inflation!({ coin: :btc })
         expect(Block.where(height: 7).count).to eq(2)
       end
@@ -196,9 +196,11 @@ RSpec.describe InflatedBlock, type: :model do
         test.sync_blocks
         @node.poll!
         @node.mirror_client.mock_set_extra_inflation(1.0)
+
+        allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
       end
 
-      it 'should add a InflatedBlock entry' do
+      it 'adds a InflatedBlock entry' do
         begin
           InflatedBlock.check_inflation!({ coin: :btc })
         rescue UncaughtThrowError
@@ -207,7 +209,7 @@ RSpec.describe InflatedBlock, type: :model do
         expect(InflatedBlock.count).to eq(1)
       end
 
-      it 'should mark txoutset as inflated' do
+      it 'marks txoutset as inflated' do
         begin
           InflatedBlock.check_inflation!({ coin: :btc })
         rescue UncaughtThrowError
@@ -217,15 +219,13 @@ RSpec.describe InflatedBlock, type: :model do
         expect(InflatedBlock.first.tx_outset.inflated).to eq(true)
       end
 
-      it 'should send an alert' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends an alert' do
         expect { InflatedBlock.check_inflation!({ coin: :btc }) }.to change {
                                                                        ActionMailer::Base.deliveries.count
                                                                      }.by(1)
       end
 
-      it 'should send email only once' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends email only once' do
         expect {  InflatedBlock.check_inflation!({ coin: :btc }) }.to change {
                                                                         ActionMailer::Base.deliveries.count
                                                                       }.by(1)

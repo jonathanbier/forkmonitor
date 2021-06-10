@@ -38,10 +38,10 @@ RSpec.describe Chaintip, type: :model do
     @nodeB.client.createwallet(blank: true)
     @nodeB.client.importdescriptors([
                                       {
-                                        "desc": 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse', "active": true, "internal": false, "timestamp": 'now', "range": 10
+                                        desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse', active: true, internal: false, timestamp: 'now', range: 10
                                       },
                                       {
-                                        "desc": 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*)#fnmy82qp', "active": true, "internal": true, "timestamp": 'now', "range": 10
+                                        desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*)#fnmy82qp', active: true, internal: true, timestamp: 'now', range: 10
                                       }
                                     ])
     @addr1 = @nodeB.client.getnewaddress
@@ -79,19 +79,19 @@ RSpec.describe Chaintip, type: :model do
       setup_python_nodes
     end
 
-    it 'should create fresh chaintip for a new node' do
+    it 'creates fresh chaintip for a new node' do
       tip = Chaintip.process_active!(@nodeA, @nodeA.block)
       expect(tip.id).not_to be_nil
     end
 
-    it 'should not update existing chaintip entry if the block unchanged' do
+    it 'does not update existing chaintip entry if the block unchanged' do
       tip_before = Chaintip.process_active!(@nodeA, @nodeA.block)
       @nodeA.poll!
       tip_after = Chaintip.process_active!(@nodeA, @nodeA.block)
       expect(tip_before).to eq(tip_after)
     end
 
-    it 'should update existing chaintip entry if the block changed' do
+    it 'updates existing chaintip entry if the block changed' do
       tip_before = Chaintip.process_active!(@nodeA, @nodeA.block)
       @nodeA.client.generate(1)
       @nodeA.poll!
@@ -100,7 +100,7 @@ RSpec.describe Chaintip, type: :model do
       expect(tip_after.block).to eq(@nodeA.block)
     end
 
-    it 'should create fresh chaintip for the different node' do
+    it 'creates fresh chaintip for the different node' do
       tip_A = Chaintip.process_active!(@nodeA, @nodeA.block)
       tip_B = Chaintip.process_active!(@nodeB, @nodeB.block)
       expect(tip_A).not_to eq(tip_B)
@@ -116,7 +116,7 @@ RSpec.describe Chaintip, type: :model do
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
     let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
 
-    it 'should show all nodes at height of active chaintip' do
+    it 'shows all nodes at height of active chaintip' do
       setup_python_nodes
       @tipA = Chaintip.process_active!(@nodeA, @nodeA.block)
       @tipB = Chaintip.process_active!(@nodeB, @nodeB.block)
@@ -124,7 +124,7 @@ RSpec.describe Chaintip, type: :model do
       assert_equal [@nodeA, @nodeB], @tipA.nodes_for_identical_chaintips
     end
 
-    it 'should only support the active chaintip' do
+    it 'onlies support the active chaintip' do
       chaintip1.update status: 'invalid'
       assert_nil chaintip1.nodes_for_identical_chaintips
       assert_nil chaintip1.nodes_for_identical_chaintips
@@ -136,13 +136,13 @@ RSpec.describe Chaintip, type: :model do
       setup_python_nodes
     end
 
-    it 'should do nothing if we already know the block' do
+    it 'does nothing if we already know the block' do
       block = Block.create(coin: :btc, block_hash: '1234', height: 5)
       expect(Block).not_to receive(:create_headers_only)
       Chaintip.process_valid_headers!(@nodeA, { 'hash' => '1234', 'height' => 5 }, block)
     end
 
-    it 'should create headers_only block entry' do
+    it 'creates headers_only block entry' do
       expect(Block).to receive(:create_headers_only)
       Chaintip.process_valid_headers!(@nodeA, { 'hash' => '1234', 'height' => 5 }, nil)
     end
@@ -157,7 +157,7 @@ RSpec.describe Chaintip, type: :model do
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
     let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
 
-    it 'should do nothing if all nodes are the same height' do
+    it 'does nothing if all nodes are the same height' do
       chaintip2.match_parent!(nodeB)
       assert_nil chaintip2.parent_chaintip
     end
@@ -167,18 +167,18 @@ RSpec.describe Chaintip, type: :model do
         chaintip1.update block: block2
       end
 
-      it 'should mark longer chain as parent' do
+      it 'marks longer chain as parent' do
         chaintip2.match_parent!(nodeB)
         assert_equal(chaintip2.parent_chaintip, chaintip1)
       end
 
-      it 'should mark even longer chain as parent' do
+      it 'marks even longer chain as parent' do
         chaintip1.update block: block3
         chaintip2.match_parent!(nodeB)
         assert_equal(chaintip2.parent_chaintip, chaintip1)
       end
 
-      it 'should not mark invalid chain as parent' do
+      it 'does not mark invalid chain as parent' do
         # Node B considers block b invalid:
         chaintip3 = create(:chaintip, block: block2, node: nodeB, status: 'invalid')
 
@@ -186,7 +186,7 @@ RSpec.describe Chaintip, type: :model do
         assert_nil(chaintip2.parent_chaintip)
       end
 
-      it 'should not mark invalid chain as parent, based on block marked invalid' do
+      it 'does not mark invalid chain as parent, based on block marked invalid' do
         # Node B considers block b invalid:
         block2.update marked_invalid_by: block2.marked_invalid_by | [nodeB.id]
 
@@ -210,7 +210,7 @@ RSpec.describe Chaintip, type: :model do
         chaintip1.update block: block2
       end
 
-      it 'should unmark parent if it later considers it invalid' do
+      it 'unmarks parent if it later considers it invalid' do
         chaintip2.update parent_chaintip: chaintip1 # For example via match_children!
 
         chaintip3 = create(:chaintip, block: block2, node: nodeB, status: 'invalid')
@@ -228,7 +228,7 @@ RSpec.describe Chaintip, type: :model do
     let(:chaintip1) { create(:chaintip, block: block1, node: nodeA) }
     let(:chaintip2) { create(:chaintip, block: block1, node: nodeB) }
 
-    it 'should do nothing if all nodes are the same height' do
+    it 'does nothing if all nodes are the same height' do
       chaintip1.match_children!(nodeB)
       assert_nil chaintip1.parent_chaintip
     end
@@ -239,13 +239,13 @@ RSpec.describe Chaintip, type: :model do
         chaintip2 # lazy load
       end
 
-      it 'should mark itself as the parent' do
+      it 'marks itself as the parent' do
         chaintip1.match_children!(nodeB)
         chaintip2.reload
         assert_equal(chaintip2.parent_chaintip, chaintip1)
       end
 
-      it 'should not mark itself as parent if the other node considers it invalid' do
+      it 'does not mark itself as parent if the other node considers it invalid' do
         # Node B considers block b invalid:
         chaintip3 = create(:chaintip, block: block2, node: nodeB, status: 'invalid')
         chaintip1.match_children!(nodeB)
@@ -259,8 +259,9 @@ RSpec.describe Chaintip, type: :model do
     before do
       setup_python_nodes
     end
+
     describe 'one node in IBD' do
-      it 'should do nothing' do
+      it 'does nothing' do
         @nodeA.update ibd: true
         Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(0)
@@ -268,7 +269,7 @@ RSpec.describe Chaintip, type: :model do
     end
 
     describe 'only an active chaintip' do
-      it 'should add a chaintip entry' do
+      it 'adds a chaintip entry' do
         expect(@nodeA.chaintips.count).to eq(0)
         Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(1)
@@ -289,13 +290,13 @@ RSpec.describe Chaintip, type: :model do
         test.sync_blocks([@nodeA.client, @nodeB.client])
       end
 
-      it 'should add chaintip entries' do
+      it 'adds chaintip entries' do
         Chaintip.check!(:btc, [@nodeA])
         expect(@nodeA.chaintips.count).to eq(2)
         expect(@nodeA.chaintips.last.status).to eq('valid-fork')
       end
 
-      it 'should add the valid fork blocks up to the common ancenstor' do
+      it 'adds the valid fork blocks up to the common ancenstor' do
         Chaintip.check!(:btc, [@nodeA])
         @nodeA.reload
         split_block = Block.find_by(height: 2)
@@ -307,7 +308,7 @@ RSpec.describe Chaintip, type: :model do
         expect(fork_tip.parent.parent).to eq(split_block)
       end
 
-      it 'should ignore forks more than 1000 blocks ago' do
+      it 'ignores forks more than 1000 blocks ago' do
         # 10 on regtest
         test.disconnect_nodes(0, 1)
         assert_equal(0, @nodeA.client.getpeerinfo.count)
@@ -336,7 +337,7 @@ RSpec.describe Chaintip, type: :model do
         Chaintip.check!(:btc, [@nodeA, @nodeB])
       end
 
-      it 'should match parent block' do
+      it 'matches parent block' do
         tip_A = @nodeA.chaintips.where(status: 'active').first
         tip_B = @nodeB.chaintips.where(status: 'active').first
         expect(tip_A).not_to be(tip_B)
@@ -399,20 +400,20 @@ RSpec.describe Chaintip, type: :model do
           @nodeA.poll!
         end
 
-        it 'should store the block' do
+        it 'stores the block' do
           Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
         end
 
-        it 'should mark the block as invalid' do
+        it 'marks the block as invalid' do
           Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@nodeA.id)
         end
 
-        it 'should store invalid tip' do
+        it 'stores invalid tip' do
           Chaintip.check!(:btc, [@nodeA])
           expect(@nodeA.chaintips.where(status: 'invalid').count).to eq(1)
         end
@@ -424,19 +425,19 @@ RSpec.describe Chaintip, type: :model do
           @nodeB.poll!
         end
 
-        it 'should mark the block as invalid' do
+        it 'marks the block as invalid' do
           Chaintip.check!(:btc, [@nodeA])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@nodeA.id)
         end
 
-        it 'should store invalid tip' do
+        it 'stores invalid tip' do
           Chaintip.check!(:btc, [@nodeA])
           expect(@nodeA.chaintips.where(status: 'invalid').count).to eq(1)
         end
 
-        it 'should be nil if the node is unreachable' do
+        it 'is nil if the node is unreachable' do
           @nodeA.client.mock_connection_error(true)
           @nodeA.poll!
           Chaintip.check!(:btc, [@nodeA])
@@ -461,7 +462,7 @@ RSpec.describe Chaintip, type: :model do
       test.sync_blocks([@nodeB.client, @nodeC.client])
     end
 
-    it "should call block.validate_fork! on 'valid-headers' tips" do
+    it "calls block.validate_fork! on 'valid-headers' tips" do
       # pp @nodeC.client.getchaintips()
       block = Block.new
       expect(Block).to receive(:find_by).and_return block
@@ -469,7 +470,7 @@ RSpec.describe Chaintip, type: :model do
       Chaintip.validate_forks!(@nodeC, 100)
     end
 
-    it 'should ignore old tips' do
+    it 'ignores old tips' do
       # pp @nodeC.client.getchaintips()
       expect(Block).not_to receive(:find_by)
       @nodeC.client.generatetoaddress(1, @addr3)

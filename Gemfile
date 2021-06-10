@@ -122,5 +122,6 @@ group :development do
   gem 'guard'
   gem 'guard-rspec', require: false
   gem 'rubocop-rails', require: false
+  gem 'rubocop-rspec', require: false
   gem 'terminal-notifier-guard', '~> 1.6.1'
 end

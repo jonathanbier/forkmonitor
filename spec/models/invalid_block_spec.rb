@@ -11,9 +11,10 @@ RSpec.describe InvalidBlock, type: :model do
 
     before do
       nodeA.block.update marked_valid_by: [nodeA.id], marked_invalid_by: [nodeB.id]
+      allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
     end
 
-    it 'should store an InvalidBlock entry' do
+    it 'stores an InvalidBlock entry' do
       InvalidBlock.check!(:btc)
       disputed_block = nodeA.block
       expect(InvalidBlock.count).to eq(1)
@@ -21,13 +22,11 @@ RSpec.describe InvalidBlock, type: :model do
       expect(InvalidBlock.first.node).to eq(nodeB)
     end
 
-    it 'should send an email to all users' do
-      expect(User).to receive(:all).and_return [user]
+    it 'sends an email to all users' do
       expect { InvalidBlock.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
 
-    it 'should send email only once' do
-      expect(User).to receive(:all).and_return [user]
+    it 'sends email only once' do
       expect { InvalidBlock.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
       expect { InvalidBlock.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
     end

@@ -5,7 +5,7 @@ class StaleCandidate < ApplicationRecord
   DOUBLE_SPEND_RANGE = Rails.env.production? ? 30 : 10
   STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
-  enum coin: %i[btc bch bsv tbtc]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   has_many :children, class_name: 'StaleCandidateChild', dependent: :destroy
 
@@ -177,14 +177,14 @@ class StaleCandidate < ApplicationRecord
         # puts "#{ tx.tx_id } vs #{ replacement.tx_id }"
         sorted_outputs = tx.outputs.sort_by(&:pk_script)
         replacement_sorted_outputs = replacement.outputs.sort_by(&:pk_script)
-        if sorted_outputs.length != replacement_sorted_outputs.length
-          false
-        else
+        if sorted_outputs.length == replacement_sorted_outputs.length
           sorted_outputs.map.with_index do |output, i|
             # puts "#{i}: #{ output.pk_script == replacement_sorted_outputs[i].pk_script } #{ (output.value - replacement_sorted_outputs[i].value).abs }"
             output.pk_script != replacement_sorted_outputs[i].pk_script ||
               (output.value - replacement_sorted_outputs[i].value).abs > 10_000
           end.none? { |res| res }
+        else
+          false
         end
       end
     end.collect { |txout, tx| [tx, longest_spent_coins_with_tx[txout]] }.uniq.transpose
@@ -203,15 +203,15 @@ class StaleCandidate < ApplicationRecord
 
   def fetch_transactions_for_descendants!
     # Iterate over descendant blocks to add their transactions
-    Block.where(coin: coin, height: height).each do |candidate_block|
+    Block.where(coin: coin, height: height).find_each do |candidate_block|
       candidate_block.fetch_transactions!
-      candidate_block.descendants.where('height <= ?', height + DOUBLE_SPEND_RANGE).each(&:fetch_transactions!)
+      candidate_block.descendants.where('height <= ?', height + DOUBLE_SPEND_RANGE).find_each(&:fetch_transactions!)
     end
   end
 
   def set_children!
     children.destroy_all # TODO: update records instead
-    Block.where(coin: coin, height: height).each do |root|
+    Block.where(coin: coin, height: height).find_each do |root|
       chain = Block.where('height <= ?', height + STALE_BLOCK_WINDOW).join_recursive do
         start_with(block_hash: root.block_hash)
           .connect_by(id: :parent_id)
@@ -312,7 +312,7 @@ class StaleCandidate < ApplicationRecord
       coin: coin, height: height
     )
     # Fetch transactions for all blocks at this height
-    Block.where(coin: coin, height: height).each(&:fetch_transactions!)
+    Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
     s
   end
 
@@ -323,7 +323,7 @@ class StaleCandidate < ApplicationRecord
 
   def notify!
     if notified_at.nil?
-      User.all.each do |user|
+      User.all.find_each do |user|
         unless tbtc? # skip email notification for testnet
           UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
         end

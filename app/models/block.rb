@@ -14,9 +14,9 @@ class Block < ApplicationRecord
   class RollbackError < StandardError; end
 
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'
-  belongs_to :parent, class_name: 'Block', foreign_key: 'parent_id', optional: true
+  belongs_to :parent, class_name: 'Block', optional: true
   has_many :invalid_blocks, dependent: :destroy
-  belongs_to :first_seen_by, class_name: 'Node', foreign_key: 'first_seen_by_id', optional: true
+  belongs_to :first_seen_by, class_name: 'Node', optional: true
   has_many :tx_outsets, dependent: :destroy
   has_one :inflated_block
   has_many :maybe_uncoop_transactions, dependent: :destroy
@@ -24,7 +24,7 @@ class Block < ApplicationRecord
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
   has_many :chaintips, dependent: :destroy
-  enum coin: %i[btc bch bsv tbtc]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   # Used to trigger and restore reorgs on the mirror node
   attr_accessor :invalidated_block_hashes
@@ -229,7 +229,7 @@ class Block < ApplicationRecord
     result = "#{block_hash} ("
     result += "#{(size / 1000.0 / 1000.0).round(2)} MB, " if size.present?
     result += "#{Time.at(timestamp).utc.strftime('%H:%M:%S')} by " if time && timestamp.present?
-    result += (pool.present? ? pool : 'unknown pool').to_s
+    result += (pool.presence || 'unknown pool').to_s
     result += ", first seen by #{self.first_seen_by.name_with_version}" if first_seen_by && self.first_seen_by.present?
     "#{result})"
   end
@@ -393,7 +393,7 @@ class Block < ApplicationRecord
     message = coinbase_message(tx)
     return nil if message.nil?
 
-    Pool.all.each do |pool|
+    Pool.all.find_each do |pool|
       return pool.name if message.force_encoding('UTF-8').include?(pool.tag)
     end
     nil
@@ -573,7 +573,7 @@ class Block < ApplicationRecord
   end
 
   def expire_stale_candidate_cache
-    StaleCandidate.where(coin: coin).each do |c|
+    StaleCandidate.where(coin: coin).find_each do |c|
       c.expire_cache if height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
     end
   end
@@ -742,6 +742,6 @@ class Block < ApplicationRecord
 
     min_height = BlockTemplate.where(coin: coin).minimum(:height)
     Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',
-                                                              min_height).where.not(total_fee: nil).each(&:set_template_diff!)
+                                                              min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
   end
 end

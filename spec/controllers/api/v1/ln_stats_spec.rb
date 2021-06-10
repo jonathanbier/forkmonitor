@@ -13,19 +13,19 @@ RSpec.describe Api::V1::LnStatsController, type: :controller do
       expect(response.status).to eq 200
     end
 
-    it 'should show penalty count' do
+    it 'shows penalty count' do
       expect(response_body['penalty_count']).to eq 1
     end
 
-    it 'should show penalty total' do
+    it 'shows penalty total' do
       expect(response_body['penalty_total']).to eq '1.33874639'
     end
 
-    it 'should show sweep count' do
+    it 'shows sweep count' do
       expect(response_body['sweep_count']).to eq 1
     end
 
-    it 'should show sweep total' do
+    it 'shows sweep total' do
       expect(response_body['sweep_total']).to eq '0.00018969'
     end
   end

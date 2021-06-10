@@ -20,7 +20,7 @@ RSpec.describe 'POST /login', type: :request do
     end
 
     it 'returns 200' do
-      expect(response).to have_http_status(200)
+      expect(response).to have_http_status(:ok)
     end
 
     it 'returns JTW token in authorization header' do
@@ -48,6 +48,6 @@ RSpec.describe 'DELETE /logout', type: :request do
 
   it 'returns 204, no content' do
     delete url
-    expect(response).to have_http_status(204)
+    expect(response).to have_http_status(:no_content)
   end
 end

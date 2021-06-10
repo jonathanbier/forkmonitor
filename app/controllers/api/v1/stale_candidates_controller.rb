@@ -16,7 +16,7 @@ module Api
           render json: info
         else
           response.headers['Retry-After'] = '5'
-          render json: '', status: 503
+          render json: '', status: :service_unavailable
         end
       end
 
@@ -26,7 +26,7 @@ module Api
           render json: info
         else
           response.headers['Retry-After'] = '5'
-          render json: '', status: 503
+          render json: '', status: :service_unavailable
         end
       end
 

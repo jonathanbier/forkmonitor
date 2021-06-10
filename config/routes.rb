@@ -17,10 +17,10 @@ Rails.application.routes.draw do
 
   namespace :api, { format: %w[json csv] } do
     namespace :v1 do
-      match '/blocks/:coin/max_height', to: 'blocks#max_height', as: 'api_max_height_for_coin', via: :get
-      match '/blocks/hash/:block_hash', to: 'blocks#with_hash', as: 'api_block_with_hash', via: :get
-      match '/nodes/coin/:coin', to: 'nodes#index_coin', as: 'api_nodes_for_coin', via: :get
-      match '/chaintips/:coin', to: 'chaintips#index_coin', as: 'chaintips_for_coin', via: :get
+      get '/blocks/:coin/max_height', to: 'blocks#max_height', as: 'api_max_height_for_coin'
+      get '/blocks/hash/:block_hash', to: 'blocks#with_hash', as: 'api_block_with_hash'
+      get '/nodes/coin/:coin', to: 'nodes#index_coin', as: 'api_nodes_for_coin'
+      get '/chaintips/:coin', to: 'chaintips#index_coin', as: 'chaintips_for_coin'
       resources :nodes, only: %i[index show update destroy create]
       resources :inflated_blocks, only: %i[index show destroy]
       resources :invalid_blocks, only: %i[index show destroy]

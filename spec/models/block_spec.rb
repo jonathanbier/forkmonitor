@@ -57,7 +57,7 @@ RSpec.describe Block, type: :model do
   end
 
   describe 'log2_pow' do
-    it 'should be log2(pow)' do
+    it 'is log2(pow)' do
       block = create(:block, work: '00000000000000000000000000000001')
       expect(block.log2_pow).to eq(0.0)
       block = create(:block, work: '00000000000000000000000000000002')
@@ -66,31 +66,37 @@ RSpec.describe Block, type: :model do
   end
 
   describe 'summary' do
-    it 'should show the pool' do
+    it 'shows the pool' do
       block = create(:block, pool: 'Antpool')
       expect(block.summary).to include('Antpool')
     end
-    it "should show 'unknown pool'" do
+
+    it "shows 'unknown pool'" do
       block = create(:block, pool: nil)
       expect(block.summary).to include('unknown pool')
     end
-    it 'should include the block size in MB' do
+
+    it 'includes the block size in MB' do
       block = create(:block, pool: 'Antpool', size: 300_000)
       expect(block.summary).to include('0.3 MB')
     end
-    it 'should round the block size to two decimals' do
+
+    it 'rounds the block size to two decimals' do
       block = create(:block, pool: 'Antpool', size: 289_999)
       expect(block.summary).to include('0.29 MB')
     end
-    it 'should show time of day if requested' do
+
+    it 'shows time of day if requested' do
       block = create(:block, pool: nil, size: nil, timestamp: 1_566_575_008)
       expect(block.summary(time: true)).to include('(15:43:28')
     end
-    it 'should not show time of day if timestamp field is missing' do
+
+    it 'does not show time of day if timestamp field is missing' do
       block = create(:block, pool: nil, size: nil, timestamp: nil)
       expect(block.summary(time: true)).not_to include('(15:43:28')
     end
-    it 'should use interpunction' do
+
+    it 'uses interpunction' do
       block = create(:block, block_hash: '0000000', pool: 'Antpool', size: 289_999, timestamp: 1_566_575_008)
       expect(block.summary).to eq('0000000 (0.29 MB, Antpool)')
       expect(block.summary(time: true)).to eq('0000000 (0.29 MB, 15:43:28 by Antpool)')
@@ -99,24 +105,26 @@ RSpec.describe Block, type: :model do
       block.size = nil
       expect(block.summary).to eq('0000000 (unknown pool)')
     end
-    it 'should show first seen by if requested' do
+
+    it 'shows first seen by if requested' do
       block = create(:block, pool: nil, first_seen_by: build(:node))
       expect(block.summary(first_seen_by: true)).to include('first seen by Bitcoin Core 0.17.1')
     end
-    it 'should not show first seen by if unknown' do
+
+    it 'does not show first seen by if unknown' do
       block = create(:block, pool: nil, first_seen_by: nil)
       expect(block.summary(first_seen_by: true)).not_to include('first seen by Bitcoin Core 0.17.1')
     end
   end
 
   describe 'version_bits' do
-    it 'should be empty by default' do
+    it 'is empty by default' do
       block = create(:block)
       expect(block.version_bits).to eq([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                         0, 0, 0])
     end
 
-    it 'should detect bit 1' do
+    it 'detects bit 1' do
       block = create(:block, version: 0x20000001)
       expect(block.version_bits).to eq([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                         0, 0, 0])
@@ -126,37 +134,37 @@ RSpec.describe Block, type: :model do
   describe 'maximum_inflation' do
     COIN = 100_000_000
 
-    it 'should be 12.5 for BTC in mid 2019' do
+    it 'is 12.5 for BTC in mid 2019' do
       @block = build(:block, height: 596_808)
       expect(@block.max_inflation).to eq(12.5 * COIN)
     end
 
-    it 'should be 50 for BTC in 2009' do
+    it 'is 50 for BTC in 2009' do
       @block = build(:block, height: 100)
       expect(@block.max_inflation).to eq(50 * COIN)
     end
 
-    it 'should be 12.5 for BTC immediately before the 2020 halving' do
+    it 'is 12.5 for BTC immediately before the 2020 halving' do
       @block = build(:block, height: 629_999)
       expect(@block.max_inflation).to eq(12.5 * COIN)
     end
 
-    it 'should be 6.25 for BTC at the 2020 halving' do
+    it 'is 6.25 for BTC at the 2020 halving' do
       @block = build(:block, height: 630_000)
       expect(@block.max_inflation).to eq(6.25 * COIN)
     end
 
-    it 'should be 0.00000009 for BTC at height 6090000' do
+    it 'is 0.00000009 for BTC at height 6090000' do
       @block = build(:block, height: 6_090_000)
       expect(@block.max_inflation).to eq(0.00000009 * COIN)
     end
 
-    it 'should be 0 for BTC as of height 6930000' do
+    it 'is 0 for BTC as of height 6930000' do
       @block = build(:block, height: 6_930_000)
       expect(@block.max_inflation).to eq(0.00000000 * COIN)
     end
 
-    it 'should create slightly less than 21 million BTC' do
+    it 'creates slightly less than 21 million BTC' do
       @block = build(:block, height: 0)
       i = 0
       coins = 0.0
@@ -180,16 +188,16 @@ RSpec.describe Block, type: :model do
       @d1 = create(:block, parent: @c1)
     end
 
-    it 'should not return itself' do
+    it 'does not return itself' do
       expect(@a.descendants).not_to include(@a)
     end
 
-    it 'should return all blocks descending' do
+    it 'returns all blocks descending' do
       expect(@b1.descendants).to include(@c1)
       expect(@b1.descendants).to include(@d1)
     end
 
-    it "should not return blocks that don't descend from it" do
+    it "does not return blocks that don't descend from it" do
       expect(@b2.descendants).not_to include(@c1)
     end
   end
@@ -206,16 +214,16 @@ RSpec.describe Block, type: :model do
       @d1 = create(:block, parent: @c1)
     end
 
-    it 'should fail if comparing to self' do
+    it 'fails if comparing to self' do
       expect { @a.branch_start(@a) }.to raise_error('same block')
     end
 
-    it 'should fail if comparing on same branch' do
+    it 'fails if comparing on same branch' do
       expect { @b1.branch_start(@c1) }.to raise_error('same branch')
       expect { @c1.branch_start(@d1) }.to raise_error('same branch')
     end
 
-    it 'should find the branch start' do
+    it 'finds the branch start' do
       expect(@d1.branch_start(@c2)).to eq(@b1)
       expect(@c2.branch_start(@d1)).to eq(@b2)
     end
@@ -226,7 +234,7 @@ RSpec.describe Block, type: :model do
       @node = create(:node)
     end
 
-    it 'should fetch transactions for the block' do
+    it 'fetches transactions for the block' do
       expect(Block).to receive(:find_by).and_call_original # Sanity check for later test
       @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
                               first_seen_by: @node)
@@ -234,7 +242,7 @@ RSpec.describe Block, type: :model do
       expect(@block.transactions.count).to eq(1)
     end
 
-    it 'should not fetch twice' do
+    it 'does not fetch twice' do
       expect(Block).to receive(:find_by).once.and_call_original
       @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
                               first_seen_by: @node)
@@ -243,14 +251,14 @@ RSpec.describe Block, type: :model do
       expect(@block.transactions.count).to eq(1)
     end
 
-    it "should mark block as pruned if it can't be fetched due to pruning" do
+    it "marks block as pruned if it can't be fetched due to pruning" do
       @block = create(:block, block_hash: '0000000000000000000000000000000000000000000000000000000000000001',
                               first_seen_by: @node)
       @block.fetch_transactions!
       expect(@block.pruned).to eq(true)
     end
 
-    it 'should try the modern node if a block was pruned' do
+    it 'tries the modern node if a block was pruned' do
       @block = create(:block, block_hash: '0000000000000000000000000000000000000000000000000000000000000001',
                               first_seen_by: @node)
       @block.fetch_transactions!
@@ -285,17 +293,17 @@ RSpec.describe Block, type: :model do
       allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
     end
 
-    it 'should store the version' do
+    it 'stores the version' do
       @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.version).to eq(536_870_912)
     end
 
-    it 'should store number of transactions' do
+    it 'stores number of transactions' do
       @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.tx_count).to eq(3024)
     end
 
-    it 'should store size' do
+    it 'stores size' do
       @block = Block.create_or_update_with(@block_info, false, @node, true)
       expect(@block.size).to eq(1_328_797)
     end
@@ -331,7 +339,7 @@ RSpec.describe Block, type: :model do
       @valid_fork_block = Block.find_by(block_hash: chaintipsA[-1]['hash'])
     end
 
-    it "should change the mirror's active chaintip" do
+    it "changes the mirror's active chaintip" do
       @valid_fork_block.make_active_on_mirror!(@nodeA)
       chaintipsA = @nodeA.mirror_client.getchaintips
       expect(chaintipsA[1]['status']).to eq('active')
@@ -366,19 +374,19 @@ RSpec.describe Block, type: :model do
       @block = Block.find_by(block_hash: chaintipsA[-1]['hash'])
     end
 
-    it 'should skip if the node already marked it as (in)valid' do
+    it 'skips if the node already marked it as (in)valid' do
       @block.update marked_valid_by: [@nodeA.id]
       expect(@block).not_to receive(:make_active_on_mirror!)
       @block.validate_fork!(@nodeA)
     end
 
-    it "should skip if the node doesn't have a mirror" do
+    it "skips if the node doesn't have a mirror" do
       @nodeA.update mirror_rpchost: nil
       expect(@block).not_to receive(:make_active_on_mirror!)
       @block.validate_fork!(@nodeA)
     end
 
-    it "should skip if the mirror node doesn't have the block" do
+    it "skips if the mirror node doesn't have the block" do
       expect { @nodeA.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
     end
 
@@ -387,17 +395,17 @@ RSpec.describe Block, type: :model do
         assert_equal(@nodeA.mirror_client.submitblock(@nodeB.client.getblock(@block.block_hash, 0)), 'inconclusive')
       end
 
-      it 'should roll the mirror back' do
+      it 'rolls the mirror back' do
         expect(@block).to receive(:make_active_on_mirror!).with(@nodeA).and_call_original
         @block.validate_fork!(@nodeA)
       end
 
-      it 'should mark the block as considered valid' do
+      it 'marks the block as considered valid' do
         @block.validate_fork!(@nodeA)
         expect(@block.marked_valid_by).to include(@nodeA.id)
       end
 
-      it 'should roll the mirror forward' do
+      it 'rolls the mirror forward' do
         expect(@nodeA.mirror_client).to receive(:reconsiderblock)
         @block.validate_fork!(@nodeA)
       end
@@ -410,7 +418,7 @@ RSpec.describe Block, type: :model do
       create(:f2pool)
     end
 
-    it 'should find Antpool' do
+    it 'finds Antpool' do
       # response from getrawtransaction 99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02 true
       tx = {
         'txid' => '99d1ead20f83d090f2878559446abaa5db320524f63011ed1b71bfef47c5ac02',
@@ -450,7 +458,7 @@ RSpec.describe Block, type: :model do
       expect(Block.pool_from_coinbase_tx(tx)).to eq('Antpool')
     end
 
-    it 'should find F2Pool' do
+    it 'finds F2Pool' do
       # Truncated response from getrawtransaction 87b72be71eab3fb8c452ea91ba0c21c4b9affa56386b0455ad50d3513c433484 true
       tx = {
         'vin' => [
@@ -470,19 +478,19 @@ RSpec.describe Block, type: :model do
       @node = build(:node)
     end
 
-    it 'should mark block as headers_only' do
+    it 'marks block as headers_only' do
       block = Block.create_headers_only(@node, 560_182,
                                         '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.headers_only).to eq(true)
     end
 
-    it 'should set first seen by' do
+    it 'sets first seen by' do
       block = Block.create_headers_only(@node, 560_182,
                                         '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.first_seen_by).to eq(@node)
     end
 
-    it 'should be updated by find_or_create_by' do
+    it 'is updated by find_or_create_by' do
       allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
       block = Block.create_headers_only(@node, 560_182,
                                         '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
@@ -496,7 +504,7 @@ RSpec.describe Block, type: :model do
       expect(block.tx_count).to eq(3)
     end
 
-    it 'should have a valid summary' do
+    it 'has a valid summary' do
       block = Block.create_headers_only(@node, 560_182,
                                         '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.summary(time: true,
@@ -533,14 +541,14 @@ RSpec.describe Block, type: :model do
       expect(@headers_only_block.headers_only).to eq(true)
     end
 
-    it 'should obtain block from other node if available' do
+    it 'obtains block from other node if available' do
       Block.find_missing(:btc, 1, 1)
       @headers_only_block.reload
       expect(@headers_only_block.headers_only).to eq(false)
       expect(@headers_only_block.first_seen_by).to eq(@nodeB)
     end
 
-    it 'should submit block to original node' do
+    it 'submits block to original node' do
       expect do
         @nodeA.client.getblock(@headers_only_block.block_hash, 1)
       end.to raise_error(BitcoinClient::BlockNotFoundError)

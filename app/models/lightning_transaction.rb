@@ -5,13 +5,13 @@ require 'csv'
 class LightningTransaction < ApplicationRecord
   PER_PAGE = Rails.env.production? ? 100 : 2
 
-  enum type: %i[PenaltyTransaction MaybeUncoopTransaction SweepTransaction]
+  enum type: { PenaltyTransaction: 0, MaybeUncoopTransaction: 1, SweepTransaction: 2 }
 
   after_commit :expire_cache
 
   belongs_to :block
-  belongs_to :parent, class_name: 'LightningTransaction', foreign_key: 'parent_id', optional: true
-  belongs_to :opening_block, class_name: 'Block', foreign_key: 'opening_block_id', optional: true
+  belongs_to :parent, class_name: 'LightningTransaction', optional: true
+  belongs_to :opening_block, class_name: 'Block', optional: true
   has_one :child, class_name: 'LightningTransaction', foreign_key: 'parent_id'
 
   def as_json(options = nil)
@@ -47,7 +47,7 @@ class LightningTransaction < ApplicationRecord
     tx = Bitcoin::Protocol::Tx.new([raw_tx].pack('H*'))
     parent_tx_id = tx.in[input].prev_out_hash.reverse.unpack1('H*')
     parent_tx_vout = tx.in[input].prev_out_index
-    LightningTransaction.where(tx_id: parent_tx_id).each do |candidate|
+    LightningTransaction.where(tx_id: parent_tx_id).find_each do |candidate|
       update parent: candidate, parent_tx_vout: parent_tx_vout
       return parent
     end
@@ -129,7 +129,7 @@ class LightningTransaction < ApplicationRecord
   end
 
   def self.check_public_channels!
-    LightningTransaction.where(channel_is_public: nil).each do |tx|
+    LightningTransaction.where(channel_is_public: nil).find_each do |tx|
       uri = URI.parse('https://1ml.com/search')
       begin
         response = Net::HTTP.post_form(uri, { 'q' => tx.opening_tx_id })
@@ -172,7 +172,7 @@ class LightningTransaction < ApplicationRecord
 
   # Used once for migration
   def self.get_opening_blocks!
-    PenaltyTransaction.all.each do |penalty|
+    PenaltyTransaction.all.find_each do |penalty|
       coin = penalty.block.coin.to_sym
       opening_tx = Node.first_with_txindex(coin).getrawtransaction(penalty.opening_tx_id, true)
       block = Block.find_by coin: coin, block_hash: opening_tx['blockhash']

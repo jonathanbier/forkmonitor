@@ -3,12 +3,12 @@
 class Chaintip < ApplicationRecord
   belongs_to :block, optional: false
   belongs_to :node, optional: false, touch: true
-  belongs_to :parent_chaintip, class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', optional: true, dependent: :destroy # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
+  belongs_to :parent_chaintip, class_name: 'Chaintip', optional: true, dependent: :destroy # When a node is behind, we assume it would agree with this chaintip, until getchaintips says otherwise
   has_many :children,  class_name: 'Chaintip', foreign_key: 'parent_chaintip_id', dependent: :nullify
 
   after_commit :expire_cache
 
-  enum coin: %i[btc bch bsv tbtc]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   validates :status, uniqueness: { scope: :node }
 
@@ -43,7 +43,7 @@ class Chaintip < ApplicationRecord
   def check_parent!(node)
     if parent_chaintip.present?
       node.chaintips.joins(:block).where(status: 'invalid').where('blocks.height > ?',
-                                                                  block.height).each do |candidate_tip|
+                                                                  block.height).find_each do |candidate_tip|
         # Traverse candidate tip down
         parent = candidate_tip.block
         while parent.present? && parent.height >= block.height
@@ -179,7 +179,7 @@ class Chaintip < ApplicationRecord
       end
       # Match children and parent active chaintips
       nodes.each do |node|
-        Chaintip.where(node: node).where(status: 'active').each do |chaintip|
+        Chaintip.where(node: node).where(status: 'active').find_each do |chaintip|
           chaintip.match_children!(node)
           # Ensure newly matched children don't consider their parent invalid
           chaintip.check_parent!(node)

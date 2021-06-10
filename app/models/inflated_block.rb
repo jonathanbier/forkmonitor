@@ -161,7 +161,7 @@ class InflatedBlock < ApplicationRecord
                                                                                    max_inflation: block.max_inflation / 100_000_000.0, actual_inflation: inflation)
               next if inflated_block.notified_at
 
-              User.all.each do |user|
+              User.all.find_each do |user|
                 UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
               end
               inflated_block.update notified_at: Time.now

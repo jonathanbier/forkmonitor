@@ -2,7 +2,7 @@
 
 class BlockTemplate < ApplicationRecord
   include ::TxIdConcern
-  enum coin: %i[btc bch bsv tbtc]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
   belongs_to :parent_block, class_name: 'Block', optional: true
   belongs_to :node
 

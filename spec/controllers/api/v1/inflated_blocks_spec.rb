@@ -7,13 +7,13 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
   let!(:inflated_block) { create(:inflated_block, node: node1) }
 
   describe 'GET /api/v1/inflated_blocks' do
-    it 'should list inflated blocks' do
+    it 'lists inflated blocks' do
       get :index, format: :json
       expect(response.status).to eq 200
       expect(response_body.length).to eq 1
     end
 
-    it 'should list dismissed entries' do
+    it 'lists dismissed entries' do
       inflated_block.update dismissed_at: Time.now
       get :index, format: :json
       expect(response.status).to eq 200
@@ -21,19 +21,19 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
     end
 
     describe 'with coin param' do
-      it 'should list entries for this coin' do
+      it 'lists entries for this coin' do
         get :index, format: :json, params: { coin: 'BTC' }
         expect(response.status).to eq 200
         expect(response_body.length).to eq 1
       end
 
-      it 'should not list entries for other coin' do
+      it 'does not list entries for other coin' do
         get :index, format: :json, params: { coin: 'TBTC' }
         expect(response.status).to eq 200
         expect(response_body.length).to eq 0
       end
 
-      it 'should not list dismissed entries' do
+      it 'does not list dismissed entries' do
         inflated_block.update dismissed_at: Time.now
         get :index, format: :json, params: { coin: 'BTC' }
         expect(response.status).to eq 200
@@ -43,7 +43,7 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
   end
 
   describe 'DELETE /api/v1/inflated_blocks/:id' do
-    it 'should require authorization' do
+    it 'requires authorization' do
       delete :destroy, params: { id: inflated_block.id }
       expect(response.status).to eq 401
     end

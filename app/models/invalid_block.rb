@@ -17,13 +17,13 @@ class InvalidBlock < ApplicationRecord
   end
 
   def self.check!(coin)
-    Block.where(coin: coin).where('array_length(marked_valid_by,1) > 0').where('array_length(marked_invalid_by,1) > 0').each do |block|
+    Block.where(coin: coin).where('array_length(marked_valid_by,1) > 0').where('array_length(marked_invalid_by,1) > 0').find_each do |block|
       node = Node.find(block.marked_invalid_by.first)
       # Create an alert
       invalid_block = InvalidBlock.find_or_create_by(node: node, block: block)
       next if invalid_block.notified_at
 
-      User.all.each do |user|
+      User.all.find_each do |user|
         UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
       end
       invalid_block.update notified_at: Time.now

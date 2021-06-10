@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 class Softfork < ApplicationRecord
-  enum coin: %i[btc bch bsv tbtc]
-  enum fork_type: %i[bip9 bip8]
-  enum status: %i[defined started locked_in active failed must_signal]
+  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum fork_type: { bip9: 0, bip8: 1 }
+  enum status: { defined: 0, started: 1, locked_in: 2, active: 3, failed: 4, must_signal: 5 }
   belongs_to :node
 
   def as_json(_options = nil)
@@ -16,7 +16,7 @@ class Softfork < ApplicationRecord
 
   def notify!
     if notified_at.nil?
-      User.all.each do |user|
+      User.all.find_each do |user|
         UserMailer.with(user: user, softfork: self).softfork_email.deliver
       end
       update notified_at: Time.now
@@ -27,7 +27,7 @@ class Softfork < ApplicationRecord
   end
 
   def self.notify!
-    Softfork.where(notified_at: nil).each(&:notify!)
+    Softfork.where(notified_at: nil).find_each(&:notify!)
   end
 
   # Only supported on Bitcoin mainnet

@@ -17,51 +17,51 @@ RSpec.describe Node, type: :model do
   end
 
   describe 'version' do
-    it 'should be set' do
+    it 'is set' do
       node = create(:node_with_block, version: 160_300)
       expect(node.version).to eq(160_300)
     end
   end
 
   describe 'name_with_version' do
-    it 'should combine node name with version' do
+    it 'combines node name with version' do
       node = create(:node, version: 170_001)
       expect(node.name_with_version).to eq('Bitcoin Core 0.17.0.1')
     end
 
-    it 'should handle 1.0 version' do
+    it 'handles 1.0 version' do
       node = create(:node, version: 1_000_000)
       expect(node.name_with_version).to eq('Bitcoin Core 1.0.0')
     end
 
-    it 'should handle clients that self identify with four digits' do
+    it 'handles clients that self identify with four digits' do
       node = create(:node, version: 1_060_000, client_type: :bu, name: 'Bitcoin Unlimited')
       expect(node.name_with_version).to eq('Bitcoin Unlimited 1.6.0.0')
     end
 
-    it 'should drop the 4th digit if zero' do
+    it 'drops the 4th digit if zero' do
       node = create(:node, version: 170_000)
       expect(node.name_with_version).to eq('Bitcoin Core 0.17.0')
     end
 
-    it 'should append version_extra' do
+    it 'appends version_extra' do
       node = create(:node, version: 170_000, version_extra: 'rc1')
       expect(node.name_with_version).to eq('Bitcoin Core 0.17.0rc1')
     end
 
-    it 'should hide version if absent' do
+    it 'hides version if absent' do
       node = create(:node, version: nil, client_type: :libbitcoin, name: 'Libbitcoin')
       expect(node.name_with_version).to eq('Libbitcoin')
     end
 
-    it 'should add version_extra if set while version is absent' do
+    it 'adds version_extra if set while version is absent' do
       node = create(:node, version: nil, client_type: :libbitcoin, name: 'Libbitcoin', version_extra: '3.6.0')
       expect(node.name_with_version).to eq('Libbitcoin 3.6.0')
     end
   end
 
   describe 'destroy' do
-    it 'should remove marked_(in)valid_by references in blocks' do
+    it 'removes marked_(in)valid_by references in blocks' do
       node = create(:node, version: 170_001)
       node_id = node.id
       block1 = create(:block, marked_valid_by: [node_id])
@@ -89,22 +89,22 @@ RSpec.describe Node, type: :model do
       @block_hash = @node.client.getbestblockhash
     end
 
-    it 'should call getblock on the client' do
+    it 'calls getblock on the client' do
       expect(@node.client).to receive('getblock').and_call_original
       @node.getblock(@block_hash, 1)
     end
 
-    it 'should throw ConnectionError' do
+    it 'throws ConnectionError' do
       @node.client.mock_connection_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::ConnectionError
     end
 
-    it 'should throw PartialFileError' do
+    it 'throws PartialFileError' do
       @node.client.mock_partial_file_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::PartialFileError
     end
 
-    it 'should throw BlockPrunedError' do
+    it 'throws BlockPrunedError' do
       @node.client.mock_block_pruned_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error Node::BlockPrunedError
     end
@@ -125,17 +125,17 @@ RSpec.describe Node, type: :model do
       @block_hash = @node.client.getbestblockhash
     end
 
-    it 'should call getblockheader on the client' do
+    it 'calls getblockheader on the client' do
       expect(@node.client).to receive('getblockheader').and_call_original
       @node.getblockheader(@block_hash)
     end
 
-    it 'should throw ConnectionError' do
+    it 'throws ConnectionError' do
       @node.client.mock_connection_error(true)
       expect { @node.getblockheader(@block_hash) }.to raise_error Node::ConnectionError
     end
 
-    it 'should throw MethodNotFoundError' do
+    it 'throws MethodNotFoundError' do
       @node.client.mock_version(100_000)
       expect { @node.getblockheader(@block_hash) }.to raise_error Node::MethodNotFoundError
     end
@@ -159,22 +159,22 @@ RSpec.describe Node, type: :model do
           allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
         end
 
-        it 'should save the node' do
+        it 'saves the node' do
           @node.poll!
           expect(@node.id).not_to be_nil
         end
 
-        it 'should store the node version' do
+        it 'stores the node version' do
           @node.poll!
           expect(@node.version).to be 219_900
         end
 
-        it 'should get IBD status' do
+        it 'gets IBD status' do
           @node.poll!
           expect(@node.ibd).to eq(false)
         end
 
-        it 'should not store the latest block if in IBD' do
+        it 'does not store the latest block if in IBD' do
           allow(@node).to receive('ibd').and_return(true)
           @node.poll!
           expect(@node.block).to be_nil
@@ -187,14 +187,14 @@ RSpec.describe Node, type: :model do
         #   expect(@node.sync_height).to eq(2)
         # end
 
-        it 'should store the latest block if not in IBD' do
+        it 'stores the latest block if not in IBD' do
           @node.poll!
           expect(@node.block).not_to be_nil
           expect(@node.block.height).to eq(2)
           expect(@node.block.first_seen_by).to eq(@node)
         end
 
-        it 'should get mempool size' do
+        it 'gets mempool size' do
           @node.client.generatetoaddress(100, @miner_addr)
           @node.client.sendtoaddress(@node.client.getnewaddress, 0.1)
           @node.poll!
@@ -210,7 +210,7 @@ RSpec.describe Node, type: :model do
           @node.client.mock_ibd(true)
         end
 
-        it 'should parse 2.0.0 variant (e.g. Bcoin)' do
+        it 'parses 2.0.0 variant (e.g. Bcoin)' do
           @node.client.mock_version('2.0.0')
           @node.client.mock_client_type(:bcoin)
           @node.poll!
@@ -236,24 +236,24 @@ RSpec.describe Node, type: :model do
         test.shutdown
       end
 
-      it 'should get IBD status' do
+      it 'gets IBD status' do
         @node.poll!
         expect(@node.ibd).to eq(false)
       end
 
-      it 'should update to the latest block' do
+      it 'updates to the latest block' do
         @node.poll!
         expect(@node.block.height).to equal(2)
       end
 
-      it 'should store size and number of transactions in block' do
+      it 'stores size and number of transactions in block' do
         @node.client.generate(1)
         @node.poll!
         expect(@node.block.tx_count).to eq(1)
         expect(@node.block.size).to be_between(249, 254).inclusive
       end
 
-      it 'should store intermediate blocks' do
+      it 'stores intermediate blocks' do
         @node.client.generate(2)
         @node.poll!
         @node.reload
@@ -265,7 +265,7 @@ RSpec.describe Node, type: :model do
         expect(@node.block.parent.parent.height).to equal(2)
       end
 
-      it 'should not store blocks during initial blockchain download' do
+      it 'does not store blocks during initial blockchain download' do
         @node.client.generate(2)
         allow(@node).to receive('ibd').and_return(true)
         @node.poll!
@@ -273,17 +273,17 @@ RSpec.describe Node, type: :model do
         expect(@node.block).to be_nil
       end
 
-      it 'should not fetch parent blocks older than MINIMUM_BLOCK_HEIGHTS' do
+      it 'does not fetch parent blocks older than MINIMUM_BLOCK_HEIGHTS' do
         # Exit IBD, fetching all previous blocks would take forever, so don't:
         @node.client.generate(2)
         before = Block::MINIMUM_BLOCK_HEIGHTS[:btc]
-        Kernel::silence_warnings {
-          Block::MINIMUM_BLOCK_HEIGHTS = {btc: 4}
-        }
+        Kernel.silence_warnings do
+          Block::MINIMUM_BLOCK_HEIGHTS = { btc: 4 }
+        end
         @node.poll!
-        Kernel::silence_warnings {
-          Block::MINIMUM_BLOCK_HEIGHTS = {btc: before}
-        }
+        Kernel.silence_warnings do
+          Block::MINIMUM_BLOCK_HEIGHTS = { btc: before }
+        end
         @node.reload
         expect(@node.block.height).to equal(4)
         expect(@node.block.parent).to be_nil
@@ -297,14 +297,14 @@ RSpec.describe Node, type: :model do
         expect(@node.block.parent.height).to equal(5)
       end
 
-      it 'should detect when node becomes unreachable' do
+      it 'detects when node becomes unreachable' do
         test.shutdown
         @node.poll!
         test.setup
         expect(@node.unreachable_since).not_to be_nil
       end
 
-      it 'should detect when node becomes reachable' do
+      it 'detects when node becomes reachable' do
         @node.update unreachable_since: Time.now
         expect(@node.unreachable_since).not_to be_nil
         @node.poll!
@@ -321,7 +321,7 @@ RSpec.describe Node, type: :model do
         @node.poll! # First poll stores the block and node entry
       end
 
-      it 'should get IBD status from verificationprogress' do
+      it 'gets IBD status from verificationprogress' do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
@@ -333,7 +333,7 @@ RSpec.describe Node, type: :model do
         expect(@node.ibd).to eq(false)
       end
 
-      it 'should store intermediate blocks' do
+      it 'stores intermediate blocks' do
         @node.client.mock_set_height(560_179)
         @node.poll!
         @node.reload
@@ -353,16 +353,16 @@ RSpec.describe Node, type: :model do
         @node.poll!
       end
 
-      it 'should get IBD status from verificationprogress' do
+      it 'gets IBD status from verificationprogress' do
         @node.client.mock_ibd(true)
         expect(@node.ibd).to eq(false)
       end
 
-      it 'should use time from getblock instead of getblockchaininfo' do
+      it 'uses time from getblock instead of getblockchaininfo' do
         expect(@node.block.timestamp).to equal(1_548_498_742)
       end
 
-      it 'should store intermediate blocks' do
+      it 'stores intermediate blocks' do
         @node.client.mock_set_height(560_179)
         @node.poll!
         @node.reload
@@ -384,12 +384,12 @@ RSpec.describe Node, type: :model do
         @node.poll!
       end
 
-      it 'should have correct data' do
+      it 'has correct data' do
         expect(@node.version).to equal(120_000)
         expect(@node.block.height).to equal(560_176)
       end
 
-      it 'should store intermediate blocks' do
+      it 'stores intermediate blocks' do
         @node.client.mock_set_height(560_178)
         @node.poll!
         @node.reload
@@ -501,7 +501,7 @@ RSpec.describe Node, type: :model do
       test.sync_blocks
     end
 
-    it 'should detect if node A and B are at the same block' do
+    it 'detects if node A and B are at the same block' do
       expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
     end
 
@@ -521,40 +521,42 @@ RSpec.describe Node, type: :model do
         @nodeA.peer_count = 1 # Bypass peer check in check_if_behind!
         @first_check = @nodeA.check_if_behind!(@nodeB)
         Timecop.freeze(Time.now + 15 * 60)
+
+        allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
       end
 
-      it 'should be false if the difference is recent' do
+      it 'is false if the difference is recent' do
         expect(@first_check).to eq(false)
       end
 
-      it 'should detect if node A is behind node B' do
+      it 'detects if node A is behind node B' do
         lag = @nodeA.check_if_behind!(@nodeB)
         expect(lag).not_to be_nil
         expect(lag.node_a).to eq(@nodeA)
         expect(lag.node_b).to eq(@nodeB)
       end
 
-      it 'should be nil if the node is unreachable' do
+      it 'is nil if the node is unreachable' do
         @nodeA.update unreachable_since: Time.now
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
-      it 'should be nil if the node is in initial block download' do
+      it 'is nil if the node is in initial block download' do
         @nodeA.update ibd: true
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
-      it 'should be nil if other node is in initial block download' do
+      it 'is nil if other node is in initial block download' do
         @nodeB.update ibd: true
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
-      it 'should be nil if the node has no peers' do
+      it 'is nil if the node has no peers' do
         @nodeA.peer_count = 0
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
       end
 
-      it 'should allow extra blocks for old nodes' do
+      it 'allows extra blocks for old nodes' do
         @nodeA.update version: 100_300
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
         @nodeB.client.generate(3)
@@ -563,7 +565,7 @@ RSpec.describe Node, type: :model do
         expect(@nodeA.check_if_behind!(@nodeB)).not_to eq(nil)
       end
 
-      it 'should detect if bcoin node A is behind (core) node B' do
+      it 'detects if bcoin node A is behind (core) node B' do
         @nodeA.update version: '2.0.0'
         @nodeA.update client_type: :bcoin
 
@@ -573,7 +575,7 @@ RSpec.describe Node, type: :model do
         expect(lag.node_b).to eq(@nodeB)
       end
 
-      it 'should allow extra blocks for btcd' do
+      it 'allows extra blocks for btcd' do
         @nodeA.update client_type: :btcd, version: 120_000
         expect(@nodeA.check_if_behind!(@nodeB)).to eq(nil)
 
@@ -584,13 +586,11 @@ RSpec.describe Node, type: :model do
         expect(@nodeA.check_if_behind!(@nodeB)).not_to eq(nil)
       end
 
-      it 'should send an email to all users' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends an email to all users' do
         expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
       end
 
-      it 'should send email only once' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends email only once' do
         expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(1)
         expect { @nodeA.check_if_behind!(@nodeB) }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
@@ -612,14 +612,15 @@ RSpec.describe Node, type: :model do
         @node.client.mock_ibd(true)
         @node.poll!
       end
-      it 'should do nothing' do
+
+      it 'does nothing' do
         @node.check_versionbits!
         expect(VersionBit.count).to eq(0)
       end
     end
 
     describe 'below threshold' do
-      it 'should do nothing' do
+      it 'does nothing' do
         @node.check_versionbits!
         expect(VersionBit.count).to eq(0)
       end
@@ -632,22 +633,22 @@ RSpec.describe Node, type: :model do
         @node.client.mock_set_height(560_178)
         @node.poll!
         @node.reload
+
+        allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
       end
 
-      it 'should store a VersionBit entry' do
+      it 'stores a VersionBit entry' do
         @node.check_versionbits!
         expect(VersionBit.count).to eq(1)
         expect(VersionBit.first.bit).to eq(1)
         expect(VersionBit.first.activate).to eq(@node.block)
       end
 
-      it 'should send an email to all users' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends an email to all users' do
         expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
       end
 
-      it 'should send email only once' do
-        expect(User).to receive(:all).and_return [user]
+      it 'sends email only once' do
         expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
         @node.client.mock_set_height(560_179)
         @node.poll!
@@ -655,9 +656,7 @@ RSpec.describe Node, type: :model do
         expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(0)
       end
 
-      it 'should leave existing VersionBit entry alone' do
-        expect(User).to receive(:all).and_return [user]
-
+      it 'leaves existing VersionBit entry alone' do
         @node.check_versionbits!
         @node.client.mock_set_height(560_179)
         @node.poll!
@@ -670,7 +669,7 @@ RSpec.describe Node, type: :model do
         expect(VersionBit.first.activate).to eq(@node.block.parent)
       end
 
-      it 'should mark VersionBit entry inactive if not signalled for' do
+      it 'marks VersionBit entry inactive if not signalled for' do
         @node.check_versionbits!
 
         @node.client.mock_set_height(560_181)
@@ -688,7 +687,7 @@ RSpec.describe Node, type: :model do
         expect(VersionBit.first.deactivate).to eq(@node.block.parent)
       end
 
-      it 'should not mark VersionBit entry inactive too early' do
+      it 'does not mark VersionBit entry inactive too early' do
         @node.check_versionbits!
 
         @node.client.mock_set_height(560_180)
@@ -713,7 +712,7 @@ RSpec.describe Node, type: :model do
       expect(Block.minimum(:height)).to equal(560_176)
     end
 
-    it 'should not fetch parents before height 560176' do
+    it 'does not fetch parents before height 560176' do
       @node.block.find_ancestors!(@node, false, true)
       expect(Block.minimum(:height)).to equal(560_176)
     end
@@ -740,11 +739,11 @@ RSpec.describe Node, type: :model do
       @node.poll!
     end
 
-    it 'should call getrawtransaction' do
+    it 'calls getrawtransaction' do
       expect(@node.getrawtransaction(@tx_id)).to eq('010000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff5303368c081a4d696e656420627920416e74506f6f6c633e007902205c4c4eadfabe6d6dd1950c951397395896a26405b01c17c50070f4a287b029b377eae4148bc9133f04000000000000005201000079650000ffffffff03478b704b000000001976a914edf10a7fac6b32e24daa5305c723f3de58db1bc888ac0000000000000000266a24aa21a9ed8d4ee584d2bd2483c525df85654a2fcfa9125638dd6fe56405a0590b3da0347800000000000000002952534b424c4f434b3ac6695c75ffa1f93f9237c6997abd16c988a3b442545478f81fd49d9af1b2ce9a0120000000000000000000000000000000000000000000000000000000000000000000000000')
     end
 
-    it 'should handle tx not found' do
+    it 'handles tx not found' do
       expect { @node.getrawtransaction(@tx_id.reverse) }.to raise_error Node::TxNotFoundError
     end
   end
@@ -762,35 +761,35 @@ RSpec.describe Node, type: :model do
         expect(Node).to receive(:first_newer_than).with(:btc, 160_000, :core).and_return @modernNode
       end
 
-      it 'should fetch the block' do
+      it 'fetches the block' do
         expect(@modernNode.client).to receive('getblock').and_call_original
         Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
-      it 'should not fetch the block if getblock is cached' do
+      it 'does not fetch the block if getblock is cached' do
         expect(@modernNode.client).not_to receive('getblock')
         Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block,
-                                                  { "height": 1, 'tx' => ['74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'] })
+                                                  { height: 1, 'tx' => ['74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'] })
       end
 
-      it 'should call getrawtransaction on the coinbase' do
+      it 'calls getrawtransaction on the coinbase' do
         expect(@modernNode.client).to receive('getrawtransaction').and_call_original
         Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
-      it 'should pass getrawtransaction output to pool_from_coinbase_tx' do
+      it 'passes getrawtransaction output to pool_from_coinbase_tx' do
         expect(Block).to receive(:pool_from_coinbase_tx)
         Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
       end
 
-      it 'should calculate the total fee' do
+      it 'calculates the total fee' do
         Node.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
         expect(@block.total_fee).to eq(0.5)
       end
     end
 
     describe 'poll!' do
-      it 'should call poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!' do
+      it 'calls poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!' do
         node1 = create(:node_with_block, coin: :btc, version: 170_000)
         node2 = create(:node_with_block, coin: :btc, version: 160_000)
         node3 = create(:node_with_block, coin: :bch)
@@ -823,7 +822,7 @@ RSpec.describe Node, type: :model do
     end
 
     describe 'poll_repeat!' do
-      it 'should call poll!' do
+      it 'calls poll!' do
         expect(Node).to receive(:poll!).with({ repeat: true, coins: ['BTC'] })
 
         Node.poll_repeat!({ coins: ['BTC'] })
@@ -848,7 +847,7 @@ RSpec.describe Node, type: :model do
         @node.mirror_client.invalidateblock(@block_hash)
       end
 
-      it 'should restore network and reconsider blocks' do
+      it 'restores network and reconsider blocks' do
         expect(@node.mirror_client).to receive('setnetworkactive').with(true)
         expect(@node.mirror_client).to receive('reconsiderblock').with(@block_hash)
         @node.restore_mirror
@@ -865,17 +864,17 @@ RSpec.describe Node, type: :model do
         allow(Chaintip).to receive(:validate_forks!).and_return nil
       end
 
-      it 'should check inflation' do
+      it 'checks inflation' do
         expect(InflatedBlock).to receive(:check_inflation!).with({ coin: :btc, max: 10 })
         Node.rollback_checks_repeat!({ coins: ['BTC'] })
       end
 
-      it 'should check for valid-headers chaintips' do
+      it 'checks for valid-headers chaintips' do
         expect(Chaintip).to receive(:validate_forks!)
         Node.rollback_checks_repeat!({ coins: ['BTC'] })
       end
 
-      it 'should call find_missing' do
+      it 'calls find_missing' do
         expect(Block).to receive(:find_missing).with(:btc, 40_000, 20)
         Node.rollback_checks_repeat!({ coins: ['BTC'] })
       end
@@ -894,29 +893,29 @@ RSpec.describe Node, type: :model do
         allow(Softfork).to receive(:notify!).and_return true
       end
 
-      it 'should run Lightning checks, on BTC only' do
+      it 'runs Lightning checks, on BTC only' do
         expect(LightningTransaction).to receive(:check!).with({ coin: :btc, max: 1000 })
         expect(LightningTransaction).not_to receive(:check!).with({ coin: :tbtc, max: 1000 })
 
         Node.heavy_checks_repeat!({ coins: %w[BTC TBTC] })
       end
 
-      it 'should call check_public_channels!' do
+      it 'calls check_public_channels!' do
         expect(LightningTransaction).to receive(:check_public_channels!)
         Node.heavy_checks_repeat!({ coins: ['BTC'] })
       end
 
-      it 'should call match_missing_pools!' do
+      it 'calls match_missing_pools!' do
         expect(Block).to receive(:match_missing_pools!).with(:btc, 3)
         Node.heavy_checks_repeat!({ coins: ['BTC'] })
       end
 
-      it 'should call process_stale_candidates' do
+      it 'calls process_stale_candidates' do
         expect(StaleCandidate).to receive(:process!).with(:btc)
         Node.heavy_checks_repeat!({ coins: ['BTC'] })
       end
 
-      it 'should call process_templates' do
+      it 'calls process_templates' do
         expect(Block).to receive(:process_templates!).with(:btc)
         Node.heavy_checks_repeat!({ coins: ['BTC'] })
       end
@@ -928,7 +927,7 @@ RSpec.describe Node, type: :model do
         allow(Node).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
       end
 
-      it 'should call getblocktemplate' do
+      it 'calls getblocktemplate' do
         expect(Node).to receive(:getblocktemplate!).with(:btc)
 
         Node.getblocktemplate_repeat!({ coins: ['BTC'] })
@@ -946,7 +945,7 @@ RSpec.describe Node, type: :model do
         @B.poll!
       end
 
-      it 'should call check_if_behind! against the newest node' do
+      it 'calls check_if_behind! against the newest node' do
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original { |relation|
           relation.call.each do |record|
             if record.id == @A.id
@@ -971,7 +970,7 @@ RSpec.describe Node, type: :model do
         @B.poll!
       end
 
-      it 'should call check! on Chaintip and on InvalidBlock' do
+      it 'calls check! on Chaintip and on InvalidBlock' do
         expect(Chaintip).to receive(:check!).with(:btc, [@A, @B])
         expect(InvalidBlock).to receive(:check!)
         Node.check_chaintips!(:btc)
@@ -991,7 +990,7 @@ RSpec.describe Node, type: :model do
         @B.poll!
       end
 
-      it 'should call find_ancestors! with the newest node' do
+      it 'calls find_ancestors! with the newest node' do
         expect(Node).to receive(:bitcoin_core_by_version).and_wrap_original { |relation|
           relation.call.each do |record|
             if record.id == @A.id
@@ -1018,16 +1017,16 @@ RSpec.describe Node, type: :model do
         @B.poll!
       end
 
-      it 'should be called with an known coin' do
+      it 'is called with an known coin' do
         expect { Node.first_with_txindex(:bbbbbbtc) }.to raise_error Node::InvalidCoinError
       end
 
-      it 'should throw if no node has txindex' do
+      it 'throws if no node has txindex' do
         @B.update txindex: false
         expect { Node.first_with_txindex(:btc) }.to raise_error Node::NoTxIndexError
       end
 
-      it 'should return node' do
+      it 'returns node' do
         expect(Node.first_with_txindex(:btc)).to eq(@B)
       end
     end
@@ -1041,7 +1040,7 @@ RSpec.describe Node, type: :model do
         @A.poll!
       end
 
-      it 'should call getrawtransaction on a node with txindex' do
+      it 'calls getrawtransaction on a node with txindex' do
         expect(Node).to receive(:first_with_txindex).with(:btc).and_return @A
         expect(@A).to receive(:getrawtransaction).with(@tx_id, false, nil)
         Node.getrawtransaction(@tx_id, :btc)

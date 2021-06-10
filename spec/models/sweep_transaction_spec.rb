@@ -43,12 +43,12 @@ RSpec.describe SweepTransaction, type: :model do
       @parsed_block.tx.append(@sweep_tx_2)
     end
 
-    it 'should find sweep transactions' do
+    it 'finds sweep transactions' do
       SweepTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.count).to eq(3)
     end
 
-    it 'should find sweep transactions with two sweep inputs' do
+    it 'finds sweep transactions with two sweep inputs' do
       SweepTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.tx_id).to eq(@sweep_tx_1.hash)
       expect(LightningTransaction.first.input).to eq(0)
@@ -57,20 +57,20 @@ RSpec.describe SweepTransaction, type: :model do
       expect(LightningTransaction.second.input).to eq(1)
     end
 
-    it 'should find transactions with one sweep and one non-sweep input' do
+    it 'finds transactions with one sweep and one non-sweep input' do
       SweepTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.third.tx_id).to eq(@sweep_tx_2.hash)
       expect(LightningTransaction.third.input).to eq(1)
       expect(LightningTransaction.third.raw_tx).to eq(@raw_tx_2)
     end
 
-    it 'should set the amount based on the output' do
+    it 'sets the amount based on the output' do
       SweepTransaction.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(0.00001002)
       expect(LightningTransaction.second.amount).to eq(0.00001001)
     end
 
-    it 'should find opening transaction' do
+    it 'finds opening transaction' do
       skip
     end
   end

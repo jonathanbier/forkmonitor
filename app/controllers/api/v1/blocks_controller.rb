@@ -2,12 +2,12 @@
 
 module Api
   module V1
-    class BlocksController < ApplicationController
+    class BlocksController < ApplicationController # rubocop:todo Style/Documentation
       before_action :authenticate_user!, only: :show
       before_action :set_coin, only: :max_height
 
       # List of blocks, Bitcoin only
-      def index
+      def index # rubocop:todo Metrics/AbcSize
         respond_to do |format|
           format.json do
             @range = JSON.parse(params['range'])
