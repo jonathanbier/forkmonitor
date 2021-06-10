@@ -28,6 +28,7 @@ before_script:
   - bundle exec rake db:create RAILS_ENV=test
   - bundle exec rake db:schema:load RAILS_ENV=test
 script:
+  - bundle exec rubocop
   - bundle exec rake
   - npm test
   - npm run coveralls || echo "push to coveralls failed"
