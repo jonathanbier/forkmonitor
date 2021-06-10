@@ -24,16 +24,6 @@ namespace 'blocks' do
     end
   end
 
-  desc 'Fetch known pool list'
-  task :fetch_pool_names do |_action|
-    puts 'Fetching known pool names from blockchain.com...'
-    response = Net::HTTP.get(URI('https://raw.githubusercontent.com/blockchain/Blockchain-Known-Pools/master/pools.json'))
-    pools = JSON.parse(response)
-    pools['coinbase_tags'].sort.each do |key, value|
-      puts "\"#{key}\" => \"#{value['name']}\","
-    end
-  end
-
   desc 'Match missing pools [coin] [n]'
   task :match_missing_pools, %i[coin n] => :environment do |_action, args|
     Block.match_missing_pools!(args.coin.downcase.to_sym, args.n.to_i)
