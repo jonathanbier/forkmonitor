@@ -40,3 +40,7 @@ RSpec/InstanceVariable:
 # Prefer allow over expect when configuring a response.
 RSpec/StubbedMock:
   Enabled: false
+
+Rails/RakeEnvironment:
+  Exclude:
+    - 'lib/capistrano/tasks/*'
