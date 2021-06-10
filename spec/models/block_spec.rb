@@ -17,29 +17,29 @@ RSpec.describe Block, type: :model do
     stub_const('BitcoinClient::TimeOutError', BitcoinClientPython::TimeOutError)
     stub_const('BitcoinClient::BlockNotFoundError', BitcoinClientPython::BlockNotFoundError)
     test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
-    @nodeA = create(:node_python_with_mirror)
-    @nodeA.client.set_python_node(test.nodes[0])
-    @nodeA.mirror_client.set_python_node(test.nodes[1])
+    @node_a = create(:node_python_with_mirror)
+    @node_a.client.set_python_node(test.nodes[0])
+    @node_a.mirror_client.set_python_node(test.nodes[1])
 
-    @nodeB = create(:node_python)
-    @nodeB.client.set_python_node(test.nodes[2])
-    @nodeA.client.generate(2)
+    @node_b = create(:node_python)
+    @node_b.client.set_python_node(test.nodes[2])
+    @node_a.client.generate(2)
     test.sync_blocks
 
-    @nodeA.poll!
-    @nodeA.poll_mirror!
-    @nodeA.reload
-    assert_equal(@nodeA.block.height, 2)
-    assert_equal(@nodeA.mirror_block.height, 2)
+    @node_a.poll!
+    @node_a.poll_mirror!
+    @node_a.reload
+    assert_equal(@node_a.block.height, 2)
+    assert_equal(@node_a.mirror_block.height, 2)
 
-    @nodeB.poll!
-    @nodeB.reload
-    assert_equal(@nodeB.block.height, 2)
+    @node_b.poll!
+    @node_b.reload
+    assert_equal(@node_b.block.height, 2)
 
     assert_equal(Chaintip.count, 0)
 
-    allow(Node).to receive(:with_mirror).with(:btc).and_return [@nodeA]
-    allow(Node).to receive(:bitcoin_core_by_version).and_return [@nodeA, @nodeB]
+    allow(Node).to receive(:with_mirror).with(:btc).and_return [@node_a]
+    allow(Node).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]
   end
 
   after do
@@ -132,36 +132,34 @@ RSpec.describe Block, type: :model do
   end
 
   describe 'maximum_inflation' do
-    COIN = 100_000_000
-
     it 'is 12.5 for BTC in mid 2019' do
       @block = build(:block, height: 596_808)
-      expect(@block.max_inflation).to eq(12.5 * COIN)
+      expect(@block.max_inflation).to eq(12.5 * Block::COIN)
     end
 
     it 'is 50 for BTC in 2009' do
       @block = build(:block, height: 100)
-      expect(@block.max_inflation).to eq(50 * COIN)
+      expect(@block.max_inflation).to eq(50 * Block::COIN)
     end
 
     it 'is 12.5 for BTC immediately before the 2020 halving' do
       @block = build(:block, height: 629_999)
-      expect(@block.max_inflation).to eq(12.5 * COIN)
+      expect(@block.max_inflation).to eq(12.5 * Block::COIN)
     end
 
     it 'is 6.25 for BTC at the 2020 halving' do
       @block = build(:block, height: 630_000)
-      expect(@block.max_inflation).to eq(6.25 * COIN)
+      expect(@block.max_inflation).to eq(6.25 * Block::COIN)
     end
 
     it 'is 0.00000009 for BTC at height 6090000' do
       @block = build(:block, height: 6_090_000)
-      expect(@block.max_inflation).to eq(0.00000009 * COIN)
+      expect(@block.max_inflation).to eq(0.00000009 * Block::COIN)
     end
 
     it 'is 0 for BTC as of height 6930000' do
       @block = build(:block, height: 6_930_000)
-      expect(@block.max_inflation).to eq(0.00000000 * COIN)
+      expect(@block.max_inflation).to eq(0.00000000 * Block::COIN)
     end
 
     it 'creates slightly less than 21 million BTC' do
@@ -173,7 +171,7 @@ RSpec.describe Block, type: :model do
         coins += 1000 * @block.max_inflation
         i += 1000
       end
-      expect(coins).to eq(20_999_999.9769 * COIN)
+      expect(coins).to eq(20_999_999.9769 * Block::COIN)
     end
   end
 
@@ -182,10 +180,10 @@ RSpec.describe Block, type: :model do
       # A -> B1 -> C1 -> D1
       #   -> B2
       @a = create(:block)
-      @b1 = create(:block, parent: @a)
-      @b2 = create(:block, parent: @a)
-      @c1 = create(:block, parent: @b1)
-      @d1 = create(:block, parent: @c1)
+      @b_1 = create(:block, parent: @a)
+      @b_2 = create(:block, parent: @a)
+      @c_1 = create(:block, parent: @b_1)
+      @d_1 = create(:block, parent: @c_1)
     end
 
     it 'does not return itself' do
@@ -193,12 +191,12 @@ RSpec.describe Block, type: :model do
     end
 
     it 'returns all blocks descending' do
-      expect(@b1.descendants).to include(@c1)
-      expect(@b1.descendants).to include(@d1)
+      expect(@b_1.descendants).to include(@c_1)
+      expect(@b_1.descendants).to include(@d_1)
     end
 
     it "does not return blocks that don't descend from it" do
-      expect(@b2.descendants).not_to include(@c1)
+      expect(@b_2.descendants).not_to include(@c_1)
     end
   end
 
@@ -207,11 +205,11 @@ RSpec.describe Block, type: :model do
       # A -> B1 -> C1 -> D1
       #   -> B2 -> C2
       @a = create(:block)
-      @b1 = create(:block, parent: @a)
-      @b2 = create(:block, parent: @a)
-      @c1 = create(:block, parent: @b1)
-      @c2 = create(:block, parent: @b2)
-      @d1 = create(:block, parent: @c1)
+      @b_1 = create(:block, parent: @a)
+      @b_2 = create(:block, parent: @a)
+      @c_1 = create(:block, parent: @b_1)
+      @c_2 = create(:block, parent: @b_2)
+      @d_1 = create(:block, parent: @c_1)
     end
 
     it 'fails if comparing to self' do
@@ -219,13 +217,13 @@ RSpec.describe Block, type: :model do
     end
 
     it 'fails if comparing on same branch' do
-      expect { @b1.branch_start(@c1) }.to raise_error('same branch')
-      expect { @c1.branch_start(@d1) }.to raise_error('same branch')
+      expect { @b_1.branch_start(@c_1) }.to raise_error('same branch')
+      expect { @c_1.branch_start(@d_1) }.to raise_error('same branch')
     end
 
     it 'finds the branch start' do
-      expect(@d1.branch_start(@c2)).to eq(@b1)
-      expect(@c2.branch_start(@d1)).to eq(@b2)
+      expect(@d_1.branch_start(@c_2)).to eq(@b_1)
+      expect(@c_2.branch_start(@d_1)).to eq(@b_2)
     end
   end
 
@@ -235,7 +233,7 @@ RSpec.describe Block, type: :model do
     end
 
     it 'fetches transactions for the block' do
-      expect(Block).to receive(:find_by).and_call_original # Sanity check for later test
+      expect(described_class).to receive(:find_by).and_call_original # Sanity check for later test
       @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
                               first_seen_by: @node)
       @block.fetch_transactions! # Mock client knows one transaction for this block
@@ -243,7 +241,7 @@ RSpec.describe Block, type: :model do
     end
 
     it 'does not fetch twice' do
-      expect(Block).to receive(:find_by).once.and_call_original
+      expect(described_class).to receive(:find_by).once.and_call_original
       @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
                               first_seen_by: @node)
       @block.fetch_transactions!
@@ -262,7 +260,7 @@ RSpec.describe Block, type: :model do
       @block = create(:block, block_hash: '0000000000000000000000000000000000000000000000000000000000000001',
                               first_seen_by: @node)
       @block.fetch_transactions!
-      expect(Block).to receive(:find_by).and_call_original
+      expect(described_class).to receive(:find_by).and_call_original
       expect { @block.fetch_transactions! }.to raise_error Node::NoMatchingNodeError
     end
   end
@@ -294,17 +292,17 @@ RSpec.describe Block, type: :model do
     end
 
     it 'stores the version' do
-      @block = Block.create_or_update_with(@block_info, false, @node, true)
+      @block = described_class.create_or_update_with(@block_info, false, @node, true)
       expect(@block.version).to eq(536_870_912)
     end
 
     it 'stores number of transactions' do
-      @block = Block.create_or_update_with(@block_info, false, @node, true)
+      @block = described_class.create_or_update_with(@block_info, false, @node, true)
       expect(@block.tx_count).to eq(3024)
     end
 
     it 'stores size' do
-      @block = Block.create_or_update_with(@block_info, false, @node, true)
+      @block = described_class.create_or_update_with(@block_info, false, @node, true)
       expect(@block.size).to eq(1_328_797)
     end
   end
@@ -316,34 +314,34 @@ RSpec.describe Block, type: :model do
       test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
       test.disconnect_nodes(0, 2) # disconnect A from B
       test.disconnect_nodes(1, 2) # disconnect A' from B
-      assert_equal(0, @nodeA.client.getpeerinfo.count)
-      assert_equal(0, @nodeA.mirror_client.getpeerinfo.count)
+      assert_equal(0, @node_a.client.getpeerinfo.count)
+      assert_equal(0, @node_a.mirror_client.getpeerinfo.count)
 
-      @nodeA.client.generate(1) # this active, but changes to valid-fork after reconnect
-      @nodeB.client.generate(2) # active one node B
-      @nodeA.poll!
-      @nodeB.poll!
+      @node_a.client.generate(1) # this active, but changes to valid-fork after reconnect
+      @node_b.client.generate(2) # active one node B
+      @node_a.poll!
+      @node_b.poll!
       test.connect_nodes(0, 1)
       test.connect_nodes(0, 2)
       test.connect_nodes(1, 2)
 
       test.sync_blocks
 
-      chaintipsA = @nodeA.client.getchaintips
-      Rails.logger.info chaintipsA
+      chaintips_a = @node_a.client.getchaintips
+      Rails.logger.info chaintips_a
 
-      expect(chaintipsA.length).to eq(2)
-      expect(chaintipsA[-1]['status']).to eq('valid-fork')
+      expect(chaintips_a.length).to eq(2)
+      expect(chaintips_a[-1]['status']).to eq('valid-fork')
 
-      Chaintip.check!(:btc, [@nodeA])
-      @valid_fork_block = Block.find_by(block_hash: chaintipsA[-1]['hash'])
+      Chaintip.check!(:btc, [@node_a])
+      @valid_fork_block = described_class.find_by(block_hash: chaintips_a[-1]['hash'])
     end
 
     it "changes the mirror's active chaintip" do
-      @valid_fork_block.make_active_on_mirror!(@nodeA)
-      chaintipsA = @nodeA.mirror_client.getchaintips
-      expect(chaintipsA[1]['status']).to eq('active')
-      expect(chaintipsA[1]['hash']).to eq(@valid_fork_block.block_hash)
+      @valid_fork_block.make_active_on_mirror!(@node_a)
+      chaintips_a = @node_a.mirror_client.getchaintips
+      expect(chaintips_a[1]['status']).to eq('active')
+      expect(chaintips_a[1]['hash']).to eq(@valid_fork_block.block_hash)
     end
   end
 
@@ -354,60 +352,60 @@ RSpec.describe Block, type: :model do
       test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
       test.disconnect_nodes(0, 2) # disconnect A from B
       test.disconnect_nodes(1, 2) # disconnect A' from B
-      assert_equal(0, @nodeA.client.getpeerinfo.count)
-      assert_equal(0, @nodeA.mirror_client.getpeerinfo.count)
+      assert_equal(0, @node_a.client.getpeerinfo.count)
+      assert_equal(0, @node_a.mirror_client.getpeerinfo.count)
 
-      @nodeA.client.generate(2) # this is and remains active
-      @nodeB.client.generate(1) # Node A will see this as valid-headers after reconnect
-      @nodeA.poll!
-      @nodeB.poll!
+      @node_a.client.generate(2) # this is and remains active
+      @node_b.client.generate(1) # Node A will see this as valid-headers after reconnect
+      @node_a.poll!
+      @node_b.poll!
       test.connect_nodes(0, 1)
       test.connect_nodes(0, 2)
       test.connect_nodes(1, 2)
 
       test.sync_blocks
 
-      chaintipsA = @nodeA.client.getchaintips
+      chaintips_a = @node_a.client.getchaintips
 
-      expect(chaintipsA.length).to eq(2)
-      expect(chaintipsA[-1]['status']).to eq('headers-only')
-      @block = Block.find_by(block_hash: chaintipsA[-1]['hash'])
+      expect(chaintips_a.length).to eq(2)
+      expect(chaintips_a[-1]['status']).to eq('headers-only')
+      @block = described_class.find_by(block_hash: chaintips_a[-1]['hash'])
     end
 
     it 'skips if the node already marked it as (in)valid' do
-      @block.update marked_valid_by: [@nodeA.id]
+      @block.update marked_valid_by: [@node_a.id]
       expect(@block).not_to receive(:make_active_on_mirror!)
-      @block.validate_fork!(@nodeA)
+      @block.validate_fork!(@node_a)
     end
 
     it "skips if the node doesn't have a mirror" do
-      @nodeA.update mirror_rpchost: nil
+      @node_a.update mirror_rpchost: nil
       expect(@block).not_to receive(:make_active_on_mirror!)
-      @block.validate_fork!(@nodeA)
+      @block.validate_fork!(@node_a)
     end
 
     it "skips if the mirror node doesn't have the block" do
-      expect { @nodeA.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
+      expect { @node_a.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
     end
 
     describe 'when mirror client has block' do
       before do
-        assert_equal(@nodeA.mirror_client.submitblock(@nodeB.client.getblock(@block.block_hash, 0)), 'inconclusive')
+        assert_equal(@node_a.mirror_client.submitblock(@node_b.client.getblock(@block.block_hash, 0)), 'inconclusive')
       end
 
       it 'rolls the mirror back' do
-        expect(@block).to receive(:make_active_on_mirror!).with(@nodeA).and_call_original
-        @block.validate_fork!(@nodeA)
+        expect(@block).to receive(:make_active_on_mirror!).with(@node_a).and_call_original
+        @block.validate_fork!(@node_a)
       end
 
       it 'marks the block as considered valid' do
-        @block.validate_fork!(@nodeA)
-        expect(@block.marked_valid_by).to include(@nodeA.id)
+        @block.validate_fork!(@node_a)
+        expect(@block.marked_valid_by).to include(@node_a.id)
       end
 
       it 'rolls the mirror forward' do
-        expect(@nodeA.mirror_client).to receive(:reconsiderblock)
-        @block.validate_fork!(@nodeA)
+        expect(@node_a.mirror_client).to receive(:reconsiderblock)
+        @block.validate_fork!(@node_a)
       end
     end
   end
@@ -455,7 +453,7 @@ RSpec.describe Block, type: :model do
         'blocktime' => 1_562_242_070
       }
 
-      expect(Block.pool_from_coinbase_tx(tx)).to eq('Antpool')
+      expect(described_class.pool_from_coinbase_tx(tx)).to eq('Antpool')
     end
 
     it 'finds F2Pool' do
@@ -469,7 +467,7 @@ RSpec.describe Block, type: :model do
         ]
       }
 
-      expect(Block.pool_from_coinbase_tx(tx)).to eq('F2Pool')
+      expect(described_class.pool_from_coinbase_tx(tx)).to eq('F2Pool')
     end
   end
 
@@ -479,34 +477,34 @@ RSpec.describe Block, type: :model do
     end
 
     it 'marks block as headers_only' do
-      block = Block.create_headers_only(@node, 560_182,
-                                        '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
+      block = described_class.create_headers_only(@node, 560_182,
+                                                  '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.headers_only).to eq(true)
     end
 
     it 'sets first seen by' do
-      block = Block.create_headers_only(@node, 560_182,
-                                        '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
+      block = described_class.create_headers_only(@node, 560_182,
+                                                  '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.first_seen_by).to eq(@node)
     end
 
     it 'is updated by find_or_create_by' do
       allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
-      block = Block.create_headers_only(@node, 560_182,
-                                        '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
-      Block.create_or_update_with({
-                                    'hash' => '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
-                                    'height' => 560_182,
-                                    'nTx' => 3
-                                  }, false, @node, nil)
+      block = described_class.create_headers_only(@node, 560_182,
+                                                  '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
+      described_class.create_or_update_with({
+                                              'hash' => '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377',
+                                              'height' => 560_182,
+                                              'nTx' => 3
+                                            }, false, @node, nil)
       block.reload
       expect(block.headers_only).to eq(false)
       expect(block.tx_count).to eq(3)
     end
 
     it 'has a valid summary' do
-      block = Block.create_headers_only(@node, 560_182,
-                                        '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
+      block = described_class.create_headers_only(@node, 560_182,
+                                                  '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.summary(time: true,
                            first_seen_by: true)).to eq('0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377 (10:57:31 by unknown pool, first seen by Bitcoin Core 0.17.1)')
     end
@@ -519,41 +517,41 @@ RSpec.describe Block, type: :model do
       test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
       test.disconnect_nodes(0, 2) # disconnect A from B
       test.disconnect_nodes(1, 2) # disconnect A' from B
-      assert_equal(0, @nodeA.client.getpeerinfo.count)
-      assert_equal(0, @nodeA.mirror_client.getpeerinfo.count)
+      assert_equal(0, @node_a.client.getpeerinfo.count)
+      assert_equal(0, @node_a.mirror_client.getpeerinfo.count)
 
-      @nodeA.client.generate(2) # this is and remains active
-      @nodeB.client.generate(1) # Node A will see this as valid-headers after reconnect
-      @nodeA.poll!
+      @node_a.client.generate(2) # this is and remains active
+      @node_b.client.generate(1) # Node A will see this as valid-headers after reconnect
+      @node_a.poll!
       test.connect_nodes(0, 1)
       test.connect_nodes(0, 2)
       test.connect_nodes(1, 2)
 
       test.sync_blocks
 
-      chaintipsA = @nodeA.client.getchaintips
+      chaintips_a = @node_a.client.getchaintips
 
-      expect(chaintipsA.length).to eq(2)
-      expect(chaintipsA[-1]['status']).to eq('headers-only')
+      expect(chaintips_a.length).to eq(2)
+      expect(chaintips_a[-1]['status']).to eq('headers-only')
 
-      Chaintip.check!(:btc, [@nodeA])
-      @headers_only_block = Block.find_by(block_hash: chaintipsA[-1]['hash'])
+      Chaintip.check!(:btc, [@node_a])
+      @headers_only_block = described_class.find_by(block_hash: chaintips_a[-1]['hash'])
       expect(@headers_only_block.headers_only).to eq(true)
     end
 
     it 'obtains block from other node if available' do
-      Block.find_missing(:btc, 1, 1)
+      described_class.find_missing(:btc, 1, 1)
       @headers_only_block.reload
       expect(@headers_only_block.headers_only).to eq(false)
-      expect(@headers_only_block.first_seen_by).to eq(@nodeB)
+      expect(@headers_only_block.first_seen_by).to eq(@node_b)
     end
 
     it 'submits block to original node' do
       expect do
-        @nodeA.client.getblock(@headers_only_block.block_hash, 1)
+        @node_a.client.getblock(@headers_only_block.block_hash, 1)
       end.to raise_error(BitcoinClient::BlockNotFoundError)
-      Block.find_missing(:btc, 1, 1)
-      res = @nodeA.client.getblock(@headers_only_block.block_hash, 1)
+      described_class.find_missing(:btc, 1, 1)
+      res = @node_a.client.getblock(@headers_only_block.block_hash, 1)
       expect(res['confirmations']).to eq(-1)
     end
   end

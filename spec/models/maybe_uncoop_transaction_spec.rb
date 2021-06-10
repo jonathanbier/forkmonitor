@@ -12,7 +12,7 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
     expect(Block.maximum(:height)).to eq(560_176)
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
 
-    allow(MaybeUncoopTransaction).to receive(:check!).and_return nil
+    allow(described_class).to receive(:check!).and_return nil
 
     # throw the first time for lacking a previously checked block
     expect do
@@ -26,9 +26,9 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
 
   describe 'self.check!' do
     before do
-      allow(MaybeUncoopTransaction).to receive(:check!).and_call_original
-      allow_any_instance_of(MaybeUncoopTransaction).to receive(:get_opening_tx_id_and_block_hash!).and_return '5cc28d4a2deeb4e6079c649645e36a1e2813605f65fdea242afb70d7677c1e03',
-                                                                                                              '0000000000000000001a93e4264f21d6c2c525c09130074ec81eb9980bcc08c0'
+      allow(described_class).to receive(:check!).and_call_original
+      allow_any_instance_of(described_class).to receive(:get_opening_tx_id_and_block_hash!).and_return '5cc28d4a2deeb4e6079c649645e36a1e2813605f65fdea242afb70d7677c1e03',
+                                                                                                       '0000000000000000001a93e4264f21d6c2c525c09130074ec81eb9980bcc08c0'
       @block = Block.find_by(height: 560_177)
       raw_block = @node.client.getblock(@block.block_hash, 0)
       @parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
@@ -40,16 +40,16 @@ RSpec.describe MaybeUncoopTransaction, type: :model do
     end
 
     it 'finds uncooperative closing transactions' do
-      MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
-      expect(MaybeUncoopTransaction.count).to eq(1)
-      expect(MaybeUncoopTransaction.first.tx_id).to eq(@uncoop_tx.hash)
-      expect(MaybeUncoopTransaction.first.input).to eq(0)
-      expect(MaybeUncoopTransaction.first.raw_tx).to eq(@raw_tx)
+      described_class.check!(@node, @block, @parsed_block)
+      expect(described_class.count).to eq(1)
+      expect(described_class.first.tx_id).to eq(@uncoop_tx.hash)
+      expect(described_class.first.input).to eq(0)
+      expect(described_class.first.raw_tx).to eq(@raw_tx)
     end
 
     it 'sets the amount based on the output' do
-      MaybeUncoopTransaction.check!(@node, @block, @parsed_block)
-      expect(MaybeUncoopTransaction.first.amount).to eq(0.00396375)
+      described_class.check!(@node, @block, @parsed_block)
+      expect(described_class.first.amount).to eq(0.00396375)
     end
 
     it 'finds opening transaction' do

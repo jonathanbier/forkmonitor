@@ -12,7 +12,7 @@ RSpec.describe SweepTransaction, type: :model do
     expect(Block.maximum(:height)).to eq(560_176)
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node]
 
-    allow(SweepTransaction).to receive(:check!).and_return nil
+    allow(described_class).to receive(:check!).and_return nil
 
     # throw the first time for lacking a previously checked block
     expect do
@@ -26,8 +26,8 @@ RSpec.describe SweepTransaction, type: :model do
 
   describe 'self.check!' do
     before do
-      allow(SweepTransaction).to receive(:check!).and_call_original
-      allow_any_instance_of(SweepTransaction).to receive(:get_opening_tx_id_and_block_hash!).and_return nil
+      allow(described_class).to receive(:check!).and_call_original
+      allow_any_instance_of(described_class).to receive(:get_opening_tx_id_and_block_hash!).and_return nil
       @block = Block.find_by(height: 560_177)
       raw_block = @node.client.getblock(@block.block_hash, 0)
       @parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
@@ -44,12 +44,12 @@ RSpec.describe SweepTransaction, type: :model do
     end
 
     it 'finds sweep transactions' do
-      SweepTransaction.check!(@node, @block, @parsed_block)
+      described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.count).to eq(3)
     end
 
     it 'finds sweep transactions with two sweep inputs' do
-      SweepTransaction.check!(@node, @block, @parsed_block)
+      described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.tx_id).to eq(@sweep_tx_1.hash)
       expect(LightningTransaction.first.input).to eq(0)
       expect(LightningTransaction.first.raw_tx).to eq(@raw_tx_1)
@@ -58,14 +58,14 @@ RSpec.describe SweepTransaction, type: :model do
     end
 
     it 'finds transactions with one sweep and one non-sweep input' do
-      SweepTransaction.check!(@node, @block, @parsed_block)
+      described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.third.tx_id).to eq(@sweep_tx_2.hash)
       expect(LightningTransaction.third.input).to eq(1)
       expect(LightningTransaction.third.raw_tx).to eq(@raw_tx_2)
     end
 
     it 'sets the amount based on the output' do
-      SweepTransaction.check!(@node, @block, @parsed_block)
+      described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(0.00001002)
       expect(LightningTransaction.second.amount).to eq(0.00001001)
     end

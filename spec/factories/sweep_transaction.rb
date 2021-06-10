@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :sweep_transaction do
-  end
+  factory :sweep_transaction
 
   factory :sweep_transaction_public, parent: :sweep_transaction do
     association :block, factory: :lightning_block

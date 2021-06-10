@@ -12,8 +12,8 @@ RSpec.describe Softfork, type: :model do
         'softforks' => {
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(0)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(0)
     end
 
     it 'adds an active bip9 softfork' do
@@ -30,16 +30,16 @@ RSpec.describe Softfork, type: :model do
           }
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
 
       # If a softfork status is not "defined" when a node is first polled, consider
       # it a status change and send notification:
-      expect(Softfork.first.notified_at).to be_nil
+      expect(described_class.first.notified_at).to be_nil
 
       # And not more than once
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
     end
 
     it 'handles a status update' do
@@ -56,11 +56,11 @@ RSpec.describe Softfork, type: :model do
           }
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
-      expect(Softfork.first.status).to eq('defined')
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
+      expect(described_class.first.status).to eq('defined')
       # Don't notify when status is defined
-      expect(Softfork.first.notified_at).not_to be_nil
+      expect(described_class.first.notified_at).not_to be_nil
 
       blockchaininfo = {
         'chain' => 'main',
@@ -75,11 +75,11 @@ RSpec.describe Softfork, type: :model do
           }
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
-      expect(Softfork.first.status).to eq('active')
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
+      expect(described_class.first.status).to eq('active')
       # Status change should trigger notification
-      expect(Softfork.first.notified_at).to be_nil
+      expect(described_class.first.notified_at).to be_nil
     end
 
     it 'parses pre 0.19 format' do
@@ -93,12 +93,12 @@ RSpec.describe Softfork, type: :model do
           }
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
 
       # And not more than once
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(1)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(1)
     end
 
     it 'ignores burried softforks' do
@@ -112,8 +112,8 @@ RSpec.describe Softfork, type: :model do
           }
         }
       }
-      Softfork.process(node, blockchaininfo)
-      expect(Softfork.count).to eq(0)
+      described_class.process(node, blockchaininfo)
+      expect(described_class.count).to eq(0)
     end
   end
 end

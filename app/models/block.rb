@@ -11,6 +11,8 @@ class Block < ApplicationRecord
     bch: 581_000
   }.freeze
 
+  COIN = 100_000_000
+
   class RollbackError < StandardError; end
 
   has_many :children, class_name: 'Block', foreign_key: 'parent_id'

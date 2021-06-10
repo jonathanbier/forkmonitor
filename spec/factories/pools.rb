@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :pool do
-  end
+  factory :pool
 
   factory :antpool, parent: :pool do
     tag { 'Mined by AntPool' }

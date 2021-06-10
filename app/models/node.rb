@@ -133,8 +133,8 @@ class Node < ApplicationRecord
                                                          tx_outset: tx_outset,
                                                          last_tx_outset: tx_outsets.last,
                                                          has_mirror_node: mirror_rpchost.present?,
-                                                         bip9_softforks: softforks.where(fork_type: :bip9),
-                                                         bip8_softforks: softforks.where(fork_type: :bip8)
+                                                         bip9_softforks: softforks.where(fork_type: :bip9), # rubocop:disable Naming/VariableNumber
+                                                         bip8_softforks: softforks.where(fork_type: :bip8) # rubocop:disable Naming/VariableNumber
                                                        })
   end
 

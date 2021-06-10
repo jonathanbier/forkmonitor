@@ -56,3 +56,9 @@ To run Javascript tests and monitor for changes:
 ```sh
 yarn test --watch
 ```
+
+## Test all the things and deploy
+
+```
+rubocop && yarn test && rake parallel:spec && git push && cap production deploy
+```

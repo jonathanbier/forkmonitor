@@ -17,8 +17,8 @@ RSpec.describe LightningTransaction, type: :model do
 
     # throw the first time for lacking a previously checked block
     expect do
-      LightningTransaction.check!({ coin: :btc,
-                                    max: 1 })
+      described_class.check!({ coin: :btc,
+                               max: 1 })
     end.to raise_error('Unable to perform lightning checks due to missing intermediate block')
     @node.client.mock_set_height(560_177)
     @node.poll!
@@ -46,33 +46,33 @@ RSpec.describe LightningTransaction, type: :model do
 
     it 'fetches the raw block' do
       expect(@node).to receive(:getblock).with(@block.block_hash, 0).and_call_original
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'calls PenaltyTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'calls SweepTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'calls MaybeUncoopTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'gracefullies fail if node connection is lost' do
       expect(@node).to receive(:getblock).and_raise(Node::ConnectionError)
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(false)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(false)
       @node.reload
       expect(@node.unreachable_since).not_to be_nil
     end
@@ -80,23 +80,23 @@ RSpec.describe LightningTransaction, type: :model do
     it 'retries if a partial result is returned' do
       expect(@node).to receive(:getblock).ordered.and_raise(Node::PartialFileError)
       expect(@node).to receive(:getblock).ordered.and_call_original
-      expect(LightningTransaction.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'gives up if a partial result is returned twice' do
       expect(@node).to receive(:getblock).twice.and_raise(Node::PartialFileError)
-      expect { LightningTransaction.check!(coin: :btc, max: 1) }.to raise_error(Node::PartialFileError)
+      expect { described_class.check!(coin: :btc, max: 1) }.to raise_error(Node::PartialFileError)
     end
   end
 
   describe 'check_public_channels!' do
-    let(:block1) { create(:lightning_block) }
-    let(:penalty_tx_public) { create(:penalty_transaction_public, block: block1) }
+    let(:block_1) { create(:lightning_block) }
+    let(:penalty_tx_public) { create(:penalty_transaction_public, block: block_1) }
     let(:penalty_tx_private) { create(:penalty_transaction_private) }
     let(:penalty_tx_private_2) do
-      create(:penalty_transaction_private, tx_id: 'fail', opening_tx_id: 'fail', block: block1)
+      create(:penalty_transaction_private, tx_id: 'fail', opening_tx_id: 'fail', block: block_1)
     end
-    let(:uncoop_tx) { create(:maybe_uncoop_transaction, block: block1) }
+    let(:uncoop_tx) { create(:maybe_uncoop_transaction, block: block_1) }
 
     before do
       stub_request(:post, 'https://1ml.com/search').with(
@@ -118,7 +118,7 @@ RSpec.describe LightningTransaction, type: :model do
       expect(penalty_tx_private_2.channel_is_public).to eq(nil)
       expect(uncoop_tx.channel_is_public).to eq(nil)
 
-      LightningTransaction.check_public_channels!
+      described_class.check_public_channels!
       penalty_tx_public.reload
       penalty_tx_private.reload
       uncoop_tx.reload

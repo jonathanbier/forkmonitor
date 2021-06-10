@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   root to: 'pages#root'
 
   namespace :api, { format: %w[json csv] } do
-    namespace :v1 do
+    namespace :v1 do # rubocop:disable Naming/VariableNumber
       get '/blocks/:coin/max_height', to: 'blocks#max_height', as: 'api_max_height_for_coin'
       get '/blocks/hash/:block_hash', to: 'blocks#with_hash', as: 'api_block_with_hash'
       get '/nodes/coin/:coin', to: 'nodes#index_coin', as: 'api_nodes_for_coin'

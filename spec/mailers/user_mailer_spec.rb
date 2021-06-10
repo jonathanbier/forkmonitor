@@ -6,7 +6,7 @@ RSpec.describe UserMailer, type: :mailer do
   describe 'lag notify' do
     let(:user) { create(:user) }
     let(:lag) { create(:lag) }
-    let(:mail) { UserMailer.with(user: user, lag: lag).lag_email }
+    let(:mail) { described_class.with(user: user, lag: lag).lag_email }
 
     it 'renders the headers' do
       expect(mail.subject).to eq('[ForkMonitor] Bitcoin Core 0.10.3 is 1 blocks behind 170100')
@@ -27,11 +27,11 @@ RSpec.describe UserMailer, type: :mailer do
   describe 'invalid block notify' do
     let(:user) { create(:user) }
     let(:invalid_block) { create(:invalid_block) }
-    let(:node2) { create(:node_with_block, version: 160_300) }
-    let(:mail) { UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email }
+    let(:node_2) { create(:node_with_block, version: 160_300) }
+    let(:mail) { described_class.with(user: user, invalid_block: invalid_block).invalid_block_email }
 
     before do
-      invalid_block.block.update first_seen_by: node2, marked_valid_by: [node2.id]
+      invalid_block.block.update first_seen_by: node_2, marked_valid_by: [node_2.id]
     end
 
     it 'renders the headers' do
@@ -51,7 +51,7 @@ RSpec.describe UserMailer, type: :mailer do
   describe 'version bits notify' do
     let(:user) { create(:user) }
     let(:node) { create(:node_with_block) }
-    let(:mail) { UserMailer.with(user: user, bit: 1, tally: 2, window: 3, block: node.block).version_bits_email }
+    let(:mail) { described_class.with(user: user, bit: 1, tally: 2, window: 3, block: node.block).version_bits_email }
 
     it 'renders the headers' do
       expect(mail.subject).to eq("[ForkMonitor] version bit 1 was set 2 times between blocks #{node.block.height - 2} and #{node.block.height}")
@@ -65,12 +65,12 @@ RSpec.describe UserMailer, type: :mailer do
 
   describe 'stale candidate notify' do
     let(:user) { create(:user) }
-    let(:mail) { UserMailer.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
+    let(:mail) { described_class.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
     let(:stale_candidate) { create(:stale_candidate, coin: :btc, height: 500_000) }
 
     before do
-      @block1 = create(:block, height: 500_000)
-      @block2 = create(:block, height: 500_000)
+      @block_1 = create(:block, height: 500_000)
+      @block_2 = create(:block, height: 500_000)
     end
 
     it 'renders the headers' do
@@ -79,8 +79,8 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it 'renders the body' do
-      expect(mail.body.encoded).to include(@block1.block_hash)
-      expect(mail.body.encoded).to include(@block2.block_hash)
+      expect(mail.body.encoded).to include(@block_1.block_hash)
+      expect(mail.body.encoded).to include(@block_2.block_hash)
     end
   end
 end

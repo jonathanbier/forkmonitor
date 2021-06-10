@@ -2,7 +2,7 @@
 
 class Softfork < ApplicationRecord
   enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
-  enum fork_type: { bip9: 0, bip8: 1 }
+  enum fork_type: { bip9: 0, bip8: 1 } # rubocop:disable Naming/VariableNumber
   enum status: { defined: 0, started: 1, locked_in: 2, active: 3, failed: 4, must_signal: 5 }
   belongs_to :node
 
@@ -40,14 +40,14 @@ class Softfork < ApplicationRecord
         fork = Softfork.find_by(
           coin: :btc,
           node: node,
-          fork_type: :bip9,
+          fork_type: :bip9, # rubocop:disable Naming/VariableNumber
           name: key
         )
         if fork.nil?
           Softfork.create(
             coin: :btc,
             node: node,
-            fork_type: :bip9,
+            fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key,
             bit: nil,
             status: value['status'].to_sym,
@@ -66,18 +66,18 @@ class Softfork < ApplicationRecord
 
       blockchaininfo['softforks'].each do |key, value|
         if value['bip9'].present?
-          bip9 = value['bip9']
+          bip9 = value['bip9'] # rubocop:disable Naming/VariableNumber
           fork = Softfork.find_by(
             coin: :btc,
             node: node,
-            fork_type: :bip9,
+            fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key
           )
           if fork.nil?
             Softfork.create(
               coin: :btc,
               node: node,
-              fork_type: :bip9,
+              fork_type: :bip9, # rubocop:disable Naming/VariableNumber
               name: key,
               bit: bip9['bit'],
               status: bip9['status'].to_sym,
@@ -94,18 +94,18 @@ class Softfork < ApplicationRecord
         end
         next unless value['bip8'].present?
 
-        bip8 = value['bip8']
+        bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
         fork = Softfork.find_by(
           coin: :btc,
           node: node,
-          fork_type: :bip8,
+          fork_type: :bip8, # rubocop:disable Naming/VariableNumber
           name: key
         )
         if fork.nil?
           Softfork.create(
             coin: :btc,
             node: node,
-            fork_type: :bip8,
+            fork_type: :bip8, # rubocop:disable Naming/VariableNumber
             name: key,
             bit: bip8['bit'],
             status: bip8['status'].to_sym,

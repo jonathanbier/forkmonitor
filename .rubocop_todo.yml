@@ -6,41 +6,12 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 8
-# Configuration parameters: IgnoredMethods.
-Lint/AmbiguousBlockAssociation:
-  Exclude:
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-
 # Offense count: 3
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:
   Exclude:
     - 'app/models/block.rb'
     - 'app/models/node.rb'
-
-# Offense count: 1
-# Configuration parameters: AllowedMethods.
-# AllowedMethods: enums
-Lint/ConstantDefinitionInBlock:
-  Exclude:
-    - 'spec/models/block_spec.rb'
-
-# Offense count: 1
-Lint/DuplicateMethods:
-  Exclude:
-    - 'app/services/bitcoin_client_python.rb'
-
-# Offense count: 5
-# Configuration parameters: AllowComments, AllowEmptyLambdas.
-Lint/EmptyBlock:
-  Exclude:
-    - 'spec/factories/penalty_transaction.rb'
-    - 'spec/factories/pools.rb'
-    - 'spec/factories/sweep_transaction.rb'
-    - 'spec/models/block_template_spec.rb'
-    - 'spec/spec_helper.rb'
 
 # Offense count: 1
 # Configuration parameters: AllowComments.
@@ -97,11 +68,6 @@ Lint/UselessAssignment:
     - 'app/services/bitcoin_client_mock.rb'
     - 'app/services/bitcoin_client_python.rb'
     - 'lib/tasks/debug.rake'
-    - 'spec/mailers/previews/user_mailer_preview.rb'
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
 
 # Offense count: 6
 # Configuration parameters: CheckForMethodsWithNoSideEffects.
@@ -184,161 +150,17 @@ Naming/VariableName:
     - 'app/models/maybe_uncoop_transaction.rb'
     - 'app/models/penalty_transaction.rb'
     - 'app/models/sweep_transaction.rb'
-    - 'spec/models/block_spec.rb'
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-
-# Offense count: 14
-# Configuration parameters: EnforcedStyle, CheckMethodNames, CheckSymbols, AllowedIdentifiers.
-# SupportedStyles: snake_case, normalcase, non_integer
-# AllowedIdentifiers: capture3, iso8601, rfc1123_date, rfc822, rfc2822, rfc3339
-Naming/VariableNumber:
-  Exclude:
-    - 'app/controllers/api/v1/nodes_controller.rb'
-    - 'app/models/node.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/lightning_transaction_spec.rb'
-    - 'spec/models/penalty_transaction_spec.rb'
-    - 'spec/models/sweep_transaction_spec.rb'
-
-# Offense count: 3
-RSpec/AnyInstance:
-  Exclude:
-    - 'spec/models/maybe_uncoop_transaction_spec.rb'
-    - 'spec/models/penalty_transaction_spec.rb'
-    - 'spec/models/sweep_transaction_spec.rb'
-
-# Offense count: 1
-# Configuration parameters: Prefixes.
-# Prefixes: when, with, without
-RSpec/ContextWording:
-  Exclude:
-    - 'spec/support/shared_contexts/rake.rb'
-
-# Offense count: 10
-# Configuration parameters: IgnoredMetadata.
-RSpec/DescribeClass:
-  Exclude:
-    - 'spec/tasks/blocks_rake_spec.rb'
-    - 'spec/tasks/nodes_rake_spec.rb'
-
-# Offense count: 202
-# Cop supports --auto-correct.
-# Configuration parameters: SkipBlocks, EnforcedStyle.
-# SupportedStyles: described_class, explicit
-RSpec/DescribedClass:
-  Exclude:
-    - 'spec/mailers/user_mailer_spec.rb'
-    - 'spec/models/block_spec.rb'
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/invalid_block_spec.rb'
-    - 'spec/models/lightning_transaction_spec.rb'
-    - 'spec/models/maybe_uncoop_transaction_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/penalty_transaction_spec.rb'
-    - 'spec/models/softfork_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-    - 'spec/models/sweep_transaction_spec.rb'
-
-# Offense count: 3
-RSpec/EmptyExampleGroup:
-  Exclude:
-    - 'spec/models/block_template_spec.rb'
-    - 'spec/models/node_spec.rb'
 
 # Offense count: 42
 # Configuration parameters: CountAsOne.
 RSpec/ExampleLength:
   Max: 35
 
-# Offense count: 51
-RSpec/ExpectInHook:
-  Exclude:
-    - 'spec/controllers/api/v1/ln_stats_spec.rb'
-    - 'spec/models/block_spec.rb'
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/lightning_transaction_spec.rb'
-    - 'spec/models/maybe_uncoop_transaction_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/penalty_transaction_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-    - 'spec/models/sweep_transaction_spec.rb'
-
-# Offense count: 9
-# Configuration parameters: Include, CustomTransform, IgnoreMethods, SpecSuffixOnly.
-# Include: **/*_spec*rb*, **/spec/**/*
-RSpec/FilePath:
-  Exclude:
-    - 'spec/concerns/tx_id_spec.rb'
-    - 'spec/controllers/api/v1/blocks_spec.rb'
-    - 'spec/controllers/api/v1/inflated_blocks_spec.rb'
-    - 'spec/controllers/api/v1/invalid_blocks_spec.rb'
-    - 'spec/controllers/api/v1/ln_stats_spec.rb'
-    - 'spec/controllers/api/v1/nodes_spec.rb'
-    - 'spec/controllers/feeds_spec.rb'
-    - 'spec/controllers/pages_spec.rb'
-    - 'spec/models/orphan_candidate_spec.rb'
-
-# Offense count: 959
-# Configuration parameters: AssignmentOnly.
-RSpec/InstanceVariable:
-  Exclude:
-    - 'spec/controllers/feeds_spec.rb'
-    - 'spec/mailers/user_mailer_spec.rb'
-    - 'spec/models/block_spec.rb'
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/lightning_transaction_spec.rb'
-    - 'spec/models/maybe_uncoop_transaction_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/penalty_transaction_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-    - 'spec/models/sweep_transaction_spec.rb'
-    - 'spec/services/bitcoin_client_spec.rb'
-
-# Offense count: 2
-RSpec/IteratedExpectation:
-  Exclude:
-    - 'spec/models/node_spec.rb'
-
-# Offense count: 3
-RSpec/LeakyConstantDeclaration:
-  Exclude:
-    - 'spec/models/block_spec.rb'
-    - 'spec/models/node_spec.rb'
-
-# Offense count: 8
-RSpec/LetSetup:
-  Exclude:
-    - 'spec/controllers/api/v1/blocks_spec.rb'
-    - 'spec/controllers/api/v1/ln_stats_spec.rb'
-    - 'spec/controllers/api/v1/nodes_spec.rb'
-    - 'spec/controllers/feeds_spec.rb'
-
-# Offense count: 5
-RSpec/MessageChain:
-  Exclude:
-    - 'spec/models/inflated_block_spec.rb'
-    - 'spec/models/invalid_block_spec.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
-
 # Offense count: 103
 # Configuration parameters: .
 # SupportedStyles: have_received, receive
 RSpec/MessageSpies:
   EnforcedStyle: receive
-
-# Offense count: 3
-RSpec/MultipleDescribes:
-  Exclude:
-    - 'spec/controllers/authentication_spec.rb'
-    - 'spec/tasks/blocks_rake_spec.rb'
-    - 'spec/tasks/nodes_rake_spec.rb'
 
 # Offense count: 120
 RSpec/MultipleExpectations:
@@ -349,31 +171,9 @@ RSpec/MultipleExpectations:
 RSpec/MultipleMemoizedHelpers:
   Max: 8
 
-# Offense count: 15
-# Configuration parameters: IgnoreSharedExamples.
-RSpec/NamedSubject:
-  Exclude:
-    - 'spec/tasks/blocks_rake_spec.rb'
-    - 'spec/tasks/nodes_rake_spec.rb'
-
 # Offense count: 6
 RSpec/NestedGroups:
   Max: 4
-
-# Offense count: 4
-RSpec/StubbedMock:
-  Exclude:
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/lightning_transaction_spec.rb'
-    - 'spec/models/node_spec.rb'
-
-# Offense count: 11
-# Configuration parameters: EnforcedStyle, IgnoredPatterns.
-# SupportedStyles: snake_case, camelCase
-RSpec/VariableName:
-  Exclude:
-    - 'spec/models/chaintip_spec.rb'
-    - 'spec/models/invalid_block_spec.rb'
 
 # Offense count: 31
 # Cop supports --auto-correct.
@@ -482,12 +282,6 @@ Rails/TimeZone:
     - 'app/models/node.rb'
     - 'app/models/softfork.rb'
     - 'app/models/stale_candidate.rb'
-    - 'spec/controllers/api/v1/inflated_blocks_spec.rb'
-    - 'spec/controllers/api/v1/invalid_blocks_spec.rb'
-    - 'spec/controllers/authentication_spec.rb'
-    - 'spec/factories/user.rb'
-    - 'spec/models/node_spec.rb'
-    - 'spec/models/stale_candidate_spec.rb'
 
 # Offense count: 1
 # Configuration parameters: Include.
@@ -543,25 +337,11 @@ Style/IfUnlessModifier:
     - 'app/models/stale_candidate.rb'
     - 'app/services/bitcoin_client.rb'
 
-# Offense count: 2
-Style/MixinUsage:
-  Exclude:
-    - 'lib/tasks/debug.rake'
-    - 'spec/bitcoind_helper.rb'
-
 # Offense count: 4
 Style/MultilineBlockChain:
   Exclude:
     - 'app/models/block.rb'
     - 'app/models/stale_candidate.rb'
-
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: literals, strict
-Style/MutableConstant:
-  Exclude:
-    - 'spec/models/node_spec.rb'
 
 # Offense count: 13
 # Configuration parameters: AllowedMethods.
@@ -579,13 +359,6 @@ Style/OptionalBooleanParameter:
 Style/ParenthesesAroundCondition:
   Exclude:
     - 'app/models/block.rb'
-
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: Methods.
-Style/RedundantArgument:
-  Exclude:
-    - 'spec/controllers/authentication_spec.rb'
 
 # Offense count: 2
 # Cop supports --auto-correct.

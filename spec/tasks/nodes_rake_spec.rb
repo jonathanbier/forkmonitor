@@ -3,8 +3,11 @@
 require 'rails_helper'
 require 'spec_helper'
 
+# rubocop:disable RSpec/MultipleDescribes
+# rubocop:disable RSpec/DescribeClass
+# rubocop:disable RSpec/NamedSubject
 describe 'nodes:poll' do
-  include_context 'rake'
+  include_context 'with rake'
 
   it 'calls :poll! on Node' do
     expect(Node).to receive(:poll!)
@@ -18,7 +21,7 @@ describe 'nodes:poll' do
 end
 
 describe 'nodes:poll_repeat' do
-  include_context 'rake'
+  include_context 'with rake'
 
   it 'calls :pollrepeat! on Node' do
     expect(Node).to receive(:poll_repeat!)
@@ -32,7 +35,7 @@ describe 'nodes:poll_repeat' do
 end
 
 describe 'nodes:heavy_checks_repeat' do
-  include_context 'rake'
+  include_context 'with rake'
 
   it 'calls :heavy_checks_repeat! on Node' do
     expect(Node).to receive(:heavy_checks_repeat!)
@@ -46,7 +49,7 @@ describe 'nodes:heavy_checks_repeat' do
 end
 
 describe 'nodes:rollback_checks_repeat' do
-  include_context 'rake'
+  include_context 'with rake'
 
   it 'calls :rollback_checks_repeat! on Node' do
     expect(Node).to receive(:rollback_checks_repeat!)
@@ -60,7 +63,7 @@ describe 'nodes:rollback_checks_repeat' do
 end
 
 describe 'nodes:getblocktemplate_repeat' do
-  include_context 'rake'
+  include_context 'with rake'
 
   it 'calls :getblocktemplate_repeat! on Node' do
     expect(Node).to receive(:getblocktemplate_repeat!)
@@ -72,3 +75,6 @@ describe 'nodes:getblocktemplate_repeat' do
     subject.invoke('BTC', 'TBTC')
   end
 end
+# rubocop:enable RSpec/NamedSubject
+# rubocop:enable RSpec/DescribeClass
+# rubocop:enable RSpec/MultipleDescribes

@@ -1,18 +1,23 @@
 # frozen_string_literal: true
 
-if Rails.env.test? || Rails.env.development?
-  require 'pycall/import'
-  include PyCall::Import
-  pyimport :sys
-  sys.path.insert(0, '.')
-end
-
 namespace 'debug' do
+  if Rails.env.test? || Rails.env.development?
+    require 'pycall/import'
+    include PyCall::Import
+    pyimport :sys
+    sys.path.insert(0, '.')
+  end
+
   :env
   desc 'Print basic info from each node'
   task node_info: :environment do
     Node.all.each do |node|
+      puts ''
       puts node.name_with_version.to_s
+      if node.block.nil?
+        puts 'Tip unknown'
+        next
+      end
       puts "Height: #{node.block.height}"
       puts "Time  : #{node.block.timestamp}"
       puts "Hash  : #{node.block.block_hash}"
@@ -23,7 +28,6 @@ namespace 'debug' do
       rescue BitcoinClient::Error
         puts 'Unreachable'
       end
-      puts ''
     end
   end
 

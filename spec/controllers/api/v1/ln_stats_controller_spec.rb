@@ -3,9 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe Api::V1::LnStatsController, type: :controller do
-  let(:block1) { create(:lightning_block) }
-  let!(:ln_penalty) { create(:penalty_transaction_public, block: block1) }
-  let!(:ln_sweep) { create(:sweep_transaction_public, block: block1) }
+  let(:block_1) { create(:lightning_block) }
+
+  before do
+    create(:penalty_transaction_public, block: block_1)
+    create(:sweep_transaction_public, block: block_1)
+  end
 
   describe 'GET /api/v1/ln_stats' do
     before do

@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :penalty_transaction do
-  end
+  factory :penalty_transaction
 
   factory :penalty_transaction_public, parent: :penalty_transaction do
     association :block, factory: :lightning_block

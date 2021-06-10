@@ -108,9 +108,10 @@ RSpec.describe FeedsController, type: :controller do
     end
 
     describe 'GET stale_candidates feed' do
+      let!(:block_1) { create(:block, coin: :btc, height: 500_000) }
+
       before do
-        @block1 = create(:block, coin: :btc, height: 500_000)
-        @stale_candidate = create(:stale_candidate, coin: :btc, height: 500_000)
+        create(:stale_candidate, coin: :btc, height: 500_000)
       end
 
       it 'is rendered' do
@@ -121,12 +122,12 @@ RSpec.describe FeedsController, type: :controller do
 
       it 'contains block hashes' do
         get :stale_candidates, params: { coin: 'btc' }, format: :rss
-        expect(response.body).to include(@block1.block_hash)
+        expect(response.body).to include(block_1.block_hash)
       end
 
       it 'is paginated' do
         get :stale_candidates, params: { coin: 'btc', page: 2 }, format: :rss
-        expect(response.body).not_to include(@block1.block_hash)
+        expect(response.body).not_to include(block_1.block_hash)
       end
 
       it 'rejects negative page numbers' do
@@ -136,7 +137,9 @@ RSpec.describe FeedsController, type: :controller do
     end
 
     describe 'GET lightning penalty feed' do
-      let!(:lightning_transaction) { create(:penalty_transaction_public) }
+      before do
+        create(:penalty_transaction_public)
+      end
 
       it 'is rendered' do
         get :ln_penalties, params: { coin: 'btc' }, format: :rss
@@ -151,7 +154,9 @@ RSpec.describe FeedsController, type: :controller do
     end
 
     describe 'GET lightning sweep feed' do
-      let!(:lightning_transaction) { create(:sweep_transaction_public) }
+      before do
+        create(:sweep_transaction_public)
+      end
 
       it 'is rendered' do
         get :ln_sweeps, params: { coin: 'btc' }, format: :rss
@@ -166,7 +171,9 @@ RSpec.describe FeedsController, type: :controller do
     end
 
     describe 'GET lightning potential close feed' do
-      let!(:lightning_transaction) { create(:maybe_uncoop_transaction) }
+      before do
+        create(:maybe_uncoop_transaction)
+      end
 
       it 'is rendered' do
         get :ln_uncoops, params: { coin: 'btc' }, format: :rss

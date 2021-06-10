@@ -3,8 +3,8 @@
 require 'rails_helper'
 
 RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
-  let!(:node1) { create(:node_with_block, coin: :btc) }
-  let!(:inflated_block) { create(:inflated_block, node: node1) }
+  let!(:node_1) { create(:node_with_block, coin: :btc) }
+  let!(:inflated_block) { create(:inflated_block, node: node_1) }
 
   describe 'GET /api/v1/inflated_blocks' do
     it 'lists inflated blocks' do
@@ -14,7 +14,7 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
     end
 
     it 'lists dismissed entries' do
-      inflated_block.update dismissed_at: Time.now
+      inflated_block.update dismissed_at: Time.zone.now
       get :index, format: :json
       expect(response.status).to eq 200
       expect(response_body.length).to eq 1
@@ -34,7 +34,7 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
       end
 
       it 'does not list dismissed entries' do
-        inflated_block.update dismissed_at: Time.now
+        inflated_block.update dismissed_at: Time.zone.now
         get :index, format: :json, params: { coin: 'BTC' }
         expect(response.status).to eq 200
         expect(response_body.length).to eq 0
@@ -49,7 +49,7 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
     end
 
     describe 'admin' do
-      let(:admin) { User.create(email: 'test@example.com', password: 'test1234', confirmed_at: Time.now) }
+      let(:admin) { User.create(email: 'test@example.com', password: 'test1234', confirmed_at: Time.zone.now) }
 
       before do
         sign_in(admin)

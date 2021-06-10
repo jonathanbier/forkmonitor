@@ -253,17 +253,6 @@ class BitcoinClientPython
     end
   end
 
-  def getpeerinfo
-    raise Error, 'Set Python node' if @node.nil?
-    raise ConnectionError if @mock_connection_error
-
-    begin
-      @node.getpeerinfo
-    rescue Error => e
-      raise Error, "getpeerinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-    end
-  end
-
   def getbestblockhash
     raise Error, 'Set Python node' if @node.nil?
     raise ConnectionError if @mock_connection_error

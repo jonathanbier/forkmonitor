@@ -2,7 +2,7 @@
 
 require 'rake'
 
-shared_context 'rake' do
+shared_context 'with rake' do
   subject         { rake[task_name] }
 
   let(:rake)      { Rake::Application.new }

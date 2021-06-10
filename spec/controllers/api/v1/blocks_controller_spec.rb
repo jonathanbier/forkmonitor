@@ -4,7 +4,9 @@ require 'rails_helper'
 
 RSpec.describe Api::V1::BlocksController, type: :controller do
   describe 'GET /api/v1/blocks' do
-    let!(:node1) { create(:node_with_block, coin: :btc) }
+    before do
+      create(:node_with_block, coin: :btc)
+    end
 
     it 'lists blocks' do
       get :index, format: :json, params: { range: '[0,10]' }

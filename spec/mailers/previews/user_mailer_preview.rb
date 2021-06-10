@@ -6,7 +6,7 @@ class NodesMailerPreview < ActionMailer::Preview
     @version_bit = VersionBit.last
     tally = 1 # TODO: store in VersionBit
     @block = Block.find(@version_bit.activate_block_id)
-    UserMailer.with(user: User.first, bit: @version_bit.bit, tally: 1, window: VersionBit::WINDOW,
+    UserMailer.with(user: User.first, bit: @version_bit.bit, tally: tally, window: VersionBit::WINDOW,
                     block: @block).version_bits_email
   end
 
