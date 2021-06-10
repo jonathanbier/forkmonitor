@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module TxIdConcern # rubocop:todo Style/Documentation
+module TxIdConcern
   extend ActiveSupport::Concern
   class NilError < StandardError; end
   class_methods do

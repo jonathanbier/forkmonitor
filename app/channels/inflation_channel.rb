@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class InflationChannel < ApplicationCable::Channel # rubocop:todo Style/Documentation
+class InflationChannel < ApplicationCable::Channel
   def subscribed
     @node = Node.find(params[:node])
     stream_for @node # "inflation_node_#{ @node }"

@@ -2,7 +2,7 @@
 
 module Api
   module V1
-    class BlockTemplatesController < ApplicationController # rubocop:todo Style/Documentation
+    class BlockTemplatesController < ApplicationController
       def index
         respond_to do |format|
           format.csv do

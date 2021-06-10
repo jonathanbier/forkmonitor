@@ -1,3 +1,5 @@
+inherit_from: .rubocop_todo.yml
+
 require:
   - rubocop-rspec
   - rubocop-rails
@@ -8,5 +10,6 @@ AllCops:
     - 'tmp/**/*'
     - '.git/**/*'
     - 'bin/*'
+    - 'node_modules/**/*'
   TargetRubyVersion: 3.0
   NewCops: enable
