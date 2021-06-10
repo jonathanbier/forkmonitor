@@ -12,8 +12,8 @@ xml.rss version: '2.0' do
     xml.link feeds_stale_candidate_url(@coin) + "?page=#{@page_count}", rel: 'last'
 
     if StaleCandidate.last_updated_cached(@coin).present?
-      xml.lastBuildDate StaleCandidate.last_updated_cached(@coin).try { |i| i.updated_at.iso8601 }
-      xml.updated StaleCandidate.last_updated_cached(@coin).try { |i| i.updated_at.iso8601 }
+      xml.lastBuildDate(StaleCandidate.last_updated_cached(@coin).try { |i| i.updated_at.iso8601 })
+      xml.updated(StaleCandidate.last_updated_cached(@coin).try { |i| i.updated_at.iso8601 })
     end
 
     @stale_candidates.each do |stale_candidate|

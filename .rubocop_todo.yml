@@ -10,7 +10,6 @@
 # Configuration parameters: IgnoredMethods.
 Lint/AmbiguousBlockAssociation:
   Exclude:
-    - 'app/views/feeds/stale_candidates.rss.builder'
     - 'spec/models/node_spec.rb'
     - 'spec/models/stale_candidate_spec.rb'
 
