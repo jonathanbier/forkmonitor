@@ -19,7 +19,6 @@ Lint/AssignmentInCondition:
   Exclude:
     - 'app/models/block.rb'
     - 'app/models/node.rb'
-    - 'db/migrate/20190225153608_add_version_bits_to_blocks.rb'
 
 # Offense count: 1
 # Configuration parameters: AllowedMethods.
@@ -209,7 +208,6 @@ Naming/VariableNumber:
   Exclude:
     - 'app/controllers/api/v1/nodes_controller.rb'
     - 'app/models/node.rb'
-    - 'db/migrate/20190807090722_add_info_to_nodes.rb'
     - 'spec/models/inflated_block_spec.rb'
     - 'spec/models/lightning_transaction_spec.rb'
     - 'spec/models/penalty_transaction_spec.rb'
@@ -387,13 +385,6 @@ RSpec/VariableName:
     - 'spec/models/chaintip_spec.rb'
     - 'spec/models/invalid_block_spec.rb'
 
-# Offense count: 8
-# Cop supports --auto-correct.
-Rails/ApplicationRecord:
-  Exclude:
-    - 'db/migrate/20200707135531_add_rpush.rb'
-    - 'db/migrate/20200707135532_rpush_2_0_0_updates.rb'
-
 # Offense count: 31
 # Cop supports --auto-correct.
 # Configuration parameters: NilOrEmpty, NotPresent, UnlessPresent.
@@ -406,20 +397,6 @@ Rails/Blank:
     - 'app/models/softfork.rb'
     - 'app/services/bitcoin_client_mock.rb'
     - 'app/services/bitcoin_client_python.rb'
-
-# Offense count: 18
-# Configuration parameters: Database, Include.
-# SupportedDatabases: mysql, postgresql
-# Include: db/migrate/*.rb
-Rails/BulkChangeTable:
-  Enabled: false
-
-# Offense count: 1
-# Configuration parameters: Include.
-# Include: db/migrate/*.rb
-Rails/CreateTableWithTimestamps:
-  Exclude:
-    - 'db/migrate/20190125152556_create_jwt_blacklist.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -483,13 +460,6 @@ Rails/InverseOf:
     - 'app/models/node.rb'
     - 'app/models/version_bit.rb'
 
-# Offense count: 1
-# Configuration parameters: Include.
-# Include: db/migrate/*.rb
-Rails/NotNullColumn:
-  Exclude:
-    - 'db/migrate/20210203191944_add_n_transactions_to_block_templates.rb'
-
 # Offense count: 13
 # Configuration parameters: Include.
 # Include: app/**/*.rb, config/**/*.rb, db/**/*.rb, lib/**/*.rb
@@ -501,8 +471,6 @@ Rails/Output:
     - 'app/models/penalty_transaction.rb'
     - 'app/models/sweep_transaction.rb'
     - 'app/services/bitcoin_client.rb'
-    - 'db/migrate/20200707135531_add_rpush.rb'
-    - 'db/migrate/20201021120359_add_raw_to_transactions.rb'
 
 # Offense count: 1
 # Cop supports --auto-correct.
@@ -512,30 +480,12 @@ Rails/RakeEnvironment:
   Exclude:
     - 'lib/tasks/blocks.rake'
 
-# Offense count: 1
-# Configuration parameters: Include.
-# Include: db/migrate/*.rb
-Rails/ReversibleMigration:
-  Exclude:
-    - 'db/migrate/20191028154143_remove_comparison_block_id_from_inflated_blocks.rb'
-
 # Offense count: 26
 # Configuration parameters: ForbiddenMethods, AllowedMethods.
 # ForbiddenMethods: decrement!, decrement_counter, increment!, increment_counter, insert, insert!, insert_all, insert_all!, toggle!, touch, touch_all, update_all, update_attribute, update_column, update_columns, update_counters, upsert, upsert_all
 Rails/SkipsModelValidations:
   Exclude:
     - 'app/models/block_template.rb'
-    - 'db/migrate/20190218094624_add_mediantime_to_blocks.rb'
-    - 'db/migrate/20190429100124_add_coin_to_blocks.rb'
-    - 'db/migrate/20190513131355_add_client_to_nodes.rb'
-    - 'db/migrate/20190612133722_add_coin_to_orphan_candidate.rb'
-    - 'db/migrate/20190927102026_add_node_to_txoutsets.rb'
-    - 'db/migrate/20200110105158_add_type_to_lightning_transactions.rb'
-    - 'db/migrate/20200111061042_add_input_to_lightning_transactions.rb'
-    - 'db/migrate/20200707135531_add_rpush.rb'
-    - 'db/migrate/20200707135532_rpush_2_0_0_updates.rb'
-    - 'db/migrate/20210104131753_stale_candidate_not_null.rb'
-    - 'db/migrate/20210217102510_add_coin_to_block_template.rb'
 
 # Offense count: 35
 # Cop supports --auto-correct.
@@ -611,9 +561,6 @@ Style/IfUnlessModifier:
     - 'app/models/node.rb'
     - 'app/models/stale_candidate.rb'
     - 'app/services/bitcoin_client.rb'
-    - 'db/migrate/20200707135531_add_rpush.rb'
-    - 'db/migrate/20200707135532_rpush_2_0_0_updates.rb'
-    - 'db/migrate/20200914112715_add_url_to_nodes.rb'
 
 # Offense count: 2
 Style/MixinUsage:

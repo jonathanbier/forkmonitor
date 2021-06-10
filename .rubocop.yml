@@ -11,5 +11,10 @@ AllCops:
     - '.git/**/*'
     - 'bin/*'
     - 'node_modules/**/*'
+    - 'db/migrate/2019*'
+    - 'db/migrate/2020*'
+    - 'db/migrate/202101*'
+    - 'db/migrate/202102*'
+
   TargetRubyVersion: 3.0
   NewCops: enable
