@@ -243,7 +243,14 @@ class Chaintip < ApplicationRecord
     raise 'Only implemented for (modern) Bitcoin Core nodes' unless node.core? && node.version >= 100_000
     return nil if node.unreachable_since || node.ibd
 
-    chaintips = node.client.getchaintips
+    chaintips = nil
+    begin
+      chaintips = node.client.getchaintips
+    rescue BitcoinClient::TimeOutError
+      node.update unreachable_since: node.unreachable_since || DateTime.now
+      return nil
+    end
+
     active_tip_height = chaintips.filter { |t| t['status'] == 'active' }.first['height']
     chaintips.filter { |t| t['status'] == 'valid-headers' }.each do |tip|
       break if tip['height'] < active_tip_height - max_depth
