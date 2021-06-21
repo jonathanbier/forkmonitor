@@ -21,7 +21,7 @@ RSpec.describe Chaintip, type: :model do
     # Once a release with Taproot support is available, it's best to use that
     # for the second node, so that this test still works when Taproot deployment
     # is burried (at which point vbparams won't work).
-    test.setup(num_nodes: 3, extra_args: [[], ['-vbparams=taproot:1:1'], ['-vbparams=taproot:1:1']])
+    test.setup(num_nodes: 3, extra_args: [['address_type=bech32m'], ['-vbparams=taproot:1:1'], ['-vbparams=taproot:1:1']])
     @node_a = create(:node_python) # Taproot enabled
     @node_a.client.set_python_node(test.nodes[0])
     @node_b = create(:node_python) # Taproot disabled
