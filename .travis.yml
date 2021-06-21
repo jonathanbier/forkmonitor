@@ -17,6 +17,12 @@ cache:
   - $HOME/include
   - $HOME/lib
   - $HOME/share
+env:
+  # These mock values were created for CI and are not sensitive:
+  - DEVISE_JWT_SECRET_KEY=b160a79b5b8de31f84e0d73ebb7d6f2aeb2a4105ee7431209ba8b88412658b48312ba11c08f6ff8700f6bb234d5d63d8a8fac9509df1b38f27d035e46b874d59
+  - VAPID_CONTACT_EMAIL=hello@example.com
+  - VAPID_PUBLIC_KEY=BODzsAyEftxIpLZLncvsR0nueOwPKtS-pxTGUKtj6n6qPXKSEdkqb7mrtE8oLVx-WQcUYvmnB1QhqwHR3v9KHhI=
+  - VAPID_PRIVATE_KEY=OFCgfJWR0XKh8frilK9Mmv7TLiwhekEflehHDIyzhJI
 before_install:
   - $TRAVIS_BUILD_DIR/travis-zmq.sh
   - cp $TRAVIS_BUILD_DIR/vendor/bitcoin-config.ini $TRAVIS_BUILD_DIR/vendor/bitcoin/test/config.ini
