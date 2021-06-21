@@ -23,7 +23,7 @@ bundle install --without production
 You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a
 package manager for NodeJS. Once installed, run:
 
-```
+```sh
 yarn
 ```
 
