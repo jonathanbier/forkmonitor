@@ -21,7 +21,17 @@ RSpec.describe Chaintip, type: :model do
     # Once a release with Taproot support is available, it's best to use that
     # for the second node, so that this test still works when Taproot deployment
     # is burried (at which point vbparams won't work).
-    test.setup(num_nodes: 3, extra_args: [['address_type=bech32m'], ['-vbparams=taproot:1:1'], ['-vbparams=taproot:1:1']])
+    test.setup(num_nodes: 3, extra_args: [
+      [
+        '-walletbroadcast=0' # manually broadcast wallet transactions
+      ],
+      [
+        '-vbparams=taproot:1:1'
+      ],
+      [
+        '-vbparams=taproot:1:1'
+      ]
+    ])
     @node_a = create(:node_python) # Taproot enabled
     @node_a.client.set_python_node(test.nodes[0])
     @node_b = create(:node_python) # Taproot disabled
@@ -34,9 +44,8 @@ RSpec.describe Chaintip, type: :model do
     test.disconnect_nodes(0, 2)
     test.disconnect_nodes(1, 2)
 
-    @node_a.client.createwallet
-    @node_b.client.createwallet(blank: true)
-    @node_b.client.importdescriptors([
+    @node_a.client.createwallet(blank: true)
+    @node_a.client.importdescriptors([
                                        {
                                          desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse', active: true, internal: false, timestamp: 'now', range: 10
                                        },
@@ -44,11 +53,12 @@ RSpec.describe Chaintip, type: :model do
                                          desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*)#fnmy82qp', active: true, internal: true, timestamp: 'now', range: 10
                                        }
                                      ])
-    @addr_1 = @node_b.client.getnewaddress
-    @addr_2 = @node_b.client.getnewaddress
-    @r_addr = @node_a.client.getnewaddress
+    @node_b.client.createwallet
+    @addr_1 = @node_a.client.getnewaddress # Taproot address
+    @addr_2 = @node_a.client.getnewaddress # Taproot address
+    @r_addr = @node_b.client.getnewaddress # Segwit v0 address
 
-    @node_a.client.generatetoaddress(2, @r_addr)
+    @node_b.client.generatetoaddress(2, @r_addr)
     test.sync_blocks([@node_a.client, @node_b.client])
 
     @node_a.poll!
@@ -348,21 +358,16 @@ RSpec.describe Chaintip, type: :model do
     describe 'invalid chaintip' do
       before do
         # Reach coinbase maturity
-        @node_a.client.generatetoaddress(99, @r_addr)
+        @node_b.client.generatetoaddress(99, @r_addr)
 
         # Fund a taproot address and mine it
-        @node_a.client.sendtoaddress(@addr_1, 1)
-        @node_a.client.generate(1)
+        @node_b.client.sendtoaddress(@addr_1, 1)
+        @node_b.client.generate(1)
         test.sync_blocks([@node_a.client, @node_b.client])
 
-        # Spend from taproot address (this node has taproot disabled, so it won't broadcast)
-        tx_id = @node_b.client.sendtoaddress(@r_addr, 0.1)
-        tx_hex = @node_b.client.gettransaction(tx_id)['hex']
-        @node_b.client.abandontransaction(tx_id)
-
-        txs = @node_b.client.listtransactions
-        assert_equal(txs[1]['txid'], tx_id)
-        assert_equal(txs[1]['abandoned'], true)
+        # Spend from taproot address
+        tx_id = @node_a.client.sendtoaddress(@r_addr, 0.1)
+        tx_hex = @node_a.client.gettransaction(tx_id)['hex']
 
         mempool_tap = @node_a.client.testmempoolaccept([tx_hex])[0]
         mempool_no_tap = @node_b.client.testmempoolaccept([tx_hex])[0]
