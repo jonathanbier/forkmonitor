@@ -22,16 +22,16 @@ RSpec.describe Chaintip, type: :model do
     # for the second node, so that this test still works when Taproot deployment
     # is burried (at which point vbparams won't work).
     test.setup(num_nodes: 3, extra_args: [
-      [
-        '-walletbroadcast=0' # manually broadcast wallet transactions
-      ],
-      [
-        '-vbparams=taproot:1:1'
-      ],
-      [
-        '-vbparams=taproot:1:1'
-      ]
-    ])
+                 [
+                   '-walletbroadcast=0' # manually broadcast wallet transactions
+                 ],
+                 [
+                   '-vbparams=taproot:1:1'
+                 ],
+                 [
+                   '-vbparams=taproot:1:1'
+                 ]
+               ])
     @node_a = create(:node_python) # Taproot enabled
     @node_a.client.set_python_node(test.nodes[0])
     @node_b = create(:node_python) # Taproot disabled
