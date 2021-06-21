@@ -49,7 +49,7 @@ gem 'webpush'
 
 # Safari notifications
 gem 'push_package'
-gem 'rpush', '~> 5.4.0'
+gem 'rpush', '~> 6.0.0'
 
 # Email when something breaks
 gem 'exception_notification'

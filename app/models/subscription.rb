@@ -20,6 +20,6 @@ class Subscription < ApplicationRecord
       s.destroy
     end
 
-    SafariSubscription.blast(tag, subject, body)
+    SafariSubscription.blast(subject, body)
   end
 end

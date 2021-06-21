@@ -314,8 +314,8 @@ GEM
       actionpack (>= 5.0)
       railties (>= 5.0)
     rexml (3.2.5)
-    rpush (5.4.0)
-      activesupport (>= 5.0)
+    rpush (6.0.0)
+      activesupport (>= 5.2)
       jwt (>= 1.5.6)
       multi_json (~> 1.0)
       net-http-persistent
@@ -469,7 +469,7 @@ DEPENDENCIES
   rails-controller-testing
   rails_real_favicon
   redis-rails
-  rpush (~> 5.4.0)
+  rpush (~> 6.0.0)
   rspec-rails
   rubocop
   rubocop-rails

@@ -1,18 +1,23 @@
 # frozen_string_literal: true
 
 class SafariSubscription < ApplicationRecord
+  # Send push message to this device
+  def notify(subject, body)
+    Rpush::Apns2::Notification.create(
+      app: Rpush::Apns::App.find_by_name('Fork Monitor'),
+      device_token: device_token,
+      alert: {
+        title: subject,
+        body: body
+      },
+      url_args: []
+    )
+  end
+
   # Send push notifications to everyone
-  def self.blast(_tag, subject, body)
+  def self.blast(subject, body)
     SafariSubscription.all.find_each do |s|
-      Rpush::Apns::Notification.create(
-        app: Rpush::Apns::App.find_by_name('Fork Monitor'),
-        device_token: s.device_token,
-        alert: {
-          title: subject,
-          body: body
-        },
-        url_args: []
-      )
+      s.notify(subject, body)
     end
   end
 end

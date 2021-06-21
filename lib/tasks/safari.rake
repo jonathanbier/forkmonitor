@@ -14,8 +14,8 @@ namespace 'safari' do
       webServiceURL: 'https://forkmonitor.info/push'
     }
     iconset_path = 'app/assets/images/safari_iconset'
-    certificate = 'tmp/forkmonitor.p12'
-    intermediate_cert = 'tmp/AppleWWDRCA.cer'
+    certificate = 'tmp/production.p12'
+    intermediate_cert = 'tmp/AppleWWDRCAG3.cer'
     package = PushPackage.new(website_params, iconset_path, certificate, ENV['CERT_PWD'],
                               intermediate_cert)
     package.save('public/pushPackage.zip')
@@ -25,7 +25,7 @@ namespace 'safari' do
   task register_app: [:environment] do
     app = Rpush::Apns::App.new
     app.name = 'Fork Monitor'
-    app.certificate = File.read('certs/forkmonitor.pem')
+    app.certificate = File.read('certs/production.pem')
     app.environment = 'production'
     app.password = ENV['CERT_PWD']
     app.connections = 1
