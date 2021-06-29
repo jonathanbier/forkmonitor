@@ -24,39 +24,10 @@ RSpec.describe Node, type: :model do
   end
 
   describe 'name_with_version' do
+    # More detailed tests in spec/lib/bitcoin_util/version_spec.rb
     it 'combines node name with version' do
       node = create(:node, version: 170_001)
       expect(node.name_with_version).to eq('Bitcoin Core 0.17.0.1')
-    end
-
-    it 'handles 1.0 version' do
-      node = create(:node, version: 1_000_000)
-      expect(node.name_with_version).to eq('Bitcoin Core 1.0.0')
-    end
-
-    it 'handles clients that self identify with four digits' do
-      node = create(:node, version: 1_060_000, client_type: :bu, name: 'Bitcoin Unlimited')
-      expect(node.name_with_version).to eq('Bitcoin Unlimited 1.6.0.0')
-    end
-
-    it 'drops the 4th digit if zero' do
-      node = create(:node, version: 170_000)
-      expect(node.name_with_version).to eq('Bitcoin Core 0.17.0')
-    end
-
-    it 'appends version_extra' do
-      node = create(:node, version: 170_000, version_extra: 'rc1')
-      expect(node.name_with_version).to eq('Bitcoin Core 0.17.0rc1')
-    end
-
-    it 'hides version if absent' do
-      node = create(:node, version: nil, client_type: :libbitcoin, name: 'Libbitcoin')
-      expect(node.name_with_version).to eq('Libbitcoin')
-    end
-
-    it 'adds version_extra if set while version is absent' do
-      node = create(:node, version: nil, client_type: :libbitcoin, name: 'Libbitcoin', version_extra: '3.6.0')
-      expect(node.name_with_version).to eq('Libbitcoin 3.6.0')
     end
   end
 

@@ -3,6 +3,7 @@
 class Node < ApplicationRecord
   include ::TxIdConcern
   include ::Errors::Node
+  include ::BitcoinUtil
 
   SUPPORTED_COINS = %i[btc tbtc bch].freeze
 
@@ -52,30 +53,8 @@ class Node < ApplicationRecord
     where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
   end
 
-  def parse_version(v)
-    return if v.nil?
-
-    if v.is_a?(String) && v.split('.').count >= 3
-      digits = v.split('.').collect(&:to_i)
-      padding = [0] * (4 - digits.size)
-      digits.push(*padding)
-      digits[3] + digits[2] * 100 + digits[1] * 10_000 + digits[0] * 1_000_000
-    else
-      v
-    end
-  end
-
   def name_with_version
-    name = self.name.to_s
-    if version.nil?
-      if version_extra.present?
-        # Allow admin to hardcode version
-        name += " #{version_extra}"
-      end
-      return name
-    end
-    version_arr = version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
-    name + " #{(version_arr[3]).zero? && !bu? ? version_arr[0..2].join('.') : version_arr.join('.')}" + version_extra
+    BitcoinUtil::Version.name_with_version(name, version, version_extra, bu?)
   end
 
   def as_json(options = nil)
@@ -199,9 +178,9 @@ class Node < ApplicationRecord
     end
 
     if networkinfo.present?
-      update(version: parse_version(networkinfo['version']), peer_count: networkinfo['connections'])
+      update(version: BitcoinUtil::Version.parse(networkinfo['version']), peer_count: networkinfo['connections'])
     elsif info.present?
-      update(version: parse_version(info['version']), peer_count: info['connections'])
+      update(version: BitcoinUtil::Version.parse(info['version']), peer_count: info['connections'])
     end
 
     if libbitcoin?
