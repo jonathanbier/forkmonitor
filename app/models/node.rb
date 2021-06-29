@@ -2,6 +2,7 @@
 
 class Node < ApplicationRecord
   include ::TxIdConcern
+  include ::Errors::Node
 
   SUPPORTED_COINS = %i[btc tbtc bch].freeze
 
@@ -13,28 +14,6 @@ class Node < ApplicationRecord
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
   before_destroy :clear_references
   after_commit :expire_cache
-
-  class Error < StandardError; end
-
-  class InvalidCoinError < Error; end
-
-  class NoTxIndexError < Error; end
-
-  class TxNotFoundError < Error; end
-
-  class ConnectionError < Error; end
-
-  class PartialFileError < Error; end
-
-  class BlockPrunedError < Error; end
-
-  class BlockNotFoundError < Error; end
-
-  class MethodNotFoundError < Error; end
-
-  class NoMatchingNodeError < Error; end
-
-  class TimeOutError < Error; end
 
   belongs_to :block, optional: true
   has_many :chaintips, dependent: :destroy

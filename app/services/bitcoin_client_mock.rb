@@ -1,21 +1,7 @@
 # frozen_string_literal: true
 
 class BitcoinClientMock
-  class Error < StandardError; end
-
-  class BlockPrunedError < Error; end
-
-  class BlockNotFoundError < Error; end
-
-  class ConnectionError < Error; end
-
-  class TimeOutError < Error; end
-
-  class PartialFileError < Error; end
-
-  class MethodNotFoundError < Error; end
-
-  class NodeInitializingError < Error; end
+  include ::Errors::Node
 
   def initialize(node_id, name_with_version, coin, client_type, client_version, _rpchost, _rpcport, _rpcuser, _rpcpassword)
     @height = 560_176
