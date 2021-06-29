@@ -9,8 +9,6 @@ RSpec.describe Chaintip, type: :model do
   def setup_python_nodes
     @use_python_nodes = true
 
-    stub_const('BitcoinClient::Error', BitcoinClientPython::Error)
-    stub_const('BitcoinClient::ConnectionError', BitcoinClientPython::ConnectionError)
     # The current commit of Bitcoin Core has wallet taproot descriptor support,
     # even when taproot is not active. We take advantage of this by creating
     # a transaction in the non-taproot wallet and then calling abandontransaction.

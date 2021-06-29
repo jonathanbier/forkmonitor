@@ -344,7 +344,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.prime_cache(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{coin}).json")
       Rails.logger.info "Prime stale candidate index for #{coin.to_s.upcase}..."
@@ -359,7 +359,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.index_json_cached(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Rails.cache.fetch("StaleCandidate.index.for_coin(#{coin}).json") do
       min_height = Block.where(coin: coin).maximum(:height) - 1000
@@ -368,7 +368,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Rails.cache.fetch("StaleCandidate.last_updated(#{coin})") do
       where(coin: coin).order(updated_at: :desc).first
@@ -376,7 +376,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def self.page_cached(coin, page)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Rails.cache.fetch("StaleCandidate.feed.for_coin(#{coin},#{page})") do
       feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a

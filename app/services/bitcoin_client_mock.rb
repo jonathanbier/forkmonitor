@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class BitcoinClientMock
-  include ::Errors::Node
+  include ::BitcoinUtil
 
   def initialize(node_id, name_with_version, coin, client_type, client_version, _rpchost, _rpcport, _rpcuser, _rpcpassword)
     @height = 560_176
@@ -428,18 +428,18 @@ class BitcoinClientMock
   def getblock(hash, verbosity, _timeout = 30)
     raise Error, 'getblock requires block hash' unless hash.present?
 
-    raise BlockPrunedError if @pruned_blocks.include? hash
+    raise BitcoinUtil::RPC::BlockPrunedError if @pruned_blocks.include? hash
 
     if [false, 0].include?(verbosity)
       raise Error, "Raw block #{hash}  not found" unless @raw_blocks[hash]
 
       @raw_blocks[hash]
     elsif [true, 1].include?(verbosity)
-      raise BlockNotFoundError unless @blocks[hash]
+      raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
 
       @blocks[hash].tap { |b| b.delete('mediantime') if @version <= 100_300 }
     elsif verbosity == 2
-      raise BlockNotFoundError unless @blocks[hash]
+      raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
 
       @blocks[hash].tap do |b|
         b['tx'] = b['tx'].collect do |tx_id|
@@ -484,7 +484,7 @@ class BitcoinClientMock
     # raise Error, "Transaction hash missing" if tx_hash.nil?
     raw_tx = @transactions[tx_hash]
     if !verbose
-      raise Error, "Unable to find #{tx_hash}" if raw_tx.nil?
+      raise BitcoinUtil::RPC::TxNotFoundError, "Unable to find #{tx_hash}" if raw_tx.nil?
 
       raw_tx
     elsif tx_hash == '74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'

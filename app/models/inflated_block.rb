@@ -83,7 +83,7 @@ class InflatedBlock < ApplicationRecord
               # Update mirror node tip and fetch most recent blocks if needed
               node.poll_mirror!
               node.reload # without this, ancestors of node.block_block are not updated
-            rescue Node::ConnectionError
+            rescue BitcoinUtil::RPC::ConnectionError
               Rails.logger.error "Unable to connect to mirror node #{node.id} #{node.name_with_version}, skipping inflation check."
               node.update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
               Thread.exit

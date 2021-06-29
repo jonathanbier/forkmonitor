@@ -11,11 +11,6 @@ RSpec.describe Block, type: :model do
     # Create two blocks and sync
     @use_python_nodes = true
 
-    stub_const('BitcoinClient::Error', BitcoinClientPython::Error)
-    stub_const('BitcoinClient::ConnectionError', BitcoinClientPython::ConnectionError)
-    stub_const('BitcoinClient::NodeInitializingError', BitcoinClientPython::NodeInitializingError)
-    stub_const('BitcoinClient::TimeOutError', BitcoinClientPython::TimeOutError)
-    stub_const('BitcoinClient::BlockNotFoundError', BitcoinClientPython::BlockNotFoundError)
     test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
     @node_a = create(:node_python_with_mirror)
     @node_a.client.set_python_node(test.nodes[0])
@@ -44,16 +39,6 @@ RSpec.describe Block, type: :model do
 
   after do
     test.shutdown if @use_python_nodes
-  end
-
-  before do
-    stub_const('BitcoinClient::Error', BitcoinClientMock::Error)
-    stub_const('BitcoinClient::ConnectionError', BitcoinClientMock::ConnectionError)
-    stub_const('BitcoinClient::PartialFileError', BitcoinClientMock::PartialFileError)
-    stub_const('BitcoinClient::BlockPrunedError', BitcoinClientMock::BlockPrunedError)
-    stub_const('BitcoinClient::BlockNotFoundError', BitcoinClientMock::BlockNotFoundError)
-    stub_const('BitcoinClient::MethodNotFoundError', BitcoinClientMock::MethodNotFoundError)
-    stub_const('BitcoinClient::TimeOutError', BitcoinClientMock::TimeOutError)
   end
 
   describe 'log2_pow' do
@@ -385,7 +370,7 @@ RSpec.describe Block, type: :model do
     end
 
     it "skips if the mirror node doesn't have the block" do
-      expect { @node_a.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinClient::BlockNotFoundError)
+      expect { @node_a.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
     end
 
     describe 'when mirror client has block' do
@@ -549,7 +534,7 @@ RSpec.describe Block, type: :model do
     it 'submits block to original node' do
       expect do
         @node_a.client.getblock(@headers_only_block.block_hash, 1)
-      end.to raise_error(BitcoinClient::BlockNotFoundError)
+      end.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
       described_class.find_missing(:btc, 1, 1)
       res = @node_a.client.getblock(@headers_only_block.block_hash, 1)
       expect(res['confirmations']).to eq(-1)

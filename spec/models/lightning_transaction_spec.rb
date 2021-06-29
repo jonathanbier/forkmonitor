@@ -71,21 +71,21 @@ RSpec.describe LightningTransaction, type: :model do
     end
 
     it 'gracefullies fail if node connection is lost' do
-      expect(@node).to receive(:getblock).and_raise(Node::ConnectionError)
+      expect(@node).to receive(:getblock).and_raise(BitcoinUtil::RPC::ConnectionError)
       expect(described_class.check!(coin: :btc, max: 1)).to eq(false)
       @node.reload
       expect(@node.unreachable_since).not_to be_nil
     end
 
     it 'retries if a partial result is returned' do
-      expect(@node).to receive(:getblock).ordered.and_raise(Node::PartialFileError)
+      expect(@node).to receive(:getblock).ordered.and_raise(BitcoinUtil::RPC::PartialFileError)
       expect(@node).to receive(:getblock).ordered.and_call_original
       expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
     end
 
     it 'gives up if a partial result is returned twice' do
-      expect(@node).to receive(:getblock).twice.and_raise(Node::PartialFileError)
-      expect { described_class.check!(coin: :btc, max: 1) }.to raise_error(Node::PartialFileError)
+      expect(@node).to receive(:getblock).twice.and_raise(BitcoinUtil::RPC::PartialFileError)
+      expect { described_class.check!(coin: :btc, max: 1) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
     end
   end
 

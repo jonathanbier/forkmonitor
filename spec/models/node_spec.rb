@@ -6,16 +6,6 @@ require 'bitcoind_helper'
 RSpec.describe Node, type: :model do
   let(:test) { TestWrapper.new }
 
-  before do
-    stub_const('BitcoinClient::Error', BitcoinClientMock::Error)
-    stub_const('BitcoinClient::ConnectionError', BitcoinClientPython::ConnectionError)
-    stub_const('BitcoinClient::TimeOutError', BitcoinClientPython::TimeOutError)
-    stub_const('BitcoinClient::PartialFileError', BitcoinClientPython::PartialFileError)
-    stub_const('BitcoinClient::BlockPrunedError', BitcoinClientPython::BlockPrunedError)
-    stub_const('BitcoinClient::BlockNotFoundError', BitcoinClientPython::BlockNotFoundError)
-    stub_const('BitcoinClient::MethodNotFoundError', BitcoinClientPython::MethodNotFoundError)
-  end
-
   describe 'version' do
     it 'is set' do
       node = create(:node_with_block, version: 160_300)
@@ -67,17 +57,17 @@ RSpec.describe Node, type: :model do
 
     it 'throws ConnectionError' do
       @node.client.mock_connection_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::ConnectionError
+      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::ConnectionError
     end
 
     it 'throws PartialFileError' do
       @node.client.mock_partial_file_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::PartialFileError
+      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::PartialFileError
     end
 
     it 'throws BlockPrunedError' do
       @node.client.mock_block_pruned_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error Node::BlockPrunedError
+      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::BlockPrunedError
     end
   end
 
@@ -103,12 +93,12 @@ RSpec.describe Node, type: :model do
 
     it 'throws ConnectionError' do
       @node.client.mock_connection_error(true)
-      expect { @node.getblockheader(@block_hash) }.to raise_error Node::ConnectionError
+      expect { @node.getblockheader(@block_hash) }.to raise_error BitcoinUtil::RPC::ConnectionError
     end
 
     it 'throws MethodNotFoundError' do
       @node.client.mock_version(100_000)
-      expect { @node.getblockheader(@block_hash) }.to raise_error Node::MethodNotFoundError
+      expect { @node.getblockheader(@block_hash) }.to raise_error BitcoinUtil::RPC::MethodNotFoundError
     end
   end
 
@@ -120,7 +110,6 @@ RSpec.describe Node, type: :model do
         end
 
         before do
-          stub_const('BitcoinClient::Error', BitcoinClientPython::Error)
           test.setup
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
@@ -192,7 +181,6 @@ RSpec.describe Node, type: :model do
 
     describe 'on subsequent runs' do
       before do
-        stub_const('BitcoinClient::Error', BitcoinClientPython::Error)
         test.setup
         @node = create(:node_python)
         @node.client.set_python_node(test.nodes[0])
@@ -670,7 +658,7 @@ RSpec.describe Node, type: :model do
     end
 
     it 'handles tx not found' do
-      expect { @node.getrawtransaction(@tx_id.reverse) }.to raise_error Node::TxNotFoundError
+      expect { @node.getrawtransaction(@tx_id.reverse) }.to raise_error BitcoinUtil::RPC::TxNotFoundError
     end
   end
 
@@ -946,12 +934,12 @@ RSpec.describe Node, type: :model do
       end
 
       it 'is called with an known coin' do
-        expect { described_class.first_with_txindex(:bbbbbbtc) }.to raise_error Node::InvalidCoinError
+        expect { described_class.first_with_txindex(:bbbbbbtc) }.to raise_error BitcoinUtil::RPC::InvalidCoinError
       end
 
       it 'throws if no node has txindex' do
         @node_b.update txindex: false
-        expect { described_class.first_with_txindex(:btc) }.to raise_error Node::NoTxIndexError
+        expect { described_class.first_with_txindex(:btc) }.to raise_error BitcoinUtil::RPC::NoTxIndexError
       end
 
       it 'returns node' do

@@ -151,10 +151,10 @@ class Block < ApplicationRecord
         end
         # Use extra long timeout for BCH blocks
         block_info = node.getblock(block_hash, 2, false, bch? ? 120 : nil)
-      rescue Node::BlockPrunedError
+      rescue BitcoinUtil::RPC::BlockPrunedError
         update pruned: true
         return
-      rescue Node::BlockNotFoundError
+      rescue BitcoinUtil::RPC::BlockNotFoundError
         # Perhaps the newest node hasn't seen this block yet, just try again later
         return
       end
@@ -191,7 +191,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(block.block_hash, 1, use_mirror)
-          rescue Node::BlockPrunedError
+          rescue BitcoinUtil::RPC::BlockPrunedError
             block_info = client.getblockheader(block.block_hash)
           end
         end
@@ -211,7 +211,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(block_info['previousblockhash'], 1, use_mirror)
-          rescue Node::BlockPrunedError
+          rescue BitcoinUtil::RPC::BlockPrunedError
             block_info = client.getblockheader(block_info['previousblockhash'])
           end
         end
@@ -269,7 +269,7 @@ class Block < ApplicationRecord
     begin
       block_info = node.getblockheader(block_hash)
       update_fields(block_info)
-    rescue Node::MethodNotFoundError, Node::BlockNotFoundError, Node::TimeOutError
+    rescue BitcoinUtil::RPC::MethodNotFoundError, BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::TimeOutError
       # Ignore old clients that don't support getblockheader, and try again
       # later if block is not found or there's a timeout.
       return false
@@ -418,7 +418,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(hash, 1, use_mirror)
-          rescue Node::BlockPrunedError
+          rescue BitcoinUtil::RPC::BlockPrunedError
             block_info = client.getblockheader(hash)
           end
         end
@@ -473,8 +473,8 @@ class Block < ApplicationRecord
           block.update headers_only: false, first_seen_by: node
           Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
           break
-        rescue Node::BlockNotFoundError
-        rescue Node::TimeOutError
+        rescue BitcoinUtil::RPC::BlockNotFoundError
+        rescue BitcoinUtil::RPC::TimeOutError
         end
 
         if raw_block.present?
@@ -485,7 +485,7 @@ class Block < ApplicationRecord
           # Feed block to node with transaction index:
           begin
             Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
-          rescue Node::NoTxIndexError
+          rescue BitcoinUtil::RPC::NoTxIndexError
           end
         end
       end
@@ -497,14 +497,14 @@ class Block < ApplicationRecord
       # Does the gbfp mirror node have the header?
       begin
         gbfp_node.getblockheader(block.block_hash, true, true)
-      rescue Node::BlockNotFoundError
+      rescue BitcoinUtil::RPC::BlockNotFoundError
         # Feed it the block header
         next if originally_seen_by.nil?
 
         raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
         # This requires blocks to be processed in ascending height order
         gbfp_node.mirror_client.submitheader(raw_block_header)
-      rescue Node::ConnectionError, BitcoinClient::NodeInitializingError
+      rescue BitcoinUtil::RPC::ConnectionError, BitcoinClient::NodeInitializingError
         next
       end
       peers = gbfp_node.mirror_client.getpeerinfo
@@ -514,7 +514,7 @@ class Block < ApplicationRecord
                                                                                           end.join(', ')}"
       peers.each do |peer|
         gbfp_node.mirror_client.getblockfrompeer(block.block_hash, peer['id'])
-      rescue BitcoinClient::Error
+      rescue BitcoinUtil::RPC::Error
         # immedidately disconnect
         begin
           gbfp_node.mirror_client.disconnectnode('', peer['id'])
@@ -545,11 +545,11 @@ class Block < ApplicationRecord
           block.update headers_only: false
           Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
         end
-      rescue Node::TimeOutError
+      rescue BitcoinUtil::RPC::TimeOutError
         Rails.logger.error "Timeout on mirror node while trying to fetch #{block.block_hash} (#{block.height})"
-      rescue Node::BlockNotFoundError
+      rescue BitcoinUtil::RPC::BlockNotFoundError
         Rails.logger.info "Block #{block.block_hash} (#{block.height}) not found on the mirror node"
-      rescue Node::BlockPrunedError
+      rescue BitcoinUtil::RPC::BlockPrunedError
         Rails.logger.info "Block #{block.block_hash} (#{block.height}) was pruned from the mirror node"
       end
     end
@@ -606,7 +606,7 @@ class Block < ApplicationRecord
         children.each do |child_block|
           begin
             node.mirror_client.getblockheader(child_block.block_hash)
-          rescue BitcoinClient::Error
+          rescue BitcoinUtil::RPC::Error
             Rails.logger.error "Skip invalidation of #{child_block.block_hash} (#{child_block.height}) on #{node.name_with_version} because mirror node doesn't have it"
             next
           end
@@ -677,7 +677,7 @@ class Block < ApplicationRecord
     # Feed block to mirror node if needed:
     begin
       node.mirror_client.getblock(block_hash, 1)
-    rescue BitcoinClient::BlockNotFoundError
+    rescue BitcoinUtil::RPC::BlockNotFoundError
       raw_block = node.client.getblock(block_hash, 0)
       node.mirror_client.submitblock(raw_block, block_hash)
       sleep 1
@@ -735,7 +735,7 @@ class Block < ApplicationRecord
   end
 
   def self.process_templates!(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     min_height = BlockTemplate.where(coin: coin).minimum(:height)
     Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',

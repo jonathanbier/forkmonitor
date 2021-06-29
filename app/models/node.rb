@@ -2,8 +2,12 @@
 
 class Node < ApplicationRecord
   include ::TxIdConcern
-  include ::Errors::Node
   include ::BitcoinUtil
+  include ::RpcConcern
+
+  class NoMatchingNodeError < StandardError; end
+
+  class NoTxIndexError < StandardError; end
 
   # BSV support has been removed, but enums are stored as integer in the database.
   enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
@@ -40,13 +44,13 @@ class Node < ApplicationRecord
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def self.coin_by_version(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     where(enabled: true, coin: coin).order(version: :desc)
   end
 
   def self.with_mirror(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
   end
@@ -141,14 +145,14 @@ class Node < ApplicationRecord
       begin
         blockchaininfo = client.getblockchaininfo
         info = client.getinfo
-      rescue BitcoinClient::Error
+      rescue BitcoinUtil::RPC::Error
         update unreachable_since: unreachable_since || DateTime.now
         return
       end
     elsif core? && version.present? && version < 100_000
       begin
         info = client.getinfo
-      rescue BitcoinClient::Error
+      rescue BitcoinUtil::RPC::Error
         update unreachable_since: unreachable_since || DateTime.now
         return
       end
@@ -156,7 +160,7 @@ class Node < ApplicationRecord
       begin
         blockchaininfo = client.getblockchaininfo
         networkinfo = client.getnetworkinfo
-      rescue BitcoinClient::Error
+      rescue BitcoinUtil::RPC::Error
         update unreachable_since: unreachable_since || DateTime.now
         return
       end
@@ -164,11 +168,11 @@ class Node < ApplicationRecord
       begin
         blockchaininfo = client.getblockchaininfo
         networkinfo = client.getnetworkinfo
-      rescue BitcoinClient::Error
+      rescue BitcoinUtil::RPC::Error
         # Try getinfo for ancient nodes:
         begin
           info = client.getinfo
-        rescue BitcoinClient::Error
+        rescue BitcoinUtil::RPC::Error
           update unreachable_since: unreachable_since || DateTime.now
           return
         end
@@ -238,7 +242,7 @@ class Node < ApplicationRecord
     Rails.logger.info 'Polling mirror node...'
     begin
       blockchaininfo = mirror_client.getblockchaininfo
-    rescue BitcoinClient::Error
+    rescue BitcoinUtil::RPC::Error
       Rails.logger.info 'Failed to poll mirror node...'
       # Ignore failure
       return
@@ -385,47 +389,6 @@ class Node < ApplicationRecord
     end
   end
 
-  def getblock(block_hash, verbosity, use_mirror = false, timeout = nil)
-    throw 'Specify block hash' if block_hash.nil?
-    throw 'Specify verbosity' if verbosity.nil?
-    client = use_mirror ? mirror_client : self.client
-    # https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.15.0.md#low-level-rpc-changes
-    # * argument verbosity was called "verbose" in older versions, but we use a positional argument
-    # * verbose was a boolean until Bitcoin Core 0.15.0
-    verbosity = verbosity.positive? if core? && version <= 149_999
-    begin
-      client.getblock(block_hash, verbosity, timeout)
-    rescue BitcoinClient::ConnectionError
-      raise ConnectionError
-    rescue BitcoinClient::PartialFileError
-      raise PartialFileError
-    rescue BitcoinClient::BlockPrunedError
-      raise BlockPrunedError
-    rescue BitcoinClient::BlockNotFoundError
-      raise BlockNotFoundError
-    rescue BitcoinClient::TimeOutError
-      raise TimeOutError
-    end
-  end
-
-  def getblockheader(block_hash, verbose = true, use_mirror = false)
-    throw 'Specify block hash' if block_hash.nil?
-    client = use_mirror ? mirror_client : self.client
-    begin
-      client.getblockheader(block_hash, verbose)
-    rescue BitcoinClient::ConnectionError
-      raise ConnectionError
-    rescue BitcoinClient::PartialFileError
-      raise PartialFileError
-    rescue BitcoinClient::BlockNotFoundError
-      raise BlockNotFoundError
-    rescue BitcoinClient::MethodNotFoundError
-      raise MethodNotFoundError
-    rescue BitcoinClient::TimeOutError
-      raise TimeOutError
-    end
-  end
-
   def self.poll!(options = {})
     if !options[:coins] || options[:coins].empty? || options[:coins].include?('BTC')
       bitcoin_core_by_version.each do |node|
@@ -514,7 +477,7 @@ class Node < ApplicationRecord
   end
 
   def self.newest_node(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     case coin
     when :btc, :tbtc
@@ -531,7 +494,7 @@ class Node < ApplicationRecord
   # but that has not been implemented.
   # Also returns array with tx ids
   def self.get_coinbase_and_tx_ids_for_block!(coin, block_hash, block_info = nil)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = nil
     begin
@@ -550,9 +513,9 @@ class Node < ApplicationRecord
     client = node.client
     begin
       block_info ||= node.getblock(block_hash, 1)
-    rescue Node::BlockPrunedError, Node::BlockNotFoundError
+    rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
       return nil
-    rescue BitcoinClient::Error => e
+    rescue BitcoinUtil::RPC::Error => e
       logger.error "Unable to fetch block #{block_hash} from #{node.name_with_version} while looking for pool name"
       return nil
     end
@@ -562,13 +525,13 @@ class Node < ApplicationRecord
     tx_id = block_info['tx'].first
     begin
       [node.getrawtransaction(tx_id, true, block_hash), block_info['tx']]
-    rescue TxNotFoundError
+    rescue BitcoinUtil::RPC::TxNotFoundError
       nil
     end
   end
 
   def self.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info = nil)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     coinbase, tx_ids = get_coinbase_and_tx_ids_for_block!(coin, block.block_hash, block_info)
     return if coinbase.nil? || coinbase == {}
@@ -586,54 +549,6 @@ class Node < ApplicationRecord
       block.coinbase_message = coinbase_message.unpack('H*')
     end
     block.save if block.changed?
-  end
-
-  # Returns false if node is not reachable. Returns nil if current mirror_block is missing.
-  def restore_mirror
-    begin
-      mirror_client.setnetworkactive(true)
-    rescue BitcoinClient::ConnectionError, BitcoinClient::NodeInitializingError, BitcoinClient::TimeOutError
-      update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
-      return false
-    end
-    return if mirror_block.nil?
-
-    # Reconsider all invalid chaintips above the currently active one:
-    chaintips = mirror_client.getchaintips
-    active_chaintip = chaintips.find { |t| t['status'] == 'active' }
-    throw "#{coin} mirror node  does not have an active chaintip" if active_chaintip.nil?
-    chaintips.select { |t| t['status'] == 'invalid' && t['height'] >= active_chaintip['height'] }.each do |t|
-      mirror_client.reconsiderblock(t['hash'])
-    end
-  end
-
-  def get_mirror_active_tip
-    mirror_client.getchaintips.find do |t|
-      t['status'] == 'active'
-    end
-  rescue BitcoinClient::TimeOutError
-    update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
-    []
-  end
-
-  def getrawtransaction(tx_id, verbose = false, block_hash = nil)
-    if core? && version && version >= 160_000
-      client.getrawtransaction(tx_id, verbose, block_hash)
-    else
-      client.getrawtransaction(tx_id, verbose)
-    end
-  rescue BitcoinClient::Error
-    # TODO: check error more precisely
-    raise TxNotFoundError,
-          "Transaction #{tx_id} #{block_hash.present? ? "in block #{block_hash}" : ''} not found on node #{id} (#{name_with_version})"
-  end
-
-  def rpc_getblocktemplate
-    if version >= 130_100
-      client.getblocktemplate({ rules: ['segwit'] })
-    else
-      client.getblocktemplate({ rules: [] })
-    end
   end
 
   def self.rollback_checks_repeat!(options)
@@ -735,7 +650,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     case coin
     when :btc
@@ -769,7 +684,7 @@ class Node < ApplicationRecord
 
   # Deleting a node takes very long, causing a timeout when done from the admin panel
   def self.destroy_if_requested(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Node.where(coin: coin, to_destroy: true).limit(1).each do |node|
       Rails.logger.info "Deleting #{node.coin.upcase} node #{node.id}: #{node.name_with_version}"
@@ -779,7 +694,7 @@ class Node < ApplicationRecord
 
   # Sometimes an empty chaintip is left over
   def self.prune_empty_chaintips!(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
   end
@@ -809,30 +724,24 @@ class Node < ApplicationRecord
   end
 
   def self.first_with_txindex(coin, client_type = :core)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false,
-                      enabled: true).first or raise NoTxIndexError
+                      enabled: true).first or raise BitcoinUtil::RPC::NoTxIndexError
   end
 
   def self.newest(coin, client_type)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false,
                       enabled: true).order(version: :desc).first or raise NoMatchingNodeError
   end
 
   def self.first_newer_than(coin, version, client_type)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where('version >= ?', version).where(coin: coin, client_type: client_type, unreachable_since: nil,
                                                      ibd: false, enabled: true).first or raise NoMatchingNodeError
-  end
-
-  def getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-    first_with_txindex(coin).getrawtransaction(tx_id, verbose, block_hash)
   end
 
   private
@@ -842,7 +751,7 @@ class Node < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin.downcase.to_sym)
+    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin.downcase.to_sym)
 
     Rails.cache.fetch("Node.last_updated(#{coin})") do
       where(coin: coin.downcase.to_sym).order(updated_at: :desc).first

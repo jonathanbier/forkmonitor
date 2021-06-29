@@ -60,7 +60,7 @@ class LightningTransaction < ApplicationRecord
     throw 'Parameter :max should be at least 1' if options[:max] < 1
     begin
       node = Node.first_with_txindex(:btc, :core)
-    rescue Node::NoTxIndexError
+    rescue BitcoinUtil::RPC::NoTxIndexError
       puts 'Unable to perform lightning checks, because no suitable node is available'
       return
     end
@@ -97,14 +97,14 @@ class LightningTransaction < ApplicationRecord
       begin
         retries ||= 0
         raw_block = node.getblock(block.block_hash, 0)
-      rescue Node::PartialFileError
+      rescue BitcoinUtil::RPC::PartialFileError
         if (retries += 1) < 2
           sleep 10 unless Rails.env.test?
           retry
         else
           raise
         end
-      rescue Node::ConnectionError
+      rescue BitcoinUtil::RPC::ConnectionError
         # The node probably crashed or temporarly ran out of RPC slots. Mark node
         # as unreachable and gracefull exit
         puts "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?

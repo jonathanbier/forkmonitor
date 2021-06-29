@@ -233,7 +233,7 @@ class Chaintip < ApplicationRecord
     rescue BitcoinClient::TimeOutError
       node.update unreachable_since: node.unreachable_since || DateTime.now
       nil
-    rescue BitcoinClient::Error
+    rescue BitcoinUtil::RPC::Error
       # Assuming this node doesn't implement it
       nil
     end

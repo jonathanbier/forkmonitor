@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
-module Errors
-  module Node
+module BitcoinUtil
+  module RPC
     class Error < StandardError; end
-
-    class InvalidCoinError < Error; end
 
     class NoTxIndexError < Error; end
 
@@ -20,10 +18,11 @@ module Errors
 
     class MethodNotFoundError < Error; end
 
-    class NoMatchingNodeError < Error; end
-
     class TimeOutError < Error; end
 
     class NodeInitializingError < Error; end
+
+    # Errors not directly from Bitcoin RPC (should be moved elsewhere)
+    class InvalidCoinError < Error; end
   end
 end

@@ -9,8 +9,6 @@ RSpec.describe InflatedBlock, type: :model do
   def setup_python_nodes
     @use_python_nodes = true
 
-    stub_const('BitcoinClient::Error', BitcoinClientPython::Error)
-    stub_const('BitcoinClient::ConnectionError', BitcoinClientPython::ConnectionError)
     test.setup(num_nodes: 3, extra_args: [['-whitelist=noban@127.0.0.1']] * 3)
     @node = create(:node_python_with_mirror)
     @node.client.set_python_node(test.nodes[0])
