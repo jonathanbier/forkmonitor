@@ -33,5 +33,7 @@ module ForkMonitor
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    config.supported_coins = %i[btc tbtc bch].freeze
   end
 end

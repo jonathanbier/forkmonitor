@@ -12,7 +12,7 @@ class ApplicationController < ActionController::Base
 
   def set_coin
     @coin = params[:coin].downcase.to_sym
-    unless params.key?(:coin) && Node::SUPPORTED_COINS.include?(@coin)
+    unless params.key?(:coin) && Rails.configuration.supported_coins.include?(@coin)
       render json: 'invalid param', status: :unprocessable_entity
       nil
     end

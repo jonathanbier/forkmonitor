@@ -5,8 +5,6 @@ class Node < ApplicationRecord
   include ::Errors::Node
   include ::BitcoinUtil
 
-  SUPPORTED_COINS = %i[btc tbtc bch].freeze
-
   # BSV support has been removed, but enums are stored as integer in the database.
   enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
@@ -42,13 +40,13 @@ class Node < ApplicationRecord
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def self.coin_by_version(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     where(enabled: true, coin: coin).order(version: :desc)
   end
 
   def self.with_mirror(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
   end
@@ -516,7 +514,7 @@ class Node < ApplicationRecord
   end
 
   def self.newest_node(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     case coin
     when :btc, :tbtc
@@ -533,7 +531,7 @@ class Node < ApplicationRecord
   # but that has not been implemented.
   # Also returns array with tx ids
   def self.get_coinbase_and_tx_ids_for_block!(coin, block_hash, block_info = nil)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = nil
     begin
@@ -570,7 +568,7 @@ class Node < ApplicationRecord
   end
 
   def self.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info = nil)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     coinbase, tx_ids = get_coinbase_and_tx_ids_for_block!(coin, block.block_hash, block_info)
     return if coinbase.nil? || coinbase == {}
@@ -737,7 +735,7 @@ class Node < ApplicationRecord
   end
 
   def self.check_chaintips!(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     case coin
     when :btc
@@ -771,7 +769,7 @@ class Node < ApplicationRecord
 
   # Deleting a node takes very long, causing a timeout when done from the admin panel
   def self.destroy_if_requested(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Node.where(coin: coin, to_destroy: true).limit(1).each do |node|
       Rails.logger.info "Deleting #{node.coin.upcase} node #{node.id}: #{node.name_with_version}"
@@ -781,7 +779,7 @@ class Node < ApplicationRecord
 
   # Sometimes an empty chaintip is left over
   def self.prune_empty_chaintips!(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
   end
@@ -811,28 +809,28 @@ class Node < ApplicationRecord
   end
 
   def self.first_with_txindex(coin, client_type = :core)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false,
                       enabled: true).first or raise NoTxIndexError
   end
 
   def self.newest(coin, client_type)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false,
                       enabled: true).order(version: :desc).first or raise NoMatchingNodeError
   end
 
   def self.first_newer_than(coin, version, client_type)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     node = Node.where('version >= ?', version).where(coin: coin, client_type: client_type, unreachable_since: nil,
                                                      ibd: false, enabled: true).first or raise NoMatchingNodeError
   end
 
-  def self.getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin)
+  def getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     first_with_txindex(coin).getrawtransaction(tx_id, verbose, block_hash)
   end
@@ -844,7 +842,7 @@ class Node < ApplicationRecord
   end
 
   def self.last_updated_cached(coin)
-    raise InvalidCoinError unless SUPPORTED_COINS.include?(coin.downcase.to_sym)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin.downcase.to_sym)
 
     Rails.cache.fetch("Node.last_updated(#{coin})") do
       where(coin: coin.downcase.to_sym).order(updated_at: :desc).first

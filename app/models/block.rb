@@ -435,7 +435,7 @@ class Block < ApplicationRecord
   end
 
   def self.find_missing(coin, max_depth, patience)
-    throw "Invalid coin argument #{coin}" unless Node::SUPPORTED_COINS.include?(coin)
+    throw "Invalid coin argument #{coin}" unless Rails.configuration.supported_coins.include?(coin)
 
     # Find recent headers_only blocks
     tip_height = Block.where(coin: coin).maximum(:height)
@@ -735,7 +735,7 @@ class Block < ApplicationRecord
   end
 
   def self.process_templates!(coin)
-    raise InvalidCoinError unless Node::SUPPORTED_COINS.include?(coin)
+    raise InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
     min_height = BlockTemplate.where(coin: coin).minimum(:height)
     Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',
