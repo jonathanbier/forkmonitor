@@ -636,7 +636,7 @@ class Node < ApplicationRecord
   def restore_mirror
     begin
       mirror_client.setnetworkactive(true)
-    rescue BitcoinClient::ConnectionError, BitcoinClient::NodeInitializingError
+    rescue BitcoinClient::ConnectionError, BitcoinClient::NodeInitializingError, BitcoinClient::TimeOutError
       update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
       return false
     end
@@ -655,6 +655,9 @@ class Node < ApplicationRecord
     mirror_client.getchaintips.find do |t|
       t['status'] == 'active'
     end
+  rescue BitcoinClient::TimeOutError
+    update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
+    []
   end
 
   def getrawtransaction(tx_id, verbose = false, block_hash = nil)
