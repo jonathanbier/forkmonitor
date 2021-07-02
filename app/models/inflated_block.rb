@@ -51,7 +51,7 @@ class InflatedBlock < ApplicationRecord
           node.mirror_client.getblockchaininfo
           node.update mirror_unreachable_since: nil
           next
-        rescue BitcoinClient::ConnectionError
+        rescue BitcoinUtil::RPC::ConnectionError
           node.update last_polled_mirror_at: Time.now
         end
       end

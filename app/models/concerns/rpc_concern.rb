@@ -39,15 +39,15 @@ module RpcConcern
     verbosity = verbosity.positive? if core? && version <= 149_999
     begin
       client.getblock(block_hash, verbosity, timeout)
-    rescue BitcoinClient::ConnectionError
+    rescue BitcoinUtil::RPC::ConnectionError
       raise BitcoinUtil::RPC::ConnectionError
-    rescue BitcoinClient::PartialFileError
+    rescue BitcoinUtil::RPC::PartialFileError
       raise BitcoinUtil::RPC::PartialFileError
-    rescue BitcoinClient::BlockPrunedError
+    rescue BitcoinUtil::RPC::BlockPrunedError
       raise BitcoinUtil::RPC::BlockPrunedError
     rescue BitcoinUtil::RPC::BlockNotFoundError
       raise BitcoinUtil::RPC::BlockNotFoundError
-    rescue BitcoinClient::TimeOutError
+    rescue BitcoinUtil::RPC::TimeOutError
       raise BitcoinUtil::RPC::TimeOutError
     end
   end
@@ -57,15 +57,15 @@ module RpcConcern
     client = use_mirror ? mirror_client : self.client
     begin
       client.getblockheader(block_hash, verbose)
-    rescue BitcoinClient::ConnectionError
+    rescue BitcoinUtil::RPC::ConnectionError
       raise BitcoinUtil::RPC::ConnectionError
-    rescue BitcoinClient::PartialFileError
+    rescue BitcoinUtil::RPC::PartialFileError
       raise BitcoinUtil::RPC::PartialFileError
     rescue BitcoinUtil::RPC::BlockNotFoundError
       raise BitcoinUtil::RPC::BlockNotFoundError
-    rescue BitcoinClient::MethodNotFoundError
+    rescue BitcoinUtil::RPC::MethodNotFoundError
       raise BitcoinUtil::RPC::MethodNotFoundError
-    rescue BitcoinClient::TimeOutError
+    rescue BitcoinUtil::RPC::TimeOutError
       raise BitcoinUtil::RPC::TimeOutError
     end
   end
@@ -74,7 +74,7 @@ module RpcConcern
   def restore_mirror
     begin
       mirror_client.setnetworkactive(true)
-    rescue BitcoinClient::ConnectionError, BitcoinClient::NodeInitializingError, BitcoinClient::TimeOutError
+    rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::TimeOutError
       update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
       return false
     end
@@ -93,7 +93,7 @@ module RpcConcern
     mirror_client.getchaintips.find do |t|
       t['status'] == 'active'
     end
-  rescue BitcoinClient::TimeOutError
+  rescue BitcoinUtil::RPC::TimeOutError
     update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
     []
   end

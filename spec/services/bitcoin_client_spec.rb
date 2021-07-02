@@ -45,12 +45,12 @@ describe BitcoinClient do
 
       it 'catches connection error' do
         expect(@client.client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'couldnt_connect')
-        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinClient::ConnectionError)
+        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinUtil::RPC::ConnectionError)
       end
 
       it 'catches partial file error' do
         expect(@client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'partial_file')
-        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinClient::PartialFileError)
+        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
       end
     end
 

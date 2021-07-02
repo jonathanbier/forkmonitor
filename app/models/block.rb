@@ -504,7 +504,7 @@ class Block < ApplicationRecord
         raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
         # This requires blocks to be processed in ascending height order
         gbfp_node.mirror_client.submitheader(raw_block_header)
-      rescue BitcoinUtil::RPC::ConnectionError, BitcoinClient::NodeInitializingError
+      rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError
         next
       end
       peers = gbfp_node.mirror_client.getpeerinfo
@@ -518,7 +518,7 @@ class Block < ApplicationRecord
         # immedidately disconnect
         begin
           gbfp_node.mirror_client.disconnectnode('', peer['id'])
-        rescue BitcoinClient::PeerNotConnected
+        rescue BitcoinUtil::RPC::PeerNotConnected
           # Ignore if already disconnected for some reason
         end
       end
@@ -560,10 +560,10 @@ class Block < ApplicationRecord
         peers = gbfp_node.mirror_client.getpeerinfo
         peers.each do |peer|
           gbfp_node.mirror_client.disconnectnode('', peer['id'])
-        rescue BitcoinClient::PeerNotConnected
+        rescue BitcoinUtil::RPC::PeerNotConnected
           # Ignore if already disconnected, e.g. by us above
         end
-      rescue BitcoinClient::NodeInitializingError, BitcoinClient::ConnectionError
+      rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
         # Ignore if mirror node can't be reached or is restarting
       end
     end

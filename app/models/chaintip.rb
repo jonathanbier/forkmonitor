@@ -230,7 +230,7 @@ class Chaintip < ApplicationRecord
 
     begin
       node.client.getchaintips
-    rescue BitcoinClient::TimeOutError
+    rescue BitcoinUtil::RPC::TimeOutError
       node.update unreachable_since: node.unreachable_since || DateTime.now
       nil
     rescue BitcoinUtil::RPC::Error
@@ -246,7 +246,7 @@ class Chaintip < ApplicationRecord
     chaintips = nil
     begin
       chaintips = node.client.getchaintips
-    rescue BitcoinClient::TimeOutError
+    rescue BitcoinUtil::RPC::TimeOutError
       node.update unreachable_since: node.unreachable_since || DateTime.now
       return nil
     end
