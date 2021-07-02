@@ -4,23 +4,7 @@ require '0mq'
 require 'digest'
 
 class BitcoinClient
-  class Error < StandardError; end
-
-  class ConnectionError < Error; end
-
-  class PartialFileError < Error; end
-
-  class BlockPrunedError < Error; end
-
-  class BlockNotFoundError < Error; end
-
-  class MethodNotFoundError < Error; end
-
-  class TimeOutError < Error; end
-
-  class PeerNotConnected < Error; end
-
-  class NodeInitializingError < Error; end
+  include ::BitcoinUtil
 
   def initialize(node_id, name_with_version, coin, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @coin = coin
@@ -75,34 +59,34 @@ class BitcoinClient
   def disconnectnode(address, peer_id)
     request('disconnectnode', address, peer_id)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise PeerNotConnected if e.message.include?('Node not found in connected nodes')
+    raise BitcoinUtil::RPC::PeerNotConnected if e.message.include?('Node not found in connected nodes')
 
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "disconnectnode(#{address},#{peer_id}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getnetworkinfo
-    Timeout.timeout(30, TimeOutError) do
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getnetworkinfo') }.value
     end
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getnetworkinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getnetworkinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getpeerinfo
     request('getpeerinfo')
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getpeerinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getpeerinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockcount
     request('getblockcount')
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getblockcount failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getblockcount failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockheight
-    raise Error, 'Not implemented' unless @client_type == :libbitcoin
+    raise BitcoinUtil::RPC::Error, 'Not implemented' unless @client_type == :libbitcoin
 
     command = 'blockchain.fetch_last_height'
     zmq_connect unless @zmq_connected
@@ -120,53 +104,53 @@ class BitcoinClient
     # TODO: patch https://github.com/NARKOZ/bitcoiner (which uses https://github.com/typhoeus/typhoeus)
     # to check for timeout.
     # See also: https://adamhooper.medium.com/in-ruby-dont-use-timeout-77d9d4e5a001
-    Timeout.timeout(30, TimeOutError) do
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getinfo') }.value
     end
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockchaininfo
-    Timeout.timeout(30, TimeOutError) do
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getblockchaininfo') }.value
     end
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getblockchaininfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getblockchaininfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockhash(height)
     request('getblockhash', height)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getbestblockhash
     request('getbestblockhash')
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getbestblockhash failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getbestblockhash failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblock(hash, verbosity, timeout = 30)
-    Timeout.timeout(timeout, TimeOutError) do
+    Timeout.timeout(timeout, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getblock', hash, verbosity) }.value
     end
-  rescue TimeOutError
-    raise TimeOutError,
+  rescue BitcoinUtil::RPC::TimeOutError
+    raise BitcoinUtil::RPC::TimeOutError,
           "getblock(#{hash},#{verbosity}) timed out for #{@coin} #{@name_with_version} (id=#{@node_id})"
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise PartialFileError if e.message.include?('partial_file')
-    raise BlockPrunedError if e.message.include?('pruned data')
-    raise BlockNotFoundError if e.message.include?('Block not found')
+    raise BitcoinUtil::RPC::PartialFileError if e.message.include?('partial_file')
+    raise BitcoinUtil::RPC::BlockPrunedError if e.message.include?('pruned data')
+    raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
 
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "getblock(#{hash},#{verbosity}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockfrompeer(hash, peer_id)
     request('getblockfrompeer', hash, peer_id)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "getblockfrompeer(#{hash},#{peer_id}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
@@ -213,34 +197,34 @@ class BitcoinClient
       begin
         request('getblockheader', hash, verbose)
       rescue Bitcoiner::Client::JSONRPCError => e
-        raise BlockNotFoundError if e.message.include?('Block not found')
+        raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
 
-        raise Error,
+        raise BitcoinUtil::RPC::Error,
               "getblockheader(#{hash},#{verbose}) failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
       end
     end
   end
 
   def getchaintips
-    Timeout.timeout(120, TimeOutError) do
+    Timeout.timeout(120, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getchaintips') }.value
     end
-  rescue TimeOutError
-    raise TimeOutError, "getchaintips timed out for #{@coin} #{@name_with_version} (id=#{@node_id})"
+  rescue BitcoinUtil::RPC::TimeOutError
+    raise BitcoinUtil::RPC::TimeOutError, "getchaintips timed out for #{@coin} #{@name_with_version} (id=#{@node_id})"
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getchaintips failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getchaintips failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getmempoolinfo
     request('getmempoolinfo')
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getmempoolinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getmempoolinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def gettxoutsetinfo
     request('gettxoutsetinfo')
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "gettxoutsetinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "gettxoutsetinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getrawtransaction(hash, verbose = false, block_hash = nil)
@@ -250,20 +234,20 @@ class BitcoinClient
       request('getrawtransaction', hash, verbose)
     end
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getrawtransaction failed #{@coin} for #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getrawtransaction failed #{@coin} for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def setnetworkactive(status)
     request('setnetworkactive', status)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "setnetworkactive #{status} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def invalidateblock(block_hash)
     request('invalidateblock', block_hash)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "invalidateblock #{block_hash} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
@@ -280,20 +264,20 @@ class BitcoinClient
   def submitblock(block_data, block_hash)
     request('submitblock', block_data)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error,
+    raise BitcoinUtil::RPC::Error,
           "submitblock #{block_hash} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def submitheader(header_data)
     request('submitheader', header_data)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "submitheader failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "submitheader failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblocktemplate(rules)
     request('getblocktemplate', rules)
   rescue Bitcoiner::Client::JSONRPCError => e
-    raise Error, "getblocktemplate failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getblocktemplate failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   private
@@ -305,11 +289,11 @@ class BitcoinClient
     begin
       @client.request(*args)
     rescue Bitcoiner::Client::JSONRPCError => e
-      raise MethodNotFoundError if e.message.include?('Method not found')
-      raise TimeOutError if e.message.include?('operation_timedout')
-      raise ConnectionError if e.message.include?('couldnt_connect')
-      raise NodeInitializingError if e.message.include?('Verifying blocks')
-      raise NodeInitializingError if e.message.include?('Loading block index')
+      raise BitcoinUtil::RPC::MethodNotFoundError if e.message.include?('Method not found')
+      raise BitcoinUtil::RPC::TimeOutError if e.message.include?('operation_timedout')
+      raise BitcoinUtil::RPC::ConnectionError if e.message.include?('couldnt_connect')
+      raise BitcoinUtil::RPC::NodeInitializingError if e.message.include?('Verifying blocks')
+      raise BitcoinUtil::RPC::NodeInitializingError if e.message.include?('Loading block index')
 
       raise
     end
