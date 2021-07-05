@@ -114,7 +114,7 @@ class Chaintip < ApplicationRecord
       when 'active'
         # A block may have arrived between when we called getblockchaininfo and getchaintips.
         # In that case, ignore the new chaintip and get back to it later.
-        return nil unless block.present?
+        return nil if block.blank?
 
         block.update marked_valid_by: block.marked_valid_by | [node.id]
         Chaintip.process_active!(node, block)

@@ -203,7 +203,7 @@ class Node < ApplicationRecord
       mempool_max = mempool_info['maxmempool']
     end
 
-    raise 'Best block hash unexpectedly nil' unless best_block_hash.present?
+    raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
 
     # Mark node as reachable (if needed) before trying to fetch additional info
     # such as the coinbase message.
@@ -333,7 +333,7 @@ class Node < ApplicationRecord
     versions_window = []
 
     while block.present? && block.height >= until_height
-      unless block.version.present?
+      if block.version.blank?
         Rails.logger.error "Missing version for block #{block.height}"
         return nil
       end
@@ -416,7 +416,7 @@ class Node < ApplicationRecord
     end
 
     def poll!(options = {})
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?('BTC')
+      if options[:coins].blank? || options[:coins].include?('BTC')
         bitcoin_core_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
 
@@ -444,7 +444,7 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:btc)
       end
 
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?('TBTC')
+      if options[:coins].blank? || options[:coins].include?('TBTC')
         testnet_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
 
@@ -456,7 +456,7 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:tbtc)
       end
 
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?('BCH')
+      if options[:coins].blank? || options[:coins].include?('BCH')
         bch_by_version.each do |node|
           next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
 
@@ -470,7 +470,7 @@ class Node < ApplicationRecord
 
       check_laggards!(options)
 
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?('BTC')
+      if options[:coins].blank? || options[:coins].include?('BTC')
         bitcoin_core_by_version.first.check_versionbits!
       end
     end
@@ -725,7 +725,7 @@ class Node < ApplicationRecord
     end
 
     def check_laggards!(options = {})
-      if !options[:coins] || options[:coins].empty? || options[:coins].include?('BTC')
+      if options[:coins].blank? || options[:coins].include?('BTC')
         core_nodes = bitcoin_core_by_version
         core_nodes.drop(1).each do |node|
           lag = node.check_if_behind!(core_nodes.first)

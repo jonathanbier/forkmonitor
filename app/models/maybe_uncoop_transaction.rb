@@ -29,7 +29,7 @@ class MaybeUncoopTransaction < LightningTransaction
         first_input = nil
         next unless tx.in.each_with_index do |tx_in, input|
           # All inputs must refer to the same transaction id
-          first_input = input unless first_input.present?
+          first_input = input if first_input.blank?
           break if prev_out_hash.present? && tx_in.prev_out_hash != prev_out_hash
 
           prev_out_hash = tx_in.prev_out_hash

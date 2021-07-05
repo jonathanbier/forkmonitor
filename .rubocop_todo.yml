@@ -53,19 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 31
-# Cop supports --auto-correct.
-# Configuration parameters: NilOrEmpty, NotPresent, UnlessPresent.
-Rails/Blank:
-  Exclude:
-    - 'app/models/block.rb'
-    - 'app/models/chaintip.rb'
-    - 'app/models/maybe_uncoop_transaction.rb'
-    - 'app/models/node.rb'
-    - 'app/models/softfork.rb'
-    - 'app/services/bitcoin_client_mock.rb'
-    - 'app/services/bitcoin_client_python.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: Whitelist, AllowedMethods, AllowedReceivers.

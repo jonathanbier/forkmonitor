@@ -156,7 +156,7 @@ class BitcoinClientMock
       end
     end
 
-    throw "No getinfo mock for #{@client_type}" unless res.present?
+    throw "No getinfo mock for #{@client_type}" if res.blank?
     res[@version]
   end
 
@@ -401,7 +401,7 @@ class BitcoinClientMock
         }
       }
     end
-    throw "No getblockchaininfo mock for #{@client_type}" unless res.present?
+    throw "No getblockchaininfo mock for #{@client_type}" if res.blank?
     res[@version]
   end
 
@@ -426,7 +426,7 @@ class BitcoinClientMock
   end
 
   def getblock(hash, verbosity, _timeout = 30)
-    raise Error, 'getblock requires block hash' unless hash.present?
+    raise Error, 'getblock requires block hash' if hash.blank?
 
     raise BitcoinUtil::RPC::BlockPrunedError if @pruned_blocks.include? hash
 
@@ -459,7 +459,7 @@ class BitcoinClientMock
   def getblockheader(hash_or_height, _verbose = true)
     # TODO: return (mock) raw header if verbose is false
     if @client_type == :libbitcoin
-      raise Error, 'Must provide height or hash' unless hash_or_height.present?
+      raise Error, 'Must provide height or hash' if hash_or_height.blank?
 
       hash = if hash_or_height.is_a?(Numeric)
                @block_hashes[hash_or_height]

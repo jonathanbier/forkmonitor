@@ -79,7 +79,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
     raise BitcoinUtil::RPC::PartialFileError if @mock_partial_file_error
     raise BitcoinUtil::RPC::BlockPrunedError if @mock_block_pruned_error
-    raise BitcoinUtil::RPC::Error, 'Specify transaction id' unless tx_id.present?
+    raise BitcoinUtil::RPC::Error, 'Specify transaction id' if tx_id.blank?
 
     begin
       @node.bumpfee(tx_id)
@@ -115,7 +115,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
     raise BitcoinUtil::RPC::PartialFileError if @mock_partial_file_error
     raise BitcoinUtil::RPC::BlockPrunedError if @mock_block_pruned_error
-    raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
+    raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 
     begin
       @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
@@ -138,7 +138,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
     raise BitcoinUtil::RPC::MethodNotFoundError if @client_version < 120_000
     raise BitcoinUtil::RPC::PartialFileError if @mock_partial_file_error
-    raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
+    raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 
     begin
       @node.getblockheader(blockhash = block_hash, verbose = verbose) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
@@ -253,7 +253,7 @@ class BitcoinClientPython
   def getrawtransaction(hash, verbose = false, block_hash = nil)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify transaction hash' unless hash.present?
+    raise BitcoinUtil::RPC::Error, 'Specify transaction hash' if hash.blank?
 
     begin
       if block_hash.present?
@@ -296,7 +296,7 @@ class BitcoinClientPython
   def invalidateblock(block_hash)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
+    raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 
     begin
       @node.invalidateblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
@@ -308,7 +308,7 @@ class BitcoinClientPython
   def reconsiderblock(block_hash)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
+    raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 
     begin
       @node.reconsiderblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
@@ -331,7 +331,7 @@ class BitcoinClientPython
   def sendrawtransaction(tx)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify transaction' unless tx.present?
+    raise BitcoinUtil::RPC::Error, 'Specify transaction' if tx.blank?
 
     begin
       @node.sendrawtransaction(tx)
@@ -343,7 +343,7 @@ class BitcoinClientPython
   def gettransaction(tx)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify transaction' unless tx.present?
+    raise BitcoinUtil::RPC::Error, 'Specify transaction' if tx.blank?
 
     begin
       @node.gettransaction(tx)
@@ -355,7 +355,7 @@ class BitcoinClientPython
   def abandontransaction(tx)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify transaction' unless tx.present?
+    raise BitcoinUtil::RPC::Error, 'Specify transaction' if tx.blank?
 
     begin
       @node.abandontransaction(tx)
@@ -367,8 +367,8 @@ class BitcoinClientPython
   def sendtoaddress(destination, amount, comment = '', comment_to = '', subtractfeefromamount = false, replaceable = false)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify destination' unless destination.present?
-    raise BitcoinUtil::RPC::Error, 'Specify amount' unless amount.present?
+    raise BitcoinUtil::RPC::Error, 'Specify destination' if destination.blank?
+    raise BitcoinUtil::RPC::Error, 'Specify amount' if amount.blank?
 
     begin
       @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to, # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
@@ -438,7 +438,7 @@ class BitcoinClientPython
   def submitblock(block, block_hash = nil)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Specify block' unless block.present?
+    raise BitcoinUtil::RPC::Error, 'Specify block' if block.blank?
 
     begin
       @node.submitblock(block)
@@ -451,7 +451,7 @@ class BitcoinClientPython
   def submitheader(header)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
-    raise BitcoinUtil::RPC::Error, 'Provide header hex' unless header.present?
+    raise BitcoinUtil::RPC::Error, 'Provide header hex' if header.blank?
 
     begin
       @node.submitheader(header)

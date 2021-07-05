@@ -176,7 +176,7 @@ class Block < ApplicationRecord
             block_info = client.getblockheader(block.block_hash)
           end
         end
-        throw 'block_info unexpectedly empty' unless block_info.present?
+        throw 'block_info unexpectedly empty' if block_info.blank?
         parent = Block.find_by(block_hash: block_info['previousblockhash'])
         block.update parent: parent
       end
@@ -294,7 +294,7 @@ class Block < ApplicationRecord
     tally = 0
     while true
       active_tip = node.get_mirror_active_tip
-      break unless active_tip.present?
+      break if active_tip.blank?
       break if block_hash == active_tip['hash']
 
       if tally > (Rails.env.test? ? 2 : 100)
@@ -345,7 +345,7 @@ class Block < ApplicationRecord
       sleep 3
     end
 
-    unless active_tip.present?
+    if active_tip.blank?
       throw "No active tip left after rollback on #{node.name_with_version}. Was expecting #{block_hash} (#{height})"
     end
     unless active_tip['hash'] == block_hash
@@ -384,7 +384,7 @@ class Block < ApplicationRecord
   end
 
   def validate_fork!(node)
-    return nil unless node.mirror_rpchost.present?
+    return nil if node.mirror_rpchost.blank?
     return nil if marked_valid_by.include?(node.id) || marked_invalid_by.include?(node.id)
 
     # Feed block to mirror node if needed:
@@ -573,7 +573,7 @@ class Block < ApplicationRecord
     end
 
     def find_or_create_block_and_ancestors!(hash, node, use_mirror, mark_valid)
-      raise 'block hash missing' unless hash.present?
+      raise 'block hash missing' if hash.blank?
 
       # Not atomic and called very frequently, so sometimes it tries to insert
       # a block that was already inserted. In that case try again, so it updates

@@ -99,7 +99,7 @@ class Softfork < ApplicationRecord
           fork.save if fork.changed?
         end
       end
-      return unless value['bip8'].present?
+      return if value['bip8'].blank?
 
       bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
       fork = Softfork.find_by(
