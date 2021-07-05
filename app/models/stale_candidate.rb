@@ -147,7 +147,7 @@ class StaleCandidate < ApplicationRecord
 
     # Filter coins that are spent with a different tx in the longest chain
     # unique is used because a transaction may doublespend multiple inputs
-    txs = shortest_spent_coins_with_tx.filter do |txout, tx|
+    shortest_spent_coins_with_tx.filter do |txout, tx|
       longest_spent_coins_with_tx.key?(txout) && tx.tx_id != longest_spent_coins_with_tx[txout].tx_id
     end.collect { |txout, tx| [tx, longest_spent_coins_with_tx[txout]] }.uniq.transpose
   end
@@ -158,7 +158,7 @@ class StaleCandidate < ApplicationRecord
     (shortest_spent_coins_with_tx, longest_spent_coins_with_tx) = spent_coins_with_tx
 
     # Filter coins that are spent with a different tx in the longest chain
-    txs = shortest_spent_coins_with_tx.filter do |txout, tx|
+    shortest_spent_coins_with_tx.filter do |txout, tx|
       if !longest_spent_coins_with_tx.key?(txout) || tx.tx_id == longest_spent_coins_with_tx[txout].tx_id
         false
       else

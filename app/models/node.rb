@@ -128,7 +128,6 @@ class Node < ApplicationRecord
       end
       header = client.getblockheader(block_height)
       best_block_hash = header['hash']
-      previousblockhash = header['previousblockhash']
     elsif btcd?
       begin
         blockchaininfo = client.getblockchaininfo
@@ -537,12 +536,11 @@ class Node < ApplicationRecord
         Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_and_tx_ids_for_block"
         return nil
       end
-      client = node.client
       begin
         block_info ||= node.getblock(block_hash, 1)
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
-      rescue BitcoinUtil::RPC::Error => e
+      rescue BitcoinUtil::RPC::Error
         logger.error "Unable to fetch block #{block_hash} from #{node.name_with_version} while looking for pool name"
         return nil
       end
@@ -753,22 +751,22 @@ class Node < ApplicationRecord
     def first_with_txindex(coin, client_type = :core)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      node = Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false,
-                        enabled: true).first or raise BitcoinUtil::RPC::NoTxIndexError
+      Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false,
+                 enabled: true).first or raise BitcoinUtil::RPC::NoTxIndexError
     end
 
     def newest(coin, client_type)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      node = Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false,
-                        enabled: true).order(version: :desc).first or raise NoMatchingNodeError
+      Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false,
+                 enabled: true).order(version: :desc).first or raise NoMatchingNodeError
     end
 
     def first_newer_than(coin, version, client_type)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      node = Node.where('version >= ?', version).where(coin: coin, client_type: client_type, unreachable_since: nil,
-                                                       ibd: false, enabled: true).first or raise NoMatchingNodeError
+      Node.where('version >= ?', version).where(coin: coin, client_type: client_type, unreachable_since: nil,
+                                                ibd: false, enabled: true).first or raise NoMatchingNodeError
     end
 
     def last_updated_cached(coin)

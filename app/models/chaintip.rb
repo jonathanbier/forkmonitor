@@ -117,7 +117,7 @@ class Chaintip < ApplicationRecord
         return nil unless block.present?
 
         block.update marked_valid_by: block.marked_valid_by | [node.id]
-        tip = Chaintip.process_active!(node, block)
+        Chaintip.process_active!(node, block)
       when 'headers-only'
         # Not all blocks for this branch are available, but the headers are valid
         Chaintip.process_valid_headers!(node, chaintip, block)
@@ -128,12 +128,12 @@ class Chaintip < ApplicationRecord
         return nil if chaintip['height'] < node.block.height - (Rails.env.test? ? 1000 : 10)
 
         block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, true)
-        tip = node.chaintips.create(status: 'valid-fork', block: block, coin: block.coin) # There can be multiple valid-block chaintips
+        node.chaintips.create(status: 'valid-fork', block: block, coin: block.coin) # There can be multiple valid-block chaintips
         block.update marked_valid_by: block.marked_valid_by | [node.id]
       when 'invalid'
         block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, false)
         block.update marked_invalid_by: block.marked_invalid_by | [node.id]
-        tip = node.chaintips.create(status: 'invalid', block: block, coin: block.coin)
+        node.chaintips.create(status: 'invalid', block: block, coin: block.coin)
       end
     end
 
@@ -181,7 +181,7 @@ class Chaintip < ApplicationRecord
         }
       end
       Chaintip.transaction do
-        result = chaintip_sets.collect do |set|
+        chaintip_sets.collect do |set|
           Chaintip.process_getchaintips(set[:chaintips], set[:node]) if set.key?(:chaintips) && !set[:chaintips].nil?
         end
         # Match children and parent active chaintips

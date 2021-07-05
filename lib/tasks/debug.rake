@@ -23,7 +23,7 @@ namespace 'debug' do
       puts "Hash  : #{node.block.block_hash}"
       puts "Work  : #{node.block.work}"
       begin
-        networkinfo = node.client.getnetworkinfo
+        node.client.getnetworkinfo
         puts 'Reachable'
       rescue BitcoinClient::Error
         puts 'Unreachable'

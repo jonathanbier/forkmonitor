@@ -41,7 +41,7 @@ class MaybeUncoopTransaction < LightningTransaction
           # Witness must have the correct number of elements
           break unless tx_in.script_witness.stack.length == 4
 
-          dummy, sig_1, sig_2, fundingScript = tx_in.script_witness.stack
+          _, sig_1, sig_2, fundingScript = tx_in.script_witness.stack
           # Signatures must be DER encoded
           break unless Bitcoin::Script.is_der_signature?(sig_1)
           break unless Bitcoin::Script.is_der_signature?(sig_2)

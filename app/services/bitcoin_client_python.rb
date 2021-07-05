@@ -118,7 +118,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment
+      @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
     rescue Error => e
@@ -141,7 +141,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.getblockheader(blockhash = block_hash, verbose = verbose) # rubocop:disable Lint/SelfAssignment
+      @node.getblockheader(blockhash = block_hash, verbose = verbose) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error,
             "getblockheader(#{block_hash}, #{verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
@@ -299,7 +299,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.invalidateblock(blockhash = block_hash)
+      @node.invalidateblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "invalidateblock(#{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -311,7 +311,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.reconsiderblock(blockhash = block_hash)
+      @node.reconsiderblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "reconsiderblock(#{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -371,8 +371,8 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify amount' unless amount.present?
 
     begin
-      @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to, # rubocop:disable Lint/SelfAssignment
-                          subtractfeefromamount = subtractfeefromamount, replaceable = replaceable)                # rubocop:disable Lint/SelfAssignment
+      @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to, # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
+                          subtractfeefromamount = subtractfeefromamount, replaceable = replaceable)                # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error,
             "sendtoaddress(#{destination}, #{amount}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message

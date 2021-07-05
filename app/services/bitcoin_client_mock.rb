@@ -510,7 +510,6 @@ class BitcoinClientMock
   def mock_add_block(height, mediantime, chainwork, block_hash = nil, previousblockhash = nil, version = 536_870_912)
     block_hash ||= @block_hashes[height]
     previousblockhash ||= @block_hashes[height - 1]
-    version_bits ||= []
 
     header = {
       'height' => height,

@@ -6,18 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 37
-Lint/UselessAssignment:
-  Exclude:
-    - 'app/models/chaintip.rb'
-    - 'app/models/maybe_uncoop_transaction.rb'
-    - 'app/models/node.rb'
-    - 'app/models/stale_candidate.rb'
-    - 'app/services/bitcoin_client.rb'
-    - 'app/services/bitcoin_client_mock.rb'
-    - 'app/services/bitcoin_client_python.rb'
-    - 'lib/tasks/debug.rake'
-
 # Offense count: 6
 # Configuration parameters: CheckForMethodsWithNoSideEffects.
 Lint/Void:
