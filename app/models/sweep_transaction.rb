@@ -57,7 +57,7 @@ class SweepTransaction < LightningTransaction
 
           next unless SweepTransaction.where(tx_id: tx.hash, input: input).count.zero?
 
-          puts "Sweep: #{tx.hash}" unless Rails.env.test?
+          Rails.logger.info "Sweep: #{tx.hash}" unless Rails.env.test?
 
           sweep_tx = block.sweep_transactions.build(
             tx_id: tx.hash,

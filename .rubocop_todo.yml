@@ -73,18 +73,6 @@ Rails/InverseOf:
     - 'app/models/node.rb'
     - 'app/models/version_bit.rb'
 
-# Offense count: 13
-# Configuration parameters: Include.
-# Include: app/**/*.rb, config/**/*.rb, db/**/*.rb, lib/**/*.rb
-Rails/Output:
-  Exclude:
-    - 'app/models/block.rb'
-    - 'app/models/lightning_transaction.rb'
-    - 'app/models/maybe_uncoop_transaction.rb'
-    - 'app/models/penalty_transaction.rb'
-    - 'app/models/sweep_transaction.rb'
-    - 'app/services/bitcoin_client.rb'
-
 # Offense count: 1
 # Cop supports --auto-correct.
 # Configuration parameters: Include.

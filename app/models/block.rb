@@ -186,7 +186,7 @@ class Block < ApplicationRecord
         # Fetch parent block:
         break unless id
 
-        puts "Fetch intermediate block at height #{block.height - 1}" unless Rails.env.test?
+        Rails.logger.info "Fetch intermediate block at height #{block.height - 1}" unless Rails.env.test?
         if node.client_type.to_sym == :libbitcoin
           block_info = client.getblockheader(block_info['previousblockhash'])
         else

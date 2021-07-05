@@ -64,7 +64,7 @@ class MaybeUncoopTransaction < LightningTransaction
           break unless MaybeUncoopTransaction.where(tx_id: tx.hash, input: input).count.zero?
         end
 
-        puts "Force-close candidate: #{tx.hash}" unless Rails.env.test?
+        Rails.logger.info "Force-close candidate: #{tx.hash}" unless Rails.env.test?
 
         ln = block.maybe_uncoop_transactions.build(
           tx_id: tx.hash,

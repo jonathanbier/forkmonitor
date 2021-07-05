@@ -57,7 +57,7 @@ class PenaltyTransaction < LightningTransaction
 
           next unless PenaltyTransaction.where(tx_id: tx.hash, input: input).count.zero?
 
-          puts "Penalty: #{tx.hash}" unless Rails.env.test?
+          Rails.logger.info "Penalty: #{tx.hash}" unless Rails.env.test?
 
           ln = block.penalty_transactions.build(
             tx_id: tx.hash,

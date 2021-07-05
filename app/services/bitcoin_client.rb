@@ -43,7 +43,7 @@ class BitcoinClient
       return socket.recv_array
     end
   rescue Timeout::Error
-    puts "Timeout: #{command}"
+    Rails.logger.info "Timeout: #{command}"
     zmq_disconnect
     nil
   end
@@ -256,7 +256,7 @@ class BitcoinClient
   rescue Bitcoiner::Client::JSONRPCError
     # TODO: intercept specific error messages (e.g. block not found vs. connection error)
     unless Rails.env.test?
-      puts "reconsiderblock #{block_hash} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): block not found"
+      Rails.logger.info "reconsiderblock #{block_hash} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): block not found"
     end
     nil
   end

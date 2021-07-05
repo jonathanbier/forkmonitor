@@ -108,7 +108,7 @@ class LightningTransaction < ApplicationRecord
       begin
         node = Node.first_with_txindex(:btc, :core)
       rescue BitcoinUtil::RPC::NoTxIndexError
-        puts 'Unable to perform lightning checks, because no suitable node is available'
+        Rails.logger.info 'Unable to perform lightning checks, because no suitable node is available'
         return
       end
 
@@ -131,7 +131,7 @@ class LightningTransaction < ApplicationRecord
       end
 
       if blocks_to_check.count.positive? && !Rails.env.test?
-        puts "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
+        Rails.logger.info "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
       end
 
       blocks_to_check.each do |b|
@@ -154,12 +154,12 @@ class LightningTransaction < ApplicationRecord
         rescue BitcoinUtil::RPC::ConnectionError
           # The node probably crashed or temporarly ran out of RPC slots. Mark node
           # as unreachable and gracefull exit
-          puts "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?
+          Rails.logger.info "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?
           node.update unreachable_since: Time.now
           return false
         end
         parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-        puts "Block #{b.height} (#{b.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
+        Rails.logger.info "Block #{b.height} (#{b.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
         MaybeUncoopTransaction.check!(node, b, parsed_block)
         PenaltyTransaction.check!(node, b, parsed_block)
         SweepTransaction.check!(node, b, parsed_block)
@@ -187,7 +187,7 @@ class LightningTransaction < ApplicationRecord
           end
         rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
                Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
-          puts "1ml search for #{tx.opening_tx_id} returned error #{e}, try again later" unless Rails.env.test?
+          Rails.logger.info "1ml search for #{tx.opening_tx_id} returned error #{e}, try again later" unless Rails.env.test?
           sleep 10
         end
       end
