@@ -48,12 +48,7 @@ module RpcConcern
 
   # Returns false if node is not reachable. Returns nil if current mirror_block is missing.
   def restore_mirror
-    begin
-      mirror_client.setnetworkactive(true)
-    rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::TimeOutError
-      update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
-      return false
-    end
+    mirror_client.setnetworkactive(true)
     return if mirror_block.nil?
 
     # Reconsider all invalid chaintips above the currently active one:
@@ -63,6 +58,9 @@ module RpcConcern
     chaintips.select { |t| t['status'] == 'invalid' && t['height'] >= active_chaintip['height'] }.each do |t|
       mirror_client.reconsiderblock(t['hash'])
     end
+  rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::TimeOutError
+    update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
+    false
   end
 
   def get_mirror_active_tip
