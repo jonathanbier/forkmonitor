@@ -53,16 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: Whitelist, AllowedMethods, AllowedReceivers.
-# Whitelist: find_by_sql
-# AllowedMethods: find_by_sql
-# AllowedReceivers: Gem::Specification
-Rails/DynamicFindBy:
-  Exclude:
-    - 'app/models/safari_subscription.rb'
-
 # Offense count: 8
 # Configuration parameters: Include.
 # Include: app/**/*.rb, config/**/*.rb, lib/**/*.rb
