@@ -643,8 +643,7 @@ class Block < ApplicationRecord
             block.update headers_only: false, first_seen_by: node
             Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
             break
-          rescue BitcoinUtil::RPC::BlockNotFoundError
-          rescue BitcoinUtil::RPC::TimeOutError
+          rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::TimeOutError # rubocop:disable Lint/SuppressedException
           end
 
           if raw_block.present?
@@ -655,7 +654,7 @@ class Block < ApplicationRecord
             # Feed block to node with transaction index:
             begin
               Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
-            rescue BitcoinUtil::RPC::NoTxIndexError
+            rescue BitcoinUtil::RPC::NoTxIndexError # rubocop:disable Lint/SuppressedException
             end
           end
         end
