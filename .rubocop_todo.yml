@@ -53,30 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 42
-# Configuration parameters: CountAsOne.
-RSpec/ExampleLength:
-  Max: 35
-
-# Offense count: 103
-# Configuration parameters: .
-# SupportedStyles: have_received, receive
-RSpec/MessageSpies:
-  EnforcedStyle: receive
-
-# Offense count: 120
-RSpec/MultipleExpectations:
-  Max: 10
-
-# Offense count: 7
-# Configuration parameters: AllowSubject.
-RSpec/MultipleMemoizedHelpers:
-  Max: 8
-
-# Offense count: 6
-RSpec/NestedGroups:
-  Max: 4
-
 # Offense count: 31
 # Cop supports --auto-correct.
 # Configuration parameters: NilOrEmpty, NotPresent, UnlessPresent.

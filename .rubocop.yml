@@ -35,6 +35,21 @@ Metrics/BlockLength:
   Exclude:
     - 'db/schema.rb'
 
+RSpec/ExampleLength:
+  Max: 35
+
+RSpec/NestedGroups:
+  Max: 4
+
+RSpec/MultipleExpectations:
+  Max: 10
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 8
+
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+
 RSpec/AnyInstance:
   Enabled: false
 
