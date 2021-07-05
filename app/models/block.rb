@@ -583,7 +583,11 @@ class Block < ApplicationRecord
     # Invalidate new blocks, including any forks we don't know of yet
     Rails.logger.info "Roll back the chain to #{block_hash} (#{height}) on #{node.name_with_version}..."
     tally = 0
-    while (active_tip = node.get_mirror_active_tip; active_tip.present? && block_hash != active_tip['hash'])
+    while true
+      active_tip = node.get_mirror_active_tip
+      break unless active_tip.present?
+      break if block_hash == active_tip['hash']
+
       if tally > (Rails.env.test? ? 2 : 100)
         throw_unable_to_roll_back!(node)
       elsif tally.positive?

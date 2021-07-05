@@ -10,7 +10,6 @@
 # Configuration parameters: AllowSafeAssignment.
 Lint/AssignmentInCondition:
   Exclude:
-    - 'app/models/block.rb'
     - 'app/models/node.rb'
 
 # Offense count: 1
