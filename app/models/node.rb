@@ -479,13 +479,13 @@ class Node < ApplicationRecord
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       # Trap `Kill `
       Signal.trap('TERM') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       loop do
@@ -580,13 +580,13 @@ class Node < ApplicationRecord
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       # Trap `Kill `
       Signal.trap('TERM') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       loop do
@@ -612,13 +612,13 @@ class Node < ApplicationRecord
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       # Trap `Kill `
       Signal.trap('TERM') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       loop do
@@ -647,13 +647,13 @@ class Node < ApplicationRecord
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       # Trap `Kill `
       Signal.trap('TERM') do
         Rails.logger.info "\nShutting down gracefully..."
-        exit
+        exit # rubocop:disable Rails/Exit
       end
 
       @last_checked = nil
