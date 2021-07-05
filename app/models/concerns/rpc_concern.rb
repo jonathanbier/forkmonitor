@@ -37,37 +37,13 @@ module RpcConcern
     # * argument verbosity was called "verbose" in older versions, but we use a positional argument
     # * verbose was a boolean until Bitcoin Core 0.15.0
     verbosity = verbosity.positive? if core? && version <= 149_999
-    begin
-      client.getblock(block_hash, verbosity, timeout)
-    rescue BitcoinUtil::RPC::ConnectionError
-      raise BitcoinUtil::RPC::ConnectionError
-    rescue BitcoinUtil::RPC::PartialFileError
-      raise BitcoinUtil::RPC::PartialFileError
-    rescue BitcoinUtil::RPC::BlockPrunedError
-      raise BitcoinUtil::RPC::BlockPrunedError
-    rescue BitcoinUtil::RPC::BlockNotFoundError
-      raise BitcoinUtil::RPC::BlockNotFoundError
-    rescue BitcoinUtil::RPC::TimeOutError
-      raise BitcoinUtil::RPC::TimeOutError
-    end
+    client.getblock(block_hash, verbosity, timeout)
   end
 
   def getblockheader(block_hash, verbose = true, use_mirror = false)
     throw 'Specify block hash' if block_hash.nil?
     client = use_mirror ? mirror_client : self.client
-    begin
-      client.getblockheader(block_hash, verbose)
-    rescue BitcoinUtil::RPC::ConnectionError
-      raise BitcoinUtil::RPC::ConnectionError
-    rescue BitcoinUtil::RPC::PartialFileError
-      raise BitcoinUtil::RPC::PartialFileError
-    rescue BitcoinUtil::RPC::BlockNotFoundError
-      raise BitcoinUtil::RPC::BlockNotFoundError
-    rescue BitcoinUtil::RPC::MethodNotFoundError
-      raise BitcoinUtil::RPC::MethodNotFoundError
-    rescue BitcoinUtil::RPC::TimeOutError
-      raise BitcoinUtil::RPC::TimeOutError
-    end
+    client.getblockheader(block_hash, verbose)
   end
 
   # Returns false if node is not reachable. Returns nil if current mirror_block is missing.
