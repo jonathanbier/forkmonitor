@@ -53,15 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 54
-# Configuration parameters: EnforcedStyle, AllowedIdentifiers.
-# SupportedStyles: snake_case, camelCase
-Naming/VariableName:
-  Exclude:
-    - 'app/models/maybe_uncoop_transaction.rb'
-    - 'app/models/penalty_transaction.rb'
-    - 'app/models/sweep_transaction.rb'
-
 # Offense count: 42
 # Configuration parameters: CountAsOne.
 RSpec/ExampleLength:

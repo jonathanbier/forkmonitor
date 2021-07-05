@@ -26,13 +26,13 @@ class SweepTransaction < LightningTransaction
           # Witness must have the correct number of elements
           next unless tx_in.script_witness.stack.length == 3
 
-          signature, flag, toLocalScript = tx_in.script_witness.stack
+          signature, flag, to_local_script = tx_in.script_witness.stack
           # Signature must be DER encoded
           next unless Bitcoin::Script.is_der_signature?(signature)
           # Script path must be one of sweep (zero or empty switches to OP_IF)
           next unless flag.empty? || flag.unpack1('H*') == '00'
 
-          script = Bitcoin::Script.new(toLocalScript)
+          script = Bitcoin::Script.new(to_local_script)
           # Witness script must match expected pattern (BOLT #3)
           chunks = script.chunks
           next unless chunks.length == 9
