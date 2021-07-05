@@ -283,42 +283,6 @@ class StaleCandidate < ApplicationRecord
     end
   end
 
-  def self.check!(coin)
-    # Look for potential stale blocks, i.e. more than one block at the same height
-    tip_height = Block.where(coin: coin).maximum(:height)
-    return if tip_height.nil?
-
-    Block.select(:height).where(coin: coin).where('height > ?',
-                                                  tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).each do |block|
-      # If there are is more than 1 block at the previous height, assume we already have a stale block entry:
-      next if Block.where(coin: coin, height: block.height - 1).count > 1
-      # If there was an invalid block, assume there's fork:
-      # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
-      #       until then, we assume a forked node is deleted and the alert is dismissed
-      next if InvalidBlock.joins(:block).where(dismissed_at: nil).where('blocks.coin = ?',
-                                                                        Block.coins[coin]).count.positive?
-
-      stale_candidate = find_or_generate(coin, block.height)
-      stale_candidate.notify!
-    end
-  end
-
-  def self.find_or_generate(coin, height)
-    throw "Expected at least two #{coin} blocks at height #{height}" unless Block.where(coin: coin,
-                                                                                        height: height).count > 1
-    s = StaleCandidate.create_with(n_children: Block.where(coin: coin, height: height).count).find_or_create_by(
-      coin: coin, height: height
-    )
-    # Fetch transactions for all blocks at this height
-    Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
-    s
-  end
-
-  def self.process!(coin)
-    # Only process the 3 most recent stale candidates
-    StaleCandidate.where(coin: coin).order(height: :desc).limit(3).each(&:process!)
-  end
-
   def notify!
     if notified_at.nil?
       User.all.find_each do |user|
@@ -343,43 +307,81 @@ class StaleCandidate < ApplicationRecord
     true
   end
 
-  def self.prime_cache(coin)
-    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+  class << self
+    def check!(coin)
+      # Look for potential stale blocks, i.e. more than one block at the same height
+      tip_height = Block.where(coin: coin).maximum(:height)
+      return if tip_height.nil?
 
-    unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{coin}).json")
-      Rails.logger.info "Prime stale candidate index for #{coin.to_s.upcase}..."
-      StaleCandidate.index_json_cached(coin)
+      Block.select(:height).where(coin: coin).where('height > ?',
+                                                    tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).each do |block|
+        # If there are is more than 1 block at the previous height, assume we already have a stale block entry:
+        next if Block.where(coin: coin, height: block.height - 1).count > 1
+        # If there was an invalid block, assume there's fork:
+        # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
+        #       until then, we assume a forked node is deleted and the alert is dismissed
+        next if InvalidBlock.joins(:block).where(dismissed_at: nil).where('blocks.coin = ?',
+                                                                          Block.coins[coin]).count.positive?
+
+        stale_candidate = find_or_generate(coin, block.height)
+        stale_candidate.notify!
+      end
     end
 
-    min_height = Block.where(coin: coin).maximum(:height) - 20_000
-    StaleCandidate.where(coin: coin).where('height > ?', min_height).order(height: :desc).each do |s|
-      # Prime cache one at a time
-      return if s.prime_cache
+    def find_or_generate(coin, height)
+      throw "Expected at least two #{coin} blocks at height #{height}" unless Block.where(coin: coin,
+                                                                                          height: height).count > 1
+      s = StaleCandidate.create_with(n_children: Block.where(coin: coin, height: height).count).find_or_create_by(
+        coin: coin, height: height
+      )
+      # Fetch transactions for all blocks at this height
+      Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
+      s
     end
-  end
 
-  def self.index_json_cached(coin)
-    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-    Rails.cache.fetch("StaleCandidate.index.for_coin(#{coin}).json") do
-      min_height = Block.where(coin: coin).maximum(:height) - 1000
-      where(coin: coin).where('height > ?', min_height).order(height: :desc).limit(3).to_json({ short: true })
+    def process!(coin)
+      # Only process the 3 most recent stale candidates
+      StaleCandidate.where(coin: coin).order(height: :desc).limit(3).each(&:process!)
     end
-  end
 
-  def self.last_updated_cached(coin)
-    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    def prime_cache(coin)
+      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-    Rails.cache.fetch("StaleCandidate.last_updated(#{coin})") do
-      where(coin: coin).order(updated_at: :desc).first
+      unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{coin}).json")
+        Rails.logger.info "Prime stale candidate index for #{coin.to_s.upcase}..."
+        StaleCandidate.index_json_cached(coin)
+      end
+
+      min_height = Block.where(coin: coin).maximum(:height) - 20_000
+      StaleCandidate.where(coin: coin).where('height > ?', min_height).order(height: :desc).each do |s|
+        # Prime cache one at a time
+        return if s.prime_cache
+      end
     end
-  end
 
-  def self.page_cached(coin, page)
-    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    def index_json_cached(coin)
+      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-    Rails.cache.fetch("StaleCandidate.feed.for_coin(#{coin},#{page})") do
-      feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+      Rails.cache.fetch("StaleCandidate.index.for_coin(#{coin}).json") do
+        min_height = Block.where(coin: coin).maximum(:height) - 1000
+        where(coin: coin).where('height > ?', min_height).order(height: :desc).limit(3).to_json({ short: true })
+      end
+    end
+
+    def last_updated_cached(coin)
+      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+
+      Rails.cache.fetch("StaleCandidate.last_updated(#{coin})") do
+        where(coin: coin).order(updated_at: :desc).first
+      end
+    end
+
+    def page_cached(coin, page)
+      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+
+      Rails.cache.fetch("StaleCandidate.feed.for_coin(#{coin},#{page})") do
+        feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+      end
     end
   end
 end

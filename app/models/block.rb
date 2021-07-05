@@ -58,19 +58,6 @@ class Block < ApplicationRecord
                                                                           })
   end
 
-  def self.to_csv
-    attributes = %w[height block_hash timestamp mediantime work version tx_count size pool total_fee
-                    template_txs_fee_diff]
-
-    CSV.generate(headers: true) do |csv|
-      csv << attributes
-
-      order(height: :desc).each do |block|
-        csv << attributes.map { |attr| block.send(attr) }
-      end
-    end
-  end
-
   def log2_pow
     return nil if work.nil?
 
@@ -94,12 +81,6 @@ class Block < ApplicationRecord
     interval = height / 210_000
     reward = 50 * 100_000_000
     reward >> interval # as opposed to (reward / 2**interval)
-  end
-
-  def self.max_inflation(height)
-    interval = height / 210_000
-    reward = 50 * 100_000_000
-    reward >> interval
   end
 
   def descendants(depth_limit = nil)
@@ -297,278 +278,6 @@ class Block < ApplicationRecord
            lowest_template_fee_rate: last_template.try(:tx_fee_rates) ? last_template.lowest_fee_rate : nil
   end
 
-  def self.create_or_update_with(block_info, _use_mirror, node, mark_valid)
-    block = Block.find_or_create_by(
-      block_hash: block_info['hash'],
-      coin: node.coin,
-      height: block_info['height']
-    )
-    tx_count = extract_tx_count(block_info)
-
-    if block_info['version'].nil?
-      Rails.logger.error "Missing version for #{node.coin.to_s.upcase} #{block.block_hash} (#{block.height}) from #{node.name_with_version}}"
-    end
-
-    block.update(
-      mediantime: block_info['mediantime'],
-      timestamp: block_info['time'],
-      work: block_info['chainwork'],
-      version: block_info['version'],
-      tx_count: tx_count,
-      size: block_info['size'],
-      first_seen_by: node,
-      headers_only: false
-    )
-    if mark_valid.present?
-      if mark_valid == true
-        block.update marked_valid_by: [node.id]
-      else
-        block.update marked_invalid_by: [node.id]
-      end
-    end
-    # Set pool:
-    Node.set_pool_tx_ids_fee_total_for_block!(node.coin.to_sym, block, block_info)
-
-    # Fetch transactions if there was a stale block recently
-    if StaleCandidate.where(coin: node.coin).where('height >= ?',
-                                                   block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive?
-      block.fetch_transactions!
-    end
-    block.expire_stale_candidate_cache
-    block
-  end
-
-  def self.create_headers_only(node, height, block_hash)
-    throw 'node missing' if node.nil?
-    throw 'height missing' if height.nil?
-    begin
-      block = Block.create(
-        coin: node.coin,
-        height: height,
-        block_hash: block_hash,
-        headers_only: true,
-        first_seen_by: node,
-        tx_count: nil
-      )
-      # Fetch headers
-      # * except for BCHN nodes, which don't support getblockheader outside main chain:
-      #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
-      block.fetch_header!(node) unless node.name == 'BCHN'
-      # TODO: connect longer branches to common ancestor (fetch more headers if needed)
-      block
-    rescue ActiveRecord::RecordNotUnique
-      raise unless Rails.env.production?
-
-      Block.find_by(node.coin, block_hash: block_hash)
-    end
-  end
-
-  def self.extract_tx_count(block_info)
-    if block_info.key?('nTx')
-      block_info['nTx']
-    elsif block_info['tx'].is_a?(Array)
-      block_info['tx'].count
-    end
-  end
-
-  def self.coinbase_message(tx)
-    throw 'transaction missing' if tx.nil?
-    return nil if tx['vin'].nil? || tx['vin'].blank?
-
-    coinbase = nil
-    tx['vin'].each do |vin|
-      coinbase = vin['coinbase']
-      break if coinbase.present?
-    end
-    throw 'not a coinbase' if coinbase.nil?
-    [coinbase].pack('H*')
-  end
-
-  def self.pool_from_coinbase_tx(tx)
-    throw 'transaction missing' if tx.nil?
-
-    message = coinbase_message(tx)
-    return nil if message.nil?
-
-    Pool.all.find_each do |pool|
-      return pool.name if message.force_encoding('UTF-8').include?(pool.tag)
-    end
-    nil
-  end
-
-  def self.match_missing_pools!(coin, n)
-    Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
-      Node.set_pool_tx_ids_fee_total_for_block!(coin, b)
-    end
-  end
-
-  def self.find_or_create_block_and_ancestors!(hash, node, use_mirror, mark_valid)
-    raise 'block hash missing' unless hash.present?
-
-    # Not atomic and called very frequently, so sometimes it tries to insert
-    # a block that was already inserted. In that case try again, so it updates
-    # the existing block instead.
-    client = use_mirror ? node.mirror_client : node.client
-    begin
-      block = Block.find_by(block_hash: hash)
-
-      if block.nil?
-        if node.client_type.to_sym == :libbitcoin
-          block_info = client.getblockheader(hash)
-        else
-          begin
-            block_info = node.getblock(hash, 1, use_mirror)
-          rescue BitcoinUtil::RPC::BlockPrunedError
-            block_info = client.getblockheader(hash)
-          end
-        end
-        block = Block.create_or_update_with(block_info, use_mirror, node, mark_valid)
-      end
-
-      block.find_ancestors!(node, use_mirror, mark_valid)
-    rescue ActiveRecord::RecordNotUnique
-      raise unless Rails.env.production?
-
-      retry
-    end
-    block
-  end
-
-  def self.find_missing(coin, max_depth, patience)
-    throw "Invalid coin argument #{coin}" unless Rails.configuration.supported_coins.include?(coin)
-
-    # Find recent headers_only blocks
-    tip_height = Block.where(coin: coin).maximum(:height)
-    blocks = Block.where(coin: coin, headers_only: true).where('height >= ?',
-                                                               tip_height - max_depth).order(height: :asc)
-    return if blocks.count.zero?
-
-    getblockfrompeer_blocks = []
-    # Ensure the most recent node supports getblockfrompeer or is patched:
-    # https://github.com/BitMEXResearch/bitcoin/pull/1
-    gbfp_node = coin == :btc ? Node.with_mirror(coin).first : nil
-    gbfp_node = nil if Rails.env.test? # TODO: add test coverage, maybe after v22.0 release
-
-    blocks.each do |block|
-      block_info = nil
-      raw_block = nil
-      # Try to fetch from other nodes.
-      nodes_to_try = case coin.to_sym
-                     when :btc
-                       Node.bitcoin_core_by_version
-                     when :tbtc
-                       Node.testnet_by_version
-                     when :bch
-                       Node.bch_by_version
-                     end
-      # Keep track of the original first seen node
-      # To make mocks easier, require that it's part of nodes_to_try:
-      originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
-      # Don't bother checking nodes for old blocks; they won't ask for them
-      if tip_height - block.height < 10
-        nodes_to_try.each do |node|
-          block_info = node.getblock(block.block_hash, 1)
-          raw_block = node.getblock(block.block_hash, 0)
-          block.update_fields(block_info)
-          block.update headers_only: false, first_seen_by: node
-          Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
-          break
-        rescue BitcoinUtil::RPC::BlockNotFoundError
-        rescue BitcoinUtil::RPC::TimeOutError
-        end
-
-        if raw_block.present?
-          # Feed block to original node
-          if originally_seen_by.present? && !(originally_seen_by.core? && originally_seen_by.version < 130_100)
-            originally_seen_by.client.submitblock(raw_block, block.block_hash)
-          end
-          # Feed block to node with transaction index:
-          begin
-            Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
-          rescue BitcoinUtil::RPC::NoTxIndexError
-          end
-        end
-      end
-
-      # Try getblockfrompeer on the gbfp_node (mirror) node
-      next if raw_block.present?
-      next if gbfp_node.nil?
-
-      # Does the gbfp mirror node have the header?
-      begin
-        gbfp_node.getblockheader(block.block_hash, true, true)
-      rescue BitcoinUtil::RPC::BlockNotFoundError
-        # Feed it the block header
-        next if originally_seen_by.nil?
-
-        raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
-        # This requires blocks to be processed in ascending height order
-        gbfp_node.mirror_client.submitheader(raw_block_header)
-      rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError
-        next
-      end
-      peers = gbfp_node.mirror_client.getpeerinfo
-      # Ask each peer for the block
-      Rails.logger.info "Request block #{block.block_hash} (#{block.height}) from peers #{peers.collect do |peer|
-                                                                                            peer['id']
-                                                                                          end.join(', ')}"
-      peers.each do |peer|
-        gbfp_node.mirror_client.getblockfrompeer(block.block_hash, peer['id'])
-      rescue BitcoinUtil::RPC::Error
-        # immedidately disconnect
-        begin
-          gbfp_node.mirror_client.disconnectnode('', peer['id'])
-        rescue BitcoinUtil::RPC::PeerNotConnected
-          # Ignore if already disconnected for some reason
-        end
-      end
-      getblockfrompeer_blocks << block
-    end
-
-    if getblockfrompeer_blocks.count.positive?
-      Rails.logger.info "Wait #{patience} seconds and check if the mirror node retrieved any of the #{getblockfrompeer_blocks.count} blocks..."
-      # Wait for getblockfrompeer responses
-      sleep patience
-
-      found_block = false
-      raw_block = nil
-      getblockfrompeer_blocks.each do |block|
-        raw_block = gbfp_node.getblock(block.block_hash, 0, true)
-        Rails.logger.info "Retrieved #{block.coin.upcase} block #{block.block_hash} (#{block.height}) on the mirror node"
-        found_block = true
-        # Feed block to original node
-        if block.first_seen_by.present? && !(block.first_seen_by.core? && block.first_seen_by.version < 130_100)
-          Rails.logger.info "Submit block #{block.block_hash} (#{block.height}) to #{block.first_seen_by.name_with_version}"
-          block.first_seen_by.client.submitblock(raw_block, block.block_hash)
-          block_info = gbfp_node.getblock(block.block_hash, 1, true)
-          block.update_fields(block_info)
-          block.update headers_only: false
-          Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
-        end
-      rescue BitcoinUtil::RPC::TimeOutError
-        Rails.logger.error "Timeout on mirror node while trying to fetch #{block.block_hash} (#{block.height})"
-      rescue BitcoinUtil::RPC::BlockNotFoundError
-        Rails.logger.info "Block #{block.block_hash} (#{block.height}) not found on the mirror node"
-      rescue BitcoinUtil::RPC::BlockPrunedError
-        Rails.logger.info "Block #{block.block_hash} (#{block.height}) was pruned from the mirror node"
-      end
-    end
-
-    if !found_block && !gbfp_node.nil?
-      # Disconnect all peers if we didn't get any block
-      begin
-        peers = gbfp_node.mirror_client.getpeerinfo
-        peers.each do |peer|
-          gbfp_node.mirror_client.disconnectnode('', peer['id'])
-        rescue BitcoinUtil::RPC::PeerNotConnected
-          # Ignore if already disconnected, e.g. by us above
-        end
-      rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
-        # Ignore if mirror node can't be reached or is restarting
-      end
-    end
-  end
-
   def expire_stale_candidate_cache
     StaleCandidate.where(coin: coin).find_each do |c|
       c.expire_cache if height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
@@ -738,11 +447,304 @@ class Block < ApplicationRecord
     nil
   end
 
-  def self.process_templates!(coin)
-    raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+  class << self
+    def to_csv
+      attributes = %w[height block_hash timestamp mediantime work version tx_count size pool total_fee
+                      template_txs_fee_diff]
 
-    min_height = BlockTemplate.where(coin: coin).minimum(:height)
-    Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',
-                                                              min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
+      CSV.generate(headers: true) do |csv|
+        csv << attributes
+
+        order(height: :desc).each do |block|
+          csv << attributes.map { |attr| block.send(attr) }
+        end
+      end
+    end
+
+    def max_inflation(height)
+      interval = height / 210_000
+      reward = 50 * 100_000_000
+      reward >> interval
+    end
+
+    def create_or_update_with(block_info, _use_mirror, node, mark_valid)
+      block = Block.find_or_create_by(
+        block_hash: block_info['hash'],
+        coin: node.coin,
+        height: block_info['height']
+      )
+      tx_count = extract_tx_count(block_info)
+
+      if block_info['version'].nil?
+        Rails.logger.error "Missing version for #{node.coin.to_s.upcase} #{block.block_hash} (#{block.height}) from #{node.name_with_version}}"
+      end
+
+      block.update(
+        mediantime: block_info['mediantime'],
+        timestamp: block_info['time'],
+        work: block_info['chainwork'],
+        version: block_info['version'],
+        tx_count: tx_count,
+        size: block_info['size'],
+        first_seen_by: node,
+        headers_only: false
+      )
+      if mark_valid.present?
+        if mark_valid == true
+          block.update marked_valid_by: [node.id]
+        else
+          block.update marked_invalid_by: [node.id]
+        end
+      end
+      # Set pool:
+      Node.set_pool_tx_ids_fee_total_for_block!(node.coin.to_sym, block, block_info)
+
+      # Fetch transactions if there was a stale block recently
+      if StaleCandidate.where(coin: node.coin).where('height >= ?',
+                                                     block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive?
+        block.fetch_transactions!
+      end
+      block.expire_stale_candidate_cache
+      block
+    end
+
+    def create_headers_only(node, height, block_hash)
+      throw 'node missing' if node.nil?
+      throw 'height missing' if height.nil?
+      begin
+        block = Block.create(
+          coin: node.coin,
+          height: height,
+          block_hash: block_hash,
+          headers_only: true,
+          first_seen_by: node,
+          tx_count: nil
+        )
+        # Fetch headers
+        # * except for BCHN nodes, which don't support getblockheader outside main chain:
+        #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
+        block.fetch_header!(node) unless node.name == 'BCHN'
+        # TODO: connect longer branches to common ancestor (fetch more headers if needed)
+        block
+      rescue ActiveRecord::RecordNotUnique
+        raise unless Rails.env.production?
+
+        Block.find_by(node.coin, block_hash: block_hash)
+      end
+    end
+
+    def extract_tx_count(block_info)
+      if block_info.key?('nTx')
+        block_info['nTx']
+      elsif block_info['tx'].is_a?(Array)
+        block_info['tx'].count
+      end
+    end
+
+    def coinbase_message(tx)
+      throw 'transaction missing' if tx.nil?
+      return nil if tx['vin'].nil? || tx['vin'].blank?
+
+      coinbase = nil
+      tx['vin'].each do |vin|
+        coinbase = vin['coinbase']
+        break if coinbase.present?
+      end
+      throw 'not a coinbase' if coinbase.nil?
+      [coinbase].pack('H*')
+    end
+
+    def pool_from_coinbase_tx(tx)
+      throw 'transaction missing' if tx.nil?
+
+      message = coinbase_message(tx)
+      return nil if message.nil?
+
+      Pool.all.find_each do |pool|
+        return pool.name if message.force_encoding('UTF-8').include?(pool.tag)
+      end
+      nil
+    end
+
+    def match_missing_pools!(coin, n)
+      Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
+        Node.set_pool_tx_ids_fee_total_for_block!(coin, b)
+      end
+    end
+
+    def find_or_create_block_and_ancestors!(hash, node, use_mirror, mark_valid)
+      raise 'block hash missing' unless hash.present?
+
+      # Not atomic and called very frequently, so sometimes it tries to insert
+      # a block that was already inserted. In that case try again, so it updates
+      # the existing block instead.
+      client = use_mirror ? node.mirror_client : node.client
+      begin
+        block = Block.find_by(block_hash: hash)
+
+        if block.nil?
+          if node.client_type.to_sym == :libbitcoin
+            block_info = client.getblockheader(hash)
+          else
+            begin
+              block_info = node.getblock(hash, 1, use_mirror)
+            rescue BitcoinUtil::RPC::BlockPrunedError
+              block_info = client.getblockheader(hash)
+            end
+          end
+          block = Block.create_or_update_with(block_info, use_mirror, node, mark_valid)
+        end
+
+        block.find_ancestors!(node, use_mirror, mark_valid)
+      rescue ActiveRecord::RecordNotUnique
+        raise unless Rails.env.production?
+
+        retry
+      end
+      block
+    end
+
+    def find_missing(coin, max_depth, patience)
+      throw "Invalid coin argument #{coin}" unless Rails.configuration.supported_coins.include?(coin)
+
+      # Find recent headers_only blocks
+      tip_height = Block.where(coin: coin).maximum(:height)
+      blocks = Block.where(coin: coin, headers_only: true).where('height >= ?',
+                                                                 tip_height - max_depth).order(height: :asc)
+      return if blocks.count.zero?
+
+      getblockfrompeer_blocks = []
+      # Ensure the most recent node supports getblockfrompeer or is patched:
+      # https://github.com/BitMEXResearch/bitcoin/pull/1
+      gbfp_node = coin == :btc ? Node.with_mirror(coin).first : nil
+      gbfp_node = nil if Rails.env.test? # TODO: add test coverage, maybe after v22.0 release
+
+      blocks.each do |block|
+        block_info = nil
+        raw_block = nil
+        # Try to fetch from other nodes.
+        nodes_to_try = case coin.to_sym
+                       when :btc
+                         Node.bitcoin_core_by_version
+                       when :tbtc
+                         Node.testnet_by_version
+                       when :bch
+                         Node.bch_by_version
+                       end
+        # Keep track of the original first seen node
+        # To make mocks easier, require that it's part of nodes_to_try:
+        originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
+        # Don't bother checking nodes for old blocks; they won't ask for them
+        if tip_height - block.height < 10
+          nodes_to_try.each do |node|
+            block_info = node.getblock(block.block_hash, 1)
+            raw_block = node.getblock(block.block_hash, 0)
+            block.update_fields(block_info)
+            block.update headers_only: false, first_seen_by: node
+            Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
+            break
+          rescue BitcoinUtil::RPC::BlockNotFoundError
+          rescue BitcoinUtil::RPC::TimeOutError
+          end
+
+          if raw_block.present?
+            # Feed block to original node
+            if originally_seen_by.present? && !(originally_seen_by.core? && originally_seen_by.version < 130_100)
+              originally_seen_by.client.submitblock(raw_block, block.block_hash)
+            end
+            # Feed block to node with transaction index:
+            begin
+              Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
+            rescue BitcoinUtil::RPC::NoTxIndexError
+            end
+          end
+        end
+
+        # Try getblockfrompeer on the gbfp_node (mirror) node
+        next if raw_block.present?
+        next if gbfp_node.nil?
+
+        # Does the gbfp mirror node have the header?
+        begin
+          gbfp_node.getblockheader(block.block_hash, true, true)
+        rescue BitcoinUtil::RPC::BlockNotFoundError
+          # Feed it the block header
+          next if originally_seen_by.nil?
+
+          raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
+          # This requires blocks to be processed in ascending height order
+          gbfp_node.mirror_client.submitheader(raw_block_header)
+        rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError
+          next
+        end
+        peers = gbfp_node.mirror_client.getpeerinfo
+        # Ask each peer for the block
+        Rails.logger.info "Request block #{block.block_hash} (#{block.height}) from peers #{peers.collect do |peer|
+                                                                                              peer['id']
+                                                                                            end.join(', ')}"
+        peers.each do |peer|
+          gbfp_node.mirror_client.getblockfrompeer(block.block_hash, peer['id'])
+        rescue BitcoinUtil::RPC::Error
+          # immedidately disconnect
+          begin
+            gbfp_node.mirror_client.disconnectnode('', peer['id'])
+          rescue BitcoinUtil::RPC::PeerNotConnected
+            # Ignore if already disconnected for some reason
+          end
+        end
+        getblockfrompeer_blocks << block
+      end
+
+      if getblockfrompeer_blocks.count.positive?
+        Rails.logger.info "Wait #{patience} seconds and check if the mirror node retrieved any of the #{getblockfrompeer_blocks.count} blocks..."
+        # Wait for getblockfrompeer responses
+        sleep patience
+
+        found_block = false
+        raw_block = nil
+        getblockfrompeer_blocks.each do |block|
+          raw_block = gbfp_node.getblock(block.block_hash, 0, true)
+          Rails.logger.info "Retrieved #{block.coin.upcase} block #{block.block_hash} (#{block.height}) on the mirror node"
+          found_block = true
+          # Feed block to original node
+          if block.first_seen_by.present? && !(block.first_seen_by.core? && block.first_seen_by.version < 130_100)
+            Rails.logger.info "Submit block #{block.block_hash} (#{block.height}) to #{block.first_seen_by.name_with_version}"
+            block.first_seen_by.client.submitblock(raw_block, block.block_hash)
+            block_info = gbfp_node.getblock(block.block_hash, 1, true)
+            block.update_fields(block_info)
+            block.update headers_only: false
+            Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
+          end
+        rescue BitcoinUtil::RPC::TimeOutError
+          Rails.logger.error "Timeout on mirror node while trying to fetch #{block.block_hash} (#{block.height})"
+        rescue BitcoinUtil::RPC::BlockNotFoundError
+          Rails.logger.info "Block #{block.block_hash} (#{block.height}) not found on the mirror node"
+        rescue BitcoinUtil::RPC::BlockPrunedError
+          Rails.logger.info "Block #{block.block_hash} (#{block.height}) was pruned from the mirror node"
+        end
+      end
+
+      if !found_block && !gbfp_node.nil?
+        # Disconnect all peers if we didn't get any block
+        begin
+          peers = gbfp_node.mirror_client.getpeerinfo
+          peers.each do |peer|
+            gbfp_node.mirror_client.disconnectnode('', peer['id'])
+          rescue BitcoinUtil::RPC::PeerNotConnected
+            # Ignore if already disconnected, e.g. by us above
+          end
+        rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
+          # Ignore if mirror node can't be reached or is restarting
+        end
+      end
+    end
+
+    def process_templates!(coin)
+      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+
+      min_height = BlockTemplate.where(coin: coin).minimum(:height)
+      Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',
+                                                                min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
+    end
   end
 end

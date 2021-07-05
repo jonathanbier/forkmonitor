@@ -16,20 +16,22 @@ class InvalidBlock < ApplicationRecord
                                                })
   end
 
-  def self.check!(coin)
-    Block.where(coin: coin).where('array_length(marked_valid_by,1) > 0').where('array_length(marked_invalid_by,1) > 0').find_each do |block|
-      node = Node.find(block.marked_invalid_by.first)
-      # Create an alert
-      invalid_block = InvalidBlock.find_or_create_by(node: node, block: block)
-      next if invalid_block.notified_at
+  class << self
+    def check!(coin)
+      Block.where(coin: coin).where('array_length(marked_valid_by,1) > 0').where('array_length(marked_invalid_by,1) > 0').find_each do |block|
+        node = Node.find(block.marked_invalid_by.first)
+        # Create an alert
+        invalid_block = InvalidBlock.find_or_create_by(node: node, block: block)
+        next if invalid_block.notified_at
 
-      User.all.find_each do |user|
-        UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
+        User.all.find_each do |user|
+          UserMailer.with(user: user, invalid_block: invalid_block).invalid_block_email.deliver
+        end
+        invalid_block.update notified_at: Time.now
+        Subscription.blast("invalid-block-#{invalid_block.id}",
+                           'Invalid block',
+                           "#{invalid_block.node.name_with_version} considers #{invalid_block.block.coin.upcase} block { @invalid_block.block.height } ({ @invalid_block.block.block_hash }) invalid")
       end
-      invalid_block.update notified_at: Time.now
-      Subscription.blast("invalid-block-#{invalid_block.id}",
-                         'Invalid block',
-                         "#{invalid_block.node.name_with_version} considers #{invalid_block.block.coin.upcase} block { @invalid_block.block.height } ({ @invalid_block.block.block_hash }) invalid")
     end
   end
 end

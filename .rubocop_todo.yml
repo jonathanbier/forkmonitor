@@ -6,12 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 6
-Lint/IneffectiveAccessModifier:
-  Exclude:
-    - 'app/models/lightning_transaction.rb'
-    - 'app/models/node.rb'
-
 # Offense count: 1
 Lint/NonLocalExitFromIterator:
   Exclude:
@@ -80,7 +74,7 @@ Metrics/BlockNesting:
 # Offense count: 11
 # Configuration parameters: CountComments, CountAsOne.
 Metrics/ClassLength:
-  Max: 600
+  Max: 602
 
 # Offense count: 40
 # Configuration parameters: IgnoredMethods.

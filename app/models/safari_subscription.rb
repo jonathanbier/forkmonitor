@@ -14,10 +14,12 @@ class SafariSubscription < ApplicationRecord
     )
   end
 
-  # Send push notifications to everyone
-  def self.blast(subject, body)
-    SafariSubscription.all.find_each do |s|
-      s.notify(subject, body)
+  class << self
+    # Send push notifications to everyone
+    def blast(subject, body)
+      SafariSubscription.all.find_each do |s|
+        s.notify(subject, body)
+      end
     end
   end
 end

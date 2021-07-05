@@ -54,98 +54,6 @@ class LightningTransaction < ApplicationRecord
     nil
   end
 
-  def self.check!(options)
-    throw 'Only BTC mainnet supported' unless options[:coin].nil? || options[:coin] == :btc
-    throw 'Must specifiy :max' unless options.key?(:max)
-    throw 'Parameter :max should be at least 1' if options[:max] < 1
-    begin
-      node = Node.first_with_txindex(:btc, :core)
-    rescue BitcoinUtil::RPC::NoTxIndexError
-      puts 'Unable to perform lightning checks, because no suitable node is available'
-      return
-    end
-
-    blocks_to_check = []
-    block = node.block
-    while true
-      if block.nil?
-        missing_block = true
-        break
-      end
-      break if block.checked_lightning
-
-      # Don't perform lightning checks for more than 10 (default) blocks; it will take too long to catch up
-      if blocks_to_check.count > options[:max]
-        max_exceeded = true
-        break
-      end
-      blocks_to_check.unshift(block)
-      block = block.parent
-    end
-
-    if blocks_to_check.count.positive? && !Rails.env.test?
-      puts "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
-    end
-
-    blocks_to_check.each do |block|
-      # libbitcoin doesn't return timestamps, so fetch those if needed
-      if block.timestamp.nil?
-        block_info = node.client.getblockheader(block.block_hash)
-        block.update timestamp: block_info['time'], mediantime: block_info['mediantime']
-      end
-
-      begin
-        retries ||= 0
-        raw_block = node.getblock(block.block_hash, 0)
-      rescue BitcoinUtil::RPC::PartialFileError
-        if (retries += 1) < 2
-          sleep 10 unless Rails.env.test?
-          retry
-        else
-          raise
-        end
-      rescue BitcoinUtil::RPC::ConnectionError
-        # The node probably crashed or temporarly ran out of RPC slots. Mark node
-        # as unreachable and gracefull exit
-        puts "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?
-        node.update unreachable_since: Time.now
-        return false
-      end
-      parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-      puts "Block #{block.height} (#{block.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
-      MaybeUncoopTransaction.check!(node, block, parsed_block)
-      PenaltyTransaction.check!(node, block, parsed_block)
-      SweepTransaction.check!(node, block, parsed_block)
-      block.update checked_lightning: true
-    end
-
-    raise 'Unable to perform lightning checks due to missing intermediate block' if missing_block
-
-    if max_exceeded
-      raise "More than #{options[:max]} blocks behind for lightning checks, please manually check blocks before #{blocks_to_check.first.height} (#{blocks_to_check.first.block_hash})"
-    end
-
-    true
-  end
-
-  def self.check_public_channels!
-    LightningTransaction.where(channel_is_public: nil).find_each do |tx|
-      uri = URI.parse('https://1ml.com/search')
-      begin
-        response = Net::HTTP.post_form(uri, { 'q' => tx.opening_tx_id })
-        if response.code.to_i == 302 && response['location'] =~ %r{/channel/(\d+)}
-          tx.update(channel_is_public: true, channel_id_1ml: Regexp.last_match(1).to_i)
-        else
-          tx.update channel_is_public: false
-        end
-      rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
-             Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
-        puts "1ml search for #{tx.opening_tx_id} returned error #{e}, try again later" unless Rails.env.test?
-        sleep 10
-      end
-    end
-  end
-
   def block_height
     block.try :height
   end
@@ -158,51 +66,7 @@ class LightningTransaction < ApplicationRecord
     parent.try :tx_id
   end
 
-  def self.to_csv
-    attributes = %w[id block_height date tx_id input amount channel_is_public parent_tx_id]
-
-    CSV.generate(headers: true) do |csv|
-      csv << attributes
-
-      eager_load(:block, :parent).order(height: :desc).each do |tx|
-        csv << attributes.map { |attr| tx.send(attr) }
-      end
-    end
-  end
-
-  # Used once for migration
-  def self.get_opening_blocks!
-    PenaltyTransaction.all.find_each do |penalty|
-      coin = penalty.block.coin.to_sym
-      opening_tx = Node.first_with_txindex(coin).getrawtransaction(penalty.opening_tx_id, true)
-      block = Block.find_by coin: coin, block_hash: opening_tx['blockhash']
-      penalty.update opening_block: block
-    end
-  end
-
   private
-
-  def self.get_input_amount(node, tx, input)
-    input_transaction = tx.inputs[input]
-    tx_id = input_transaction.prev_out_hash.reverse.unpack1('H*')
-    raw_tx = node.client.getrawtransaction(tx_id)
-    parsed_tx = Bitcoin::Protocol::Tx.new([raw_tx].pack('H*'))
-    parsed_tx.out[input_transaction.prev_out_index].value / 100_000_000.0
-  end
-
-  def self.last_updated_cached
-    Rails.cache.fetch("#{name}.last_updated") { order(updated_at: :desc).first }
-  end
-
-  def self.all_with_block_cached
-    Rails.cache.fetch("#{name}.all_with_block") { joins(:block).order(height: :desc).to_a }
-  end
-
-  def self.page_with_block_cached(page)
-    Rails.cache.fetch("#{name}.page_with_block_cached(#{page})") do
-      joins(:block).order(height: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
-    end
-  end
 
   def expire_cache
     Rails.cache.delete("#{self.class.name}.csv")
@@ -212,5 +76,145 @@ class LightningTransaction < ApplicationRecord
       Rails.cache.delete("#{self.class.name}.page_with_block_cached(#{page})")
     end
     Rails.cache.delete("#{self.class.name}.count")
+  end
+
+  class << self
+    def to_csv
+      attributes = %w[id block_height date tx_id input amount channel_is_public parent_tx_id]
+
+      CSV.generate(headers: true) do |csv|
+        csv << attributes
+
+        eager_load(:block, :parent).order(height: :desc).each do |tx|
+          csv << attributes.map { |attr| tx.send(attr) }
+        end
+      end
+    end
+
+    # Used once for migration
+    def get_opening_blocks!
+      PenaltyTransaction.all.find_each do |penalty|
+        coin = penalty.block.coin.to_sym
+        opening_tx = Node.first_with_txindex(coin).getrawtransaction(penalty.opening_tx_id, true)
+        block = Block.find_by coin: coin, block_hash: opening_tx['blockhash']
+        penalty.update opening_block: block
+      end
+    end
+
+    def check!(options)
+      throw 'Only BTC mainnet supported' unless options[:coin].nil? || options[:coin] == :btc
+      throw 'Must specifiy :max' unless options.key?(:max)
+      throw 'Parameter :max should be at least 1' if options[:max] < 1
+      begin
+        node = Node.first_with_txindex(:btc, :core)
+      rescue BitcoinUtil::RPC::NoTxIndexError
+        puts 'Unable to perform lightning checks, because no suitable node is available'
+        return
+      end
+
+      blocks_to_check = []
+      block = node.block
+      while true
+        if block.nil?
+          missing_block = true
+          break
+        end
+        break if block.checked_lightning
+
+        # Don't perform lightning checks for more than 10 (default) blocks; it will take too long to catch up
+        if blocks_to_check.count > options[:max]
+          max_exceeded = true
+          break
+        end
+        blocks_to_check.unshift(block)
+        block = block.parent
+      end
+
+      if blocks_to_check.count.positive? && !Rails.env.test?
+        puts "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
+      end
+
+      blocks_to_check.each do |block|
+        # libbitcoin doesn't return timestamps, so fetch those if needed
+        if block.timestamp.nil?
+          block_info = node.client.getblockheader(block.block_hash)
+          block.update timestamp: block_info['time'], mediantime: block_info['mediantime']
+        end
+
+        begin
+          retries ||= 0
+          raw_block = node.getblock(block.block_hash, 0)
+        rescue BitcoinUtil::RPC::PartialFileError
+          if (retries += 1) < 2
+            sleep 10 unless Rails.env.test?
+            retry
+          else
+            raise
+          end
+        rescue BitcoinUtil::RPC::ConnectionError
+          # The node probably crashed or temporarly ran out of RPC slots. Mark node
+          # as unreachable and gracefull exit
+          puts "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?
+          node.update unreachable_since: Time.now
+          return false
+        end
+        parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
+        puts "Block #{block.height} (#{block.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
+        MaybeUncoopTransaction.check!(node, block, parsed_block)
+        PenaltyTransaction.check!(node, block, parsed_block)
+        SweepTransaction.check!(node, block, parsed_block)
+        block.update checked_lightning: true
+      end
+
+      raise 'Unable to perform lightning checks due to missing intermediate block' if missing_block
+
+      if max_exceeded
+        raise "More than #{options[:max]} blocks behind for lightning checks, please manually check blocks before #{blocks_to_check.first.height} (#{blocks_to_check.first.block_hash})"
+      end
+
+      true
+    end
+
+    def check_public_channels!
+      LightningTransaction.where(channel_is_public: nil).find_each do |tx|
+        uri = URI.parse('https://1ml.com/search')
+        begin
+          response = Net::HTTP.post_form(uri, { 'q' => tx.opening_tx_id })
+          if response.code.to_i == 302 && response['location'] =~ %r{/channel/(\d+)}
+            tx.update(channel_is_public: true, channel_id_1ml: Regexp.last_match(1).to_i)
+          else
+            tx.update channel_is_public: false
+          end
+        rescue Timeout::Error, Errno::EINVAL, Errno::ECONNRESET, EOFError,
+               Net::HTTPBadResponse, Net::HTTPHeaderSyntaxError, Net::ProtocolError => e
+          puts "1ml search for #{tx.opening_tx_id} returned error #{e}, try again later" unless Rails.env.test?
+          sleep 10
+        end
+      end
+    end
+
+    def last_updated_cached
+      Rails.cache.fetch("#{name}.last_updated") { order(updated_at: :desc).first }
+    end
+
+    def all_with_block_cached
+      Rails.cache.fetch("#{name}.all_with_block") { joins(:block).order(height: :desc).to_a }
+    end
+
+    def page_with_block_cached(page)
+      Rails.cache.fetch("#{name}.page_with_block_cached(#{page})") do
+        joins(:block).order(height: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+      end
+    end
+
+    private
+
+    def get_input_amount(node, tx, input)
+      input_transaction = tx.inputs[input]
+      tx_id = input_transaction.prev_out_hash.reverse.unpack1('H*')
+      raw_tx = node.client.getrawtransaction(tx_id)
+      parsed_tx = Bitcoin::Protocol::Tx.new([raw_tx].pack('H*'))
+      parsed_tx.out[input_transaction.prev_out_index].value / 100_000_000.0
+    end
   end
 end
