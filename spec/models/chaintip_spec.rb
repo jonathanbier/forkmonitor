@@ -2,91 +2,24 @@
 
 require 'rails_helper'
 require 'bitcoind_helper'
+require './spec/support/mock_node_helpers'
+
+RSpec.configure do |c|
+  c.include MockNodeHelpers
+end
 
 RSpec.describe Chaintip, type: :model do
   let(:test) { TestWrapper.new }
 
-  def setup_python_nodes
-    @use_python_nodes = true
-
-    # The current commit of Bitcoin Core has wallet taproot descriptor support,
-    # even when taproot is not active. We take advantage of this by creating
-    # a transaction in the non-taproot wallet and then calling abandontransaction.
-    #
-    # TOOD: figure out how to get the "send" RPC to work ('send' is a reserved
-    # keyword in Ruby and Python and this seems to confuse the wrapper)
-    #
-    # Once a release with Taproot support is available, it's best to use that
-    # for the second node, so that this test still works when Taproot deployment
-    # is burried (at which point vbparams won't work).
-    test.setup(num_nodes: 3, extra_args: [
-                 [
-                   '-walletbroadcast=0' # manually broadcast wallet transactions
-                 ],
-                 [
-                   '-vbparams=taproot:1:1'
-                 ],
-                 [
-                   '-vbparams=taproot:1:1'
-                 ]
-               ])
-    @node_a = create(:node_python) # Taproot enabled
-    @node_a.client.set_python_node(test.nodes[0])
-    @node_b = create(:node_python) # Taproot disabled
-    @node_b.client.set_python_node(test.nodes[1])
-    @node_c = create(:node_python) # Taproot disabled (doesn't really matter)
-    @node_c.client.set_python_node(test.nodes[2])
-
-    # Disconnect Node C so we can give it a an independent chain
-    @node_c.client.setnetworkactive(false)
-    test.disconnect_nodes(0, 2)
-    test.disconnect_nodes(1, 2)
-
-    @node_a.client.createwallet(blank: true)
-    @node_a.client.importdescriptors([
-                                       {
-                                         desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/0/*)#c8796lse', active: true, internal: false, timestamp: 'now', range: 10
-                                       },
-                                       {
-                                         desc: 'tr(tprv8ZgxMBicQKsPeNLUGrbv3b7qhUk1LQJZAGMuk9gVuKh9sd4BWGp1eMsehUni6qGb8bjkdwBxCbgNGdh2bYGACK5C5dRTaif9KBKGVnSezxV/1/*)#fnmy82qp', active: true, internal: true, timestamp: 'now', range: 10
-                                       }
-                                     ])
-    @node_b.client.createwallet
-    @addr_1 = @node_a.client.getnewaddress # Taproot address
-    @addr_2 = @node_a.client.getnewaddress # Taproot address
-    @r_addr = @node_b.client.getnewaddress # Segwit v0 address
-
-    @node_b.client.generatetoaddress(2, @r_addr)
-    test.sync_blocks([@node_a.client, @node_b.client])
-
-    @node_a.poll!
-    @node_a.reload
-    assert_equal(@node_a.block.height, 2)
-    expect(@node_a.block.parent).not_to be_nil
-    assert_equal(@node_a.block.parent.height, 1)
-    assert_equal(Chaintip.count, 0)
-
-    @node_b.poll!
-    @node_b.reload
-    assert_equal(@node_b.block.height, 2)
-    assert_equal(@node_b.block.parent.height, 1)
-    assert_equal(Chaintip.count, 0)
-
-    @node_c.client.createwallet
-    @addr_3 = @node_c.client.getnewaddress
-    @node_c.client.generatetoaddress(3, @addr_3) # longer chain than A and B, so it won't validate those blocks
-    # Node C intentionally remains disconnected from A and B
+  before do
+    setup_chaintip_spec_nodes
   end
 
   after do
-    test.shutdown if @use_python_nodes
+    test.shutdown
   end
 
   describe 'process_active!' do
-    before do
-      setup_python_nodes
-    end
-
     it 'creates fresh chaintip for a new node' do
       tip = described_class.process_active!(@node_a, @node_a.block)
       expect(tip.id).not_to be_nil
@@ -125,7 +58,6 @@ RSpec.describe Chaintip, type: :model do
     let(:chaintip_2) { create(:chaintip, block: block_1, node: node_b) }
 
     it 'shows all nodes at height of active chaintip' do
-      setup_python_nodes
       @tip_a = described_class.process_active!(@node_a, @node_a.block)
       @tip_b = described_class.process_active!(@node_b, @node_b.block)
       assert_equal 2, @tip_a.nodes_for_identical_chaintips.count
@@ -140,10 +72,6 @@ RSpec.describe Chaintip, type: :model do
   end
 
   describe 'process_valid_headers!' do
-    before do
-      setup_python_nodes
-    end
-
     it 'does nothing if we already know the block' do
       block = Block.create(coin: :btc, block_hash: '1234', height: 5)
       expect(Block).not_to receive(:create_headers_only)
@@ -264,10 +192,6 @@ RSpec.describe Chaintip, type: :model do
   end
 
   describe 'check!' do
-    before do
-      setup_python_nodes
-    end
-
     describe 'one node in IBD' do
       it 'does nothing' do
         @node_a.update ibd: true
@@ -452,8 +376,6 @@ RSpec.describe Chaintip, type: :model do
 
   describe 'self.validate_forks!' do
     before do
-      setup_python_nodes
-
       # Feed blocks from node B to node C so their status changes from 'headers-only'
       # to 'valid-headers'
       assert_equal(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(1), 0)), 'inconclusive')
@@ -466,7 +388,6 @@ RSpec.describe Chaintip, type: :model do
     end
 
     it "calls block.validate_fork! on 'valid-headers' tips" do
-      # pp @node_c.client.getchaintips()
       block = Block.new
       expect(Block).to receive(:find_by).and_return block
       expect(block).to receive(:validate_fork!)
@@ -474,7 +395,6 @@ RSpec.describe Chaintip, type: :model do
     end
 
     it 'ignores old tips' do
-      # pp @node_c.client.getchaintips()
       expect(Block).not_to receive(:find_by)
       @node_c.client.generatetoaddress(1, @addr_3)
       described_class.validate_forks!(@node_c, 1)

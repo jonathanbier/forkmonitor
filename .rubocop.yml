@@ -26,6 +26,12 @@ Rails/EnvironmentVariableAccess:
 Naming/VariableNumber:
   EnforcedStyle: snake_case
 
+Metrics/BlockLength:
+  CountAsOne: ['array']
+  IgnoredMethods: ['describe', 'draw']
+  Exclude:
+    - 'db/schema.rb'
+
 RSpec/AnyInstance:
   Enabled: false
 
