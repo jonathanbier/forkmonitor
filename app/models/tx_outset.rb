@@ -5,7 +5,7 @@ class TxOutset < ApplicationRecord
   belongs_to :node
 
   def parent
-    block.parent.tx_outsets.where(node: node).first
+    block.parent.tx_outsets.find_by(node: node)
   end
 
   def as_json(options = nil)

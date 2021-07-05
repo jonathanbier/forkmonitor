@@ -751,8 +751,8 @@ class Node < ApplicationRecord
     def first_with_txindex(coin, client_type = :core)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      Node.where(coin: coin, txindex: true, client_type: client_type, ibd: false,
-                 enabled: true).first or raise BitcoinUtil::RPC::NoTxIndexError
+      Node.find_by(coin: coin, txindex: true, client_type: client_type, ibd: false,
+                   enabled: true) or raise BitcoinUtil::RPC::NoTxIndexError
     end
 
     def newest(coin, client_type)
@@ -765,8 +765,8 @@ class Node < ApplicationRecord
     def first_newer_than(coin, version, client_type)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      Node.where('version >= ?', version).where(coin: coin, client_type: client_type, unreachable_since: nil,
-                                                ibd: false, enabled: true).first or raise NoMatchingNodeError
+      Node.where(coin: coin, client_type: client_type, unreachable_since: nil,
+                 ibd: false, enabled: true).find_by('version >= ?', version) or raise NoMatchingNodeError
     end
 
     def last_updated_cached(coin)
