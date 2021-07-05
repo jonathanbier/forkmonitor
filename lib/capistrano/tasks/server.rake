@@ -2,6 +2,8 @@
 
 task :restart_rake_tasks do
   on 'forkmonitor' do
+    execute 'pkill -f rake'
+    sleep 10
     execute 'pkill -9 -f rake'
   end
 end
