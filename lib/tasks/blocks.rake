@@ -20,7 +20,13 @@ namespace 'blocks' do
   task get_chaintips: :environment do |_action|
     Node.all.each do |node|
       puts "Node #{node.id}: #{node.name_with_version}:"
-      tp node.client.getchaintips, :height, :branchlen, :status, hash: { width: 64 }
+      begin
+        Thread.report_on_exception = false
+        tp node.client.getchaintips, :height, :branchlen, :status, hash: { width: 64 }
+      rescue BitcoinUtil::RPC::ConnectionError
+        puts 'Unreachable'
+      end
+      puts ''
     end
   end
 
