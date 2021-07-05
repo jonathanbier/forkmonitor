@@ -6,17 +6,6 @@
 # Note that changes in the inspected code, or installation of new
 # versions of RuboCop, may require this file to be generated again.
 
-# Offense count: 6
-# Configuration parameters: CheckForMethodsWithNoSideEffects.
-Lint/Void:
-  Exclude:
-    - 'lib/tasks/blocks.rake'
-    - 'lib/tasks/cache.rake'
-    - 'lib/tasks/debug.rake'
-    - 'lib/tasks/nodes.rake'
-    - 'lib/tasks/pools.rake'
-    - 'lib/tasks/safari.rake'
-
 # Offense count: 85
 # Configuration parameters: IgnoredMethods, CountRepeatedAttributes.
 Metrics/AbcSize:

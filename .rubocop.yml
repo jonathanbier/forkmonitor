@@ -1,6 +1,7 @@
 inherit_from: .rubocop_todo.yml
 
 require:
+  - rubocop-rake
   - rubocop-rspec
   - rubocop-rails
 
@@ -42,5 +43,9 @@ RSpec/StubbedMock:
   Enabled: false
 
 Rails/RakeEnvironment:
+  Exclude:
+    - 'lib/capistrano/tasks/*'
+
+Rake:
   Exclude:
     - 'lib/capistrano/tasks/*'

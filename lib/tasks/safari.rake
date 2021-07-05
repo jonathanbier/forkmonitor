@@ -2,7 +2,6 @@
 
 require 'push_package'
 namespace 'safari' do
-  :env
   desc 'Generate Push Package'
   task generate_push_package: [:environment] do
     website_params = {

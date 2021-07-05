@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 namespace 'nodes' do
-  :env
   desc 'Update database with latest info from each node'
   task :poll, [] => :environment do |_action, args|
     Node.poll!({ coins: args.extras })

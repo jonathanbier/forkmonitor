@@ -4,7 +4,6 @@ require 'net/http'
 require 'json'
 
 namespace 'blocks' do
-  :env
   desc 'Fetch block ancestors down to [height]'
   task :fetch_ancestors, [:height] => :environment do |_action, args|
     Node.fetch_ancestors!(args.height.to_i)

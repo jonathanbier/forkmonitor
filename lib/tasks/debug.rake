@@ -8,7 +8,6 @@ namespace 'debug' do
     sys.path.insert(0, '.')
   end
 
-  :env
   desc 'Print basic info from each node'
   task node_info: :environment do
     Node.all.each do |node|
@@ -58,6 +57,7 @@ task info: %i[environment verbose] do
   Rails.logger.level = Logger::INFO
 end
 
+desc 'Simulate task failure'
 task failing_task: :environment do
   puts "Failing task in environment #{Rails.env}..."
   FAIL!
