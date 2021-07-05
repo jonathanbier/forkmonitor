@@ -345,14 +345,14 @@ class Node < ApplicationRecord
 
     versions_window = []
 
-    while block.height >= until_height
+    while block.present? && block.height >= until_height
       unless block.version.present?
         Rails.logger.error "Missing version for block #{block.height}"
         return nil
       end
 
       versions_window.push(block.version_bits)
-      break unless block = block.parent
+      block = block.parent
     end
 
     return nil if versions_window.length != VersionBit::WINDOW # Less than 100 blocks or missing parent info
