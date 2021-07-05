@@ -566,8 +566,8 @@ class Block < ApplicationRecord
       nil
     end
 
-    def match_missing_pools!(coin, n)
-      Block.where(coin: coin, pool: nil).order(height: :desc).limit(n).each do |b|
+    def match_missing_pools!(coin, limit)
+      Block.where(coin: coin, pool: nil).order(height: :desc).limit(limit).each do |b|
         Node.set_pool_tx_ids_fee_total_for_block!(coin, b)
       end
     end

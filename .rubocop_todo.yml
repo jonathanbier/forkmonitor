@@ -53,16 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 10
-# Configuration parameters: MinNameLength, AllowNamesEndingInNumbers, AllowedNames, ForbiddenNames.
-# AllowedNames: at, by, db, id, in, io, ip, of, on, os, pp, to
-Naming/MethodParameterName:
-  Exclude:
-    - 'app/models/block.rb'
-    - 'app/models/lightning_transaction.rb'
-    - 'app/models/node.rb'
-    - 'app/services/bitcoin_client_python.rb'
-
 # Offense count: 54
 # Configuration parameters: EnforcedStyle, AllowedIdentifiers.
 # SupportedStyles: snake_case, camelCase

@@ -205,24 +205,24 @@ class BitcoinClientPython
     end
   end
 
-  def generate(n)
+  def generate(n_blocks)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
       coinbase_dest = @node.get_deterministic_priv_key.address
-      @node.generatetoaddress(n, coinbase_dest)
+      @node.generatetoaddress(n_blocks, coinbase_dest)
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
-  def generatetoaddress(n, address)
+  def generatetoaddress(n_blocks, address)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
-      @node.generatetoaddress(n, address)
+      @node.generatetoaddress(n_blocks, address)
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

@@ -26,6 +26,9 @@ Rails/EnvironmentVariableAccess:
 Naming/VariableNumber:
   EnforcedStyle: snake_case
 
+Naming/MethodParameterName:
+  AllowedNames: ['tx']
+
 Metrics/BlockLength:
   CountAsOne: ['array']
   IgnoredMethods: ['describe', 'draw']
