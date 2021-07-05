@@ -53,13 +53,6 @@ Naming/AccessorMethodName:
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
-# Offense count: 1
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: slashes, arguments
-Rails/FilePath:
-  Exclude:
-    - 'config/environments/development.rb'
-
 # Offense count: 3
 # Cop supports --auto-correct.
 # Configuration parameters: Include.
