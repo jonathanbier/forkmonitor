@@ -118,7 +118,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.getblock(blockhash = block_hash, verbosity = verbosity)
+      @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
     rescue Error => e
@@ -128,7 +128,7 @@ class BitcoinClientPython
   end
 
   def getblockhash(height)
-    @node.getblockhash(height = height)
+    @node.getblockhash(height = height) # rubocop:disable Lint/SelfAssignment
   rescue Error => e
     raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
@@ -141,7 +141,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify block hash' unless block_hash.present?
 
     begin
-      @node.getblockheader(blockhash = block_hash, verbose = verbose)
+      @node.getblockheader(blockhash = block_hash, verbose = verbose) # rubocop:disable Lint/SelfAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error,
             "getblockheader(#{block_hash}, #{verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
@@ -371,8 +371,8 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify amount' unless amount.present?
 
     begin
-      @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to,
-                          subtractfeefromamount = subtractfeefromamount, replaceable = replaceable)
+      @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to, # rubocop:disable Lint/SelfAssignment
+                          subtractfeefromamount = subtractfeefromamount, replaceable = replaceable)                # rubocop:disable Lint/SelfAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error,
             "sendtoaddress(#{destination}, #{amount}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
