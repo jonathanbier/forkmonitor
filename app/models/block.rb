@@ -103,9 +103,7 @@ class Block < ApplicationRecord
 
     candidate_branch_start = self
     until candidate_branch_start.nil?
-      if candidate_branch_start.parent.nil?
-        raise "parent of #{coin.upcase} block #{candidate_branch_start.block_hash} (#{candidate_branch_start.height}) missing"
-      end
+      raise "parent of #{coin.upcase} block #{candidate_branch_start.block_hash} (#{candidate_branch_start.height}) missing" if candidate_branch_start.parent.nil?
 
       if candidate_branch_start.parent.descendants.include? other_block
         raise 'same branch' if self == candidate_branch_start
@@ -127,9 +125,7 @@ class Block < ApplicationRecord
         node = this_block.first_seen_by
         # getblock argument verbosity 2 was added in v0.16.0
         # Knots doesn't return the transaction hash
-        if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
-          node = Node.newest_node(this_block.coin.to_sym)
-        end
+        node = Node.newest_node(this_block.coin.to_sym) if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
         # Use extra long timeout for BCH blocks
         block_info = node.getblock(block_hash, 2, false, bch? ? 120 : nil)
       rescue BitcoinUtil::RPC::BlockPrunedError
@@ -139,9 +135,7 @@ class Block < ApplicationRecord
         # Perhaps the newest node hasn't seen this block yet, just try again later
         return
       end
-      if block_info['tx'].nil?
-        throw "Missing transaction data for #{coin.upcase} block #{height} (#{block_hash}) on #{node.name_with_version}"
-      end
+      throw "Missing transaction data for #{coin.upcase} block #{height} (#{block_hash}) on #{node.name_with_version}" if block_info['tx'].nil?
       block_info['tx'].each_with_index do |tx, i|
         transactions.create(
           is_coinbase: i.zero?,
@@ -312,9 +306,7 @@ class Block < ApplicationRecord
         blocks_to_invalidate.append(active_tip_block)
       else
         Rails.logger.info "Check if active chaintip (#{active_tip['height']}) descends from target block (#{height}), otherwise invalidate the active chain..."
-        unless descendants.include? active_tip_block
-          blocks_to_invalidate.append(active_tip_block.branch_start(self))
-        end
+        blocks_to_invalidate.append(active_tip_block.branch_start(self)) unless descendants.include? active_tip_block
         # Invalidate all child blocks we know of, if the node knows them
         children.each do |child_block|
           begin
@@ -323,9 +315,7 @@ class Block < ApplicationRecord
             Rails.logger.error "Skip invalidation of #{child_block.block_hash} (#{child_block.height}) on #{node.name_with_version} because mirror node doesn't have it"
             next
           end
-          unless @invalidated_block_hashes.include?(child_block.block_hash)
-            blocks_to_invalidate.append(child_block)
-          end
+          blocks_to_invalidate.append(child_block) unless @invalidated_block_hashes.include?(child_block.block_hash)
         end
       end
       # Stop if there are no new blocks to invalidate
@@ -345,12 +335,8 @@ class Block < ApplicationRecord
       sleep 3
     end
 
-    if active_tip.blank?
-      throw "No active tip left after rollback on #{node.name_with_version}. Was expecting #{block_hash} (#{height})"
-    end
-    unless active_tip['hash'] == block_hash
-      throw "Unexpected active tip hash #{active_tip['hash']} (#{active_tip['height']}) instead of #{block_hash} (#{height}) on #{node.name_with_version}"
-    end
+    throw "No active tip left after rollback on #{node.name_with_version}. Was expecting #{block_hash} (#{height})" if active_tip.blank?
+    throw "Unexpected active tip hash #{active_tip['hash']} (#{active_tip['height']}) instead of #{block_hash} (#{height}) on #{node.name_with_version}" unless active_tip['hash'] == block_hash
   end
 
   def throw_unable_to_roll_back!(node, blocks_to_invalidate = nil, invalidated_block_hashes = nil)
@@ -475,9 +461,7 @@ class Block < ApplicationRecord
       )
       tx_count = extract_tx_count(block_info)
 
-      if block_info['version'].nil?
-        Rails.logger.error "Missing version for #{node.coin.to_s.upcase} #{block.block_hash} (#{block.height}) from #{node.name_with_version}}"
-      end
+      Rails.logger.error "Missing version for #{node.coin.to_s.upcase} #{block.block_hash} (#{block.height}) from #{node.name_with_version}}" if block_info['version'].nil?
 
       block.update(
         mediantime: block_info['mediantime'],
@@ -648,9 +632,7 @@ class Block < ApplicationRecord
 
           if raw_block.present?
             # Feed block to original node
-            if originally_seen_by.present? && !(originally_seen_by.core? && originally_seen_by.version < 130_100)
-              originally_seen_by.client.submitblock(raw_block, block.block_hash)
-            end
+            originally_seen_by.client.submitblock(raw_block, block.block_hash) if originally_seen_by.present? && !(originally_seen_by.core? && originally_seen_by.version < 130_100)
             # Feed block to node with transaction index:
             begin
               Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)

@@ -286,9 +286,7 @@ class StaleCandidate < ApplicationRecord
   def notify!
     if notified_at.nil?
       User.all.find_each do |user|
-        unless tbtc? # skip email notification for testnet
-          UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
-        end
+        UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver unless tbtc? # skip email notification for testnet
       end
       update notified_at: Time.zone.now
       unless tbtc? # skip push notification for testnet

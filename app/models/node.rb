@@ -72,9 +72,7 @@ class Node < ApplicationRecord
       to_destroy
       getblocktemplate
     ]
-    if options && options[:admin]
-      fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled
-    end
+    fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled if options && options[:admin]
     super({ only: fields }.merge(options || {})).merge({
                                                          height: active_chaintip&.block&.height,
                                                          name_with_version: name_with_version,
@@ -466,9 +464,7 @@ class Node < ApplicationRecord
 
       check_laggards!(options)
 
-      if options[:coins].blank? || options[:coins].include?('BTC')
-        bitcoin_core_by_version.first.check_versionbits!
-      end
+      bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
     end
 
     def poll_repeat!(options = {})
@@ -688,9 +684,7 @@ class Node < ApplicationRecord
 
     def getblocktemplate!(coin)
       nodes = Node.where(coin: coin, enabled: true, getblocktemplate: true, unreachable_since: nil)
-      if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
-        throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{coin} nodes."
-      end
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{coin} nodes." if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
       threads = []
       nodes.each do |node|
         threads << Thread.new do

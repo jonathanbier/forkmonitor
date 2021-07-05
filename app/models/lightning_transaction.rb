@@ -130,9 +130,7 @@ class LightningTransaction < ApplicationRecord
         block = block.parent
       end
 
-      if blocks_to_check.count.positive? && !Rails.env.test?
-        Rails.logger.info "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
-      end
+      Rails.logger.info "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..." if blocks_to_check.count.positive? && !Rails.env.test?
 
       blocks_to_check.each do |b|
         # libbitcoin doesn't return timestamps, so fetch those if needed
@@ -168,9 +166,7 @@ class LightningTransaction < ApplicationRecord
 
       raise 'Unable to perform lightning checks due to missing intermediate block' if missing_block
 
-      if max_exceeded
-        raise "More than #{options[:max]} blocks behind for lightning checks, please manually check blocks before #{blocks_to_check.first.height} (#{blocks_to_check.first.block_hash})"
-      end
+      raise "More than #{options[:max]} blocks behind for lightning checks, please manually check blocks before #{blocks_to_check.first.height} (#{blocks_to_check.first.block_hash})" if max_exceeded
 
       true
     end

@@ -34,9 +34,7 @@ class InflatedBlock < ApplicationRecord
       threads = []
       nodes = Node.with_mirror(options[:coin])
       Rails.logger.info "Check #{options[:coin].to_s.upcase} inflation for #{nodes.count} nodes..."
-      if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
-        throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{options[:coin]} mirror nodes."
-      end
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{options[:coin]} mirror nodes." if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
 
       nodes.each do |node|
         max_exceeded = false
@@ -127,9 +125,7 @@ class InflatedBlock < ApplicationRecord
             break
           end
           comparison_block = comparison_block.parent
-          if comparison_block.nil?
-            throw "Unable to check inflation due to missing intermediate block on #{node.name_with_version}"
-          end
+          throw "Unable to check inflation due to missing intermediate block on #{node.name_with_version}" if comparison_block.nil?
           comparison_tx_outset = TxOutset.find_by(node: node, block: comparison_block)
           break if comparison_tx_outset.present?
 
@@ -145,9 +141,7 @@ class InflatedBlock < ApplicationRecord
           block.undo_rollback!(node)
 
           # Make sure we got the block we expected
-          unless txoutsetinfo['bestblock'] == block.block_hash
-            throw "TxOutset #{txoutsetinfo['bestblock']} is not for block #{block.block_hash}"
-          end
+          throw "TxOutset #{txoutsetinfo['bestblock']} is not for block #{block.block_hash}" unless txoutsetinfo['bestblock'] == block.block_hash
 
           tx_outset = TxOutset.create_with(txouts: txoutsetinfo['txouts'], total_amount: txoutsetinfo['total_amount']).find_or_create_by(
             block: block, node: node
@@ -159,9 +153,7 @@ class InflatedBlock < ApplicationRecord
           # Check that inflation does not exceed the maximum permitted miner award per block
           prev_tx_outset = TxOutset.find_by(node: node, block: block.parent)
           if prev_tx_outset.nil?
-            unless Rails.env.test?
-              Rails.logger.error "No previous TxOutset to compare against, skipping inflation check for height #{block.height}..."
-            end
+            Rails.logger.error "No previous TxOutset to compare against, skipping inflation check for height #{block.height}..." unless Rails.env.test?
             next
           end
 
