@@ -73,7 +73,7 @@ class Block < ApplicationRecord
     # In fact, nVersion 4 (0x00000004) would now indicate signalling for a soft fork on bit 26.
     #        mask: 0xe0000000 (bit 0-28)
     # BIP320 mask: 0xe0001fff (loses bit 13-28)
-    (format('%.32b', (version & ~0xe0000000))).split('').drop(3).reverse.collect(&:to_i)
+    format('%.32b', (version & ~0xe0000000)).chars.drop(3).reverse.collect(&:to_i)
   end
 
   # https://bitcoin.stackexchange.com/a/9962
