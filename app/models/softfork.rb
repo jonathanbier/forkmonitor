@@ -66,61 +66,65 @@ class Softfork < ApplicationRecord
         return if blockchaininfo['softforks'].nil?
 
         blockchaininfo['softforks'].each do |key, value|
-          if value['bip9'].present?
-            bip9 = value['bip9'] # rubocop:disable Naming/VariableNumber
-            fork = Softfork.find_by(
-              coin: :btc,
-              node: node,
-              fork_type: :bip9, # rubocop:disable Naming/VariableNumber
-              name: key
-            )
-            if fork.nil?
-              Softfork.create(
-                coin: :btc,
-                node: node,
-                fork_type: :bip9, # rubocop:disable Naming/VariableNumber
-                name: key,
-                bit: bip9['bit'],
-                status: bip9['status'].to_sym,
-                since: bip9['since'],
-                notified_at: bip9['status'].to_sym == :defined ? Time.now : nil
-              )
-            else
-              fork.bit = bip9['bit'] # in case a node is upgraded to 0.19 or newer
-              fork.status = bip9['status'].to_sym
-              fork.since = bip9['since']
-              fork.notified_at = nil if fork.status_changed?
-              fork.save if fork.changed?
-            end
-          end
-          next unless value['bip8'].present?
+          process_fork(node, key, value)
+        end
+      end
+    end
 
-          bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
-          fork = Softfork.find_by(
+    def process_fork(node, key, value)
+      if value['bip9'].present?
+        bip9 = value['bip9'] # rubocop:disable Naming/VariableNumber
+        fork = Softfork.find_by(
+          coin: :btc,
+          node: node,
+          fork_type: :bip9, # rubocop:disable Naming/VariableNumber
+          name: key
+        )
+        if fork.nil?
+          Softfork.create(
             coin: :btc,
             node: node,
-            fork_type: :bip8, # rubocop:disable Naming/VariableNumber
-            name: key
+            fork_type: :bip9, # rubocop:disable Naming/VariableNumber
+            name: key,
+            bit: bip9['bit'],
+            status: bip9['status'].to_sym,
+            since: bip9['since'],
+            notified_at: bip9['status'].to_sym == :defined ? Time.now : nil
           )
-          if fork.nil?
-            Softfork.create(
-              coin: :btc,
-              node: node,
-              fork_type: :bip8, # rubocop:disable Naming/VariableNumber
-              name: key,
-              bit: bip8['bit'],
-              status: bip8['status'].to_sym,
-              since: bip8['since'],
-              notified_at: bip8['status'].to_sym == :defined ? Time.now : nil
-            )
-          else
-            fork.bit = bip8['bit'] # in case a node is upgraded to 0.19 or newer
-            fork.status = bip8['status'].to_sym
-            fork.since = bip8['since']
-            fork.notified_at = nil if fork.status_changed?
-            fork.save if fork.changed?
-          end
+        else
+          fork.bit = bip9['bit'] # in case a node is upgraded to 0.19 or newer
+          fork.status = bip9['status'].to_sym
+          fork.since = bip9['since']
+          fork.notified_at = nil if fork.status_changed?
+          fork.save if fork.changed?
         end
+      end
+      return unless value['bip8'].present?
+
+      bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
+      fork = Softfork.find_by(
+        coin: :btc,
+        node: node,
+        fork_type: :bip8, # rubocop:disable Naming/VariableNumber
+        name: key
+      )
+      if fork.nil?
+        Softfork.create(
+          coin: :btc,
+          node: node,
+          fork_type: :bip8, # rubocop:disable Naming/VariableNumber
+          name: key,
+          bit: bip8['bit'],
+          status: bip8['status'].to_sym,
+          since: bip8['since'],
+          notified_at: bip8['status'].to_sym == :defined ? Time.now : nil
+        )
+      else
+        fork.bit = bip8['bit'] # in case a node is upgraded to 0.19 or newer
+        fork.status = bip8['status'].to_sym
+        fork.since = bip8['since']
+        fork.notified_at = nil if fork.status_changed?
+        fork.save if fork.changed?
       end
     end
   end
