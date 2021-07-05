@@ -1,3 +1,108 @@
+## Local server and console
+
+Install ZeroMQ (for Libbitcoin), e.g. on macOS: `brew install zeromq`
+
+Install Postgres, e.g. on macOS: `brew install postgresql`
+
+Install Redis, e.g. on macOS: `brew install redis` and see [instructions](https://medium.com/@petehouston/install-and-config-redis-on-mac-os-x-via-homebrew-eb8df9a4f298).
+
+To use Rails cache, install memcacher, e.g. on macOS: `brew install memcached`. To toggle cache, use `rails dev:cache`
+
+Install Python. When using pyenv, use `env PYTHON_CONFIGURE_OPTS='--enable-shared' pyenv install VERSION` in order for [PyCall](https://github.com/mrkn/pycall.rb) to work.
+
+Install Ruby 3.0.1 through a version manager such as [RVM](https://rvm.io) or [rbenv](https://github.com/rbenv/rbenv). Install
+the bundler and foreman gems, then run bundler:
+
+```
+gem install bundler foreman
+bundle install --without production
+```
+
+You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a
+package manager for NodeJS. Once installed, run:
+
+```sh
+yarn
+```
+
+Run `rake secret` and then edit `.env` to add it:
+
+```
+DEVISE_JWT_SECRET_KEY=the_generate_secret
+```
+
+Now run the server (this can take a while the first time, as well as each time you modify javascript):
+
+```
+foreman start -f Procfile.dev -p 3000
+```
+
+To check if nodes are reachable:
+
+```
+rake debug:node_info
+```
+
+To poll nodes:
+
+```
+rake nodes:poll
+rake nodes:poll[BTC,TBTC]
+```
+
+Prefix rake command with `debug` or `info` to see more progress details:
+
+```
+rake debug nodes:poll[BTC]
+```
+
+To poll all nodes continuously, or filter by coin:
+
+```sh
+rake nodes:poll_repeat
+rake nodes:poll_repeat[BTC,TBTC]
+```
+
+To check inflation, you need to run a mirror node and add it in the admin panel.
+
+```
+rake debug blocks:check_inflation[BTC]
+```
+
+To run inflation checks continuously, filtered by coin:
+
+```
+rake debug nodes:rollback_checks_repeat[BTC]
+```
+
+The other long running heavy work tasks:
+
+```
+rake debug nodes:heavy_checks_repeat[BTC]
+```
+
+To manually query a node:
+
+```rb
+rails c
+info = Node.first.client.getblockchaininfo
+info["blocks"]
+=> 548121
+```
+
+To get the list of RPC commands and execute an arbitrary command:
+
+```rb
+puts Node.first.client.help
+Node.first.client.request("getblock", ...)
+```
+
+To communicate with the first Bitcoin Core mirror node:
+
+```
+Node.where(coin:"BTC").where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
+```
+
 ## Test suite
 
 When switching between a binary and custom Bitcoin Core branch, comment
