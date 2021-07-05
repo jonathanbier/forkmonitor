@@ -15,6 +15,17 @@ Site config: [/etc/nginx/sites-available/forkmonitor](deploy/etc/nginx/sites-ava
 See Certbot tutorial and the nginx config file above. In the forkmonitor home
 directy, run `openssl dhparam -out dhparams.pem 2048`
 
+Certbot automatically creates a renewal cron, probably in /etc/cron.d/certbot.
+
+Configure it restart nginx after a renewal, or users will see an https error. Add
+the following line to /etc/letsencrypt/cli.ini:
+
+```
+deploy-hook = systemctl reload nginx
+```
+
+See also: https://blog.arnonerba.com/2019/01/lets-encrypt-how-to-automatically-restart-nginx-with-certbot
+
 ## Capistrano and rbenv
 
 The site is deployed using Capistrano:
