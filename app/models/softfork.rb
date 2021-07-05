@@ -19,7 +19,7 @@ class Softfork < ApplicationRecord
       User.all.find_each do |user|
         UserMailer.with(user: user, softfork: self).softfork_email.deliver
       end
-      update notified_at: Time.now
+      update notified_at: Time.zone.now
       Subscription.blast("softfork-#{id}",
                          "#{coin.upcase} #{name} softfork #{status}",
                          "#{name.capitalize} #{fork_type.to_s.upcase} status became #{status.to_s.upcase} at height #{since.to_s(:delimited)} according to #{node.name_with_version}.")
@@ -53,7 +53,7 @@ class Softfork < ApplicationRecord
               bit: nil,
               status: value['status'].to_sym,
               since: value['since'],
-              notified_at: value['status'].to_sym == :defined ? Time.now : nil
+              notified_at: value['status'].to_sym == :defined ? Time.zone.now : nil
             )
           else
             fork.status = value['status'].to_sym
@@ -89,7 +89,7 @@ class Softfork < ApplicationRecord
             bit: bip9['bit'],
             status: bip9['status'].to_sym,
             since: bip9['since'],
-            notified_at: bip9['status'].to_sym == :defined ? Time.now : nil
+            notified_at: bip9['status'].to_sym == :defined ? Time.zone.now : nil
           )
         else
           fork.bit = bip9['bit'] # in case a node is upgraded to 0.19 or newer
@@ -117,7 +117,7 @@ class Softfork < ApplicationRecord
           bit: bip8['bit'],
           status: bip8['status'].to_sym,
           since: bip8['since'],
-          notified_at: bip8['status'].to_sym == :defined ? Time.now : nil
+          notified_at: bip8['status'].to_sym == :defined ? Time.zone.now : nil
         )
       else
         fork.bit = bip8['bit'] # in case a node is upgraded to 0.19 or newer

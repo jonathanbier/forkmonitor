@@ -59,7 +59,7 @@ module RpcConcern
       mirror_client.reconsiderblock(t['hash'])
     end
   rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::TimeOutError
-    update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
+    update mirror_unreachable_since: Time.zone.now, last_polled_mirror_at: Time.zone.now
     false
   end
 
@@ -68,7 +68,7 @@ module RpcConcern
       t['status'] == 'active'
     end
   rescue BitcoinUtil::RPC::TimeOutError
-    update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
+    update mirror_unreachable_since: Time.zone.now, last_polled_mirror_at: Time.zone.now
     []
   end
 

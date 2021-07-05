@@ -290,7 +290,7 @@ class StaleCandidate < ApplicationRecord
           UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
         end
       end
-      update notified_at: Time.now
+      update notified_at: Time.zone.now
       unless tbtc? # skip push notification for testnet
         Subscription.blast("stale-candidate-#{id}",
                            "#{coin.upcase} stale candidate",

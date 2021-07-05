@@ -207,12 +207,12 @@ class Node < ApplicationRecord
 
     # Mark node as reachable (if needed) before trying to fetch additional info
     # such as the coinbase message.
-    update polled_at: Time.now, unreachable_since: nil if unreachable_since
+    update polled_at: Time.zone.now, unreachable_since: nil if unreachable_since
 
     block = self.ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, false, true)
 
     update(
-      polled_at: Time.now,
+      polled_at: Time.zone.now,
       unreachable_since: nil,
       block: block,
       mempool_bytes: mempool_bytes,
@@ -237,7 +237,7 @@ class Node < ApplicationRecord
     best_block_hash = blockchaininfo['bestblockhash']
     ibd = blockchaininfo['initialblockdownload']
     block = ibd ? nil : Block.find_or_create_block_and_ancestors!(best_block_hash, self, true, nil)
-    update mirror_block: block, last_polled_mirror_at: Time.now, mirror_ibd: ibd
+    update mirror_block: block, last_polled_mirror_at: Time.zone.now, mirror_ibd: ibd
   end
 
   # Should be run after polling all nodes, otherwise it may find false positives
@@ -300,7 +300,7 @@ class Node < ApplicationRecord
     end
 
     # Return false if behind but still in grace period:
-    return false if lag_entry && ((Time.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60).to_i)
+    return false if lag_entry && ((Time.zone.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60).to_i)
 
     if lag_entry
       # Mark as ready to publish on RSS
@@ -308,7 +308,7 @@ class Node < ApplicationRecord
 
       # Send email after grace period
       unless lag_entry.notified_at
-        lag_entry.update notified_at: Time.now
+        lag_entry.update notified_at: Time.zone.now
         User.all.find_each do |user|
           UserMailer.with(user: user, lag: lag_entry).lag_email.deliver
         end
@@ -372,7 +372,7 @@ class Node < ApplicationRecord
         UserMailer.with(user: user, bit: bit, tally: tally, window: VersionBit::WINDOW,
                         block: self.block).version_bits_email.deliver
       end
-      current_alert.update notified_at: Time.now
+      current_alert.update notified_at: Time.zone.now
     end
   end
 
@@ -660,7 +660,7 @@ class Node < ApplicationRecord
 
       loop do
         if @last_checked.nil? || @last_checked < 20.seconds.ago
-          @last_checked = Time.now
+          @last_checked = Time.zone.now
           options[:coins].each do |coin|
             Node.getblocktemplate!(coin.downcase.to_sym)
           end

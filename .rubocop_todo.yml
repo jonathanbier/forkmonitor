@@ -9,7 +9,7 @@
 # Offense count: 85
 # Configuration parameters: IgnoredMethods, CountRepeatedAttributes.
 Metrics/AbcSize:
-  Max: 145
+  Max: 148
 
 # Offense count: 92
 # Configuration parameters: CountComments, CountAsOne, ExcludedMethods, IgnoredMethods.
@@ -79,22 +79,6 @@ Rails/InverseOf:
 Rails/SkipsModelValidations:
   Exclude:
     - 'app/models/block_template.rb'
-
-# Offense count: 35
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle.
-# SupportedStyles: strict, flexible
-Rails/TimeZone:
-  Exclude:
-    - 'app/controllers/api/v1/inflated_blocks_controller.rb'
-    - 'app/controllers/api/v1/invalid_blocks_controller.rb'
-    - 'app/models/inflated_block.rb'
-    - 'app/models/invalid_block.rb'
-    - 'app/models/lightning_transaction.rb'
-    - 'app/models/node.rb'
-    - 'app/models/softfork.rb'
-    - 'app/models/stale_candidate.rb'
-    - 'app/models/concerns/rpc_concern.rb'
 
 # Offense count: 1
 # Configuration parameters: Include.

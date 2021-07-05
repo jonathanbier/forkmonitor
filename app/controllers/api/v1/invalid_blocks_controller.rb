@@ -30,7 +30,7 @@ module Api
 
       # Mark as dismissed
       def destroy
-        @invalid_block.update dismissed_at: Time.now
+        @invalid_block.update dismissed_at: Time.zone.now
         head :no_content
       end
 

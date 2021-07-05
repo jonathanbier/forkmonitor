@@ -41,7 +41,7 @@ class InflatedBlock < ApplicationRecord
       nodes.each do |node|
         max_exceeded = false
 
-        next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.now
+        next unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.zone.now
 
         # Check mirror node again if we marked it as unreachable more than 10 minutes ago
         unless node.mirror_unreachable_since.nil?
@@ -52,7 +52,7 @@ class InflatedBlock < ApplicationRecord
             node.update mirror_unreachable_since: nil
             next
           rescue BitcoinUtil::RPC::ConnectionError
-            node.update last_polled_mirror_at: Time.now
+            node.update last_polled_mirror_at: Time.zone.now
           end
         end
 
@@ -98,7 +98,7 @@ class InflatedBlock < ApplicationRecord
           node.reload # without this, ancestors of node.block_block are not updated
         rescue BitcoinUtil::RPC::ConnectionError
           Rails.logger.error "Unable to connect to mirror node #{node.id} #{node.name_with_version}, skipping inflation check."
-          node.update mirror_unreachable_since: Time.now, last_polled_mirror_at: Time.now
+          node.update mirror_unreachable_since: Time.zone.now, last_polled_mirror_at: Time.zone.now
           Thread.exit
         end
 
@@ -177,7 +177,7 @@ class InflatedBlock < ApplicationRecord
           User.all.find_each do |user|
             UserMailer.with(user: user, inflated_block: inflated_block).inflated_block_email.deliver
           end
-          inflated_block.update notified_at: Time.now
+          inflated_block.update notified_at: Time.zone.now
           Subscription.blast("inflated-block-#{inflated_block.id}",
                              "#{inflated_block.actual_inflation - inflated_block.max_inflation} BTC inflation",
                              "Unexpected #{inflated_block.actual_inflation - inflated_block.max_inflation} BTC extra inflation \

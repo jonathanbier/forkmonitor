@@ -155,7 +155,7 @@ class LightningTransaction < ApplicationRecord
           # The node probably crashed or temporarly ran out of RPC slots. Mark node
           # as unreachable and gracefull exit
           Rails.logger.info "Lost connection to #{node.name_with_version}. Try again later." unless Rails.env.test?
-          node.update unreachable_since: Time.now
+          node.update unreachable_since: Time.zone.now
           return false
         end
         parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
