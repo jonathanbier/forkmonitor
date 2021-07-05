@@ -97,14 +97,6 @@ Rails/WhereEquals:
     - 'app/models/block.rb'
     - 'app/models/stale_candidate.rb'
 
-# Offense count: 2
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, SingleLineConditionsOnly, IncludeTernaryExpressions.
-# SupportedStyles: assign_to_condition, assign_inside_condition
-Style/ConditionalAssignment:
-  Exclude:
-    - 'app/models/node.rb'
-
 # Offense count: 186
 # Configuration parameters: AllowedConstants.
 Style/Documentation:
