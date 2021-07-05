@@ -134,16 +134,16 @@ class LightningTransaction < ApplicationRecord
         puts "Scan blocks for relevant Lightning transactions using #{node.name_with_version}..."
       end
 
-      blocks_to_check.each do |block|
+      blocks_to_check.each do |b|
         # libbitcoin doesn't return timestamps, so fetch those if needed
-        if block.timestamp.nil?
-          block_info = node.client.getblockheader(block.block_hash)
-          block.update timestamp: block_info['time'], mediantime: block_info['mediantime']
+        if b.timestamp.nil?
+          block_info = node.client.getblockheader(b.block_hash)
+          b.update timestamp: block_info['time'], mediantime: block_info['mediantime']
         end
 
         begin
           retries ||= 0
-          raw_block = node.getblock(block.block_hash, 0)
+          raw_block = node.getblock(b.block_hash, 0)
         rescue BitcoinUtil::RPC::PartialFileError
           if (retries += 1) < 2
             sleep 10 unless Rails.env.test?
@@ -159,11 +159,11 @@ class LightningTransaction < ApplicationRecord
           return false
         end
         parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
-        puts "Block #{block.height} (#{block.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
-        MaybeUncoopTransaction.check!(node, block, parsed_block)
-        PenaltyTransaction.check!(node, block, parsed_block)
-        SweepTransaction.check!(node, block, parsed_block)
-        block.update checked_lightning: true
+        puts "Block #{b.height} (#{b.block_hash}, #{parsed_block.tx.count} txs)" unless Rails.env.test?
+        MaybeUncoopTransaction.check!(node, b, parsed_block)
+        PenaltyTransaction.check!(node, b, parsed_block)
+        SweepTransaction.check!(node, b, parsed_block)
+        b.update checked_lightning: true
       end
 
       raise 'Unable to perform lightning checks due to missing intermediate block' if missing_block
