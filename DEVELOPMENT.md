@@ -167,3 +167,21 @@ yarn test --watch
 ```
 rubocop && yarn test && rake parallel:spec && git push && cap production deploy
 ```
+
+## Push notifications
+
+Generate a `VAPID_PUBLIC_KEY` and `VAPID_PRIVATEY_KEY` for push notifications:
+
+```rb
+npm install -g web-push
+web-push generate-vapid-keys
+```
+
+Also provide a contact email via `VAPID_CONTACT_EMAIL=`.
+
+To test notifications, open the site in Chrome and give permission, and then:
+
+```rb
+@subscription = Subscription.last
+Webpush.payload_send(endpoint: @subscription.endpoint, message: "tag|title|body", p256dh: @subscription.p256dh, auth: @subscription.auth, vapid: { subject: "mailto:" + ENV['VAPID_CONTACT_EMAIL'], public_key: ENV['VAPID_PUBLIC_KEY'] , private_key: ENV['VAPID_PRIVATE_KEY'] }, ttl: 60 * 60)
+```
