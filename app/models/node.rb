@@ -340,7 +340,7 @@ class Node < ApplicationRecord
 
     versions_tally = versions_window.transpose.map(&:sum)
     throw "Unexpected versions_tally = #{versions_tally.length} != 29" if versions_tally.length != 29
-    current_alerts = VersionBit.where(deactivate: nil).index_by { |vb| vb.bit }
+    current_alerts = VersionBit.where(deactivate: nil).index_by(&:bit)
     known_softforks = Softfork.all.collect(&:bit).uniq
     versions_tally.each_with_index do |tally, bit|
       next if known_softforks.include?(bit)

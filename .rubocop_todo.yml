@@ -131,14 +131,6 @@ Style/Semicolon:
   Exclude:
     - 'app/services/bitcoin_client_mock.rb'
 
-# Offense count: 1
-# Cop supports --auto-correct.
-# Configuration parameters: AllowMethodsWithArguments, IgnoredMethods.
-# IgnoredMethods: respond_to, define_method
-Style/SymbolProc:
-  Exclude:
-    - 'app/models/node.rb'
-
 # Offense count: 129
 # Cop supports --auto-correct.
 # Configuration parameters: AutoCorrect, AllowHeredoc, AllowURI, URISchemes, IgnoreCopDirectives, IgnoredPatterns.
