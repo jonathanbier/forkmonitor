@@ -292,6 +292,7 @@ class BitcoinClient
       raise BitcoinUtil::RPC::ConnectionError if e.message.include?('couldnt_connect')
       raise BitcoinUtil::RPC::NodeInitializingError if e.message.include?('Verifying blocks')
       raise BitcoinUtil::RPC::NodeInitializingError if e.message.include?('Loading block index')
+      raise BitcoinUtil::RPC::NodeInitializingError if e.message.include?('Pruning blockstore')
 
       raise
     end
