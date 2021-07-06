@@ -4,6 +4,7 @@ require 'csv'
 
 class Block < ApplicationRecord
   include ::TxIdConcern
+  include ::BitcoinUtil
 
   MINIMUM_BLOCK_HEIGHTS = {
     btc: Rails.env.test? ? 0 : 500_000, # Mid December 2017, around Lightning network launch
