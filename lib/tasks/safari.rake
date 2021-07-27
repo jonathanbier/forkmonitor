@@ -22,7 +22,7 @@ namespace 'safari' do
 
   desc 'Register app'
   task register_app: [:environment] do
-    app = Rpush::Apns::App.new
+    app = Rpush::Apns2::App.new
     app.name = 'Fork Monitor'
     app.certificate = File.read('certs/production.pem')
     app.environment = 'production'
