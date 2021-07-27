@@ -28,7 +28,7 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, optional: true, class_name: 'Block'
   has_one :active_chaintip, -> { where(status: 'active') }, class_name: 'Chaintip'
-  has_many :softforks
+  has_many :softforks, dependent: :destroy
 
   scope :bitcoin_core_by_version, lambda {
                                     where(enabled: true, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc)
