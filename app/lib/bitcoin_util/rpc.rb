@@ -24,6 +24,8 @@ module BitcoinUtil
 
     class PeerNotConnected < Error; end
 
+    class PreviousHeaderMissing < Error; end
+
     # Errors not directly from Bitcoin RPC (should be moved elsewhere)
     class InvalidCoinError < Error; end
   end

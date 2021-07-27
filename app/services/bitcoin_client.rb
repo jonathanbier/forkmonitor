@@ -269,6 +269,8 @@ class BitcoinClient
   def submitheader(header_data)
     request('submitheader', header_data)
   rescue Bitcoiner::Client::JSONRPCError => e
+    raise BitcoinUtil::RPC::PreviousHeaderMissing if e.message.include?('Must submit previous header')
+
     raise BitcoinUtil::RPC::Error, "submitheader failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 

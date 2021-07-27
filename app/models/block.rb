@@ -656,7 +656,10 @@ class Block < ApplicationRecord
           raw_block_header = originally_seen_by.getblockheader(block.block_hash, false)
           # This requires blocks to be processed in ascending height order
           gbfp_node.mirror_client.submitheader(raw_block_header)
-        rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError
+        rescue BitcoinUtil::RPC::PreviousHeaderMissing
+          # TODO: call submitheader multiple times if needed
+          next
+        rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError # rubocop:disable Lint/DuplicateBranch
           next
         end
         peers = gbfp_node.mirror_client.getpeerinfo
