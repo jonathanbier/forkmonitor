@@ -31,9 +31,11 @@ class Softfork < ApplicationRecord
       Softfork.where(notified_at: nil).find_each(&:notify!)
     end
 
-    # Only supported on Bitcoin mainnet
+    # Only supported on Bitcoin mainnet and testnet
     # Only tested with v0.18.1 and up
     def process(node, blockchaininfo)
+      return unless node.btc? || node.tbtc?
+
       if node.version < 190_000
         return if blockchaininfo['bip9_softforks'].nil?
 
