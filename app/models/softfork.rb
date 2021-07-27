@@ -41,14 +41,14 @@ class Softfork < ApplicationRecord
 
         blockchaininfo['bip9_softforks'].each do |key, value|
           fork = Softfork.find_by(
-            coin: :btc,
+            coin: node.coin,
             node: node,
             fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key
           )
           if fork.nil?
             Softfork.create(
-              coin: :btc,
+              coin: node.coin,
               node: node,
               fork_type: :bip9, # rubocop:disable Naming/VariableNumber
               name: key,
@@ -77,14 +77,14 @@ class Softfork < ApplicationRecord
       if value['bip9'].present?
         bip9 = value['bip9'] # rubocop:disable Naming/VariableNumber
         fork = Softfork.find_by(
-          coin: :btc,
+          coin: node.coin,
           node: node,
           fork_type: :bip9, # rubocop:disable Naming/VariableNumber
           name: key
         )
         if fork.nil?
           Softfork.create(
-            coin: :btc,
+            coin: node.coin,
             node: node,
             fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key,
@@ -105,14 +105,14 @@ class Softfork < ApplicationRecord
 
       bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
       fork = Softfork.find_by(
-        coin: :btc,
+        coin: node.coin,
         node: node,
         fork_type: :bip8, # rubocop:disable Naming/VariableNumber
         name: key
       )
       if fork.nil?
         Softfork.create(
-          coin: :btc,
+          coin: node.coin,
           node: node,
           fork_type: :bip8, # rubocop:disable Naming/VariableNumber
           name: key,
