@@ -194,12 +194,12 @@ class BitcoinClientPython
     end
   end
 
-  def getnewaddress(address_type=nil)
+  def getnewaddress(address_type = nil)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
-      @node.getnewaddress(address_type = address_type)
+      @node.getnewaddress(address_type = address_type) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "getnewaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
