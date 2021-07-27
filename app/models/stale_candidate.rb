@@ -31,7 +31,6 @@ class StaleCandidate < ApplicationRecord
 
   def json_cached
     cache_key = "StaleCandidate(#{id}).json"
-    return nil if height_processed.nil?
 
     Rails.cache.fetch(cache_key) do
       to_json
