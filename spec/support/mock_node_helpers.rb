@@ -47,9 +47,10 @@ module MockNodeHelpers
                                        }
                                      ])
     @node_b.client.createwallet
-    @addr_1 = @node_a.client.getnewaddress # Taproot address
-    @addr_2 = @node_a.client.getnewaddress # Taproot address
-    @r_addr = @node_b.client.getnewaddress # Segwit v0 address
+    # The following behavior depends on this patch: https://github.com/BitMEXResearch/bitcoin/pull/2
+    @addr_1 = @node_a.client.getnewaddress('bech32') # Taproot address
+    @addr_2 = @node_a.client.getnewaddress('bech32') # Taproot address
+    @r_addr = @node_b.client.getnewaddress('bech32') # Segwit v0 address
 
     @node_b.client.generatetoaddress(2, @r_addr)
     test.sync_blocks([@node_a.client, @node_b.client])

@@ -194,12 +194,12 @@ class BitcoinClientPython
     end
   end
 
-  def getnewaddress
+  def getnewaddress(address_type=nil)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
-      @node.getnewaddress
+      @node.getnewaddress(address_type = address_type)
     rescue Error => e
       raise BitcoinUtil::RPC::Error, "getnewaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

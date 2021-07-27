@@ -30,7 +30,7 @@ RSpec.describe Node, type: :model do
 
         it 'stores the node version' do
           @node.poll!
-          expect(@node.version).to be 219_900
+          expect(@node.version).to be 220_000
         end
 
         it 'gets IBD status' do
