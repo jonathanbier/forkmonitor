@@ -307,7 +307,7 @@ class Block < ApplicationRecord
         blocks_to_invalidate.append(active_tip_block)
       else
         Rails.logger.info "Check if active chaintip (#{active_tip['height']}) descends from target block (#{height}), otherwise invalidate the active chain..."
-        blocks_to_invalidate.append(active_tip_block.branch_start(self)) unless descendants.include? active_tip_block
+        blocks_to_invalidate.append(active_tip_block.branch_start(self)) unless active_tip_block.height <= height || descendants.include?(active_tip_block)
         # Invalidate all child blocks we know of, if the node knows them
         children.each do |child_block|
           begin
