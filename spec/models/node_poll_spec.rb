@@ -14,7 +14,11 @@ RSpec.describe Node, type: :model do
         end
 
         before do
-          test.setup
+          test.setup(extra_args: [
+                       [
+                         '-txindex'
+                       ]
+                     ])
           @node = create(:node_python)
           @node.client.set_python_node(test.nodes[0])
           @node.client.createwallet
@@ -65,6 +69,11 @@ RSpec.describe Node, type: :model do
           expect(@node.mempool_bytes).to be_within(2).of(141)
           expect(@node.mempool_count).to eq(1)
           expect(@node.mempool_max).to eq(300_000_000)
+        end
+
+        it 'stores index status for >= 0.21' do
+          @node.poll!
+          expect(@node.txindex).to eq(true)
         end
       end
 

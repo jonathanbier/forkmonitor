@@ -172,6 +172,19 @@ class BitcoinClientPython
     end
   end
 
+  def getindexinfo
+    raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
+    raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
+
+    begin
+      @node.getindexinfo
+    rescue NoMethodError => e
+      raise BitcoinUtil::RPC::Error, "getindexinfo undefined for #{@name_with_version} (id=#{@node_id}): " + e.message
+    rescue PyCall::PyError => e
+      raise BitcoinUtil::RPC::Error, "getindexinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
   def getpeerinfo
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error

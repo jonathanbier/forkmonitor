@@ -215,6 +215,12 @@ class BitcoinClient
     raise BitcoinUtil::RPC::Error, "getchaintips failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
+  def getindexinfo
+    request('getindexinfo')
+  rescue Bitcoiner::Client::JSONRPCError => e
+    raise BitcoinUtil::RPC::Error, "getindexinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+  end
+
   def getmempoolinfo
     request('getmempoolinfo')
   rescue Bitcoiner::Client::JSONRPCError => e

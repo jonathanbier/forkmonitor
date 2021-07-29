@@ -199,6 +199,12 @@ class Node < ApplicationRecord
 
     raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
 
+    has_tx_index = nil
+    if core? && version >= 210_000
+      index_info = client.getindexinfo
+      has_tx_index = index_info.key? 'txindex'
+    end
+
     # Mark node as reachable (if needed) before trying to fetch additional info
     # such as the coinbase message.
     update polled_at: Time.zone.now, unreachable_since: nil if unreachable_since
@@ -211,7 +217,8 @@ class Node < ApplicationRecord
       block: block,
       mempool_bytes: mempool_bytes,
       mempool_count: mempool_count,
-      mempool_max: mempool_max
+      mempool_max: mempool_max,
+      txindex: has_tx_index.nil? ? txindex : has_tx_index # Set by admin before v0.21
     )
   end
 
