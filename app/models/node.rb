@@ -200,9 +200,11 @@ class Node < ApplicationRecord
     raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
 
     has_tx_index = nil
+    has_coinstatsindex_index = nil
     if core? && version >= 210_000
       index_info = client.getindexinfo
       has_tx_index = index_info.key? 'txindex'
+      has_coinstatsindex_index = index_info.key? 'coinstatsindex'
     end
 
     # Mark node as reachable (if needed) before trying to fetch additional info
@@ -218,7 +220,8 @@ class Node < ApplicationRecord
       mempool_bytes: mempool_bytes,
       mempool_count: mempool_count,
       mempool_max: mempool_max,
-      txindex: has_tx_index.nil? ? txindex : has_tx_index # Set by admin before v0.21
+      txindex: has_tx_index.nil? ? txindex : has_tx_index, # Set by admin before v0.21
+      coinstatsindex: has_coinstatsindex_index
     )
   end
 
