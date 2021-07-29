@@ -712,18 +712,17 @@ class Block < ApplicationRecord
 
       if !found_block && !gbfp_node.nil?
         # Disconnect all peers if we didn't get any block
-        begin
-          peers = gbfp_node.mirror_client.getpeerinfo
-          peers.each do |peer|
-            gbfp_node.mirror_client.disconnectnode('', peer['id'])
-          rescue BitcoinUtil::RPC::PeerNotConnected
-            # Ignore if already disconnected, e.g. by us above
-          end
-        end
-      end
 
+        peers = gbfp_node.mirror_client.getpeerinfo
+        peers.each do |peer|
+          gbfp_node.mirror_client.disconnectnode('', peer['id'])
+        rescue BitcoinUtil::RPC::PeerNotConnected
+          # Ignore if already disconnected, e.g. by us above
+        end
+
+      end
     rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
-      return nil
+      nil
     end
 
     def process_templates!(coin)

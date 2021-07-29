@@ -186,6 +186,20 @@ class InflatedBlock < ApplicationRecord
           node.mirror_client.reconsiderblock(tip['hash']) # This is a blocking call
           sleep 1 # But wait anyway
         end
+        # Explictly reconsider the child block of the current tip:
+        active_tip = node.mirror_client.getchaintips.detect { |tip| tip['status'] == 'active' }
+        if active_tip.present?
+          tip_block = Block.find_by(block_hash: active_tip['hash'])
+          if tip_block.present?
+            tip_block.children.each do |child|
+              Rails.logger.info "Reconsider block #{child.block_hash}"
+              node.mirror_client.reconsiderblock(child.block_hash) # This is a blocking call
+              sleep 1 # But wait anyway
+            end
+          end
+        end
+
+        node.mirror_client.reconsiderblock(tip['hash']) # This is a blocking call
         Rails.logger.info 'Node restored'
         # Give node some time to catch up:
         node.update mirror_rest_until: 60.seconds.from_now
