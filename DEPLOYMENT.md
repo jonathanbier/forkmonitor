@@ -2,6 +2,11 @@
 
 The production site [forkmonitor.info](https://forkmonitor.info) is deployed on a Ubuntu 20.04 server with 8 CPUs and 16 GB RAM (10 GB swap). This machine also runs a two mainnet nodes (usually the most recent version of Bitcoin Core and its mirror) and two testnet nodes.
 
+## Bitcoin nodes
+
+Ensure the most recent (patched) node with a mirror supports `getblockfrompeer`.
+See find_missing in block.rb
+
 ## Users
 
 In addition to root user, there is a `bitcoin` and a `forkmonitor` user which don't have `sudo` rights.
