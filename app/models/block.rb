@@ -589,6 +589,7 @@ class Block < ApplicationRecord
       block
     end
 
+    # This method returns nil if at any point the mirror node can't be reached or is restarting
     def find_missing(coin, max_depth, patience)
       throw "Invalid coin argument #{coin}" unless Rails.configuration.supported_coins.include?(coin)
 
@@ -659,7 +660,7 @@ class Block < ApplicationRecord
         rescue BitcoinUtil::RPC::PreviousHeaderMissing
           # TODO: call submitheader multiple times if needed
           next
-        rescue BitcoinUtil::RPC::ConnectionError, BitcoinUtil::RPC::NodeInitializingError # rubocop:disable Lint/DuplicateBranch
+        rescue BitcoinUtil::RPC::NodeInitializingError # rubocop:disable Lint/DuplicateBranch
           next
         end
         peers = gbfp_node.mirror_client.getpeerinfo
@@ -718,10 +719,11 @@ class Block < ApplicationRecord
           rescue BitcoinUtil::RPC::PeerNotConnected
             # Ignore if already disconnected, e.g. by us above
           end
-        rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
-          # Ignore if mirror node can't be reached or is restarting
         end
       end
+
+    rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
+      return nil
     end
 
     def process_templates!(coin)
