@@ -115,6 +115,8 @@ class BitcoinClient
     Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
       Thread.new { request('getblockchaininfo') }.value
     end
+  rescue JSON::ParserError
+    raise BitcoinUtil::RPC::Error, "getblockchaininfo failed to parse JSON for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getblockchaininfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end

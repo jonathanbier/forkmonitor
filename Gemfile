@@ -33,6 +33,7 @@ gem 'rails_real_favicon'
 gem 'bootsnap', '>= 1.1.0', require: false
 
 # Ruby interface to the 'bitcoind' JSON-RPC API
+# https://github.com/NARKOZ/bitcoiner
 gem 'bitcoiner'
 
 # Ruby Bitcoin utilities
