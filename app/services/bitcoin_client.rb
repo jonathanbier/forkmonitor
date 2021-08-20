@@ -120,7 +120,9 @@ class BitcoinClient
   end
 
   def getblockhash(height)
-    request('getblockhash', height)
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
+      Thread.new { request('getblockhash', height) }.value
+    end
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
@@ -222,7 +224,9 @@ class BitcoinClient
   end
 
   def getmempoolinfo
-    request('getmempoolinfo')
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
+      Thread.new { request('getmempoolinfo') }.value
+    end
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getmempoolinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
