@@ -662,7 +662,7 @@ class Block < ApplicationRecord
             # TODO: call submitheader multiple times if needed
             next
           end
-        rescue BitcoinUtil::RPC::NodeInitializingError # rubocop:disable Lint/DuplicateBranch
+        rescue BitcoinUtil::RPC::NodeInitializingError
           next
         end
         peers = gbfp_node.mirror_client.getpeerinfo
