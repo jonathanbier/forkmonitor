@@ -121,6 +121,10 @@ class BitcoinClientMock
 
   def getblocktemplate(rules); end
 
+  def getindexinfo
+     return {}
+  end
+
   def getinfo
     raise Error unless @reachable
 
