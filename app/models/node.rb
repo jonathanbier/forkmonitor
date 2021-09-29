@@ -44,7 +44,7 @@ class Node < ApplicationRecord
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def name_with_version
-    BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type)
+    BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type.to_sym)
   end
 
   def as_json(options = nil)
@@ -161,9 +161,9 @@ class Node < ApplicationRecord
     end
 
     if networkinfo.present?
-      update(version: BitcoinUtil::Version.parse(networkinfo['version']), peer_count: networkinfo['connections'])
+      update(version: BitcoinUtil::Version.parse(networkinfo['version'], client_type.to_sym), peer_count: networkinfo['connections'])
     elsif info.present?
-      update(version: BitcoinUtil::Version.parse(info['version']), peer_count: info['connections'])
+      update(version: BitcoinUtil::Version.parse(info['version'], client_type.to_sym), peer_count: info['connections'])
     end
 
     if libbitcoin?
