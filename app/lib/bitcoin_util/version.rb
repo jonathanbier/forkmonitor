@@ -16,7 +16,7 @@ module BitcoinUtil
         end
       end
 
-      def name_with_version(name, version, version_extra, is_bu)
+      def name_with_version(name, version, version_extra, client_type)
         name = name.to_s
         if version.nil?
           if version_extra.present?
@@ -26,7 +26,7 @@ module BitcoinUtil
           return name
         end
         version_arr = version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
-        name + " #{(version_arr[3]).zero? && !is_bu ? version_arr[0..2].join('.') : version_arr.join('.')}" + version_extra
+        name + " #{(version_arr[3]).zero? && client_type != :bu ? version_arr[0..2].join('.') : version_arr.join('.')}" + version_extra
       end
     end
   end

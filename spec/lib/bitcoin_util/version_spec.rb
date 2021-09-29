@@ -13,23 +13,23 @@ RSpec.describe BitcoinUtil::Version do
     end
 
     it 'handles clients that self identify with four digits' do
-      expect(described_class.name_with_version('Bitcoin Unlimited', 1_060_000, '', true)).to eq('Bitcoin Unlimited 1.6.0.0')
+      expect(described_class.name_with_version('Bitcoin Unlimited', 1_060_000, '', :bu)).to eq('Bitcoin Unlimited 1.6.0.0')
     end
 
     it 'drops the 4th digit if zero' do
-      expect(described_class.name_with_version('Bitcoin Core', 170_000, '', false)).to eq('Bitcoin Core 0.17.0')
+      expect(described_class.name_with_version('Bitcoin Core', 170_000, '', :core)).to eq('Bitcoin Core 0.17.0')
     end
 
     it 'appends version_extra' do
-      expect(described_class.name_with_version('Bitcoin Core', 170_000, 'rc1', false)).to eq('Bitcoin Core 0.17.0rc1')
+      expect(described_class.name_with_version('Bitcoin Core', 170_000, 'rc1', :core)).to eq('Bitcoin Core 0.17.0rc1')
     end
 
     it 'hides version if absent' do
-      expect(described_class.name_with_version('Libbitcoin', nil, '', false)).to eq('Libbitcoin')
+      expect(described_class.name_with_version('Libbitcoin', nil, '', :libbitcoin)).to eq('Libbitcoin')
     end
 
     it 'adds version_extra if set while version is absent' do
-      expect(described_class.name_with_version('Libbitcoin', nil, '3.6.0', false)).to eq('Libbitcoin 3.6.0')
+      expect(described_class.name_with_version('Libbitcoin', nil, '3.6.0', :libbitcoin)).to eq('Libbitcoin 3.6.0')
     end
   end
 end

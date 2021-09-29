@@ -44,7 +44,7 @@ class Node < ApplicationRecord
   scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def name_with_version
-    BitcoinUtil::Version.name_with_version(name, version, version_extra, bu?)
+    BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type)
   end
 
   def as_json(options = nil)
