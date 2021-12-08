@@ -199,7 +199,6 @@ class InflatedBlock < ApplicationRecord
           end
         end
 
-        node.mirror_client.reconsiderblock(tip['hash']) # This is a blocking call
         Rails.logger.info 'Node restored'
         # Give node some time to catch up:
         node.update mirror_rest_until: 60.seconds.from_now
