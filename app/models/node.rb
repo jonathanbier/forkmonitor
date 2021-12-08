@@ -191,10 +191,15 @@ class Node < ApplicationRecord
     mempool_count = nil
     mempool_max = nil
     unless libbitcoin?
-      mempool_info = client.getmempoolinfo
-      mempool_bytes = mempool_info['bytes']
-      mempool_count = mempool_info['size']
-      mempool_max = mempool_info['maxmempool']
+      begin
+        mempool_info = client.getmempoolinfo
+        mempool_bytes = mempool_info['bytes']
+        mempool_count = mempool_info['size']
+        mempool_max = mempool_info['maxmempool']
+      rescue BitcoinUtil::RPC::TimeOutError
+        # Ignore the occasional timeout
+      end
+
     end
 
     raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
