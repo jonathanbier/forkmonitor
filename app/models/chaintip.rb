@@ -248,7 +248,9 @@ class Chaintip < ApplicationRecord
 
     def validate_forks!(node, max_depth)
       raise 'Only implemented for (modern) Bitcoin Core nodes' unless node.core? && node.version >= 100_000
-      return nil if node.unreachable_since || node.ibd
+      return nil if node.unreachable_since || node.ibd || node.mirror_ibd
+
+      return nil unless node.mirror_rest_until.nil? || node.mirror_rest_until < Time.zone.now
 
       chaintips = nil
       begin
