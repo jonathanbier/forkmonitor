@@ -378,9 +378,19 @@ class Block < ApplicationRecord
     begin
       node.mirror_client.getblock(block_hash, 1)
     rescue BitcoinUtil::RPC::BlockNotFoundError
-      raw_block = node.client.getblock(block_hash, 0)
+      return nil if first_seen_by.libbitcoin?
+
+      Rails.logger.info "Feed block #{block_hash} (#{height}) from #{first_seen_by.name_with_version} to mirror of #{node.name_with_version}"
+      raw_block = first_seen_by.client.getblock(block_hash, 0)
       node.mirror_client.submitblock(raw_block, block_hash)
-      sleep 1
+      sleep 3
+      # Check if this succeeded
+      begin
+        node.mirror_client.getblock(block_hash, 1)
+      rescue BitcoinUtil::RPC::BlockNotFoundError
+        Rails.logger.error 'Failed to provide mirror node with block'
+        return nil
+      end
     end
 
     Rails.logger.info 'Stop p2p networking to prevent the chain from updating underneath us'
