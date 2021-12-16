@@ -383,7 +383,14 @@ class Block < ApplicationRecord
       Rails.logger.info "Feed block #{block_hash} (#{height}) from #{first_seen_by.name_with_version} to mirror of #{node.name_with_version}"
       raw_block_header = first_seen_by.getblockheader(block_hash, false)
       raw_block = first_seen_by.client.getblock(block_hash, 0)
-      node.mirror_client.submitheader(raw_block_header)
+      begin
+        node.mirror_client.submitheader(raw_block_header)
+      rescue BitcoinUtil::RPC::PreviousHeaderMissing
+        # This can happen if the mirror node is too far behind or if the stale fork is longer than 1
+        Rails.logger.error 'Failed to provide mirror node with block header'
+        # TODO: call submitheader multiple times if needed
+        return nil
+      end
       node.mirror_client.submitblock(raw_block, block_hash)
       sleep 3
       # Check if this succeeded
