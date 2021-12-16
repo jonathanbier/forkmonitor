@@ -374,14 +374,16 @@ class Block < ApplicationRecord
     return nil if node.mirror_rpchost.blank?
     return nil if marked_valid_by.include?(node.id) || marked_invalid_by.include?(node.id)
 
-    # Feed block to mirror node if needed:
+    # Feed header and block to mirror node if needed:
     begin
       node.mirror_client.getblock(block_hash, 1)
     rescue BitcoinUtil::RPC::BlockNotFoundError
       return nil if first_seen_by.libbitcoin?
 
       Rails.logger.info "Feed block #{block_hash} (#{height}) from #{first_seen_by.name_with_version} to mirror of #{node.name_with_version}"
+      raw_block_header = first_seen_by.getblockheader(block_hash, false)
       raw_block = first_seen_by.client.getblock(block_hash, 0)
+      node.mirror_client.submitheader(raw_block_header)
       node.mirror_client.submitblock(raw_block, block_hash)
       sleep 3
       # Check if this succeeded
