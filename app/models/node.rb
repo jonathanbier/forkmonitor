@@ -603,6 +603,7 @@ class Node < ApplicationRecord
           Block.find_missing(coin.downcase.to_sym, 40_000, 20) # waits 20 seconds for blocks
           InflatedBlock.check_inflation!({ coin: coin.downcase.to_sym, max: 10 })
           Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).find_each do |node|
+            # validate_forks! relies on the mirror node having been polled by check_inflation!
             Chaintip.validate_forks!(node, 50)
           end
         end

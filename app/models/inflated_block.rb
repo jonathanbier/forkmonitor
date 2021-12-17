@@ -59,10 +59,6 @@ class InflatedBlock < ApplicationRecord
           Rails.logger.info 'Node in Initial Blockchain Download'
           next
         end
-        if node.mirror_ibd
-          Rails.logger.info 'Mirror node in Initial Blockchain Download'
-          next
-        end
         if node.restore_mirror == false # false: unable to connect, nil: no mirror block
           Rails.logger.error "Unable to connect to mirror node #{node.id} #{node.name_with_version}"
           next
@@ -104,8 +100,8 @@ class InflatedBlock < ApplicationRecord
           Thread.exit
         end
 
-        # Skip if mirror node isn't synced
-        Thread.exit if node.mirror_block.nil?
+        # Skip if mirror node isn't synced (mirror node must have been polled before this)
+        Thread.exit if node.mirror_block.nil? || node.mirror_ibd
 
         # Avoid expensive call if we already have this information for the most recent tip (of the mirror node):
         if TxOutset.find_by(block: node.mirror_block, node: node).present?
