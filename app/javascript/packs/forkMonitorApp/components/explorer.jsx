@@ -29,8 +29,6 @@ class Explorer extends React.Component {
       if (coin == "btc") {
       } else if (coin == "tbtc") {
         return null;
-      } else if (coin == "bch") {
-        rootUrl = "https://bch.btc.com/"
       } else {
         return null;
       }

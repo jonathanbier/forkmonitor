@@ -50,13 +50,12 @@ RSpec.describe Node, type: :model do
       it 'calls poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!' do
         create(:node_with_block, coin: :btc, version: 170_000)
         create(:node_with_block, coin: :btc, version: 160_000)
-        create(:node_with_block, coin: :bch)
+        create(:node_with_block, coin: :tbtc)
 
         expect(described_class).to receive(:check_laggards!)
 
         expect(described_class).to receive(:check_chaintips!).with(:btc)
         expect(described_class).to receive(:check_chaintips!).with(:tbtc)
-        expect(described_class).to receive(:check_chaintips!).with(:bch)
 
         # rubocop:disable RSpec/IteratedExpectation
         expect(described_class).to(receive(:bitcoin_core_by_version).and_wrap_original do |relation|
@@ -70,7 +69,7 @@ RSpec.describe Node, type: :model do
           end
         end)
 
-        expect(described_class).to(receive(:bch_by_version).once.and_wrap_original do |relation|
+        expect(described_class).to(receive(:testnet_by_version).once.and_wrap_original do |relation|
           relation.call.each do |node|
             expect(node).to receive(:poll!)
           end

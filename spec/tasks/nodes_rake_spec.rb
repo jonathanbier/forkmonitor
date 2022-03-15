@@ -15,8 +15,8 @@ describe 'nodes:poll' do
   end
 
   it 'calls :poll! on Node with a list of coins' do
-    expect(Node).to receive(:poll!).with({ coins: %w[BTC BCH] })
-    subject.invoke('BTC', 'BCH')
+    expect(Node).to receive(:poll!).with({ coins: %w[BTC TBTC] })
+    subject.invoke('BTC', 'TBTC')
   end
 end
 
@@ -29,8 +29,8 @@ describe 'nodes:poll_repeat' do
   end
 
   it 'calls :pollrepeat! on Node with a list of coins' do
-    expect(Node).to receive(:poll_repeat!).with({ coins: %w[BTC BCH] })
-    subject.invoke('BTC', 'BCH')
+    expect(Node).to receive(:poll_repeat!).with({ coins: %w[BTC TBTC] })
+    subject.invoke('BTC', 'TBTC')
   end
 end
 

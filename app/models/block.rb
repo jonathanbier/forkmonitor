@@ -8,8 +8,7 @@ class Block < ApplicationRecord
 
   MINIMUM_BLOCK_HEIGHTS = {
     btc: Rails.env.test? ? 0 : 500_000, # Mid December 2017, around Lightning network launch
-    tbtc: 1_600_000,
-    bch: 581_000
+    tbtc: 1_600_000
   }.freeze
 
   COIN = 100_000_000
@@ -127,8 +126,7 @@ class Block < ApplicationRecord
         # getblock argument verbosity 2 was added in v0.16.0
         # Knots doesn't return the transaction hash
         node = Node.newest_node(this_block.coin.to_sym) if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
-        # Use extra long timeout for BCH blocks
-        block_info = node.getblock(block_hash, 2, false, bch? ? 120 : nil)
+        block_info = node.getblock(block_hash, 2, false, nil)
       rescue BitcoinUtil::RPC::BlockPrunedError
         update pruned: true
         return
@@ -525,9 +523,7 @@ class Block < ApplicationRecord
           tx_count: nil
         )
         # Fetch headers
-        # * except for BCHN nodes, which don't support getblockheader outside main chain:
-        #   https://gitlab.com/bitcoin-cash-node/bitcoin-cash-node/-/issues/178
-        block.fetch_header!(node) unless node.name == 'BCHN'
+        block.fetch_header!(node)
         # TODO: connect longer branches to common ancestor (fetch more headers if needed)
         block
       rescue ActiveRecord::RecordNotUnique
@@ -633,8 +629,6 @@ class Block < ApplicationRecord
                          Node.bitcoin_core_by_version
                        when :tbtc
                          Node.testnet_by_version
-                       when :bch
-                         Node.bch_by_version
                        end
         # Keep track of the original first seen node
         # To make mocks easier, require that it's part of nodes_to_try:

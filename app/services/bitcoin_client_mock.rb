@@ -239,21 +239,6 @@ class BitcoinClientMock
       else
         throw "No getnetworkinfo mock for #{@client_type}"
       end
-    when :bch
-      {
-        180_500 => {
-          'version' => 180_500,
-          'subversion' => '/Bitcoin ABC:0.18.5(EB32.0)/',
-          'protocolversion' => 70_015,
-          'localservices' => '0000000000000024',
-          'localrelay' => true,
-          'timeoffset' => 0,
-          'networkactive' => @network_active,
-          'connections' => @peer_count,
-          'relayfee' => 1.0e-05,
-          'warnings' => "Warning: Unknown block versions being mined! It's possible unknown rules are in effect"
-        }
-      }[@version]
     else
       throw "Unsporrted coin: #{@coin}"
     end
@@ -385,25 +370,6 @@ class BitcoinClientMock
           }
         }
       end
-    when :bch
-      res = {
-        180_500 => { # Copied from BTC
-          'chain' => 'main',
-          'blocks' => @height,
-          'headers' => @height,
-          'bestblockhash' => @block_hashes[@height],
-          # "difficulty" => 5883988430955.408,
-          'mediantime' => 1_548_515_214,
-          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-          'initialblockdownload' => @ibd,
-          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-          'size_on_disk' => 229_120_703_086 + (@height - 560_179) * 2_000_000,
-          'pruned' => false,
-          'softforks' => [],
-          'bip9_softforks' => {},
-          'warnings' => ''
-        }
-      }
     end
     throw "No getblockchaininfo mock for #{@client_type}" if res.blank?
     res[@version]

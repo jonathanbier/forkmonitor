@@ -17,7 +17,6 @@ class RSSFeeds extends React.Component {
         <ul>
           <li>BTC <a href="/feeds/btc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BTC testnet<a href="/feeds/tbtc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BCH <a href="/feeds/bch/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -31,7 +30,6 @@ class RSSFeeds extends React.Component {
         <ul>
           <li>BTC <a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BTC testnet <a href="/feeds/invalid_blocks/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BCH <a href="/feeds/invalid_blocks/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -66,7 +64,6 @@ class RSSFeeds extends React.Component {
         <ul>
           <li>BTC <a href="/feeds/stale_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BTC testnet <a href="/feeds/stale_candidates/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BCH <a href="/feeds/stale_candidates/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -82,7 +79,6 @@ class RSSFeeds extends React.Component {
         <ul>
           <li>BTC <a href="/feeds/blocks/unknown_pools/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
           <li>BTC testnet <a href="/feeds/blocks/unknown_pools/tbtc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
-          <li>BCH <a href="/feeds/blocks/unknown_pools/bch.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>

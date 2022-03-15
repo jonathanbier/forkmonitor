@@ -9,7 +9,7 @@ class Node < ApplicationRecord
 
   class NoTxIndexError < StandardError; end
 
-  # BSV support has been removed, but enums are stored as integer in the database.
+  # BCH and BSV support have been removed, but enums are stored as integer in the database.
   enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   nilify_blanks only: [:mirror_rpchost]
@@ -41,7 +41,6 @@ class Node < ApplicationRecord
                       omni: 8, blockcore: 9 }
 
   scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
-  scope :bch_by_version, -> { where(enabled: true, coin: :bch).order(version: :desc) }
 
   def name_with_version
     BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type.to_sym)
@@ -465,18 +464,6 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:tbtc)
       end
 
-      if options[:coins].blank? || options[:coins].include?('BCH')
-        bch_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-
-        check_chaintips!(:bch)
-        StaleCandidate.check!(:bch)
-      end
-
       check_laggards!(options)
 
       bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
@@ -515,8 +502,6 @@ class Node < ApplicationRecord
       case coin
       when :btc, :tbtc
         return Node.newest(coin, :core)
-      when :bch
-        return Node.newest(coin, :abc)
       end
       throw "Unable to find suitable #{coin} node in newest_node"
     end
@@ -535,9 +520,6 @@ class Node < ApplicationRecord
         when :btc, :tbtc
           # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
           node = Node.first_newer_than(coin, 160_000, :core)
-        when :bch
-          # getrawtransaction supports blockhash as of version 0.21, perhaps earlier too
-          node = Node.first_newer_than(coin, 210_000, :abc)
         end
       rescue Node::NoMatchingNodeError
         Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_and_tx_ids_for_block"
@@ -690,8 +672,6 @@ class Node < ApplicationRecord
         Chaintip.check!(:btc, bitcoin_core_by_version + bitcoin_alternative_implementations)
       when :tbtc
         Chaintip.check!(:tbtc, testnet_by_version)
-      when :bch
-        Chaintip.check!(:bch, bch_by_version)
       else
         throw Error, 'Unknown coin'
       end

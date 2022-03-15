@@ -18,7 +18,6 @@ import {
 
 const coin_choices = [
   { id: "btc", name: "Bitcoin"},
-  { id: "bch", name: "Bitcoin Cash"},
   { id: "tbtc", name: "Bitcoin Testnet"}
 ]
 
@@ -30,7 +29,6 @@ const client_choices = [
     { id: "libbitcoin", name: "libbitcoin"},
     { id: "omni", name: "omni"},
     { id: "blockcore", name: "Blockcore"},
-    { id: "abc", name: "Bitcoin ABC"},
     { id: "bu", name: "Bitcoin Unlimited"},
 ];
 
