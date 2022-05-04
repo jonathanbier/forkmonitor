@@ -34,12 +34,12 @@ RSpec.describe Node, type: :model do
 
         it 'stores the node version' do
           @node.poll!
-          expect(@node.version).to be 220_000
+          expect(@node.version).to be 230_000
         end
 
         it 'gets IBD status' do
           @node.poll!
-          expect(@node.ibd).to eq(false)
+          expect(@node.ibd).to be(false)
         end
 
         it 'does not store the latest block if in IBD' do
@@ -73,7 +73,7 @@ RSpec.describe Node, type: :model do
 
         it 'stores index status for >= 0.21' do
           @node.poll!
-          expect(@node.txindex).to eq(true)
+          expect(@node.txindex).to be(true)
         end
       end
 
@@ -110,7 +110,7 @@ RSpec.describe Node, type: :model do
 
       it 'gets IBD status' do
         @node.poll!
-        expect(@node.ibd).to eq(false)
+        expect(@node.ibd).to be(false)
       end
 
       it 'updates to the latest block' do
@@ -199,12 +199,12 @@ RSpec.describe Node, type: :model do
         @node.client.mock_ibd(true)
         @node.client.mock_set_height(976)
         @node.poll!
-        expect(@node.ibd).to eq(true)
+        expect(@node.ibd).to be(true)
 
         @node.client.mock_ibd(false)
         @node.client.mock_set_height(560_179)
         @node.poll!
-        expect(@node.ibd).to eq(false)
+        expect(@node.ibd).to be(false)
       end
 
       it 'stores intermediate blocks' do
@@ -229,7 +229,7 @@ RSpec.describe Node, type: :model do
 
       it 'gets IBD status from verificationprogress' do
         @node.client.mock_ibd(true)
-        expect(@node.ibd).to eq(false)
+        expect(@node.ibd).to be(false)
       end
 
       it 'uses time from getblock instead of getblockchaininfo' do

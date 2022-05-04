@@ -21,8 +21,8 @@ ExceptionNotification.configure do |config|
   # Email notifier sends notifications by email.
   config.add_notifier :email, {
     email_prefix: "[Fork Monitor Exception] #{Process.pid}:",
-    sender_address: ENV['EXCEPTION_FROM_EMAIL'],
-    exception_recipients: (ENV['BUGS_TO'] || '').split(',')
+    sender_address: ENV.fetch('EXCEPTION_FROM_EMAIL', nil),
+    exception_recipients: (ENV.fetch('BUGS_TO', '')).split(',')
   }
 
   # Campfire notifier sends notifications to your Campfire room. Requires 'tinder' gem.

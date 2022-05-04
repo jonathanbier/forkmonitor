@@ -110,7 +110,7 @@ RSpec.describe Block, type: :model do
     it 'marks block as headers_only' do
       block = described_class.create_headers_only(@node, 560_182,
                                                   '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
-      expect(block.headers_only).to eq(true)
+      expect(block.headers_only).to be(true)
     end
 
     it 'sets first seen by' do
@@ -129,7 +129,7 @@ RSpec.describe Block, type: :model do
                                               'nTx' => 3
                                             }, false, @node, nil)
       block.reload
-      expect(block.headers_only).to eq(false)
+      expect(block.headers_only).to be(false)
       expect(block.tx_count).to eq(3)
     end
 
@@ -137,7 +137,7 @@ RSpec.describe Block, type: :model do
       block = described_class.create_headers_only(@node, 560_182,
                                                   '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       expect(block.summary(time: true,
-                           first_seen_by: true)).to eq('0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377 (10:57:31 by unknown pool, first seen by Bitcoin Core 0.17.1)')
+                           first_seen_by: true)).to eq('0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377 (10:57:31 by unknown pool, first seen by Bitcoin Core 23.0)')
     end
   end
 
@@ -167,13 +167,13 @@ RSpec.describe Block, type: :model do
 
       Chaintip.check!(:btc, [@node_a])
       @headers_only_block = described_class.find_by(block_hash: chaintips_a[-1]['hash'])
-      expect(@headers_only_block.headers_only).to eq(true)
+      expect(@headers_only_block.headers_only).to be(true)
     end
 
     it 'obtains block from other node if available' do
       described_class.find_missing(:btc, 1, 1)
       @headers_only_block.reload
-      expect(@headers_only_block.headers_only).to eq(false)
+      expect(@headers_only_block.headers_only).to be(false)
       expect(@headers_only_block.first_seen_by).to eq(@node_b)
     end
 

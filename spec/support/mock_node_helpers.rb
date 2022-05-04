@@ -4,10 +4,6 @@ module MockNodeHelpers
   # Required variables:
   # test: TestWrapper
   def setup_chaintip_spec_nodes
-    # The current commit of Bitcoin Core has wallet taproot descriptor support,
-    # even when taproot is not active. We take advantage of this by creating
-    # a transaction in the non-taproot wallet and then calling abandontransaction.
-    #
     # TOOD: figure out how to get the "send" RPC to work ('send' is a reserved
     # keyword in Ruby and Python and this seems to confuse the wrapper)
     #
@@ -21,15 +17,17 @@ module MockNodeHelpers
                  [
                    '-vbparams=taproot:1:1'
                  ],
-                 [
-                   '-vbparams=taproot:1:1'
-                 ]
+                 []
                ])
     @node_a = create(:node_python) # Taproot enabled
     @node_a.client.set_python_node(test.nodes[0])
     @node_b = create(:node_python) # Taproot disabled
     @node_b.client.set_python_node(test.nodes[1])
-    @node_c = create(:node_python) # Taproot disabled (doesn't really matter)
+
+    deployments = @node_b.client.getdeploymentinfo
+    assert_equal(deployments['deployments']['taproot']['active'], false)
+
+    @node_c = create(:node_python)
     @node_c.client.set_python_node(test.nodes[2])
 
     # Disconnect Node C so we can give it a an independent chain
@@ -47,10 +45,9 @@ module MockNodeHelpers
                                        }
                                      ])
     @node_b.client.createwallet
-    # The following behavior depends on this patch: https://github.com/BitMEXResearch/bitcoin/pull/2
-    @addr_1 = @node_a.client.getnewaddress('bech32') # Taproot address
-    @addr_2 = @node_a.client.getnewaddress('bech32') # Taproot address
-    @r_addr = @node_b.client.getnewaddress('bech32') # Segwit v0 address
+    @addr_1 = @node_a.client.getnewaddress('bech32m') # Taproot address
+    @addr_2 = @node_a.client.getnewaddress('bech32m') # Taproot address
+    @r_addr = @node_b.client.getnewaddress('bech32m') # Taproot address
 
     @node_b.client.generatetoaddress(2, @r_addr)
     test.sync_blocks([@node_a.client, @node_b.client])

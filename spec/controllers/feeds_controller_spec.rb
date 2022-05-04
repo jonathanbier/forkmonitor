@@ -98,7 +98,7 @@ RSpec.describe FeedsController, type: :controller do
         get :version_bits, format: :rss
         expect(response).to render_template('feeds/version_bits')
         expect(response.body).to include('Version bits')
-        expect(response.body).to include("#{ENV['VERSION_BITS_THRESHOLD']} times")
+        expect(response.body).to include("#{ENV.fetch('VERSION_BITS_THRESHOLD', nil)} times")
       end
 
       it 'contains version bit' do

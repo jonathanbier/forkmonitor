@@ -28,7 +28,7 @@ RSpec.describe InvalidBlock, type: :model do
 
     it 'sends email only once' do
       expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'node should have invalid blocks' do

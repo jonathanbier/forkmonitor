@@ -9,7 +9,7 @@ RSpec.describe UserMailer, type: :mailer do
     let(:mail) { described_class.with(user: user, lag: lag).lag_email }
 
     it 'renders the headers' do
-      expect(mail.subject).to eq('[ForkMonitor] Bitcoin Core 0.10.3 is 1 blocks behind 170100')
+      expect(mail.subject).to eq('[ForkMonitor] Bitcoin Core 0.10.3 is 1 blocks behind 230000')
       expect(mail.to).to eq([user.email])
     end
 
@@ -35,7 +35,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it 'renders the headers' do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 0.17.1 considers BTC block #{invalid_block.block.height} (#{invalid_block.block.block_hash}) invalid")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 23.0 considers BTC block #{invalid_block.block.height} (#{invalid_block.block.block_hash}) invalid")
       expect(mail.to).to eq([user.email])
     end
 

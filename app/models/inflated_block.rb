@@ -34,7 +34,7 @@ class InflatedBlock < ApplicationRecord
       threads = []
       nodes = Node.with_mirror(options[:coin])
       Rails.logger.info "Check #{options[:coin].to_s.upcase} inflation for #{nodes.count} nodes..."
-      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{options[:coin]} mirror nodes." if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{options[:coin]} mirror nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
 
       nodes.each do |node|
         max_exceeded = false
@@ -158,10 +158,12 @@ class InflatedBlock < ApplicationRecord
           end
 
           inflation = tx_outset.total_amount - prev_tx_outset.total_amount
+          Rails.logger.debug { "Inflation: #{inflation} (max #{block.max_inflation / 100_000_000.0})" }
 
           next unless inflation > block.max_inflation / 100_000_000.0
 
           tx_outset.update inflated: true
+          Rails.logger.debug { "Find or create InflatedBlock at height #{block.height}" }
           inflated_block = block.inflated_block || block.create_inflated_block(node: node,
                                                                                max_inflation: block.max_inflation / 100_000_000.0, actual_inflation: inflation)
           next if inflated_block.notified_at

@@ -308,7 +308,7 @@ class Node < ApplicationRecord
     end
 
     # Return false if behind but still in grace period:
-    return false if lag_entry && ((Time.zone.now - lag_entry.created_at) < (ENV['LAG_GRACE_PERIOD'] || 1 * 60).to_i)
+    return false if lag_entry && ((Time.zone.now - lag_entry.created_at) < (ENV.fetch('LAG_GRACE_PERIOD') { (1 * 60) }).to_i)
 
     if lag_entry
       # Mark as ready to publish on RSS
@@ -553,9 +553,9 @@ class Node < ApplicationRecord
       tx_ids.shift # skip coinbase
       block.tx_ids = hashes_to_binary(tx_ids)
       block.pool = Block.pool_from_coinbase_tx(coinbase)
-      block.total_fee = (coinbase['vout'].sum do |vout|
-                           vout['value']
-                         end * 100_000_000.0 - block.max_inflation) / 100_000_000.0
+      block.total_fee = ((coinbase['vout'].sum do |vout|
+                            vout['value']
+                          end * 100_000_000.0) - block.max_inflation) / 100_000_000.0
       if block.pool.nil?
         coinbase_message = Block.coinbase_message(coinbase)
         return if coinbase_message.nil?
@@ -680,7 +680,7 @@ class Node < ApplicationRecord
 
     def getblocktemplate!(coin)
       nodes = Node.where(coin: coin, enabled: true, getblocktemplate: true, unreachable_since: nil)
-      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{coin} nodes." if nodes.count > (ENV['RAILS_MAX_THREADS'] || '5').to_i
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{coin} nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
       threads = []
       nodes.each do |node|
         threads << Thread.new do

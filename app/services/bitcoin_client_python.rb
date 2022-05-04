@@ -46,7 +46,7 @@ class BitcoinClientPython
     begin
       throw 'Specify node and node_id' if node.nil? || command.nil?
       @node.addnode(node, command)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "addnode(#{node}, #{command}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -83,7 +83,7 @@ class BitcoinClientPython
 
     begin
       @node.bumpfee(tx_id)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "bumpfee(#{tx_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -104,7 +104,7 @@ class BitcoinClientPython
       else
         @node.disconnectnode(address: address, nodeid: node_id)
       end
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error,
             "disconnectnode(#{address}, #{node_id}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -121,7 +121,7 @@ class BitcoinClientPython
       @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
-    rescue Error => e
+
       raise BitcoinUtil::RPC::Error,
             "getblock(#{block_hash}, #{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -129,7 +129,7 @@ class BitcoinClientPython
 
   def getblockhash(height)
     @node.getblockhash(height = height) # rubocop:disable Lint/SelfAssignment
-  rescue Error => e
+  rescue PyCall::PyError => e
     raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
@@ -142,7 +142,7 @@ class BitcoinClientPython
 
     begin
       @node.getblockheader(blockhash = block_hash, verbose = verbose) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error,
             "getblockheader(#{block_hash}, #{verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -169,6 +169,17 @@ class BitcoinClientPython
       raise BitcoinUtil::RPC::Error, "getinfo undefined for #{@name_with_version} (id=#{@node_id}): " + e.message
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+    end
+  end
+
+  def getdeploymentinfo
+    raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
+    raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
+
+    begin
+      @node.getdeploymentinfo
+    rescue PyCall::PyError => e
+      raise BitcoinUtil::RPC::Error, "getdeploymentinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -202,7 +213,7 @@ class BitcoinClientPython
 
     begin
       @node.getnetworkinfo
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -212,8 +223,8 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
-      @node.getnewaddress(address_type = address_type) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
-    rescue Error => e
+      @node.getnewaddress('', address_type)
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getnewaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -224,8 +235,8 @@ class BitcoinClientPython
 
     begin
       coinbase_dest = @node.get_deterministic_priv_key.address
-      @node.generatetoaddress(n_blocks, coinbase_dest)
-    rescue Error => e
+      @node.generatetoaddress(n_blocks, coinbase_dest, invalid_call: false)
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -233,10 +244,12 @@ class BitcoinClientPython
   def generatetoaddress(n_blocks, address)
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
+    raise BitcoinUtil::RPC::Error, 'Specify number of blocks' if n_blocks.nil?
+    raise BitcoinUtil::RPC::Error, 'Specify address' if address.nil?
 
     begin
-      @node.generatetoaddress(n_blocks, address)
-    rescue Error => e
+      @node.generatetoaddress(n_blocks, address, invalid_call: false)
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -247,7 +260,7 @@ class BitcoinClientPython
 
     begin
       @node.getchaintips
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getchaintips failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -258,7 +271,7 @@ class BitcoinClientPython
 
     begin
       @node.getbestblockhash
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -274,7 +287,7 @@ class BitcoinClientPython
       else
         @node.getrawtransaction(hash, verbose)
       end
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error,
             "getrawtransaction(#{hash}, #{verbose}, #{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -286,7 +299,7 @@ class BitcoinClientPython
 
     begin
       @node.getmempoolinfo
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "getmempoolinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -298,10 +311,11 @@ class BitcoinClientPython
     begin
       info = @node.gettxoutsetinfo
       if @mock_extra_inflation.positive?
-        info = info.collect { |k, v| [k, k == 'total_amount' ? (v.to_f + @mock_extra_inflation) : v] }.to_h
+        Rails.logger.debug { "Add extra #{@mock_extra_inflation} inflation..." }
+        info = info.collect { |k, v| [k, k == 'total_amount' ? (v.to_f + @mock_extra_inflation) : v] }.to_h # rubocop:disable Style/MapToHash
       end
       info
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "gettxoutsetinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -313,7 +327,7 @@ class BitcoinClientPython
 
     begin
       @node.invalidateblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "invalidateblock(#{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -325,7 +339,7 @@ class BitcoinClientPython
 
     begin
       @node.reconsiderblock(blockhash = block_hash) # rubocop:disable Lint/UselessAssignment
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "reconsiderblock(#{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -336,7 +350,7 @@ class BitcoinClientPython
 
     begin
       @node.listtransactions
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "listtransactions failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -348,7 +362,7 @@ class BitcoinClientPython
 
     begin
       @node.sendrawtransaction(tx)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "sendrawtransaction(#{tx}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -360,7 +374,7 @@ class BitcoinClientPython
 
     begin
       @node.gettransaction(tx)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "gettransaction(#{tx}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -372,7 +386,7 @@ class BitcoinClientPython
 
     begin
       @node.abandontransaction(tx)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "abandontransaction(#{tx}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -386,7 +400,7 @@ class BitcoinClientPython
     begin
       @node.sendtoaddress(address = destination, amount = amount.to_s, comment = comment, comment_to = comment_to, # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
                           subtractfeefromamount = subtractfeefromamount, replaceable = replaceable)                # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error,
             "sendtoaddress(#{destination}, #{amount}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -398,7 +412,7 @@ class BitcoinClientPython
 
     begin
       @node.testmempoolaccept(txs)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "testmempoolaccept failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -409,7 +423,7 @@ class BitcoinClientPython
 
     begin
       @node.walletcreatefundedpsbt(inputs, outputs)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "walletcreatefundedpsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -420,7 +434,7 @@ class BitcoinClientPython
 
     begin
       @node.walletprocesspsbt(psbt, sign)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "walletprocesspsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -431,7 +445,7 @@ class BitcoinClientPython
 
     begin
       @node.finalizepsbt(psbt)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "finalizepsbt failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -443,7 +457,7 @@ class BitcoinClientPython
 
     begin
       @node.setnetworkactive(state)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "setnetworkactive(#{block_hash}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
@@ -455,7 +469,7 @@ class BitcoinClientPython
 
     begin
       @node.submitblock(block)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error,
             "submitblock(#{block_hash.presence || block}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -468,7 +482,7 @@ class BitcoinClientPython
 
     begin
       @node.submitheader(header)
-    rescue Error => e
+    rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "submitheader(#{header}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end

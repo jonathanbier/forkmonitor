@@ -12,9 +12,9 @@ module BitcoinUtil
           padding = [0] * (4 - digits.size)
           digits.push(*padding)
           if client_type == :core && digits[0] >= 22
-            digits[2] + digits[1] * 100 + digits[0] * 10_000
+            digits[2] + (digits[1] * 100) + (digits[0] * 10_000)
           else
-            digits[3] + digits[2] * 100 + digits[1] * 10_000 + digits[0] * 1_000_000
+            digits[3] + (digits[2] * 100) + (digits[1] * 10_000) + (digits[0] * 1_000_000)
           end
         else
           version

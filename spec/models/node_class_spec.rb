@@ -196,7 +196,7 @@ RSpec.describe Node, type: :model do
     describe 'check_laggards!' do
       before do
         @node_a = build(:node)
-        @node_a.client.mock_version(170_100)
+        @node_a.client.mock_version(230_000)
         @node_a.poll!
 
         @node_b = build(:node)
@@ -221,7 +221,7 @@ RSpec.describe Node, type: :model do
     describe 'check_chaintips!' do
       before do
         @node_a = build(:node)
-        @node_a.client.mock_version(170_100)
+        @node_a.client.mock_version(230_000)
         @node_a.poll!
 
         @node_b = build(:node)
@@ -239,7 +239,7 @@ RSpec.describe Node, type: :model do
     describe 'fetch_ancestors!' do
       before do
         @node_a = build(:node)
-        @node_a.client.mock_version(170_100)
+        @node_a.client.mock_version(230_000)
         @node_a.client.mock_set_height(560_178)
         @node_a.poll!
 
@@ -266,9 +266,11 @@ RSpec.describe Node, type: :model do
     describe 'first_with_txindex' do
       before do
         @node_a = build(:node)
-        @node_a.client.mock_version(170_100)
+        @node_a.client.mock_version(230_000)
         @node_a.client.mock_set_height(560_178)
         @node_a.poll!
+        # Explictly set to false, due to ugly hack in how the mock handles getindexinfo
+        @node_a.update txindex: false
 
         @node_b = build(:node, txindex: true)
         @node_b.client.mock_version(100_300)
@@ -294,7 +296,7 @@ RSpec.describe Node, type: :model do
       before do
         @tx_id = '74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'
         @node_a = build(:node, txindex: true)
-        @node_a.client.mock_version(170_100)
+        @node_a.client.mock_version(230_000)
         @node_a.client.mock_set_height(560_178)
         @node_a.poll!
       end

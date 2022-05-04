@@ -9,13 +9,13 @@ namespace 'safari' do
       websitePushID: 'web.info.forkmonitor',
       allowedDomains: ['https://forkmonitor.info'],
       urlFormatString: 'https://forkmonitor.info',
-      authenticationToken: ENV['SAFARI_AUTH_TOKEN'],
+      authenticationToken: ENV.fetch('SAFARI_AUTH_TOKEN', nil),
       webServiceURL: 'https://forkmonitor.info/push'
     }
     iconset_path = 'app/assets/images/safari_iconset'
     certificate = 'tmp/production.p12'
     intermediate_cert = 'tmp/AppleWWDRCAG4.cer'
-    package = PushPackage.new(website_params, iconset_path, certificate, ENV['CERT_PWD'],
+    package = PushPackage.new(website_params, iconset_path, certificate, ENV.fetch('CERT_PWD', nil),
                               intermediate_cert)
     package.save('public/pushPackage.zip')
   end
@@ -26,7 +26,7 @@ namespace 'safari' do
     app.name = 'Fork Monitor'
     app.certificate = File.read('certs/production.pem')
     app.environment = 'production'
-    app.password = ENV['CERT_PWD']
+    app.password = ENV.fetch('CERT_PWD', nil)
     app.connections = 1
     app.save!
   end

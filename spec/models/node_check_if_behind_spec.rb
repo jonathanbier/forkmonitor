@@ -27,7 +27,7 @@ RSpec.describe Node, type: :model do
     end
 
     it 'detects if node A and B are at the same block' do
-      expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+      expect(@node_a.check_if_behind!(@node_b)).to be_nil
     end
 
     describe 'when behind' do
@@ -45,13 +45,13 @@ RSpec.describe Node, type: :model do
         described_class.poll!
         @node_a.peer_count = 1 # Bypass peer check in check_if_behind!
         @first_check = @node_a.check_if_behind!(@node_b)
-        Timecop.freeze(Time.zone.now + 15 * 60)
+        Timecop.freeze(Time.zone.now + (15 * 60))
 
         allow(User).to receive_message_chain(:all, :find_each).and_yield(user)
       end
 
       it 'is false if the difference is recent' do
-        expect(@first_check).to eq(false)
+        expect(@first_check).to be(false)
       end
 
       it 'detects if node A is behind node B' do
@@ -63,31 +63,31 @@ RSpec.describe Node, type: :model do
 
       it 'is nil if the node is unreachable' do
         @node_a.update unreachable_since: Time.zone.now
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
       end
 
       it 'is nil if the node is in initial block download' do
         @node_a.update ibd: true
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
       end
 
       it 'is nil if other node is in initial block download' do
         @node_b.update ibd: true
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
       end
 
       it 'is nil if the node has no peers' do
         @node_a.peer_count = 0
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
       end
 
       it 'allows extra blocks for old nodes' do
         @node_a.update version: 100_300
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
         @node_b.client.generate(3)
         described_class.poll!
         @node_a.update peer_count: 1, version: 100_300 # Undo override from poll
-        expect(@node_a.check_if_behind!(@node_b)).not_to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).not_to be_nil
       end
 
       it 'detects if bcoin node A is behind (core) node B' do
@@ -102,22 +102,22 @@ RSpec.describe Node, type: :model do
 
       it 'allows extra blocks for btcd' do
         @node_a.update client_type: :btcd, version: 120_000
-        expect(@node_a.check_if_behind!(@node_b)).to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).to be_nil
 
         @node_b.client.generate(2)
         @node_a.update client_type: :core, version: 170_000 # Poll should use core
         described_class.poll!
         @node_a.update peer_count: 1, client_type: :btcd, version: 120_000
-        expect(@node_a.check_if_behind!(@node_b)).not_to eq(nil)
+        expect(@node_a.check_if_behind!(@node_b)).not_to be_nil
       end
 
       it 'sends an email to all users' do
-        expect { @node_a.check_if_behind!(@node_b) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @node_a.check_if_behind!(@node_b) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
       end
 
       it 'sends email only once' do
-        expect { @node_a.check_if_behind!(@node_b) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-        expect { @node_a.check_if_behind!(@node_b) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+        expect { @node_a.check_if_behind!(@node_b) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
+        expect { @node_a.check_if_behind!(@node_b) }.not_to(change { ActionMailer::Base.deliveries.count })
       end
     end
   end

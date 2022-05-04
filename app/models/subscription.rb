@@ -12,9 +12,9 @@ class Subscription < ApplicationRecord
           auth: s.auth,
           ttl: 60 * 60,
           vapid: {
-            subject: "mailto:#{ENV['VAPID_CONTACT_EMAIL']}",
-            public_key: ENV['VAPID_PUBLIC_KEY'],
-            private_key: ENV['VAPID_PRIVATE_KEY']
+            subject: "mailto:#{ENV.fetch('VAPID_CONTACT_EMAIL', nil)}",
+            public_key: ENV.fetch('VAPID_PUBLIC_KEY', nil),
+            private_key: ENV.fetch('VAPID_PRIVATE_KEY', nil)
           }
         )
       rescue Webpush::Unauthorized, Webpush::ExpiredSubscription

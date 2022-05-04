@@ -207,30 +207,30 @@ RSpec.describe StaleCandidate, type: :model do
 
     it 'triggers potential stale block alert' do
       # One alert for the lowest height:
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
       # Just once...
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'is quiet at an invalid block alert' do
       InvalidBlock.create(block: @node_a.block, node: @node_a)
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'is quiet after an invalid block alert' do
       InvalidBlock.create(block: @node_a.block.parent, node: @node_a)
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(0)
+      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'notifies again if alert was dismissed' do
       InvalidBlock.create(block: @node_a.block.parent, node: @node_a, dismissed_at: Time.zone.now)
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
 
     it 'works for headers_only block' do
       @node_b.block.update headers_only: true, pool: nil, tx_count: nil, timestamp: nil, work: nil, parent_id: nil,
                            mediantime: nil, first_seen_by_id: nil
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
 
     it 'does not also create one if the race continues 1 more block' do
@@ -245,7 +245,7 @@ RSpec.describe StaleCandidate, type: :model do
       expect(@node_a.block.block_hash).not_to eq(@node_b.block.block_hash)
       test.connect_nodes(0, 1)
 
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
   end
 

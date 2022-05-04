@@ -10,8 +10,8 @@ sys.path.append(VENDOR_DIRECTORY + "/bitcoin/test/functional")
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.test_node import RPCOverloadWrapper
-from feature_taproot import create_block, NORMAL_GBT_REQUEST_PARAMS
-from test_framework.blocktools import add_witness_commitment
+from feature_taproot import create_block
+from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
 
 class TestWrapper(BitcoinTestFramework):
     """Wrapper Class for BitcoinTestFramework.
@@ -86,21 +86,20 @@ class TestWrapper(BitcoinTestFramework):
             delattr(RPCOverloadWrapper, "createwallet")
 
         self.add_nodes(self.num_nodes,
-            versions=[210000] * self.num_nodes,
-            # binary=[os.path.abspath(VENDOR_DIRECTORY + "/v0.21.0/bin/bitcoind")] * self.num_nodes,
-            # binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v0.21.0/bin/bitcoin-cli")] * self.num_nodes,
-            binary=[str(Path.home()) + "/bin/bitcoind"] * self.num_nodes,
-            binary_cli=[str(Path.home()) + "/bin/bitcoin-cli"] * self.num_nodes,
+            versions=[230000] * self.num_nodes,
+            binary=[os.path.abspath(VENDOR_DIRECTORY + "/v23.0/bin/bitcoind")] * self.num_nodes,
+            binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v23.0/bin/bitcoin-cli")] * self.num_nodes,
+            # binary=[str(Path.home()) + "/bin/bitcoind"] * self.num_nodes,
+            # binary_cli=[str(Path.home()) + "/bin/bitcoin-cli"] * self.num_nodes,
             extra_args=self.extra_args,
         )
         self.start_nodes()
-
 
     def connect_nodes(self, a, b):
         BitcoinTestFramework.connect_nodes(self, a, b)
 
     def disconnect_nodes(self, a, b):
-        BitcoinTestFramework.disconnect_nodes(self, a, b)
+        BitcoinTestFramework.disconnect_nodes(self, a, b)        
 
     def shutdown(self):
         super().shutdown()

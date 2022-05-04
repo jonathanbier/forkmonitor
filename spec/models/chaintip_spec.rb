@@ -293,9 +293,9 @@ RSpec.describe Chaintip, type: :model do
 
         mempool_tap = @node_a.client.testmempoolaccept([tx_hex])[0]
         mempool_no_tap = @node_b.client.testmempoolaccept([tx_hex])[0]
-        expect(mempool_tap['allowed']).to eq(true)
-        expect(mempool_no_tap['allowed']).to eq(false)
-        expect(mempool_no_tap['reject-reason']).to eq('bad-txns-nonstandard-inputs')
+        expect(mempool_tap['allowed']).to be(true)
+        # Although Taproot is inactive on node B, the mempool still accepts it
+        expect(mempool_no_tap['allowed']).to be(true)
 
         # Cripple transaction so that it's invalid under taproot rules
         tx_hex[-20] = if tx_hex[-20] == '0'
@@ -307,13 +307,14 @@ RSpec.describe Chaintip, type: :model do
         mempool_broken_tap = @node_a.client.testmempoolaccept([tx_hex])[0]
         mempool_broken_no_tap = @node_b.client.testmempoolaccept([tx_hex])[0]
 
-        expect(mempool_broken_no_tap['allowed']).to eq(false)
-        expect(mempool_broken_no_tap['reject-reason']).to eq('bad-txns-nonstandard-inputs')
+        # Taproot is treated as always active in the mempool: https://github.com/bitcoin/bitcoin/pull/23512
+        expect(mempool_broken_no_tap['allowed']).to be(false)
+        expect(mempool_broken_no_tap['reject-reason']).to eq('non-mandatory-script-verify-flag (Invalid Schnorr signature)')
 
-        expect(mempool_broken_tap['allowed']).to eq(false)
+        expect(mempool_broken_tap['allowed']).to be(false)
         expect(mempool_broken_tap['reject-reason']).to eq('non-mandatory-script-verify-flag (Invalid Schnorr signature)')
 
-        # @node_a.client.sendrawtransaction(tx_hex)
+        # But Taproot is still inactive for block validation (in v23):
         block_hex = test.createtaprootblock([tx_hex])
         @node_b.client.submitblock(block_hex)
         sleep(1)

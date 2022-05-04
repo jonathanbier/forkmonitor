@@ -213,22 +213,22 @@ RSpec.describe InflatedBlock, type: :model do
         rescue UncaughtThrowError
           # Ignore error
         end
-        expect(described_class.first.tx_outset.inflated).to eq(true)
+        expect(described_class.first.tx_outset.inflated).to be(true)
       end
 
       it 'sends an alert' do
-        expect { described_class.check_inflation!({ coin: :btc }) }.to change {
-                                                                         ActionMailer::Base.deliveries.count
-                                                                       }.by(1)
+        expect { described_class.check_inflation!({ coin: :btc }) }.to (change do
+          ActionMailer::Base.deliveries.count
+        end).by(1)
       end
 
       it 'sends email only once' do
-        expect {  described_class.check_inflation!({ coin: :btc }) }.to change {
-                                                                          ActionMailer::Base.deliveries.count
-                                                                        }.by(1)
-        expect {  described_class.check_inflation!({ coin: :btc }) }.to change {
-                                                                          ActionMailer::Base.deliveries.count
-                                                                        }.by(0)
+        expect { described_class.check_inflation!({ coin: :btc }) }.to (change do
+          ActionMailer::Base.deliveries.count
+        end).by(1)
+        expect { described_class.check_inflation!({ coin: :btc }) }.not_to(change do
+          ActionMailer::Base.deliveries.count
+        end)
       end
     end
   end

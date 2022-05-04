@@ -10,7 +10,7 @@ class BitcoinClientMock
     @reachable = true
     @ibd = false
     @peer_count = 100
-    @version = 170_100
+    @version = 230_000
     @coin = coin
     @client_type = client_type
     @client_version = client_version
@@ -18,6 +18,8 @@ class BitcoinClientMock
     @networkactive = true
     @node_id = node_id
     @name_with_version = name_with_version
+    @coinstatsindex = true
+    @txindex = true
 
     @block_hashes = {
       975 => '00000000d67ac3dab052ac69301316b73678703e719ce3757e31e5b92444e64c',
@@ -122,7 +124,10 @@ class BitcoinClientMock
   def getblocktemplate(rules); end
 
   def getindexinfo
-    {}
+    {
+      'txindex' => @txindex,
+      'coinstatsindex' => @coinstatsindex
+    }
   end
 
   def getinfo
@@ -208,10 +213,10 @@ class BitcoinClientMock
             'connections' => @peer_count,
             'warnings' => ''
           },
-          170_100 => {
-            'version' => 170_100,
-            'subversion' => '/Satoshi:0.17.1/',
-            'protocolversion' => 70_015,
+          230_000 => {
+            'version' => 230_000,
+            'subversion' => '/Satoshi:23.0.0/',
+            'protocolversion' => 70_016,
             'localservices' => '0000000000000409',
             'localrelay' => true,
             'timeoffset' => -1,
@@ -258,7 +263,7 @@ class BitcoinClientMock
         raise Error if @version < 100_000
 
         res = {
-          170_100 => {
+          230_000 => {
             'chain' => 'main',
             'blocks' => @height,
             'headers' => @height,
@@ -268,7 +273,7 @@ class BitcoinClientMock
             'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
             'initialblockdownload' => @ibd,
             'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + (@height - 560_179) * 2_000_000,
+            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
             'pruned' => false,
             'softforks' => [],
             'bip9_softforks' => {},
@@ -284,7 +289,7 @@ class BitcoinClientMock
             'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
             'initialblockdownload' => @ibd,
             'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + (@height - 560_179) * 2_000_000,
+            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
             'pruned' => false,
             'softforks' => [],
             'bip9_softforks' => {},
@@ -353,7 +358,7 @@ class BitcoinClientMock
         raise Error if @version < 100_000
 
         res = {
-          170_100 => {
+          230_000 => {
             'chain' => 'test',
             'blocks' => @height,
             'headers' => @height,
@@ -362,7 +367,7 @@ class BitcoinClientMock
             'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
             'initialblockdownload' => @ibd,
             'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + (@height - 560_179) * 2_000_000,
+            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
             'pruned' => false,
             'softforks' => [],
             'bip9_softforks' => {},

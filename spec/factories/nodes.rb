@@ -4,7 +4,7 @@ FactoryBot.define do
   factory :node do
     coin { :btc }
     name { 'Bitcoin Core' }
-    version { 170_100 }
+    version { 230_000 }
     client_type { :core }
     enabled { true }
   end

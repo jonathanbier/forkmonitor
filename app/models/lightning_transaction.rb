@@ -72,7 +72,7 @@ class LightningTransaction < ApplicationRecord
     Rails.cache.delete("#{self.class.name}.csv")
     Rails.cache.delete("#{self.class.name}.last_updated")
     Rails.cache.delete("#{self.class.name}.all_with_block")
-    (1..(self.class.count / PER_PAGE + 1)).each do |page|
+    (1..((self.class.count / PER_PAGE) + 1)).each do |page|
       Rails.cache.delete("#{self.class.name}.page_with_block_cached(#{page})")
     end
     Rails.cache.delete("#{self.class.name}.count")

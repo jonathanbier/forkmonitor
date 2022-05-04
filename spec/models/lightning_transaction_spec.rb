@@ -41,38 +41,38 @@ RSpec.describe LightningTransaction, type: :model do
     end
 
     it 'marks lightning checks complete on each block' do
-      expect(Block.find_by(height: 560_176).checked_lightning).to eq(true)
+      expect(Block.find_by(height: 560_176).checked_lightning).to be(true)
     end
 
     it 'fetches the raw block' do
       expect(@node).to receive(:getblock).with(@block.block_hash, 0).and_call_original
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
     end
 
     it 'calls PenaltyTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
     end
 
     it 'calls SweepTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
     end
 
     it 'calls MaybeUncoopTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
     end
 
     it 'gracefullies fail if node connection is lost' do
       expect(@node).to receive(:getblock).and_raise(BitcoinUtil::RPC::ConnectionError)
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(false)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(false)
       @node.reload
       expect(@node.unreachable_since).not_to be_nil
     end
@@ -80,7 +80,7 @@ RSpec.describe LightningTransaction, type: :model do
     it 'retries if a partial result is returned' do
       expect(@node).to receive(:getblock).ordered.and_raise(BitcoinUtil::RPC::PartialFileError)
       expect(@node).to receive(:getblock).ordered.and_call_original
-      expect(described_class.check!(coin: :btc, max: 1)).to eq(true)
+      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
     end
 
     it 'gives up if a partial result is returned twice' do
@@ -113,10 +113,10 @@ RSpec.describe LightningTransaction, type: :model do
       stub_request(:post, 'https://1ml.com/search').with(
         body: 'q=fail'
       ).to_raise(Timeout::Error)
-      expect(penalty_tx_public.channel_is_public).to eq(nil)
-      expect(penalty_tx_private.channel_is_public).to eq(nil)
-      expect(penalty_tx_private_2.channel_is_public).to eq(nil)
-      expect(uncoop_tx.channel_is_public).to eq(nil)
+      expect(penalty_tx_public.channel_is_public).to be_nil
+      expect(penalty_tx_private.channel_is_public).to be_nil
+      expect(penalty_tx_private_2.channel_is_public).to be_nil
+      expect(uncoop_tx.channel_is_public).to be_nil
 
       described_class.check_public_channels!
       penalty_tx_public.reload
@@ -125,20 +125,20 @@ RSpec.describe LightningTransaction, type: :model do
     end
 
     it 'marks public channels as such' do
-      expect(penalty_tx_public.channel_is_public).to eq(true)
+      expect(penalty_tx_public.channel_is_public).to be(true)
       expect(penalty_tx_public.channel_id_1ml).to eq(578_407_987_470_532_609)
 
-      expect(uncoop_tx.channel_is_public).to eq(true)
+      expect(uncoop_tx.channel_is_public).to be(true)
       expect(uncoop_tx.channel_id_1ml).to eq(578_407_987_470_532_609)
     end
 
     it 'marks private channels as such' do
-      expect(penalty_tx_private.channel_is_public).to eq(false)
+      expect(penalty_tx_private.channel_is_public).to be(false)
       expect(penalty_tx_private.channel_id_1ml).to be_nil
     end
 
     it 'does not mark channel if connection fails' do
-      expect(penalty_tx_private_2.channel_is_public).to eq(nil)
+      expect(penalty_tx_private_2.channel_is_public).to be_nil
     end
   end
 end

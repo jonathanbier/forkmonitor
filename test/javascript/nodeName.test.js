@@ -17,7 +17,7 @@ const chaintip = {
 let wrapper;
 
 describe('NodeName', () => {
-  const node = {id: 1, name_with_version: "Bitcoin Core 0.17.1", best_block: chaintip, unreachable_since: null, ibd: false};
+  const node = {id: 1, name_with_version: "Bitcoin Core 23.0", best_block: chaintip, unreachable_since: null, ibd: false};
 
   beforeAll(() => {
     wrapper = shallow(<NodeName
@@ -27,7 +27,7 @@ describe('NodeName', () => {
   });
 
   test('should display name and version', () => {
-    expect(wrapper.text()).toEqual("Bitcoin Core 0.17.1");
+    expect(wrapper.text()).toEqual("Bitcoin Core 23.0");
   });
 
 });

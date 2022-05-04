@@ -105,7 +105,7 @@ RSpec.describe Node, type: :model do
   describe 'check_versionbits!' do
     before do
       @node = build(:node)
-      @node.client.mock_version(170_100)
+      @node.client.mock_version(230_000)
       @node.client.mock_set_height(560_176)
       @node.poll!
       @node.client.mock_set_height(560_177)
@@ -150,15 +150,15 @@ RSpec.describe Node, type: :model do
       end
 
       it 'sends an email to all users' do
-        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @node.check_versionbits! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
       end
 
       it 'sends email only once' do
-        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+        expect { @node.check_versionbits! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
         @node.client.mock_set_height(560_179)
         @node.poll!
         @node.reload
-        expect { @node.check_versionbits! }.to change { ActionMailer::Base.deliveries.count }.by(0)
+        expect { @node.check_versionbits! }.not_to(change { ActionMailer::Base.deliveries.count })
       end
 
       it 'leaves existing VersionBit entry alone' do
@@ -239,7 +239,7 @@ RSpec.describe Node, type: :model do
     before do
       @tx_id = '74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'
       @node = build(:node, txindex: true)
-      @node.client.mock_version(170_100)
+      @node.client.mock_version(230_000)
       @node.client.mock_set_height(560_178)
       @node.poll!
     end

@@ -93,12 +93,12 @@ RSpec.describe Block, type: :model do
 
     it 'shows first seen by if requested' do
       block = create(:block, pool: nil, first_seen_by: build(:node))
-      expect(block.summary(first_seen_by: true)).to include('first seen by Bitcoin Core 0.17.1')
+      expect(block.summary(first_seen_by: true)).to include('first seen by Bitcoin Core 23.0')
     end
 
     it 'does not show first seen by if unknown' do
       block = create(:block, pool: nil, first_seen_by: nil)
-      expect(block.summary(first_seen_by: true)).not_to include('first seen by Bitcoin Core 0.17.1')
+      expect(block.summary(first_seen_by: true)).not_to include('first seen by Bitcoin Core 23.0')
     end
   end
 
@@ -238,7 +238,7 @@ RSpec.describe Block, type: :model do
       @block = create(:block, block_hash: '0000000000000000000000000000000000000000000000000000000000000001',
                               first_seen_by: @node)
       @block.fetch_transactions!
-      expect(@block.pruned).to eq(true)
+      expect(@block.pruned).to be(true)
     end
 
     it 'tries the modern node if a block was pruned' do

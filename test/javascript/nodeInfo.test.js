@@ -20,7 +20,7 @@ describe('NodeInfo', () => {
 
   const node = {
     id: 1,
-    name_with_version: "Bitcoin Core 0.17.1",
+    name_with_version: "Bitcoin Core 23.0",
     best_block: chaintip,
     unreachable_since: null,
     ibd: false,
