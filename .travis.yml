@@ -3,7 +3,7 @@ language: ruby
 services:
   - postgresql
 rvm:
-  - 3.0.1
+  - 3.0.4
 bundler_args: --without production:development
 cache:
   ccache: true
