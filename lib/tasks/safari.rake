@@ -14,7 +14,7 @@ namespace 'safari' do
     }
     iconset_path = 'app/assets/images/safari_iconset'
     certificate = 'tmp/production.p12'
-    intermediate_cert = 'tmp/AppleWWDRCAG3.cer'
+    intermediate_cert = 'tmp/AppleWWDRCAG4.cer'
     package = PushPackage.new(website_params, iconset_path, certificate, ENV['CERT_PWD'],
                               intermediate_cert)
     package.save('public/pushPackage.zip')

@@ -75,9 +75,11 @@ You need a developer account with Apple.
 
 Go to the [Developer Center](https://developer.apple.com/) -> Certificates, Identifiers & Profiles -> Certificates. Create a new "Website Push ID Certificate". Select forkmonitor from the dropdown (create the Website Push ID first if needed). Create a certificate signing request on your local machine. Enter your email and `web.info.forkmonitor` as the common name. Save to disk and upload.
 
-Download the signed certificate p12 file and put in tmp, alongside with Apple's intermedidate certificate (`AppleWWDRCAG3.cer`).
+Download the signed certificate `.cer` file. Also download Apple's [intermedidate certificate](https://www.apple.com/certificateauthority/) (`AppleWWDRCAG4.cer`, Worldwide Developer Relations - G4) and put it in tmp.
 
-Ppdate the push package zip file:
+Convert to `.p12`: open the `.cer` file in Keychain (also open the intermediate cert in KeyChain) and export it, call it `production.p12` and put it in `tmp`.
+
+Make sure `CERT_PWD` is set and update the push package zip file:
 
 ```
 rake safari:generate_push_package
