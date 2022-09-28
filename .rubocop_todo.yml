@@ -25,7 +25,7 @@ Metrics/ClassLength:
 # Offense count: 40
 # Configuration parameters: IgnoredMethods.
 Metrics/CyclomaticComplexity:
-  Max: 46
+  Max: 48
 
 # Offense count: 95
 # Configuration parameters: CountComments, CountAsOne, ExcludedMethods, IgnoredMethods.
@@ -41,7 +41,7 @@ Metrics/ParameterLists:
 # Offense count: 34
 # Configuration parameters: IgnoredMethods.
 Metrics/PerceivedComplexity:
-  Max: 51
+  Max: 54
 
 # Offense count: 8
 Naming/AccessorMethodName:

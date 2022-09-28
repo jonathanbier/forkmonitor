@@ -159,6 +159,14 @@ class Node < ApplicationRecord
       end
     end
 
+    best_block_hash ||= if blockchaininfo.present?
+                          blockchaininfo['bestblockhash']
+                        else
+                          info.present? ? client.getblockhash(info['blocks']) : nil
+                        end
+
+    raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
+
     if networkinfo.present?
       update(version: BitcoinUtil::Version.parse(networkinfo['version'], client_type.to_sym), peer_count: networkinfo['connections'])
     elsif info.present?
@@ -188,14 +196,9 @@ class Node < ApplicationRecord
         update unreachable_since: unreachable_since || DateTime.now
         return
       end
-    end
-
     # Get soft fork info for older nodes
-    if blockchaininfo.present?
-      best_block_hash = blockchaininfo['bestblockhash']
+    elsif blockchaininfo.present?
       Softfork.process(self, blockchaininfo) if (btc? || tbtc?) && (core? || knots?)
-    elsif info.present?
-      best_block_hash = client.getblockhash(info['blocks'])
     end
 
     mempool_bytes = nil
@@ -212,8 +215,6 @@ class Node < ApplicationRecord
       end
 
     end
-
-    raise 'Best block hash unexpectedly nil' if best_block_hash.blank?
 
     has_tx_index = nil
     has_coinstatsindex_index = nil
