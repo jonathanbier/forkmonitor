@@ -31,6 +31,15 @@ class Softfork < ApplicationRecord
       Softfork.where(notified_at: nil).find_each(&:notify!)
     end
 
+    # Only supported on Bitcoin Core v23+
+    def process_deploymentinfo(node, deploymentinfo)
+      return unless (node.btc? || node.tbtc?) && node.core? && node.version.present? && node.version >= 230_000
+
+      deploymentinfo['deployments'].each do |key, value|
+        process_fork(node, key, value)
+      end
+    end
+
     # Only supported on Bitcoin mainnet and testnet
     # Only tested with v0.18.1 and up
     def process(node, blockchaininfo)

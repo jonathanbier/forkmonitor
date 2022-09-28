@@ -219,6 +219,16 @@ class BitcoinClient
     raise BitcoinUtil::RPC::Error, "getchaintips failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
+  def getdeploymentinfo
+    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
+      Thread.new { request('getdeploymentinfo') }.value
+    end
+  rescue JSON::ParserError
+    raise BitcoinUtil::RPC::Error, "getdeploymentinfo failed to parse JSON for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+  rescue Bitcoiner::Client::JSONRPCError => e
+    raise BitcoinUtil::RPC::Error, "getdeploymentinfo failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+  end
+
   def getindexinfo
     request('getindexinfo')
   rescue Bitcoiner::Client::JSONRPCError => e

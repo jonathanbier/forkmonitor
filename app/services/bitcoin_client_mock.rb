@@ -380,6 +380,26 @@ class BitcoinClientMock
     res[@version]
   end
 
+  def getdeploymentinfo
+    raise Error unless @reachable
+
+    case @coin
+    when :btc, :tbtc
+      case @client_type
+      when :core
+        raise Error if @version < 230_000
+
+        res = {
+          230_000 => {
+            'deployments' => {}
+          }
+        }
+      end
+    end
+    throw "No getdeploymentinfo mock for #{@client_type}" if res.blank?
+    res[@version]
+  end
+
   def getmempoolinfo
     {
       'loaded' => true,

@@ -79,7 +79,7 @@ RSpec.describe Node, type: :model do
 
       describe 'other clients' do
         before do
-          @node = build(:node)
+          @node = build(:node, client_type: :bcoin)
           @node.client.mock_ibd(true)
         end
 

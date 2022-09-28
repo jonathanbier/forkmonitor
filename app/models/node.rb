@@ -179,6 +179,18 @@ class Node < ApplicationRecord
     end
     update ibd: ibd, sync_height: ibd ? block_height : nil
 
+    # Get soft fork info using getdeploymentinfo for Bitcoin Core v23.0 and up
+    if core? && version.present? && version >= 230_000
+      begin
+        deploymentinfo = client.getdeploymentinfo
+        Softfork.process_deploymentinfo(self, deploymentinfo)
+      rescue BitcoinUtil::RPC::Error
+        update unreachable_since: unreachable_since || DateTime.now
+        return
+      end
+    end
+
+    # Get soft fork info for older nodes
     if blockchaininfo.present?
       best_block_hash = blockchaininfo['bestblockhash']
       Softfork.process(self, blockchaininfo) if (btc? || tbtc?) && (core? || knots?)
