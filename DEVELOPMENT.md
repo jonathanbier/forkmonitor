@@ -15,7 +15,8 @@ the bundler and foreman gems, then run bundler:
 
 ```
 gem install bundler foreman
-bundle install --without production
+bundle config set --local without 'production'
+bundle install
 ```
 
 You also need [Yarn](https://yarnpkg.com/lang/en/docs/install/#mac-stable), a
