@@ -132,7 +132,7 @@ RSpec.describe FeedsController, type: :controller do
 
       it 'rejects negative page numbers' do
         get :stale_candidates, params: { coin: 'btc', page: -2 }, format: :rss
-        expect(response.status).to eq(422)
+        expect(response).to have_http_status(:unprocessable_entity)
       end
     end
 

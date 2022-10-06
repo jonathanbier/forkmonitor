@@ -60,14 +60,14 @@ RSpec.describe Chaintip, type: :model do
     it 'shows all nodes at height of active chaintip' do
       @tip_a = described_class.process_active!(@node_a, @node_a.block)
       @tip_b = described_class.process_active!(@node_b, @node_b.block)
-      assert_equal 2, @tip_a.nodes_for_identical_chaintips.count
-      assert_equal [@node_a, @node_b], @tip_a.nodes_for_identical_chaintips
+      expect(@tip_a.nodes_for_identical_chaintips.count).to eq(2)
+      expect(@tip_a.nodes_for_identical_chaintips).to eq([@node_a, @node_b])
     end
 
-    it 'onlies support the active chaintip' do
+    it 'only support the active chaintip' do
       chaintip_1.update status: 'invalid'
-      assert_nil chaintip_1.nodes_for_identical_chaintips
-      assert_nil chaintip_1.nodes_for_identical_chaintips
+      expect(chaintip_1.nodes_for_identical_chaintips).to be_nil
+      expect(chaintip_1.nodes_for_identical_chaintips).to be_nil
     end
   end
 
@@ -95,7 +95,7 @@ RSpec.describe Chaintip, type: :model do
 
     it 'does nothing if all nodes are the same height' do
       chaintip_2.match_parent!(node_b)
-      assert_nil chaintip_2.parent_chaintip
+      expect(chaintip_2.parent_chaintip).to be_nil
     end
 
     describe 'when another chaintip is longer' do
@@ -105,13 +105,13 @@ RSpec.describe Chaintip, type: :model do
 
       it 'marks longer chain as parent' do
         chaintip_2.match_parent!(node_b)
-        assert_equal(chaintip_2.parent_chaintip, chaintip_1)
+        expect(chaintip_1).to eq(chaintip_2.parent_chaintip)
       end
 
       it 'marks even longer chain as parent' do
         chaintip_1.update block: block_3
         chaintip_2.match_parent!(node_b)
-        assert_equal(chaintip_2.parent_chaintip, chaintip_1)
+        expect(chaintip_1).to eq(chaintip_2.parent_chaintip)
       end
 
       it 'does not mark invalid chain as parent' do
@@ -119,7 +119,7 @@ RSpec.describe Chaintip, type: :model do
         chaintip_3 = create(:chaintip, block: block_2, node: node_b, status: 'invalid') # rubocop:disable Lint/UselessAssignment
 
         chaintip_2.match_parent!(node_b)
-        assert_nil(chaintip_2.parent_chaintip)
+        expect((chaintip_2.parent_chaintip)).to be_nil
       end
 
       it 'does not mark invalid chain as parent, based on block marked invalid' do
@@ -127,7 +127,7 @@ RSpec.describe Chaintip, type: :model do
         block_2.update marked_invalid_by: block_2.marked_invalid_by | [node_b.id]
 
         chaintip_2.match_parent!(node_b)
-        assert_nil(chaintip_2.parent_chaintip)
+        expect((chaintip_2.parent_chaintip)).to be_nil
       end
     end
   end
@@ -151,7 +151,7 @@ RSpec.describe Chaintip, type: :model do
 
         chaintip_3 = create(:chaintip, block: block_2, node: node_b, status: 'invalid') # rubocop:disable Lint/UselessAssignment
         chaintip_2.check_parent!(node_b)
-        assert_nil(chaintip_2.parent_chaintip)
+        expect((chaintip_2.parent_chaintip)).to be_nil
       end
     end
   end
@@ -166,7 +166,7 @@ RSpec.describe Chaintip, type: :model do
 
     it 'does nothing if all nodes are the same height' do
       chaintip_1.match_children!(node_b)
-      assert_nil chaintip_1.parent_chaintip
+      expect(chaintip_1.parent_chaintip).to be_nil
     end
 
     describe 'when another chaintip is shorter' do
@@ -178,7 +178,7 @@ RSpec.describe Chaintip, type: :model do
       it 'marks itself as the parent' do
         chaintip_1.match_children!(node_b)
         chaintip_2.reload
-        assert_equal(chaintip_2.parent_chaintip, chaintip_1)
+        expect(chaintip_1).to eq(chaintip_2.parent_chaintip)
       end
 
       it 'does not mark itself as parent if the other node considers it invalid' do
@@ -186,7 +186,7 @@ RSpec.describe Chaintip, type: :model do
         chaintip_3 = create(:chaintip, block: block_2, node: node_b, status: 'invalid') # rubocop:disable Lint/UselessAssignment
         chaintip_1.match_children!(node_b)
         chaintip_2.reload
-        assert_nil(chaintip_2.parent_chaintip)
+        expect((chaintip_2.parent_chaintip)).to be_nil
       end
     end
   end
@@ -212,7 +212,7 @@ RSpec.describe Chaintip, type: :model do
     describe 'one active and one valid-fork chaintip' do
       before do
         test.disconnect_nodes(0, 1)
-        assert_equal(0, @node_a.client.getpeerinfo.count)
+        expect(@node_a.client.getpeerinfo.count).to eq(0)
 
         @node_a.client.generate(2) # this will be a valid-fork after reorg
         @node_b.client.generate(3) # reorg to this upon reconnect
@@ -243,7 +243,7 @@ RSpec.describe Chaintip, type: :model do
       it 'ignores forks more than 1000 blocks ago' do
         # 10 on regtest
         test.disconnect_nodes(0, 1)
-        assert_equal(0, @node_a.client.getpeerinfo.count)
+        expect(@node_a.client.getpeerinfo.count).to eq(0)
 
         @node_a.client.generate(11) # this will be a valid-fork after reorg
         @node_b.client.generate(12) # reorg to this upon reconnect
@@ -263,7 +263,7 @@ RSpec.describe Chaintip, type: :model do
         @node_b.poll!
         # Disconnect nodes and produce one more block for A
         test.disconnect_nodes(0, 1)
-        assert_equal(0, @node_a.client.getpeerinfo.count)
+        expect(@node_a.client.getpeerinfo.count).to eq(0)
         @node_a.client.generate(1)
         @node_a.poll!
         described_class.check!(:btc, [@node_a, @node_b])
@@ -379,8 +379,8 @@ RSpec.describe Chaintip, type: :model do
     before do
       # Feed blocks from node B to node C so their status changes from 'headers-only'
       # to 'valid-headers'
-      assert_equal(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(1), 0)), 'inconclusive')
-      assert_equal(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(2), 0)), 'inconclusive')
+      expect(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(1), 0))).to eq('inconclusive')
+      expect(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(2), 0))).to eq('inconclusive')
 
       # Now connect them (node_b will reorg)
       @node_c.client.setnetworkactive(true)

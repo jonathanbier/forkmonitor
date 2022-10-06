@@ -11,7 +11,7 @@ RSpec.describe Api::V1::NodesController, type: :controller do
 
     it 'lists nodes' do
       get :index_coin, format: :json, params: { coin: 'BTC' }
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response_body.length).to eq 2
     end
   end

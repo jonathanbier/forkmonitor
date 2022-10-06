@@ -6,7 +6,7 @@ RSpec.describe PagesController, type: :controller do
   describe 'GET /' do
     it 'loads' do
       get :root
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
   end
 end

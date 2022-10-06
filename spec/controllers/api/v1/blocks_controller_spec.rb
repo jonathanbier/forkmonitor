@@ -10,13 +10,13 @@ RSpec.describe Api::V1::BlocksController, type: :controller do
 
     it 'lists blocks' do
       get :index, format: :json, params: { range: '[0,10]' }
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response_body.length).to eq 1
     end
 
     it 'paginates blocks' do
       get :index, format: :json, params: { range: '[10,20]' }
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
       expect(response_body.length).to eq 0
     end
   end

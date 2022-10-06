@@ -13,7 +13,7 @@ RSpec.describe Api::V1::LnStatsController, type: :controller do
   describe 'GET /api/v1/ln_stats' do
     before do
       get :index, format: :json
-      expect(response.status).to eq 200
+      expect(response).to have_http_status :ok
     end
 
     it 'shows penalty count' do

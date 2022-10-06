@@ -31,7 +31,7 @@ Naming/MethodParameterName:
 
 Metrics/BlockLength:
   CountAsOne: ['array']
-  IgnoredMethods: ['describe', 'draw']
+  AllowedMethods: ['describe', 'draw']
   Exclude:
     - 'db/schema.rb'
 
