@@ -141,7 +141,7 @@ class InflatedBlock < ApplicationRecord
           block.undo_rollback!(node)
 
           # Make sure we got the block we expected
-          throw "TxOutset #{txoutsetinfo['bestblock']} is not for block #{block.block_hash}" unless txoutsetinfo['bestblock'] == block.block_hash
+          throw "TxOutset #{txoutsetinfo['bestblock']} is not for block #{block.block_hash} on #{node.name_with_version}" unless txoutsetinfo['bestblock'] == block.block_hash
 
           tx_outset = TxOutset.create_with(txouts: txoutsetinfo['txouts'], total_amount: txoutsetinfo['total_amount']).find_or_create_by(
             block: block, node: node
