@@ -12,7 +12,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20_210_729_125_218) do
+ActiveRecord::Schema.define(version: 20_221_006_075_242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension 'plpgsql'
 
@@ -189,6 +189,7 @@ ActiveRecord::Schema.define(version: 20_210_729_125_218) do
     t.boolean 'to_destroy', default: false, null: false
     t.boolean 'getblocktemplate', default: false, null: false
     t.boolean 'coinstatsindex'
+    t.boolean 'checkpoints', default: true, null: false
     t.index ['block_id'], name: 'index_nodes_on_block_id'
     t.index ['mirror_block_id'], name: 'index_nodes_on_mirror_block_id'
   end

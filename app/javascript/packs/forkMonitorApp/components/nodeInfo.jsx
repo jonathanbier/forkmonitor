@@ -48,6 +48,7 @@ class NodeInfo extends React.Component {
             <li>Pruned: { this.props.node.pruned ? "Yes" : "No" }</li>
             <li>Transaction index: { this.props.node.txindex ? "Yes" : "No" }</li>
             <li>CVE-2018-17144 Inflation Exposure: { this.props.node.cve_2018_17144 ? "Yes" : "No" }</li>
+            <li>Checkpoints: { this.props.node.checkpoints ? "Yes" : "No" }</li>
             <li>Client release date: { this.props.node.released }</li>
             { this.props.node.mempool_count != null &&
               <li>

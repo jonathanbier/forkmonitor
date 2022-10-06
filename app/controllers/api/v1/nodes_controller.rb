@@ -64,7 +64,7 @@ module Api
 
       def node_params
         params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport,
-                                     :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :released, :enabled, :link, :link_text, :getblocktemplate, :to_destroy)
+                                     :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :checkpoints, :released, :enabled, :link, :link_text, :getblocktemplate, :to_destroy)
       end
     end
   end

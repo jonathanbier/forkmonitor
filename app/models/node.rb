@@ -59,6 +59,7 @@ class Node < ApplicationRecord
       cpu
       ram
       storage
+      checkpoints
       cve_2018_17144
       released
       sync_height
