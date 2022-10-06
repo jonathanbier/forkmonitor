@@ -15,7 +15,7 @@
     "enzyme-adapter-react-16": "^1.6.0",
     "jest-enzyme": "^7.0.0",
     "moment": "^2.29.4",
-    "moment-timezone": "^0.5.26",
+    "moment-timezone": "^0.5.35",
     "postcss-preset-env": "^6.7.0",
     "prop-types": "^15.6.2",
     "ra-data-json-server": "^2.6.1",
