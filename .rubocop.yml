@@ -12,6 +12,7 @@ AllCops:
     - '.git/**/*'
     - 'bin/*'
     - 'node_modules/**/*'
+    - 'db/schema.rb'
     - 'db/migrate/2019*'
     - 'db/migrate/2020*'
     - 'db/migrate/202101*'
