@@ -740,6 +740,7 @@ class Node < ApplicationRecord
     end
 
     def check_laggards!(options = {})
+      Lag.where("created_at < ?", 1.day.ago).destroy_all
       if options[:coins].blank? || options[:coins].include?('BTC')
         core_nodes = bitcoin_core_by_version
         core_nodes.drop(1).each do |node|
