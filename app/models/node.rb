@@ -183,7 +183,8 @@ class Node < ApplicationRecord
       elsif blockchaininfo.key?('verificationprogress')
         ibd = blockchaininfo['verificationprogress'] < 0.9999
       elsif btc?
-        ibd = info['blocks'] < Block.where(coin: :btc).maximum(:height) - 10
+        # Don't set too tight because it will silence node behind warnings
+        ibd = info['blocks'] < Block.where(coin: :btc).maximum(:height) - 1000
       end
     end
     update ibd: ibd, sync_height: ibd ? block_height : nil
@@ -281,20 +282,34 @@ class Node < ApplicationRecord
 
     return nil if block.nil? || node.block.nil?
 
-    return nil if active_chaintip.nil? || node.active_chaintip.nil?
+    blocks_behind = nil
+    # Use chaintips for Bitcoin Core nodes, and a simpler heuristic for other nodes
+    if core?
+      return nil if active_chaintip.nil? || node.active_chaintip.nil?
 
-    # Sometimes the work field is missing:
-    return nil if active_chaintip.block.work.nil? || node.active_chaintip.block.work.nil?
+      # Sometimes the work field is missing:
+      return nil if active_chaintip.block.work.nil? || node.active_chaintip.block.work.nil?
 
-    # Not behind if at the same block
-    if active_chaintip.block == node.active_chaintip.block
-      behind = false
-    # Compare work:
-    elsif active_chaintip.block.work < node.active_chaintip.block.work
-      behind = true
+      # Not behind if at the same block
+      if active_chaintip.block == node.active_chaintip.block
+        behind = false
+      # Compare work:
+      elsif active_chaintip.block.work < node.active_chaintip.block.work
+        behind = true
+      end
+
+      blocks_behind = node.active_chaintip.block.height - active_chaintip.block.height
+    else
+      # Not behind if at the same block
+      if block == node.block
+        behind = false
+      # Compare work:
+      elsif block.work < node.block.work
+        behind = true
+      end
+
+      blocks_behind = node.block.height - block.height
     end
-
-    blocks_behind = node.active_chaintip.block.height - active_chaintip.block.height
 
     # Allow 1 block extra for 0.16 nodes and older:
     return nil if core? && version < 169_999 && blocks_behind < 2
