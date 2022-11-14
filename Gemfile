@@ -90,6 +90,7 @@ gem 'ed25519'
 gem 'nilify_blanks'
 gem 'net-smtp', require: false
 gem 'net-pop', require: false
+gem 'net-imap', require: false
 
 # CI runs with :test, but without :development
 group :development, :test do
