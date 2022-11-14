@@ -81,7 +81,7 @@ gem 'dalli'
 
 # Deployment
 gem 'bcrypt_pbkdf'
-gem 'capistrano', '~> 3.16'
+gem 'capistrano', '~> 3.17'
 gem 'capistrano-passenger', '>= 0.2.1'
 gem 'capistrano-rails', '~> 1.6.1'
 gem 'capistrano-rake'
