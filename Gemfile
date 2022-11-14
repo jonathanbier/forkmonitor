@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.0.4'
+ruby '3.1.2'
 
 gem 'rails', '~> 6.1.3'
 # Use Puma as the app server

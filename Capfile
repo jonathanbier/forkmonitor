@@ -42,4 +42,4 @@ require 'capistrano/rake'
 Dir.glob('lib/capistrano/tasks/*.rake').each { |r| import r }
 
 set :rbenv_type, :user
-set :rbenv_ruby, '3.0.4'
+set :rbenv_ruby, '3.1.2'
