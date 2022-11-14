@@ -7,7 +7,13 @@ class Block < ApplicationRecord
   include ::BitcoinUtil
 
   MINIMUM_BLOCK_HEIGHTS = {
-    btc: Rails.env.test? ? 0 : 500_000, # Mid December 2017, around Lightning network launch
+    btc: if Rails.env.test?
+           0
+         else
+           # For production, mid December 2017, around Lightning network launch
+           # For development: something recent
+           (Rails.env.development? ? 763_000 : 500_000)
+         end,
     tbtc: 1_600_000
   }.freeze
 
