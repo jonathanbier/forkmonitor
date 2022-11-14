@@ -215,6 +215,8 @@ GEM
       connection_pool (~> 2.2)
     net-http2 (0.18.4)
       http-2 (~> 0.11)
+    net-pop (0.1.2)
+      net-protocol
     net-protocol (0.1.3)
       timeout
     net-scp (4.0.0)
@@ -468,6 +470,7 @@ DEPENDENCIES
   guard-rspec
   jbuilder (~> 2.5)
   listen
+  net-pop
   net-smtp
   nilify_blanks
   parallel_tests
