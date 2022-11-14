@@ -9,7 +9,7 @@ class Node < ApplicationRecord
 
   class NoTxIndexError < StandardError; end
 
-  # BCH and BSV support have been removed, but enums are stored as integer in the database.
+  # BCH support has been removed, but enums are stored as integer in the database.
   enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
 
   nilify_blanks only: [:mirror_rpchost]
@@ -41,6 +41,8 @@ class Node < ApplicationRecord
                       omni: 8, blockcore: 9 }
 
   scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
+
+  scope :bsv_by_version, -> { where(enabled: true, coin: :bsv).order(version: :desc) }
 
   def name_with_version
     BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type.to_sym)

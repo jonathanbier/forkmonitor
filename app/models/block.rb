@@ -14,7 +14,8 @@ class Block < ApplicationRecord
            # For development: something recent
            (Rails.env.development? ? 763_000 : 500_000)
          end,
-    tbtc: 1_600_000
+    tbtc: 1_600_000,
+    bsv: 710_000
   }.freeze
 
   COIN = 100_000_000

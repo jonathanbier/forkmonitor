@@ -78,6 +78,11 @@ class Navigation extends React.Component {
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
+                <LinkContainer to="/nodes/bsv">
+                  <NavLink>BSV</NavLink>
+                </LinkContainer>
+              </NavItem>
+              <NavItem className="NavItem">
                 <LinkContainer to="/notifications">
                   <NavLink><FontAwesomeIcon icon={faRss} /></NavLink>
                 </LinkContainer>
