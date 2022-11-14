@@ -36,7 +36,11 @@ module BitcoinUtil
           version_arr = version.to_s.rjust(6, '0').scan(/.{1,2}/).map(&:to_i)
           name + " #{(version_arr[2]).zero? ? version_arr[0..1].join('.') : version_arr.join('.')}" + version_extra
         else
-          version_arr = version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
+          if client_type == :sv
+            version_arr = (version  - 100000000).to_s.rjust(8, "0").scan(/.{1,2}/).map(&:to_i)
+          else
+            version_arr = version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
+          end
           name + " #{(version_arr[3]).zero? && client_type != :bu ? version_arr[0..2].join('.') : version_arr.join('.')}" + version_extra
         end
       end

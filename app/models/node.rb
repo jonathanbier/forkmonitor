@@ -153,6 +153,7 @@ class Node < ApplicationRecord
         networkinfo = client.getnetworkinfo
       rescue BitcoinUtil::RPC::Error
         # Try getinfo for ancient nodes:
+        update unreachable_since: unreachable_since || DateTime.now if bsv?
         begin
           info = client.getinfo
         rescue BitcoinUtil::RPC::Error
@@ -495,6 +496,18 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:tbtc)
       end
 
+      if options[:coins].blank? || options[:coins].include?('BSV')
+        bsv_by_version.each do |node|
+          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+
+          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
+          node.poll!
+        end
+
+        check_chaintips!(:bsv)
+        StaleCandidate.check!(:bsv)
+      end
+
       check_laggards!(options)
 
       bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
@@ -700,8 +713,10 @@ class Node < ApplicationRecord
         Chaintip.check!(:btc, bitcoin_core_by_version + bitcoin_alternative_implementations)
       when :tbtc
         Chaintip.check!(:tbtc, testnet_by_version)
+      when :bsv
+        Chaintip.check!(:bsv, bsv_by_version)
       else
-        throw Error, 'Unknown coin'
+        throw 'Unknown coin'
       end
       InvalidBlock.check!(coin)
     end
