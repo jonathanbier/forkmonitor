@@ -24,7 +24,7 @@ RSpec.describe Node, type: :model do
           @node.client.createwallet
           @miner_addr = @node.client.getnewaddress
           @node.client.generatetoaddress(2, @miner_addr)
-          allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+          allow(described_class).to receive('set_pool_for_block!').and_return(nil)
         end
 
         it 'saves the node' do
@@ -100,7 +100,7 @@ RSpec.describe Node, type: :model do
         @node.client.createwallet
         @miner_addr = @node.client.getnewaddress
         @node.client.generatetoaddress(2, @miner_addr)
-        expect(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').at_least(:once).and_return(nil)
+        expect(described_class).to receive('set_pool_for_block!').at_least(:once).and_return(nil)
         @node.poll! # stores the block and node entry
       end
 
@@ -188,7 +188,7 @@ RSpec.describe Node, type: :model do
 
     describe 'Bitcoin Core 0.13.0' do
       before do
-        allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
         @node = build(:node)
         @node.client.mock_version(130_000)
         @node.client.mock_set_height(560_177)
@@ -221,7 +221,7 @@ RSpec.describe Node, type: :model do
 
     describe 'Bitcoin Core 0.10.3' do
       before do
-        allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
         @node = build(:node)
         @node.client.mock_version(100_300)
         @node.poll!
@@ -251,7 +251,7 @@ RSpec.describe Node, type: :model do
 
     describe 'btcd' do
       before do
-        allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
         @node = build(:node, client_type: :btcd)
         @node.client.mock_client_type(:btcd)
         @node.client.mock_version(120_000)

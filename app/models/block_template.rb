@@ -24,9 +24,7 @@ class BlockTemplate < ApplicationRecord
           retry if retries < 5
           Rails.logger.warn "Parent block #{template['previousblockhash']} not found after 5 seconds"
         end
-        height = template['height']
         tx_ids = hashes_to_binary(template['transactions'].collect { |tx| tx['txid'] })
-        tx_fee_rates = template['transactions'].collect { |tx| tx['fee'] / (tx['weight'] / 4) }
         template = create!(
           coin: node.coin,
           height: template['height'],
@@ -34,15 +32,8 @@ class BlockTemplate < ApplicationRecord
           node: node,
           fee_total: (template['coinbasevalue'] - Block.max_inflation(template['height'])) / 100_000_000.0,
           timestamp: Time.at(template['curtime']).utc,
-          n_transactions: tx_ids.length / 32,
-          tx_ids: tx_ids,
-          tx_fee_rates: tx_fee_rates,
-          lowest_fee_rate: tx_fee_rates.min
+          n_transactions: tx_ids.length / 32
         )
-        # TODO: when polling multiple nodes, the code below is repeated, and the
-        #       block will use whatever we processed last.
-        # Save space by cleaning up transaction ids and fees from earlier templates at this height:
-        where(height: height, node: node).where.not(id: template.id).update_all tx_ids: nil, tx_fee_rates: nil
       end
     end
 

@@ -34,7 +34,7 @@ RSpec.describe Node, type: :model do
       let(:user) { create(:user) }
 
       before do
-        allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
 
         test.disconnect_nodes(0, 1)
         assert_equal(0, @node_a.client.getpeerinfo.count)

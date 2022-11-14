@@ -7,7 +7,7 @@ RSpec.describe StaleCandidate, type: :model do
   let(:test) { TestWrapper.new }
 
   before do
-    allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+    allow(Node).to receive('set_pool_for_block!').and_return(nil)
     test.setup(num_nodes: 2, extra_args: [['-whitelist=noban@127.0.0.1']] * 2)
     @node_a = create(:node_python)
     @node_a.client.set_python_node(test.nodes[0])

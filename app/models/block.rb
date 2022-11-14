@@ -50,18 +50,7 @@ class Block < ApplicationRecord
                                                                                                id: first_seen_by.id,
                                                                                                name_with_version: first_seen_by.name_with_version
                                                                                              }
-                                                                                           end,
-                                                                            tx_ids_added: if options && options[:tx_diff] && tx_ids_added
-                                                                                            [Block.binary_to_hashes(tx_ids_added),
-                                                                                             Array.new(Block.binary_to_hashes(tx_ids_added).length)].transpose
-                                                                                          end,
-                                                                            tx_ids_omitted: if options && options[:tx_diff] && tx_ids_omitted
-                                                                                              [Block.binary_to_hashes(tx_ids_omitted),
-                                                                                               tx_omitted_fee_rates].transpose.filter do |a|
-                                                                                                a[1] >= (lowest_template_fee_rate || 0) + 5
-                                                                                              end
-                                                                                            end,
-                                                                            lowest_template_fee_rate: lowest_template_fee_rate
+                                                                                           end
                                                                           })
   end
 
@@ -260,22 +249,12 @@ class Block < ApplicationRecord
 
   def set_template_diff!
     # Transactions and total fee may be missing e.g. if this is a headers only block:
-    return if total_fee.nil? || tx_ids.nil?
+    return if total_fee.nil?
 
-    last_template = BlockTemplate.where(height: height).where.not(tx_ids: nil).last
+    last_template = BlockTemplate.where(height: height).last
     return if last_template.nil?
 
-    template_tx_ids = BlockTemplate.get_binary_chunks(last_template.tx_ids, 32)
-    block_tx_ids = BlockTemplate.get_binary_chunks(tx_ids, 32)
-    # * fee difference
-    # * transactions in template that are missing in the block, and;
-    # * those in the block that were not in the template:
-    tx_pos_omitted = template_tx_ids.map.with_index { |tx_id, i| i unless block_tx_ids.include?(tx_id) }.compact
-    update template_txs_fee_diff: total_fee - last_template.fee_total,
-           tx_ids_added: (block_tx_ids - template_tx_ids).join,
-           tx_ids_omitted: (template_tx_ids - block_tx_ids).join,
-           tx_omitted_fee_rates: last_template.try(:tx_fee_rates) ? last_template.tx_fee_rates.values_at(*tx_pos_omitted) : nil,
-           lowest_template_fee_rate: last_template.try(:tx_fee_rates) ? last_template.lowest_fee_rate : nil
+    update template_txs_fee_diff: total_fee - last_template.fee_total
   end
 
   def expire_stale_candidate_cache
@@ -506,7 +485,7 @@ class Block < ApplicationRecord
         end
       end
       # Set pool:
-      Node.set_pool_tx_ids_fee_total_for_block!(node.coin.to_sym, block, block_info)
+      Node.set_pool_for_block!(node.coin.to_sym, block, block_info)
 
       # Fetch transactions if there was a stale block recently
       if StaleCandidate.where(coin: node.coin).where('height >= ?',
@@ -575,7 +554,7 @@ class Block < ApplicationRecord
 
     def match_missing_pools!(coin, limit)
       Block.where(coin: coin, pool: nil).order(height: :desc).limit(limit).each do |b|
-        Node.set_pool_tx_ids_fee_total_for_block!(coin, b)
+        Node.set_pool_for_block!(coin, b)
       end
     end
 
@@ -647,7 +626,7 @@ class Block < ApplicationRecord
             raw_block = node.getblock(block.block_hash, 0)
             block.update_fields(block_info)
             block.update headers_only: false, first_seen_by: node
-            Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
+            Node.set_pool_for_block!(coin, block, block_info)
             break
           rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::TimeOutError # rubocop:disable Lint/SuppressedException
           end
@@ -721,7 +700,7 @@ class Block < ApplicationRecord
             block_info = gbfp_node.getblock(block.block_hash, 1, true)
             block.update_fields(block_info)
             block.update headers_only: false
-            Node.set_pool_tx_ids_fee_total_for_block!(coin, block, block_info)
+            Node.set_pool_for_block!(coin, block, block_info)
           end
         rescue BitcoinUtil::RPC::TimeOutError
           Rails.logger.error "Timeout on mirror node while trying to fetch #{block.block_hash} (#{block.height})"

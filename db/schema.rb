@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_10_06_075242) do
+ActiveRecord::Schema.define(version: 2022_11_14_130645) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -24,10 +24,7 @@ ActiveRecord::Schema.define(version: 2022_10_06_075242) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "n_transactions", null: false
-    t.binary "tx_ids"
     t.integer "coin", null: false
-    t.integer "tx_fee_rates", array: true
-    t.integer "lowest_fee_rate"
     t.index ["node_id"], name: "index_block_templates_on_node_id"
     t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
   end
@@ -56,11 +53,6 @@ ActiveRecord::Schema.define(version: 2022_10_06_075242) do
     t.boolean "headers_only", default: false, null: false
     t.decimal "total_fee", precision: 16, scale: 8
     t.decimal "template_txs_fee_diff", precision: 16, scale: 8
-    t.binary "tx_ids"
-    t.binary "tx_ids_added"
-    t.binary "tx_ids_omitted"
-    t.integer "tx_omitted_fee_rates", array: true
-    t.integer "lowest_template_fee_rate"
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"

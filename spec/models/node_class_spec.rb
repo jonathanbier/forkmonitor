@@ -7,7 +7,7 @@ RSpec.describe Node, type: :model do
   let(:test) { TestWrapper.new }
 
   describe 'class' do
-    describe 'set_pool_tx_ids_fee_total_for_block!' do
+    describe 'set_pool_for_block!' do
       before do
         @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
         @node = create(:node, coin: :btc, block: @block, version: 160_000)
@@ -21,27 +21,27 @@ RSpec.describe Node, type: :model do
 
       it 'fetches the block' do
         expect(@modern_node.client).to receive('getblock').and_call_original
-        described_class.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(:btc, @block)
       end
 
       it 'does not fetch the block if getblock is cached' do
         expect(@modern_node.client).not_to receive('getblock')
-        described_class.set_pool_tx_ids_fee_total_for_block!(:btc, @block,
-                                                             { height: 1, 'tx' => ['74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'] })
+        described_class.set_pool_for_block!(:btc, @block,
+                                            { height: 1, 'tx' => ['74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'] })
       end
 
       it 'calls getrawtransaction on the coinbase' do
         expect(@modern_node.client).to receive('getrawtransaction').and_call_original
-        described_class.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(:btc, @block)
       end
 
       it 'passes getrawtransaction output to pool_from_coinbase_tx' do
         expect(Block).to receive(:pool_from_coinbase_tx)
-        described_class.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(:btc, @block)
       end
 
       it 'calculates the total fee' do
-        described_class.set_pool_tx_ids_fee_total_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(:btc, @block)
         expect(@block.total_fee).to eq(0.5)
       end
     end
@@ -95,7 +95,7 @@ RSpec.describe Node, type: :model do
 
       before do
         test.setup
-        allow(described_class).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
         @node = create(:node_python_with_mirror)
         @node.client.set_python_node(test.nodes[0])
         @node.client.createwallet

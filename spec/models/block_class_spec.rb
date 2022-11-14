@@ -120,7 +120,7 @@ RSpec.describe Block, type: :model do
     end
 
     it 'is updated by find_or_create_by' do
-      allow(Node).to receive('set_pool_tx_ids_fee_total_for_block!').and_return(nil)
+      allow(Node).to receive('set_pool_for_block!').and_return(nil)
       block = described_class.create_headers_only(@node, 560_182,
                                                   '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
       described_class.create_or_update_with({

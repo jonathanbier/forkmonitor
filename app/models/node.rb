@@ -541,8 +541,7 @@ class Node < ApplicationRecord
     # with a blockhash argument, so a txindex is not required.
     # For older nodes it could process the raw block instead of using getrawtransaction,
     # but that has not been implemented.
-    # Also returns array with tx ids
-    def get_coinbase_and_tx_ids_for_block!(coin, block_hash, block_info = nil)
+    def get_coinbase_for_block!(coin, block_hash, block_info = nil)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
       node = nil
@@ -553,7 +552,7 @@ class Node < ApplicationRecord
           node = Node.first_newer_than(coin, 160_000, :core)
         end
       rescue Node::NoMatchingNodeError
-        Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_and_tx_ids_for_block"
+        Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
         return nil
       end
       begin
@@ -569,20 +568,18 @@ class Node < ApplicationRecord
 
       tx_id = block_info['tx'].first
       begin
-        [node.getrawtransaction(tx_id, true, block_hash), block_info['tx']]
+        node.getrawtransaction(tx_id, true, block_hash)
       rescue BitcoinUtil::RPC::TxNotFoundError
         nil
       end
     end
 
-    def set_pool_tx_ids_fee_total_for_block!(coin, block, block_info = nil)
+    def set_pool_for_block!(coin, block, block_info = nil)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      coinbase, tx_ids = get_coinbase_and_tx_ids_for_block!(coin, block.block_hash, block_info)
+      coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
       return if coinbase.nil? || coinbase == {}
 
-      tx_ids.shift # skip coinbase
-      block.tx_ids = hashes_to_binary(tx_ids)
       block.pool = Block.pool_from_coinbase_tx(coinbase)
       block.total_fee = ((coinbase['vout'].sum do |vout|
                             vout['value']
