@@ -31,6 +31,16 @@ deploy-hook = systemctl reload nginx
 
 See also: https://blog.arnonerba.com/2019/01/lets-encrypt-how-to-automatically-restart-nginx-with-certbot
 
+## Mining pools
+
+In `shared/vendor` do:
+
+```
+git clone https://github.com/0xB10C/known-mining-pools.git
+cd known-mining-pools
+python contrib/create-old-pools-json.py
+```
+
 ## Capistrano and rbenv
 
 The site is deployed using Capistrano:
