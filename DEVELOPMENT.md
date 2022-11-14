@@ -38,6 +38,14 @@ Now run the server (this can take a while the first time, as well as each time y
 foreman start -f Procfile.dev -p 3000
 ```
 
+In order to log in to /admin and add nodes, you need to create an admin user:
+
+```
+rails console
+
+User.create(email: "you@example.com", password: "1234", confirmed_at: Time.now)
+```
+
 To check if nodes are reachable:
 
 ```
