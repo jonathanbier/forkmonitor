@@ -364,7 +364,8 @@ class StaleCandidate < ApplicationRecord
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
       Rails.cache.fetch("StaleCandidate.index.for_coin(#{coin}).json") do
-        return nil if Block.where(coin: coin).count == 0
+        return nil if Block.where(coin: coin).count.zero?
+
         min_height = Block.where(coin: coin).maximum(:height) - 1000
         where(coin: coin).where('height > ?', min_height).order(height: :desc).limit(3).to_json({ short: true })
       end
