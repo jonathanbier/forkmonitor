@@ -569,7 +569,8 @@ class Node < ApplicationRecord
         return nil
       end
       begin
-        block_info ||= node.getblock(block_hash, 1)
+        # Use verbosity level 3 for BSV, so it only returns the coinbase transaction rather that all hashes
+        block_info ||= node.getblock(block_hash, node.bsv? ? 3 : 1)
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
       rescue BitcoinUtil::RPC::Error
@@ -577,13 +578,17 @@ class Node < ApplicationRecord
         return nil
       end
       return nil if block_info['height'].nil? # Can't fetch the genesis coinbase
-      return nil if block_info['tx'].nil?
+      return nil if block_info['tx'].nil? || block_info['tx'].to_a.empty?
 
-      tx_id = block_info['tx'].first
-      begin
-        node.getrawtransaction(tx_id, true, block_hash)
-      rescue BitcoinUtil::RPC::TxNotFoundError
-        nil
+      if block_info['tx'].first.instance_of? String
+        tx_id = block_info['tx'].first
+        begin
+          node.getrawtransaction(tx_id, true, block_hash)
+        rescue BitcoinUtil::RPC::TxNotFoundError
+          nil
+        end
+      else
+        block_info['tx'].first['hex']
       end
     end
 

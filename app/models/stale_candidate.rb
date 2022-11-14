@@ -264,6 +264,8 @@ class StaleCandidate < ApplicationRecord
   end
 
   def process!
+    return if bsv? # Do not fetch a full BSV block
+
     fetch_transactions_for_descendants!
 
     # When a new block comes in (up to a maximum height) calculate the new branch
@@ -332,6 +334,8 @@ class StaleCandidate < ApplicationRecord
         coin: coin, height: height
       )
       # Fetch transactions for all blocks at this height
+      return s if coin == :bsv # Never fetch a full BSV block
+
       Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
       s
     end

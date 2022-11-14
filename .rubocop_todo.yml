@@ -16,11 +16,11 @@ Metrics/BlockLength:
 
 # Offense count: 11
 Metrics/ClassLength:
-  Max: 610
+  Max: 622
 
 # Offense count: 40
 Metrics/CyclomaticComplexity:
-  Max: 48
+  Max: 50
 
 # Offense count: 95
 Metrics/MethodLength:
@@ -33,7 +33,7 @@ Metrics/ParameterLists:
 
 # Offense count: 34
 Metrics/PerceivedComplexity:
-  Max: 54
+  Max: 56
 
 # Offense count: 8
 Naming/AccessorMethodName:
