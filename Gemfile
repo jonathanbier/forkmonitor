@@ -88,6 +88,7 @@ gem 'capistrano-rake'
 gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
 gem 'ed25519'
 gem 'nilify_blanks'
+gem 'net-smtp'
 
 # CI runs with :test, but without :development
 group :development, :test do
