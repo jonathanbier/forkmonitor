@@ -552,9 +552,11 @@ class Node < ApplicationRecord
 
     # Find pool name for a block. For modern nodes it uses getrawtransaction
     # with a blockhash argument, so a txindex is not required.
+    # For BSV it uses getblock with verbosity 3, which in their client only returns the coinbase transaction.
     # For older nodes it could process the raw block instead of using getrawtransaction,
     # but that has not been implemented.
-    def get_coinbase_for_block!(coin, block_hash, block_info = nil)
+    def get_coinbase_for_block!(block, block_info = nil)
+      coin = block.coin.to_sym
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
       node = nil
@@ -563,18 +565,24 @@ class Node < ApplicationRecord
         when :btc, :tbtc
           # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
           node = Node.first_newer_than(coin, 160_000, :core)
+        when :bsv
+          node = block.first_seen_by || Node.where(coin: :bsv).first
         end
       rescue Node::NoMatchingNodeError
         Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
         return nil
       end
+      if node.nil?
+        Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
+        return nil
+      end
       begin
         # Use verbosity level 3 for BSV, so it only returns the coinbase transaction rather that all hashes
-        block_info ||= node.getblock(block_hash, node.bsv? ? 3 : 1)
+        block_info ||= node.getblock(block.block_hash, node.bsv? ? 3 : 1)
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
       rescue BitcoinUtil::RPC::Error
-        logger.error "Unable to fetch block #{block_hash} from #{node.name_with_version} while looking for pool name"
+        logger.error "Unable to fetch block #{block.block_hash} from #{coin} #{node.name_with_version} while looking for pool name"
         return nil
       end
       return nil if block_info['height'].nil? # Can't fetch the genesis coinbase
@@ -583,7 +591,7 @@ class Node < ApplicationRecord
       if block_info['tx'].first.instance_of? String
         tx_id = block_info['tx'].first
         begin
-          node.getrawtransaction(tx_id, true, block_hash)
+          node.getrawtransaction(tx_id, true, block.block_hash)
         rescue BitcoinUtil::RPC::TxNotFoundError
           nil
         end
@@ -595,7 +603,7 @@ class Node < ApplicationRecord
     def set_pool_for_block!(coin, block, block_info = nil)
       raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
 
-      coinbase = get_coinbase_for_block!(coin, block.block_hash, block_info)
+      coinbase = get_coinbase_for_block!(block, block_info)
       return if coinbase.nil? || coinbase == {}
 
       block.pool = Block.pool_from_coinbase_tx(coinbase)
