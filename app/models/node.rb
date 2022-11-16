@@ -596,7 +596,7 @@ class Node < ApplicationRecord
           nil
         end
       else
-        block_info['tx'].first['hex']
+        block_info['tx'].first
       end
     end
 
