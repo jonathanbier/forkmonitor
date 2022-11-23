@@ -29,9 +29,11 @@ class Penalty extends React.Component {
         </td>
         <td>
           <Explorer blockstream coin={ this.props.penalty.block.coin } tx={ this.props.penalty.opening_tx_id }/>&nbsp;
-          <Explorer btcCom coin={ this.props.penalty.block.coin } tx={ this.props.penalty.opening_tx_id }/>&nbsp;
           { this.props.penalty.channel_is_public == true &&
-            <Explorer oneML coin={ this.props.penalty.block.coin } channelId={ this.props.penalty.channel_id_1ml }/>
+            <span>
+              <Explorer oneML coin={ this.props.penalty.block.coin } channelId={ this.props.penalty.channel_id_1ml }/>
+              <Explorer mempool coin={ this.props.penalty.block.coin } channelId={ this.props.penalty.channel_id_1ml }/>
+            </span>
           }
           { this.props.penalty.channel_is_public == null &&
             <FontAwesomeIcon className="fa-pulse" icon={faSpinner} />
@@ -39,7 +41,6 @@ class Penalty extends React.Component {
         </td>
         <td>
           <Explorer blockstream coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>&nbsp;
-          <Explorer btcCom coin={ this.props.penalty.block.coin } tx={ this.props.penalty.tx_id }/>
         </td>
         <td>
           { this.props.penalty.channel_age &&

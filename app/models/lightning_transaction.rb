@@ -172,6 +172,7 @@ class LightningTransaction < ApplicationRecord
     end
 
     def check_public_channels!
+      Rails.logger.debug "Checking #{LightningTransaction.where(channel_is_public: nil).count} txs for public channels..."
       LightningTransaction.where(channel_is_public: nil).find_each do |tx|
         uri = URI.parse('https://1ml.com/search')
         begin
