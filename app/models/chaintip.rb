@@ -8,7 +8,7 @@ class Chaintip < ApplicationRecord
 
   after_commit :expire_cache
 
-  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum coin: { btc: 0, tbtc: 3 }
 
   validates :status, uniqueness: { scope: :node }
 

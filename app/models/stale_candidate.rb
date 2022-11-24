@@ -5,7 +5,7 @@ class StaleCandidate < ApplicationRecord
   DOUBLE_SPEND_RANGE = Rails.env.production? ? 30 : 10
   STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
-  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum coin: { btc: 0, tbtc: 3 }
 
   has_many :children, class_name: 'StaleCandidateChild', dependent: :destroy
 
@@ -264,8 +264,6 @@ class StaleCandidate < ApplicationRecord
   end
 
   def process!
-    return if bsv? # Do not fetch a full BSV block
-
     fetch_transactions_for_descendants!
 
     # When a new block comes in (up to a maximum height) calculate the new branch
@@ -334,8 +332,6 @@ class StaleCandidate < ApplicationRecord
         coin: coin, height: height
       )
       # Fetch transactions for all blocks at this height
-      return s if coin == :bsv # Never fetch a full BSV block
-
       Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
       s
     end

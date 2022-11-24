@@ -14,8 +14,7 @@ class Block < ApplicationRecord
            # For development: something recent
            (Rails.env.development? ? 763_000 : 500_000)
          end,
-    tbtc: 1_600_000,
-    bsv: 766_000
+    tbtc: 1_600_000
   }.freeze
 
   COIN = 100_000_000
@@ -33,7 +32,7 @@ class Block < ApplicationRecord
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
   has_many :chaintips, dependent: :destroy
-  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum coin: { btc: 0, tbtc: 3 }
 
   # Used to trigger and restore reorgs on the mirror node
   attr_accessor :invalidated_block_hashes
@@ -180,8 +179,7 @@ class Block < ApplicationRecord
           block_info = client.getblockheader(block_info['previousblockhash'])
         else
           begin
-            # Use verbosity level 3 for BSV, so it only returns the coinbase transaction rather that all hashes
-            block_info = node.getblock(block_info['previousblockhash'], node.bsv? ? 3 : 1, use_mirror)
+            block_info = node.getblock(block_info['previousblockhash'], 1, use_mirror)
           rescue BitcoinUtil::RPC::BlockPrunedError
             block_info = client.getblockheader(block_info['previousblockhash'])
           end
@@ -490,8 +488,8 @@ class Block < ApplicationRecord
 
       # Fetch transactions if there was a stale block recently
       if StaleCandidate.where(coin: node.coin).where('height >= ?',
-                                                     block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive? && !node.bsv?
-        block.fetch_transactions! # Do not fetch a full BSV block
+                                                     block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive?
+        block.fetch_transactions!
       end
       block.expire_stale_candidate_cache
       block
@@ -574,8 +572,7 @@ class Block < ApplicationRecord
             block_info = client.getblockheader(hash)
           else
             begin
-              # Use verbosity level 3 for BSV, so it only returns the coinbase transaction rather that all hashes
-              block_info = node.getblock(hash, node.bsv? ? 3 : 1, use_mirror)
+              block_info = node.getblock(hash, 1, use_mirror)
             rescue BitcoinUtil::RPC::BlockPrunedError
               block_info = client.getblockheader(hash)
             end

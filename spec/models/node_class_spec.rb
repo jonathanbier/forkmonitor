@@ -56,7 +56,6 @@ RSpec.describe Node, type: :model do
 
         expect(described_class).to receive(:check_chaintips!).with(:btc)
         expect(described_class).to receive(:check_chaintips!).with(:tbtc)
-        expect(described_class).to receive(:check_chaintips!).with(:bsv)
 
         # rubocop:disable RSpec/IteratedExpectation
         expect(described_class).to(receive(:bitcoin_core_by_version).and_wrap_original do |relation|

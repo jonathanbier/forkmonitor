@@ -19,7 +19,6 @@ import {
 const coin_choices = [
   { id: "btc", name: "Bitcoin"},
   { id: "tbtc", name: "Bitcoin Testnet"},
-  { id: "bsv", name: "Bitcoin SV"}
 ]
 
 const client_choices = [
@@ -31,7 +30,6 @@ const client_choices = [
     { id: "omni", name: "omni"},
     { id: "blockcore", name: "Blockcore"},
     { id: "bu", name: "Bitcoin Unlimited"},
-    { id: "sv", name: "Bitcoin SV"}
 ];
 
 export const NodeList = props => (

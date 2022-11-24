@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Softfork < ApplicationRecord
-  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum coin: { btc: 0, tbtc: 3 }
   enum fork_type: { bip9: 0, bip8: 1 } # rubocop:disable Naming/VariableNumber
   enum status: { defined: 0, started: 1, locked_in: 2, active: 3, failed: 4, must_signal: 5 }
   belongs_to :node

@@ -10,7 +10,7 @@ class Node < ApplicationRecord
   class NoTxIndexError < StandardError; end
 
   # BCH support has been removed, but enums are stored as integer in the database.
-  enum coin: { btc: 0, bch: 1, bsv: 2, tbtc: 3 }
+  enum coin: { btc: 0, tbtc: 3 }
 
   nilify_blanks only: [:mirror_rpchost]
 
@@ -41,8 +41,6 @@ class Node < ApplicationRecord
                       omni: 8, blockcore: 9 }
 
   scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
-
-  scope :bsv_by_version, -> { where(enabled: true, coin: :bsv).order(version: :desc) }
 
   def name_with_version
     BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type.to_sym)
@@ -152,8 +150,6 @@ class Node < ApplicationRecord
         blockchaininfo = client.getblockchaininfo
         networkinfo = client.getnetworkinfo
       rescue BitcoinUtil::RPC::Error
-        # Try getinfo for ancient nodes:
-        update unreachable_since: unreachable_since || DateTime.now if bsv?
         begin
           info = client.getinfo
         rescue BitcoinUtil::RPC::Error
@@ -496,18 +492,6 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:tbtc)
       end
 
-      if options[:coins].blank? || options[:coins].include?('BSV')
-        bsv_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-
-        check_chaintips!(:bsv)
-        StaleCandidate.check!(:bsv)
-      end
-
       check_laggards!(options)
 
       bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
@@ -552,7 +536,6 @@ class Node < ApplicationRecord
 
     # Find pool name for a block. For modern nodes it uses getrawtransaction
     # with a blockhash argument, so a txindex is not required.
-    # For BSV it uses getblock with verbosity 3, which in their client only returns the coinbase transaction.
     # For older nodes it could process the raw block instead of using getrawtransaction,
     # but that has not been implemented.
     def get_coinbase_for_block!(block, block_info = nil)
@@ -565,8 +548,6 @@ class Node < ApplicationRecord
         when :btc, :tbtc
           # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
           node = Node.first_newer_than(coin, 160_000, :core)
-        when :bsv
-          node = block.first_seen_by || Node.where(coin: :bsv).first
         end
       rescue Node::NoMatchingNodeError
         Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
@@ -577,8 +558,7 @@ class Node < ApplicationRecord
         return nil
       end
       begin
-        # Use verbosity level 3 for BSV, so it only returns the coinbase transaction rather that all hashes
-        block_info ||= node.getblock(block.block_hash, node.bsv? ? 3 : 1)
+        block_info ||= node.getblock(block.block_hash, 1)
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
       rescue BitcoinUtil::RPC::Error
@@ -726,8 +706,6 @@ class Node < ApplicationRecord
         Chaintip.check!(:btc, bitcoin_core_by_version + bitcoin_alternative_implementations)
       when :tbtc
         Chaintip.check!(:tbtc, testnet_by_version)
-      when :bsv
-        Chaintip.check!(:bsv, bsv_by_version)
       else
         throw 'Unknown coin'
       end
