@@ -25,7 +25,7 @@ set :deploy_to, "/home/forkmonitor/#{fetch :application}"
 # append :linked_files, "config/database.yml"
 
 # Default value for linked_dirs is []
-append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'vendor/known-mining-pools', '.bundle', 'public/system',
+append :linked_dirs, 'log', 'tmp/pids', 'tmp/cache', 'tmp/sockets', 'vendor/bundle', 'vendor/mining-pools', '.bundle', 'public/system',
        'public/uploads', 'certs'
 
 # Default value for default_env is {}
