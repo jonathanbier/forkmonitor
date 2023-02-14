@@ -36,9 +36,9 @@ See also: https://blog.arnonerba.com/2019/01/lets-encrypt-how-to-automatically-r
 In `shared/vendor` do:
 
 ```
-git clone https://github.com/0xB10C/known-mining-pools.git
-cd known-mining-pools
-python contrib/create-old-pools-json.py
+git clone https://github.com/bitcoin-data/mining-pools.git
+cd mining-pools
+python contrib/create-old-pools-json.py pools.json
 ```
 
 ## Capistrano and rbenv
