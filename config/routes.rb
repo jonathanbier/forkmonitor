@@ -44,11 +44,6 @@ Rails.application.routes.draw do
     end
   end
 
-  post 'push/:version/log', to: 'safari#log'
-  post 'push/:version/pushPackages/web.info.forkmonitor', to: 'safari#package'
-  post 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: 'safari#registrations'
-  delete 'push/:version/devices/:device_token/registrations/web.info.forkmonitor', to: 'safari#deregister'
-
   scope format: true, constraints: { format: /rss/ } do
     namespace :feeds do
       get ':coin/blocks/invalid', action: :blocks_invalid

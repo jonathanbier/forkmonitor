@@ -77,44 +77,6 @@ User `crontab`:
 
 Roughly follows the tutorial [here](https://chown.io/guide-host-your-own-onion-site-tor-nginx/). Suggestions to improve our [/etc/tor/torrc](deploy/etc/tor/torrc) are welcome.
 
-## Safari push certificate
-
-See also the [RPush documentation](https://github.com/rpush/rpush#apple-push-notification-service).
-
-You need a developer account with Apple.
-
-Go to the [Developer Center](https://developer.apple.com/) -> Certificates, Identifiers & Profiles -> Certificates. Create a new "Website Push ID Certificate". Select forkmonitor from the dropdown (create the Website Push ID first if needed). Create a certificate signing request on your local machine. Enter your email and `web.info.forkmonitor` as the common name. Save to disk and upload.
-
-Download the signed certificate `.cer` file. Also download Apple's [intermedidate certificate](https://www.apple.com/certificateauthority/) (`AppleWWDRCAG4.cer`, Worldwide Developer Relations - G4) and put it in tmp.
-
-Convert to `.p12`: open the `.cer` file in Keychain (also open the intermediate cert in KeyChain) and export it, call it `production.p12` and put it in `tmp`.
-
-Make sure `CERT_PWD` is set and update the push package zip file:
-
-```
-rake safari:generate_push_package
-```
-
-Now [convert the certificate to pem](https://github.com/rpush/rpush/wiki/Generating-Certificates). `CERT_PWD` should match the password. Upload it:
-
-```sh
-scp production.pem forkmonitor:forkmonitor/shared/certs
-```
-
-After deploying the new push package, you can test in Safari, by sending a test notification from the console.
-
-First get the device token from the Safari javascript console:
-
-```js
-window.safari.pushNotification.permission("web.info.forkmonitor")
-```
-
-In the Rails console use this to send a test message:
-
-```rb
-SafariSubscription.find_by(device_token: "TOKEN").notify("test", "Test", "Test 123")
-```
-
 ## Bitcoin nodes
 
 These are run using systemd, mostly based on the Bitcoin Core [bitcoind.service example](https://github.com/bitcoin/bitcoin/blob/master/contrib/init/bitcoind.service). It uses the configuration in `/home/bitcoin/.bitcoin/bitcoin.conf`. `bitcoind-mirror.service` and `bitcoind-testnet(-mirror).service` follow the same pattern.

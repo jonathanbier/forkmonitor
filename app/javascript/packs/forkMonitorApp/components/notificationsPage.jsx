@@ -37,7 +37,6 @@ class NotificationsPage extends React.Component {
 
     this.state = {
       webpush: null,
-      askSafari: null,
       vapidPublicKey: process.env['VAPID_PUBLIC_KEY']
     };
 
@@ -48,46 +47,9 @@ class NotificationsPage extends React.Component {
       }
       return new Uint8Array(result);
     }
-
-    this.safariRequestPermission = this.safariRequestPermission.bind(this);
-  }
-
-  checkSafariPermission(permissionData) {
-    if (permissionData.permission === 'default') {
-      // This is a new web service URL and its validity is unknown.
-      this.setState({
-        askSafari: true
-      })
-    } else if (permissionData.permission === 'denied') {
-      // The user said no.
-      this.setState({
-        askSafari: true
-      })
-    } else if (permissionData.permission === 'granted') {
-      // The web service URL is a valid push provider, and the user said yes.
-      // permissionData.deviceToken is now available to use.
-      this.setState({
-        askSafari: false
-      })
-    }
-  }
-
-  safariRequestPermission() {
-    window.safari.pushNotification.requestPermission(
-      'https://forkmonitor.info/push',
-      'web.info.forkmonitor',
-      {}, // Data that you choose to send to your server to help you identify the user.
-      this.checkSafariPermission
-    );
   }
 
   checkNotifs() {
-    if ('safari' in window && 'pushNotification' in window.safari) {
-      var permissionData = window.safari.pushNotification.permission('web.info.forkmonitor');
-      this.checkSafariPermission(permissionData);
-      return;
-    }
-
     // Standard HTML5 notifications
     if (!("Notification" in window)) {
       return;
@@ -159,13 +121,9 @@ class NotificationsPage extends React.Component {
           <Container>
             <h2>Browser push notifications</h2>
             <p>
-              We currently send browser push notifications for invalid blocks (all coins),
-              stale candidates (all coins except testnet) and unexpected extra inflation (Bitcoin and testnet).
+              We currently send browser push notifications for invalid blocks,
+              stale candidates (except for testnet)) and unexpected extra inflation.
             </p>
-            { this.state && this.state.askSafari == true &&
-              <button onClick={ this.safariRequestPermission }>Grant permission</button>
-            }
-
             { this.state && this.state.webpush == false &&
               <p>Browser push notification permission denied</p>
             }

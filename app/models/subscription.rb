@@ -20,8 +20,6 @@ class Subscription < ApplicationRecord
       rescue Webpush::Unauthorized, Webpush::ExpiredSubscription
         s.destroy
       end
-
-      SafariSubscription.blast(subject, body)
     end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_11_14_130645) do
+ActiveRecord::Schema.define(version: 2023_02_19_135249) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -261,12 +261,6 @@ ActiveRecord::Schema.define(version: 2022_11_14_130645) do
     t.boolean "dry_run", default: false, null: false
     t.boolean "sound_is_json", default: false
     t.index ["delivered", "failed", "processing", "deliver_after", "created_at"], name: "index_rpush_notifications_multi", where: "((NOT delivered) AND (NOT failed))"
-  end
-
-  create_table "safari_subscriptions", force: :cascade do |t|
-    t.string "device_token"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
   end
 
   create_table "softforks", force: :cascade do |t|
