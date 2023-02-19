@@ -184,7 +184,7 @@ GEM
       guard-compat (~> 1.1)
       rspec (>= 2.99.0, < 4.0)
     hashdiff (1.0.1)
-    hkdf (0.3.0)
+    hkdf (1.0.0)
     htmlentities (4.3.4)
     i18n (1.12.0)
       concurrent-ruby (~> 1.0)
@@ -234,6 +234,7 @@ GEM
     notiffany (0.1.3)
       nenv (~> 0.1)
       shellany (~> 0.0)
+    openssl (3.1.0)
     orm_adapter (0.5.0)
     parallel (1.22.1)
     parallel_tests (4.2.0)
@@ -411,6 +412,10 @@ GEM
       dry-configurable (>= 0.13, < 2)
       jwt (~> 2.1)
       warden (~> 1.2)
+    web-push (3.0.0)
+      hkdf (~> 1.0)
+      jwt (~> 2.0)
+      openssl (~> 3.0)
     webmock (3.18.1)
       addressable (>= 2.8.0)
       crack (>= 0.3.2)
@@ -420,9 +425,6 @@ GEM
       rack-proxy (>= 0.6.1)
       railties (>= 5.2)
       semantic_range (>= 2.3.0)
-    webpush (1.1.0)
-      hkdf (~> 0.2)
-      jwt (~> 2.0)
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
@@ -487,9 +489,9 @@ DEPENDENCIES
   table_print
   terminal-notifier-guard (~> 1.6.1)
   timecop
+  web-push
   webmock
   webpacker (~> 5.4.3)
-  webpush
 
 RUBY VERSION
    ruby 3.1.2p20

@@ -192,5 +192,5 @@ To test notifications, open the site in Chrome and give permission, and then:
 
 ```rb
 @subscription = Subscription.last
-Webpush.payload_send(endpoint: @subscription.endpoint, message: "tag|title|body", p256dh: @subscription.p256dh, auth: @subscription.auth, vapid: { subject: "mailto:" + ENV.fetch('VAPID_CONTACT_EMAIL'), public_key: ENV.fetch('VAPID_PUBLIC_KEY') , private_key: ENV.fetch('VAPID_PRIVATE_KEY') }, ttl: 60 * 60)
+WebPush.payload_send(endpoint: @subscription.endpoint, message: "tag|title|body", p256dh: @subscription.p256dh, auth: @subscription.auth, vapid: { subject: "mailto:" + ENV.fetch('VAPID_CONTACT_EMAIL'), public_key: ENV.fetch('VAPID_PUBLIC_KEY') , private_key: ENV.fetch('VAPID_PRIVATE_KEY') }, ttl: 60 * 60)
 ```

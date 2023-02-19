@@ -46,7 +46,7 @@ gem 'devise-jwt'
 
 # Push notifications
 gem 'serviceworker-rails'
-gem 'webpush'
+gem 'web-push'
 
 # Email when something breaks
 gem 'exception_notification'

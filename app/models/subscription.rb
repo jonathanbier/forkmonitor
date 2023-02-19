@@ -5,7 +5,7 @@ class Subscription < ApplicationRecord
     # Send push notifications to everyone
     def blast(tag, subject, body)
       Subscription.all.find_each do |s|
-        Webpush.payload_send(
+        WebPush.payload_send(
           endpoint: s.endpoint,
           message: "#{tag}|#{subject}|#{body}",
           p256dh: s.p256dh,
@@ -17,7 +17,7 @@ class Subscription < ApplicationRecord
             private_key: ENV.fetch('VAPID_PRIVATE_KEY', nil)
           }
         )
-      rescue Webpush::Unauthorized, Webpush::ExpiredSubscription
+      rescue WebPush::Unauthorized, WebPush::ExpiredSubscription
         s.destroy
       end
     end
