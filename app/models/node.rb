@@ -654,8 +654,6 @@ class Node < ApplicationRecord
           StaleCandidate.process!(coin.downcase.to_sym)
           StaleCandidate.prime_cache(coin.downcase.to_sym)
           Softfork.notify!
-          Rpush.apns_feedback unless Rails.env.test?
-          Rpush.push unless Rails.env.test?
           Node.destroy_if_requested(coin.downcase.to_sym)
         end
 
