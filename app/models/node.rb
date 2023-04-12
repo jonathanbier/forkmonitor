@@ -303,7 +303,7 @@ class Node < ApplicationRecord
       if block == node.block
         behind = false
       # Compare work:
-      elsif block.work < node.block.work
+      elsif block.work.present? && node.block.work.present? && block.work < node.block.work
         behind = true
       end
 
