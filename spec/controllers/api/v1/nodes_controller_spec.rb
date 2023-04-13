@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Api::V1::NodesController, type: :controller do
+RSpec.describe Api::V1::NodesController do
   describe 'GET /api/v1/nodes/btc' do
     before do
       create(:node_with_block, coin: :btc)

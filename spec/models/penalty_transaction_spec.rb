@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe PenaltyTransaction, type: :model do
+RSpec.describe PenaltyTransaction do
   before do
     @node = build(:node, txindex: true)
     @node.client.mock_set_height(560_176)
@@ -63,10 +63,6 @@ RSpec.describe PenaltyTransaction, type: :model do
     it 'sets the amount based on the output' do
       described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(0.00396375)
-    end
-
-    it 'finds opening transaction' do
-      skip
     end
   end
 end

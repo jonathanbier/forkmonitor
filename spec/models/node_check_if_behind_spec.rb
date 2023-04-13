@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe Node, type: :model do
+RSpec.describe Node do
   let(:test) { TestWrapper.new }
 
   describe 'check_if_behind!' do
@@ -37,7 +37,7 @@ RSpec.describe Node, type: :model do
         allow(described_class).to receive('set_pool_for_block!').and_return(nil)
 
         test.disconnect_nodes(0, 1)
-        assert_equal(0, @node_a.client.getpeerinfo.count)
+        expect(@node_a.client.getpeerinfo.count).to eq(0)
 
         @node_b.client.generate(1)
         allow(described_class).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]

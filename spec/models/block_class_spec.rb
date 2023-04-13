@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe Block, type: :model do
+RSpec.describe Block do
   let(:test) { TestWrapper.new }
 
   def setup_python_nodes
@@ -24,14 +24,14 @@ RSpec.describe Block, type: :model do
     @node_a.poll!
     @node_a.poll_mirror!
     @node_a.reload
-    assert_equal(@node_a.block.height, 2)
-    assert_equal(@node_a.mirror_block.height, 2)
+    expect(@node_a.block.height).to eq(2)
+    expect(@node_a.mirror_block.height).to eq(2)
 
     @node_b.poll!
     @node_b.reload
-    assert_equal(@node_b.block.height, 2)
+    expect(@node_b.block.height).to eq(2)
 
-    assert_equal(Chaintip.count, 0)
+    expect(Chaintip.count).to eq(0)
 
     allow(Node).to receive(:with_mirror).with(:btc).and_return [@node_a]
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]
@@ -148,8 +148,8 @@ RSpec.describe Block, type: :model do
       test.disconnect_nodes(0, 1) # disconnect A from mirror (A')
       test.disconnect_nodes(0, 2) # disconnect A from B
       test.disconnect_nodes(1, 2) # disconnect A' from B
-      assert_equal(0, @node_a.client.getpeerinfo.count)
-      assert_equal(0, @node_a.mirror_client.getpeerinfo.count)
+      expect(@node_a.client.getpeerinfo.count).to eq(0)
+      expect(@node_a.mirror_client.getpeerinfo.count).to eq(0)
 
       @node_a.client.generate(2) # this is and remains active
       @node_b.client.generate(1) # Node A will see this as valid-headers after reconnect

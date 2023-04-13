@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Api::V1::LnStatsController, type: :controller do
+RSpec.describe Api::V1::LnStatsController do
   let(:block_1) { create(:lightning_block) }
 
   before do

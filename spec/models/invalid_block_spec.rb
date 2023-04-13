@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe InvalidBlock, type: :model do
+RSpec.describe InvalidBlock do
   describe 'InvalidBlock.check!' do
     let(:user) { create(:user) }
 

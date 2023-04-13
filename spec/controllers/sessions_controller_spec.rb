@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe SessionsController, type: :controller do
+RSpec.describe SessionsController do
   describe 'POST /login', type: :request do
     let(:user) { User.create(email: 'test@example.com', password: 'test1234', confirmed_at: Time.zone.now) }
     let(:url) { '/login' }

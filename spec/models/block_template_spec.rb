@@ -2,6 +2,6 @@
 
 require 'rails_helper'
 
-RSpec.describe BlockTemplate, type: :model do
+RSpec.describe BlockTemplate do
   pending "add some examples to (or delete) #{__FILE__}"
 end

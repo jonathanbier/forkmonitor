@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
+RSpec.describe Api::V1::InflatedBlocksController do
   let!(:node_1) { create(:node_with_block, coin: :btc) }
   let!(:inflated_block) { create(:inflated_block, node: node_1) }
 

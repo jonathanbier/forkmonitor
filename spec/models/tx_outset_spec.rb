@@ -2,6 +2,6 @@
 
 require 'rails_helper'
 
-RSpec.describe TxOutset, type: :model do
+RSpec.describe TxOutset do
   pending "add some examples to (or delete) #{__FILE__}"
 end

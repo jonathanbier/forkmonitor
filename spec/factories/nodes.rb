@@ -14,7 +14,7 @@ FactoryBot.define do
   end
 
   factory :node_with_chaintip, parent: :node_with_block do |_node|
-    chaintips { build_list :chaintip, 1, block: block, status: 'active' }
+    chaintips { build_list(:chaintip, 1, block: block, status: 'active') }
   end
 
   factory :node_with_mirror, parent: :node do

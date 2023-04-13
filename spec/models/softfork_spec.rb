@@ -2,15 +2,14 @@
 
 require 'rails_helper'
 
-RSpec.describe Softfork, type: :model do
+RSpec.describe Softfork do
   let(:node) { create(:node_with_block, version: 200_000) }
 
   describe 'process' do
     it 'does nothing if no forks are active' do
       blockchaininfo = {
         'chain' => 'main',
-        'softforks' => {
-        }
+        'softforks' => {}
       }
       described_class.process(node, blockchaininfo)
       expect(described_class.count).to eq(0)

@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe SweepTransaction, type: :model do
+RSpec.describe SweepTransaction do
   before do
     @node = build(:node, txindex: true)
     @node.client.mock_set_height(560_176)
@@ -68,10 +68,6 @@ RSpec.describe SweepTransaction, type: :model do
       described_class.check!(@node, @block, @parsed_block)
       expect(LightningTransaction.first.amount).to eq(0.00001002)
       expect(LightningTransaction.second.amount).to eq(0.00001001)
-    end
-
-    it 'finds opening transaction' do
-      skip
     end
   end
 end

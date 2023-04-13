@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe Block, type: :model do
+RSpec.describe Block do
   let(:test) { TestWrapper.new }
 
   def setup_python_nodes
@@ -24,14 +24,14 @@ RSpec.describe Block, type: :model do
     @node_a.poll!
     @node_a.poll_mirror!
     @node_a.reload
-    assert_equal(@node_a.block.height, 2)
-    assert_equal(@node_a.mirror_block.height, 2)
+    expect(@node_a.block.height).to eq(2)
+    expect(@node_a.mirror_block.height).to eq(2)
 
     @node_b.poll!
     @node_b.reload
-    assert_equal(@node_b.block.height, 2)
+    expect(@node_b.block.height).to eq(2)
 
-    assert_equal(Chaintip.count, 0)
+    expect(Chaintip.count).to eq(0)
 
     allow(Node).to receive(:with_mirror).with(:btc).and_return [@node_a]
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]

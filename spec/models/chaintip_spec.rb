@@ -8,7 +8,7 @@ RSpec.configure do |c|
   c.include MockNodeHelpers
 end
 
-RSpec.describe Chaintip, type: :model do
+RSpec.describe Chaintip do
   let(:test) { TestWrapper.new }
 
   before do

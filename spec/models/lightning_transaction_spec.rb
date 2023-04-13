@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe LightningTransaction, type: :model do
+RSpec.describe LightningTransaction do
   before do
     @node = build(:node, txindex: true)
     @node.client.mock_set_height(560_176)

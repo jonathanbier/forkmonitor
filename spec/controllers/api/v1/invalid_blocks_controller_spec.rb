@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe Api::V1::InvalidBlocksController, type: :controller do
+RSpec.describe Api::V1::InvalidBlocksController do
   let!(:node_1) { create(:node_with_block, coin: :btc) }
   let!(:invalid_block) { create(:invalid_block, node: node_1) }
 

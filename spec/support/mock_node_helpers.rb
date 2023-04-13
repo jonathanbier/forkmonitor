@@ -25,7 +25,7 @@ module MockNodeHelpers
     @node_b.client.set_python_node(test.nodes[1])
 
     deployments = @node_b.client.getdeploymentinfo
-    assert_equal(deployments['deployments']['taproot']['active'], false)
+    expect(deployments['deployments']['taproot']['active']).to be(false)
 
     @node_c = create(:node_python)
     @node_c.client.set_python_node(test.nodes[2])
@@ -54,16 +54,16 @@ module MockNodeHelpers
 
     @node_a.poll!
     @node_a.reload
-    assert_equal(@node_a.block.height, 2)
+    expect(@node_a.block.height).to eq(2)
     expect(@node_a.block.parent).not_to be_nil
-    assert_equal(@node_a.block.parent.height, 1)
-    assert_equal(Chaintip.count, 0)
+    expect(@node_a.block.parent.height).to eq(1)
+    expect(Chaintip.count).to eq(0)
 
     @node_b.poll!
     @node_b.reload
-    assert_equal(@node_b.block.height, 2)
-    assert_equal(@node_b.block.parent.height, 1)
-    assert_equal(Chaintip.count, 0)
+    expect(@node_b.block.height).to eq(2)
+    expect(@node_b.block.parent.height).to eq(1)
+    expect(Chaintip.count).to eq(0)
 
     @node_c.client.createwallet
     @addr_3 = @node_c.client.getnewaddress

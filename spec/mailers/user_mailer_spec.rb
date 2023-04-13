@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-RSpec.describe UserMailer, type: :mailer do
+RSpec.describe UserMailer do
   describe 'lag notify' do
     let(:user) { create(:user) }
     let(:lag) { create(:lag) }

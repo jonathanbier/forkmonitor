@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe InflatedBlock, type: :model do
+RSpec.describe InflatedBlock do
   let(:test) { TestWrapper.new }
 
   def setup_python_nodes
@@ -20,10 +20,10 @@ RSpec.describe InflatedBlock, type: :model do
     @node.poll!
     @node.poll_mirror!
     @node.reload
-    assert_equal(@node.block.height, 5)
-    assert_equal(@node.block.parent.height, 4)
-    assert_equal(Chaintip.count, 0)
-    assert_equal(@node.mirror_block.height, 5)
+    expect(@node.block.height).to eq(5)
+    expect(@node.block.parent.height).to eq(4)
+    expect(Chaintip.count).to eq(0)
+    expect(@node.mirror_block.height).to eq(5)
 
     @node_b = create(:node_python)
     @node_b.client.set_python_node(test.nodes[2])
@@ -136,7 +136,7 @@ RSpec.describe InflatedBlock, type: :model do
       before do
         test.disconnect_nodes(2, 0)
         test.disconnect_nodes(2, 1)
-        assert_equal(0, @node_b.client.getpeerinfo.count)
+        expect(@node_b.client.getpeerinfo.count).to eq(0)
         @node.client.generate(1)
         # Block at same height, but seen later by @node. It will be fetched,
         # but only validated up to valid-headers.
@@ -159,7 +159,7 @@ RSpec.describe InflatedBlock, type: :model do
       before do
         test.disconnect_nodes(2, 0)
         test.disconnect_nodes(2, 1)
-        assert_equal(0, @node_b.client.getpeerinfo.count)
+        expect(@node_b.client.getpeerinfo.count).to eq(0)
         # This will be the active tip until sync, when it's replaced with the
         # longer chain from node B. It then becomes a valid-fork.
         @node.client.generate(1)

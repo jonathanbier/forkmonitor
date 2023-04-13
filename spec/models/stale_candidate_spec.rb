@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe StaleCandidate, type: :model do
+RSpec.describe StaleCandidate do
   let(:test) { TestWrapper.new }
 
   before do
@@ -29,7 +29,7 @@ RSpec.describe StaleCandidate, type: :model do
     test.sync_mempools
 
     test.disconnect_nodes(0, 1)
-    assert_equal(0, @node_a.client.getpeerinfo.count)
+    expect(@node_a.client.getpeerinfo.count).to eq(0)
 
     # Transaction to be mined in block 105 by node A, and later by node B
     @tx_2_id = @node_a.client.sendtoaddress(address_b, 1)
@@ -149,7 +149,7 @@ RSpec.describe StaleCandidate, type: :model do
       describe 'when one chain is longer' do
         before do
           test.disconnect_nodes(0, 1)
-          assert_equal(0, @node_a.client.getpeerinfo.count)
+          expect(@node_a.client.getpeerinfo.count).to eq(0)
           # this mines tx_2
           @node_a.client.generate(1)
           @node_a.poll!
@@ -176,7 +176,7 @@ RSpec.describe StaleCandidate, type: :model do
       describe 'when one chain is longer' do
         before do
           test.disconnect_nodes(0, 1)
-          assert_equal(0, @node_a.client.getpeerinfo.count)
+          expect(@node_a.client.getpeerinfo.count).to eq(0)
           # this mines tx_2
           @node_a.client.generate(1)
           @node_a.poll!
@@ -235,7 +235,7 @@ RSpec.describe StaleCandidate, type: :model do
 
     it 'does not also create one if the race continues 1 more block' do
       test.disconnect_nodes(0, 1)
-      assert_equal(0, @node_a.client.getpeerinfo.count)
+      expect(@node_a.client.getpeerinfo.count).to eq(0)
       @node_a.client.generate(1)
       @node_b.client.generate(1)
       @node_a.poll!

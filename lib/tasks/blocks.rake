@@ -12,7 +12,7 @@ namespace 'blocks' do
   desc 'Check for unwanted inflation for [coin] (limit to [max=10])'
   task :check_inflation, %i[coin max] => :environment do |_action, args|
     InflatedBlock.check_inflation!({ coin: args.coin.downcase.to_sym,
-                                     max: args[:max] ? args[:max].to_i : nil })
+                                     max: args[:max]&.to_i })
   end
 
   desc 'Get chaintips for all nodes'

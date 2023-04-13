@@ -3,7 +3,7 @@
 require 'rails_helper'
 require 'bitcoind_helper'
 
-RSpec.describe Node, type: :model do
+RSpec.describe Node do
   let(:test) { TestWrapper.new }
 
   describe 'class' do
