@@ -6,9 +6,6 @@ require 'spec_helper'
 
 ENV['RAILS_ENV'] ||= 'test'
 
-ENV['NODE_1'] ||= 'BTC:127.0.0.1:8332|user|password|Bitcoin Core'
-ENV['NODE_2'] ||= 'TBTC:127.0.0.2:8332|user|password2|Bitcoin Testnet'
-
 require File.expand_path('../config/environment', __dir__)
 
 # Prevent database truncation if the environment is production
