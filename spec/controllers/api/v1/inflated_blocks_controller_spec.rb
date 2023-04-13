@@ -27,12 +27,6 @@ RSpec.describe Api::V1::InflatedBlocksController, type: :controller do
         expect(response_body.length).to eq 1
       end
 
-      it 'does not list entries for other coin' do
-        get :index, format: :json, params: { coin: 'TBTC' }
-        expect(response).to have_http_status :ok
-        expect(response_body.length).to eq 0
-      end
-
       it 'does not list dismissed entries' do
         inflated_block.update dismissed_at: Time.zone.now
         get :index, format: :json, params: { coin: 'BTC' }

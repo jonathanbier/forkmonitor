@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Softfork < ApplicationRecord
-  enum coin: { btc: 0, tbtc: 3 }
+  enum coin: { btc: 0 }
   enum fork_type: { bip9: 0, bip8: 1 } # rubocop:disable Naming/VariableNumber
   enum status: { defined: 0, started: 1, locked_in: 2, active: 3, failed: 4, must_signal: 5 }
   belongs_to :node
@@ -33,17 +33,17 @@ class Softfork < ApplicationRecord
 
     # Only supported on Bitcoin Core v23+
     def process_deploymentinfo(node, deploymentinfo)
-      return unless (node.btc? || node.tbtc?) && node.core? && node.version.present? && node.version >= 230_000
+      return unless node.btc? && node.core? && node.version.present? && node.version >= 230_000
 
       deploymentinfo['deployments'].each do |key, value|
         process_fork(node, key, value)
       end
     end
 
-    # Only supported on Bitcoin mainnet and testnet
+    # Only supported on Bitcoin mainnet
     # Only tested with v0.18.1 and up
     def process(node, blockchaininfo)
-      return unless node.btc? || node.tbtc?
+      return unless node.btc?
 
       if node.version < 190_000
         return if blockchaininfo['bip9_softforks'].nil?

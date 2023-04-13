@@ -14,8 +14,6 @@ class Explorer extends React.Component {
     if (this.props.blockstream) {
       var rootUrl = "https://blockstream.info/";
       if (coin == "btc") {
-      } else if (coin == "tbtc") {
-        rootUrl += "testnet/"
       } else {
         return null;
       }
@@ -28,8 +26,6 @@ class Explorer extends React.Component {
     } else if (this.props.btcCom) {
       var rootUrl = "https://btc.com/";
       if (coin == "btc") {
-      } else if (coin == "tbtc") {
-        return null;
       } else {
         return null;
       }

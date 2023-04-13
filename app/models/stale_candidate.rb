@@ -5,7 +5,7 @@ class StaleCandidate < ApplicationRecord
   DOUBLE_SPEND_RANGE = Rails.env.production? ? 30 : 10
   STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
-  enum coin: { btc: 0, tbtc: 3 }
+  enum coin: { btc: 0 }
 
   has_many :children, class_name: 'StaleCandidateChild', dependent: :destroy
 
@@ -285,14 +285,12 @@ class StaleCandidate < ApplicationRecord
   def notify!
     if notified_at.nil?
       User.all.find_each do |user|
-        UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver unless tbtc? # skip email notification for testnet
+        UserMailer.with(user: user, stale_candidate: self).stale_candidate_email.deliver
       end
       update notified_at: Time.zone.now
-      unless tbtc? # skip push notification for testnet
-        Subscription.blast("stale-candidate-#{id}",
-                           "#{coin.upcase} stale candidate",
-                           "At height #{height}")
-      end
+      Subscription.blast("stale-candidate-#{id}",
+                         "#{coin.upcase} stale candidate",
+                         "At height #{height}")
     end
   end
 

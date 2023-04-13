@@ -9,8 +9,8 @@ class Node < ApplicationRecord
 
   class NoTxIndexError < StandardError; end
 
-  # BCH support has been removed, but enums are stored as integer in the database.
-  enum coin: { btc: 0, tbtc: 3 }
+  # BCH, BSV and Testnet support have been removed, but enums are stored as integer in the database.
+  enum coin: { btc: 0 }
 
   nilify_blanks only: [:mirror_rpchost]
 
@@ -39,8 +39,6 @@ class Node < ApplicationRecord
   # Enum is stored as an integer, so do not remove entries from this list:
   enum client_type: { core: 0, bcoin: 1, knots: 2, btcd: 3, libbitcoin: 4, abc: 5, sv: 6, bu: 7,
                       omni: 8, blockcore: 9 }
-
-  scope :testnet_by_version, -> { where(enabled: true, coin: :tbtc).order(version: :desc) }
 
   def name_with_version
     BitcoinUtil::Version.name_with_version(name, version, version_extra, client_type.to_sym)
@@ -482,18 +480,6 @@ class Node < ApplicationRecord
         StaleCandidate.check!(:btc)
       end
 
-      if options[:coins].blank? || options[:coins].include?('TBTC')
-        testnet_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-
-        check_chaintips!(:tbtc)
-        StaleCandidate.check!(:tbtc)
-      end
-
       check_laggards!(options)
 
       bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
@@ -704,8 +690,6 @@ class Node < ApplicationRecord
       case coin
       when :btc
         Chaintip.check!(:btc, bitcoin_core_by_version + bitcoin_alternative_implementations)
-      when :tbtc
-        Chaintip.check!(:tbtc, testnet_by_version)
       else
         throw 'Unknown coin'
       end

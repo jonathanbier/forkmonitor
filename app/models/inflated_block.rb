@@ -214,11 +214,7 @@ class InflatedBlock < ApplicationRecord
 
       if max_exceeded
         message = "More than #{max} blocks behind for inflation check, please manually check #{comparison_block.height} (#{comparison_block.block_hash}) and earlier"
-        if node.tbtc? # Don't send error emails for testnet
-          Rails.logger.error message
-        else
-          raise TooFarBehindError, message
-        end
+        raise TooFarBehindError, message
       end
     end
   end

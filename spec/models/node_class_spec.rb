@@ -50,12 +50,10 @@ RSpec.describe Node, type: :model do
       it 'calls poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!' do
         create(:node_with_block, coin: :btc, version: 170_000)
         create(:node_with_block, coin: :btc, version: 160_000)
-        create(:node_with_block, coin: :tbtc)
 
         expect(described_class).to receive(:check_laggards!)
 
         expect(described_class).to receive(:check_chaintips!).with(:btc)
-        expect(described_class).to receive(:check_chaintips!).with(:tbtc)
 
         # rubocop:disable RSpec/IteratedExpectation
         expect(described_class).to(receive(:bitcoin_core_by_version).and_wrap_original do |relation|
@@ -69,11 +67,6 @@ RSpec.describe Node, type: :model do
           end
         end)
 
-        expect(described_class).to(receive(:testnet_by_version).once.and_wrap_original do |relation|
-          relation.call.each do |node|
-            expect(node).to receive(:poll!)
-          end
-        end)
         # rubocop:enable RSpec/IteratedExpectation
 
         described_class.poll!
@@ -154,9 +147,8 @@ RSpec.describe Node, type: :model do
 
       it 'runs Lightning checks, on BTC only' do
         expect(LightningTransaction).to receive(:check!).with({ coin: :btc, max: 1000 })
-        expect(LightningTransaction).not_to receive(:check!).with({ coin: :tbtc, max: 1000 })
 
-        described_class.heavy_checks_repeat!({ coins: %w[BTC TBTC] })
+        described_class.heavy_checks_repeat!({ coins: %w[BTC] })
       end
 
       it 'calls check_public_channels!' do

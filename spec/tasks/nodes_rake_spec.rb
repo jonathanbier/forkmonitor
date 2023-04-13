@@ -15,8 +15,8 @@ describe 'nodes:poll' do
   end
 
   it 'calls :poll! on Node with a list of coins' do
-    expect(Node).to receive(:poll!).with({ coins: %w[BTC TBTC] })
-    subject.invoke('BTC', 'TBTC')
+    expect(Node).to receive(:poll!).with({ coins: %w[BTC] })
+    subject.invoke('BTC')
   end
 end
 
@@ -29,8 +29,8 @@ describe 'nodes:poll_repeat' do
   end
 
   it 'calls :pollrepeat! on Node with a list of coins' do
-    expect(Node).to receive(:poll_repeat!).with({ coins: %w[BTC TBTC] })
-    subject.invoke('BTC', 'TBTC')
+    expect(Node).to receive(:poll_repeat!).with({ coins: %w[BTC] })
+    subject.invoke('BTC')
   end
 end
 
@@ -43,8 +43,8 @@ describe 'nodes:heavy_checks_repeat' do
   end
 
   it 'calls :heavy_checks_repeat! on Node with a list of coins' do
-    expect(Node).to receive(:heavy_checks_repeat!).with({ coins: %w[BTC TBTC] })
-    subject.invoke('BTC', 'TBTC')
+    expect(Node).to receive(:heavy_checks_repeat!).with({ coins: %w[BTC] })
+    subject.invoke('BTC')
   end
 end
 
@@ -57,8 +57,8 @@ describe 'nodes:rollback_checks_repeat' do
   end
 
   it 'calls :rollback_checks_repeat! on Node with a list of coins' do
-    expect(Node).to receive(:rollback_checks_repeat!).with({ coins: %w[BTC TBTC] })
-    subject.invoke('BTC', 'TBTC')
+    expect(Node).to receive(:rollback_checks_repeat!).with({ coins: %w[BTC] })
+    subject.invoke('BTC')
   end
 end
 
@@ -71,8 +71,8 @@ describe 'nodes:getblocktemplate_repeat' do
   end
 
   it 'calls :getblocktemplate_repeat! on Node with a list of coins' do
-    expect(Node).to receive(:getblocktemplate_repeat!).with({ coins: %w[BTC TBTC] })
-    subject.invoke('BTC', 'TBTC')
+    expect(Node).to receive(:getblocktemplate_repeat!).with({ coins: %w[BTC] })
+    subject.invoke('BTC')
   end
 end
 # rubocop:enable RSpec/NamedSubject

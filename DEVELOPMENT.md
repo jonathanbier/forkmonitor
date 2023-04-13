@@ -56,7 +56,7 @@ To poll nodes:
 
 ```
 rake nodes:poll
-rake nodes:poll[BTC,TBTC]
+rake nodes:poll[BTC]
 ```
 
 Prefix rake command with `debug` or `info` to see more progress details:
@@ -69,7 +69,7 @@ To poll all nodes continuously, or filter by coin:
 
 ```sh
 rake nodes:poll_repeat
-rake nodes:poll_repeat[BTC,TBTC]
+rake nodes:poll_repeat[BTC]
 ```
 
 To check inflation, you need to run a mirror node and add it in the admin panel.

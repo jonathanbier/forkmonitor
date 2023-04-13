@@ -306,8 +306,7 @@ class BitcoinClientMock
             'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
             'pruned' => false,
             'softforks' => [],
-            'bip9_softforks' => {
-            }
+            'bip9_softforks' => {}
           },
           100_300 => {
             'chain' => 'main',
@@ -331,8 +330,7 @@ class BitcoinClientMock
             'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
             'pruned' => false,
             'softforks' => [],
-            'bip9_softforks' => {
-            }
+            'bip9_softforks' => {}
           }
         }
       when :bcoin
@@ -353,28 +351,6 @@ class BitcoinClientMock
           }
         }
       end
-    when :tbtc # tesnet
-      if @client_type == :core
-        raise Error if @version < 100_000
-
-        res = {
-          230_000 => {
-            'chain' => 'test',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hash,
-            'mediantime' => 1_548_515_214,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'initialblockdownload' => @ibd,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
-            'pruned' => false,
-            'softforks' => [],
-            'bip9_softforks' => {},
-            'warnings' => ''
-          }
-        }
-      end
     end
     throw "No getblockchaininfo mock for #{@client_type}" if res.blank?
     res[@version]
@@ -384,7 +360,7 @@ class BitcoinClientMock
     raise Error unless @reachable
 
     case @coin
-    when :btc, :tbtc
+    when :btc
       case @client_type
       when :core
         raise Error if @version < 230_000

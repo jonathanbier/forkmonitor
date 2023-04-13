@@ -13,8 +13,7 @@ class Block < ApplicationRecord
            # For production, mid December 2017, around Lightning network launch
            # For development: something recent
            (Rails.env.development? ? 763_000 : 500_000)
-         end,
-    tbtc: 1_600_000
+         end
   }.freeze
 
   COIN = 100_000_000
@@ -32,7 +31,7 @@ class Block < ApplicationRecord
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
   has_many :chaintips, dependent: :destroy
-  enum coin: { btc: 0, tbtc: 3 }
+  enum coin: { btc: 0 }
 
   # Used to trigger and restore reorgs on the mirror node
   attr_accessor :invalidated_block_hashes
@@ -612,8 +611,6 @@ class Block < ApplicationRecord
         nodes_to_try = case coin.to_sym
                        when :btc
                          Node.bitcoin_core_by_version
-                       when :tbtc
-                         Node.testnet_by_version
                        end
         # Keep track of the original first seen node
         # To make mocks easier, require that it's part of nodes_to_try:

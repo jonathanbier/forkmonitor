@@ -18,9 +18,9 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it 'links to the right coin' do
-      lag.node_a.update coin: :tbtc
-      lag.node_b.update coin: :tbtc
-      expect(mail.body.encoded).to include('https://forkmonitor.info/nodes/tbtc')
+      lag.node_a.update coin: :btc
+      lag.node_b.update coin: :btc
+      expect(mail.body.encoded).to include('https://forkmonitor.info/nodes/btc')
     end
   end
 
