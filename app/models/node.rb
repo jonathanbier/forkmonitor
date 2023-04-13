@@ -281,6 +281,8 @@ class Node < ApplicationRecord
 
     return nil if block.nil? || node.block.nil?
 
+    return nil if block.work.nil? || node.block.work.nil?
+
     blocks_behind = nil
     # Use chaintips for Bitcoin Core nodes, and a simpler heuristic for other nodes
     if core?
@@ -303,7 +305,7 @@ class Node < ApplicationRecord
       if block == node.block
         behind = false
       # Compare work:
-      elsif block.work.present? && node.block.work.present? && block.work < node.block.work
+      elsif block.work < node.block.work
         behind = true
       end
 
