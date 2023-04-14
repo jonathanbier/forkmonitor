@@ -16,7 +16,7 @@ function flushPromises() {
 }
 
 axios.get.mockImplementation(url => {
-  if (url == "/api/v1/stale_candidates/btc.json") {
+  if (url == "/api/v1/stale_candidates.json") {
     return Promise.resolve({data: [{
       height: 10,
       blocks: [
@@ -34,7 +34,7 @@ axios.get.mockImplementation(url => {
 
 
 describe('component', () => {
-  const component = shallow(<StaleBlockAlerts coin='btc' currentHeight={10} />);
+  const component = shallow(<StaleBlockAlerts currentHeight={10} />);
 
   test('should show stale block alert', async () => {
     await flushPromises();

@@ -97,12 +97,12 @@ class Navigation extends React.Component {
             <TabContent>
               <Switch>
                 <Redirect exact path="/" to="/nodes/btc" />
-                <Route path='/blocks/:coin/:hash' component={withTracker(Block, { /* additional attributes */ })} />
-                <Route path='/nodes/:coin' component={withTracker(Nodes, { /* additional attributes */ }, {cableApp: CableApp} )} />
+                <Route path='/blocks/:hash' component={withTracker(Block, { /* additional attributes */ })} />
+                <Route path='/nodes/btc' component={withTracker(Nodes, { /* additional attributes */ }, {cableApp: CableApp} )} />
                 <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
                 <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />
-                <Route path='/stale/:coin/:height' component={withTracker(StaleCandidates, { /* additional attributes */ } )} />
+                <Route path='/stale/:height' component={withTracker(StaleCandidates, { /* additional attributes */ } )} />
               </Switch>
             </TabContent>
           </div>

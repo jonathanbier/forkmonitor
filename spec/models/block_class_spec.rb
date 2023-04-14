@@ -33,7 +33,7 @@ RSpec.describe Block do
 
     expect(Chaintip.count).to eq(0)
 
-    allow(Node).to receive(:with_mirror).with(:btc).and_return [@node_a]
+    allow(Node).to receive(:with_mirror).and_return [@node_a]
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]
   end
 
@@ -165,13 +165,13 @@ RSpec.describe Block do
       expect(chaintips_a.length).to eq(2)
       expect(chaintips_a[-1]['status']).to eq('headers-only')
 
-      Chaintip.check!(:btc, [@node_a])
+      Chaintip.check!([@node_a])
       @headers_only_block = described_class.find_by(block_hash: chaintips_a[-1]['hash'])
       expect(@headers_only_block.headers_only).to be(true)
     end
 
     it 'obtains block from other node if available' do
-      described_class.find_missing(:btc, 1, 1)
+      described_class.find_missing(1, 1)
       @headers_only_block.reload
       expect(@headers_only_block.headers_only).to be(false)
       expect(@headers_only_block.first_seen_by).to eq(@node_b)
@@ -181,7 +181,7 @@ RSpec.describe Block do
       expect do
         @node_a.client.getblock(@headers_only_block.block_hash, 1)
       end.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
-      described_class.find_missing(:btc, 1, 1)
+      described_class.find_missing(1, 1)
       res = @node_a.client.getblock(@headers_only_block.block_hash, 1)
       expect(res['confirmations']).to eq(-1)
     end

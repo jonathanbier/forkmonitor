@@ -85,14 +85,14 @@ RSpec.describe StaleCandidate do
 
   describe 'find_or_generate' do
     it 'creates StaleCandidate' do
-      s = described_class.find_or_generate(:btc, 105)
+      s = described_class.find_or_generate(105)
       expect(s).not_to be_nil
       s.prime_cache
       expect(s.n_children).to eq(2)
     end
 
     it 'adds transactions' do
-      described_class.find_or_generate(:btc, 105)
+      described_class.find_or_generate(105)
       # Node A block 105 should contain tx_1, tx_2, tx_3 (bumped) and  tx_4 (bumped)
       block = Block.find_by!(height: 105, first_seen_by: @node_a)
       expect(block.transactions.where(is_coinbase: false).count).to eq(4)
@@ -105,7 +105,7 @@ RSpec.describe StaleCandidate do
 
   describe 'get_spent_coins_with_tx' do
     before do
-      @s = described_class.find_or_generate(:btc, 105)
+      @s = described_class.find_or_generate(105)
       @s.fetch_transactions_for_descendants!
       @s.set_children!
     end
@@ -129,7 +129,7 @@ RSpec.describe StaleCandidate do
 
   describe 'set_conflicting_tx_info!' do
     before do
-      @s = described_class.find_or_generate(:btc, 105)
+      @s = described_class.find_or_generate(105)
       expect(@s).not_to be_nil
       @s.fetch_transactions_for_descendants!
       @s.set_children!
@@ -207,30 +207,30 @@ RSpec.describe StaleCandidate do
 
     it 'triggers potential stale block alert' do
       # One alert for the lowest height:
-      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
+      expect { described_class.check! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
       # Just once...
-      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
+      expect { described_class.check! }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'is quiet at an invalid block alert' do
       InvalidBlock.create(block: @node_a.block, node: @node_a)
-      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
+      expect { described_class.check! }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'is quiet after an invalid block alert' do
       InvalidBlock.create(block: @node_a.block.parent, node: @node_a)
-      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
+      expect { described_class.check! }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'notifies again if alert was dismissed' do
       InvalidBlock.create(block: @node_a.block.parent, node: @node_a, dismissed_at: Time.zone.now)
-      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
+      expect { described_class.check! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
 
     it 'works for headers_only block' do
       @node_b.block.update headers_only: true, pool: nil, tx_count: nil, timestamp: nil, work: nil, parent_id: nil,
                            mediantime: nil, first_seen_by_id: nil
-      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
+      expect { described_class.check! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
 
     it 'does not also create one if the race continues 1 more block' do
@@ -245,16 +245,16 @@ RSpec.describe StaleCandidate do
       expect(@node_a.block.block_hash).not_to eq(@node_b.block.block_hash)
       test.connect_nodes(0, 1)
 
-      expect { described_class.check!(:btc) }.to(change { ActionMailer::Base.deliveries.count }.by(1))
+      expect { described_class.check! }.to(change { ActionMailer::Base.deliveries.count }.by(1))
     end
   end
 
   describe 'self.process!' do
     before do
-      described_class.check!(:btc) # Create stale candidate entry at height 105
+      described_class.check! # Create stale candidate entry at height 105
       expect(described_class.count).to eq(1)
       expect(described_class.first.height).to eq(105)
-      described_class.process!(:btc) # Fetch transactions from descendant blocks
+      described_class.process! # Fetch transactions from descendant blocks
     end
 
     it 'adds transactions for descendant blocks' do
@@ -272,7 +272,7 @@ RSpec.describe StaleCandidate do
       @node_a.poll!
       @node_b.poll!
 
-      described_class.process!(:btc) # Fetch transactions from descendant blocks
+      described_class.process! # Fetch transactions from descendant blocks
       # Node B block 108 should contain tx_2
       block = Block.find_by!(height: 108)
       expect(block.transactions.where(is_coinbase: false).count).to eq(1)
@@ -293,7 +293,7 @@ RSpec.describe StaleCandidate do
       @node_a.poll!
       @node_b.poll!
 
-      described_class.process!(:btc) # Fetch transactions from descendant blocks
+      described_class.process! # Fetch transactions from descendant blocks
       # Node B block 118 should contain tx_2
       block = Block.find_by!(height: 118)
       expect(block.transactions.where(is_coinbase: false).count).to eq(0)

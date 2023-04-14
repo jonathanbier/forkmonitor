@@ -5,7 +5,7 @@ require 'rails_helper'
 describe BitcoinClient do
   describe 'instance' do
     before do
-      @client = described_class.new(1, 'Bitcoin Core v0.19.0', :btc, :core, 190_000, '127.0.0.1', '8332', 'user',
+      @client = described_class.new(1, 'Bitcoin Core v0.19.0', :core, 190_000, '127.0.0.1', '8332', 'user',
                                     'password')
     end
 

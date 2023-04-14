@@ -73,7 +73,7 @@ RSpec.describe Chaintip do
 
   describe 'process_valid_headers!' do
     it 'does nothing if we already know the block' do
-      block = Block.create(coin: :btc, block_hash: '1234', height: 5)
+      block = Block.create(block_hash: '1234', height: 5)
       expect(Block).not_to receive(:create_headers_only)
       described_class.process_valid_headers!(@node_a, { 'hash' => '1234', 'height' => 5 }, block)
     end
@@ -195,7 +195,7 @@ RSpec.describe Chaintip do
     describe 'one node in IBD' do
       it 'does nothing' do
         @node_a.update ibd: true
-        described_class.check!(:btc, [@node_a])
+        described_class.check!([@node_a])
         expect(@node_a.chaintips.count).to eq(0)
       end
     end
@@ -203,7 +203,7 @@ RSpec.describe Chaintip do
     describe 'only an active chaintip' do
       it 'adds a chaintip entry' do
         expect(@node_a.chaintips.count).to eq(0)
-        described_class.check!(:btc, [@node_a])
+        described_class.check!([@node_a])
         expect(@node_a.chaintips.count).to eq(1)
         expect(@node_a.chaintips.first.block.height).to eq(2)
       end
@@ -223,13 +223,13 @@ RSpec.describe Chaintip do
       end
 
       it 'adds chaintip entries' do
-        described_class.check!(:btc, [@node_a])
+        described_class.check!([@node_a])
         expect(@node_a.chaintips.count).to eq(2)
         expect(@node_a.chaintips.last.status).to eq('valid-fork')
       end
 
       it 'adds the valid fork blocks up to the common ancenstor' do
-        described_class.check!(:btc, [@node_a])
+        described_class.check!([@node_a])
         @node_a.reload
         split_block = Block.find_by(height: 2)
         fork_tip = @node_a.block
@@ -251,7 +251,7 @@ RSpec.describe Chaintip do
         @node_b.poll!
         test.connect_nodes(0, 1)
 
-        described_class.check!(:btc, [@node_a])
+        described_class.check!([@node_a])
         expect(@node_a.chaintips.count).to eq(2)
       end
     end
@@ -266,7 +266,7 @@ RSpec.describe Chaintip do
         expect(@node_a.client.getpeerinfo.count).to eq(0)
         @node_a.client.generate(1)
         @node_a.poll!
-        described_class.check!(:btc, [@node_a, @node_b])
+        described_class.check!([@node_a, @node_b])
       end
 
       it 'matches parent block' do
@@ -329,20 +329,20 @@ RSpec.describe Chaintip do
         end
 
         it 'stores the block' do
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
         end
 
         it 'marks the block as invalid' do
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@node_a.id)
         end
 
         it 'stores invalid tip' do
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           expect(@node_a.chaintips.where(status: 'invalid').count).to eq(1)
         end
       end
@@ -354,21 +354,21 @@ RSpec.describe Chaintip do
         end
 
         it 'marks the block as invalid' do
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           block = Block.find_by(block_hash: @disputed_block_hash)
           expect(block).not_to be_nil
           expect(block.marked_invalid_by).to include(@node_a.id)
         end
 
         it 'stores invalid tip' do
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           expect(@node_a.chaintips.where(status: 'invalid').count).to eq(1)
         end
 
         it 'is nil if the node is unreachable' do
           @node_a.client.mock_connection_error(true)
           @node_a.poll!
-          described_class.check!(:btc, [@node_a])
+          described_class.check!([@node_a])
           expect(@node_a.chaintips.count).to eq(0)
         end
       end

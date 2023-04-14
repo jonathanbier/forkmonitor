@@ -16,8 +16,7 @@ RSpec.describe PenaltyTransaction do
 
     # throw the first time for lacking a previously checked block
     expect do
-      LightningTransaction.check!({ coin: :btc,
-                                    max: 1 })
+      LightningTransaction.check!({ max: 1 })
     end.to raise_error('Unable to perform lightning checks due to missing intermediate block')
     @node.client.mock_set_height(560_177)
     @node.poll!

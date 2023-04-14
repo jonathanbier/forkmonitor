@@ -9,9 +9,6 @@ class Node < ApplicationRecord
 
   class NoTxIndexError < StandardError; end
 
-  # BCH, BSV and Testnet support have been removed, but enums are stored as integer in the database.
-  enum coin: { btc: 0 }
-
   nilify_blanks only: [:mirror_rpchost]
 
   before_save :clear_chaintips, if: :will_save_change_to_enabled?
@@ -31,10 +28,10 @@ class Node < ApplicationRecord
   has_many :softforks, dependent: :destroy
 
   scope :bitcoin_core_by_version, lambda {
-                                    where(enabled: true, coin: :btc, client_type: :core).where.not(version: nil).order(version: :desc)
+                                    where(enabled: true, client_type: :core).where.not(version: nil).order(version: :desc)
                                   }
-  scope :bitcoin_core_unknown_version, -> { where(enabled: true, coin: :btc, client_type: :core).where(version: nil) }
-  scope :bitcoin_alternative_implementations, -> { where(enabled: true, coin: :btc).where.not(client_type: :core) }
+  scope :bitcoin_core_unknown_version, -> { where(enabled: true, client_type: :core).where(version: nil) }
+  scope :bitcoin_alternative_implementations, -> { where(enabled: true).where.not(client_type: :core) }
 
   # Enum is stored as an integer, so do not remove entries from this list:
   enum client_type: { core: 0, bcoin: 1, knots: 2, btcd: 3, libbitcoin: 4, abc: 5, sv: 6, bu: 7,
@@ -70,7 +67,7 @@ class Node < ApplicationRecord
       to_destroy
       getblocktemplate
     ]
-    fields << :id << :coin << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled if options && options[:admin]
+    fields << :id << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled if options && options[:admin]
     super({ only: fields }.merge(options || {})).merge({
                                                          height: active_chaintip&.block&.height,
                                                          name_with_version: name_with_version,
@@ -84,10 +81,10 @@ class Node < ApplicationRecord
 
   def client
     @client ||= if python
-                  BitcoinClientPython.new(id, name_with_version, coin.to_sym, client_type.to_sym,
+                  BitcoinClientPython.new(id, name_with_version, client_type.to_sym,
                                           version)
                 else
-                  client_klass.new(id, name_with_version, coin.to_sym,
+                  client_klass.new(id, name_with_version,
                                    client_type.to_sym, version, rpchost, rpcport, rpcuser, rpcpassword)
                 end
     @client
@@ -97,10 +94,10 @@ class Node < ApplicationRecord
     return nil unless mirror_rpchost
 
     @mirror_client ||= if python
-                         BitcoinClientPython.new(id, name_with_version, coin.to_sym,
+                         BitcoinClientPython.new(id, name_with_version,
                                                  client_type.to_sym, version)
                        else
-                         client_klass.new(id, name_with_version, coin.to_sym,
+                         client_klass.new(id, name_with_version,
                                           client_type.to_sym, version, mirror_rpchost, mirror_rpcport, rpcuser, rpcpassword)
                        end
     @mirror_client
@@ -175,14 +172,14 @@ class Node < ApplicationRecord
       ibd = block_height < 631_885
     elsif blockchaininfo.present?
       block_height = blockchaininfo['blocks']
-      if blockchaininfo.key?('initialblockdownload')
-        ibd = blockchaininfo['initialblockdownload']
-      elsif blockchaininfo.key?('verificationprogress')
-        ibd = blockchaininfo['verificationprogress'] < 0.9999
-      elsif btc?
-        # Don't set too tight because it will silence node behind warnings
-        ibd = info['blocks'] < Block.where(coin: :btc).maximum(:height) - 1000
-      end
+      ibd = if blockchaininfo.key?('initialblockdownload')
+              blockchaininfo['initialblockdownload']
+            elsif blockchaininfo.key?('verificationprogress')
+              blockchaininfo['verificationprogress'] < 0.9999
+            else
+              # Don't set too tight because it will silence node behind warnings
+              info['blocks'] < Block.maximum(:height) - 1000
+            end
     end
     update ibd: ibd, sync_height: ibd ? block_height : nil
 
@@ -197,7 +194,7 @@ class Node < ApplicationRecord
       end
     # Get soft fork info for older nodes
     elsif blockchaininfo.present?
-      Softfork.process(self, blockchaininfo) if (btc? || tbtc?) && (core? || knots?)
+      Softfork.process(self, blockchaininfo) if core? || knots?
     end
 
     mempool_bytes = nil
@@ -419,17 +416,17 @@ class Node < ApplicationRecord
   end
 
   def clear_references
-    Block.where(coin: coin).where('? = ANY(marked_valid_by)', id).find_each do |b|
+    Block.where('? = ANY(marked_valid_by)', id).find_each do |b|
       b.update marked_valid_by: b.marked_valid_by - [id]
     end
 
-    Block.where(coin: coin).where('? = ANY(marked_invalid_by)', id).find_each do |b|
+    Block.where('? = ANY(marked_invalid_by)', id).find_each do |b|
       b.update marked_invalid_by: b.marked_invalid_by - [id]
     end
   end
 
   def expire_cache
-    Rails.cache.delete("Node.last_updated(#{coin.to_s.upcase})")
+    Rails.cache.delete('Node.last_updated')
   end
 
   def clear_chaintips
@@ -439,50 +436,44 @@ class Node < ApplicationRecord
   end
 
   class << self
-    def coin_by_version(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      where(enabled: true, coin: coin).order(version: :desc)
+    def by_version
+      where(enabled: true).order(version: :desc)
     end
 
-    def with_mirror(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      where(enabled: true, coin: coin, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
+    def with_mirror
+      where(enabled: true, client_type: :core).where.not(mirror_rpchost: nil).order(version: :desc)
     end
 
     def poll!(options = {})
-      if options[:coins].blank? || options[:coins].include?('BTC')
-        bitcoin_core_by_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+      bitcoin_core_by_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
 
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-
-        bitcoin_core_unknown_version.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (unknown verison)..."
-          node.poll!
-        end
-
-        bitcoin_alternative_implementations.each do |node|
-          next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
-          # Skip libbitcoin in repeat poll, due to ZMQ socket errors
-          next if options[:repeat] && node.client_type.to_sym == :libbitcoin
-
-          Rails.logger.info "Polling #{node.coin} node #{node.id} (#{node.name_with_version})..."
-          node.poll!
-        end
-
-        check_chaintips!(:btc)
-        StaleCandidate.check!(:btc)
+        Rails.logger.info "Polling node #{node.id} (#{node.name_with_version})..."
+        node.poll!
       end
+
+      bitcoin_core_unknown_version.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+
+        Rails.logger.info "Polling node #{node.id} (unknown verison)..."
+        node.poll!
+      end
+
+      bitcoin_alternative_implementations.each do |node|
+        next if options[:unless_fresh] && node.polled_at.present? && node.polled_at > 5.minutes.ago
+        # Skip libbitcoin in repeat poll, due to ZMQ socket errors
+        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+
+        Rails.logger.info "Polling node #{node.id} (#{node.name_with_version})..."
+        node.poll!
+      end
+
+      check_chaintips!
+      StaleCandidate.check!
 
       check_laggards!(options)
 
-      bitcoin_core_by_version.first.check_versionbits! if options[:coins].blank? || options[:coins].include?('BTC')
+      bitcoin_core_by_version.first.check_versionbits!
     end
 
     def poll_repeat!(options = {})
@@ -499,7 +490,7 @@ class Node < ApplicationRecord
       end
 
       loop do
-        Rails.logger.info "Polling #{options[:coins].join(', ')} nodes..."
+        Rails.logger.info 'Polling nodes...'
         sleep 5
 
         poll!(options.merge({ repeat: true }))
@@ -512,14 +503,8 @@ class Node < ApplicationRecord
       end
     end
 
-    def newest_node(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      case coin
-      when :btc, :tbtc
-        return Node.newest(coin, :core)
-      end
-      throw "Unable to find suitable #{coin} node in newest_node"
+    def newest_node
+      Node.newest(:core)
     end
 
     # Find pool name for a block. For modern nodes it uses getrawtransaction
@@ -527,22 +512,16 @@ class Node < ApplicationRecord
     # For older nodes it could process the raw block instead of using getrawtransaction,
     # but that has not been implemented.
     def get_coinbase_for_block!(block, block_info = nil)
-      coin = block.coin.to_sym
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
       node = nil
       begin
-        case coin
-        when :btc, :tbtc
-          # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
-          node = Node.first_newer_than(coin, 160_000, :core)
-        end
+        # getrawtransaction supports blockhash as of version 0.16, perhaps earlier too
+        node = Node.first_newer_than(160_000, :core)
       rescue Node::NoMatchingNodeError
-        Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
+        Rails.logger.warn 'Unable to find suitable node in get_coinbase_for_block'
         return nil
       end
       if node.nil?
-        Rails.logger.warn "Unable to find suitable #{coin} node in get_coinbase_for_block"
+        Rails.logger.warn 'Unable to find suitable node in get_coinbase_for_block'
         return nil
       end
       begin
@@ -550,7 +529,7 @@ class Node < ApplicationRecord
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
       rescue BitcoinUtil::RPC::Error
-        logger.error "Unable to fetch block #{block.block_hash} from #{coin} #{node.name_with_version} while looking for pool name"
+        logger.error "Unable to fetch block #{block.block_hash} from #{node.name_with_version} while looking for pool name"
         return nil
       end
       return nil if block_info['height'].nil? # Can't fetch the genesis coinbase
@@ -568,9 +547,7 @@ class Node < ApplicationRecord
       end
     end
 
-    def set_pool_for_block!(coin, block, block_info = nil)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
+    def set_pool_for_block!(block, block_info = nil)
       coinbase = get_coinbase_for_block!(block, block_info)
       return if coinbase.nil? || coinbase == {}
 
@@ -587,7 +564,7 @@ class Node < ApplicationRecord
       block.save if block.changed?
     end
 
-    def rollback_checks_repeat!(options)
+    def rollback_checks_repeat!
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
@@ -601,15 +578,13 @@ class Node < ApplicationRecord
       end
 
       loop do
-        options[:coins].each do |coin|
-          # TODO: find_missing shouldn't need to use a mirror node, but the current
-          #       pattern of disconecting is not ideal for the main node.
-          Block.find_missing(coin.downcase.to_sym, 40_000, 20) # waits 20 seconds for blocks
-          InflatedBlock.check_inflation!({ coin: coin.downcase.to_sym, max: 10 })
-          Node.where(coin: coin.downcase.to_sym, client_type: :core).where.not(mirror_rpchost: nil).find_each do |node|
-            # validate_forks! relies on the mirror node having been polled by check_inflation!
-            Chaintip.validate_forks!(node, 50)
-          end
+        # TODO: find_missing shouldn't need to use a mirror node, but the current
+        #       pattern of disconecting is not ideal for the main node.
+        Block.find_missing(40_000, 20) # waits 20 seconds for blocks
+        InflatedBlock.check_inflation!({ max: 10 })
+        Node.where(client_type: :core).where.not(mirror_rpchost: nil).find_each do |node|
+          # validate_forks! relies on the mirror node having been polled by check_inflation!
+          Chaintip.validate_forks!(node, 50)
         end
 
         if Rails.env.test?
@@ -620,7 +595,7 @@ class Node < ApplicationRecord
       end
     end
 
-    def heavy_checks_repeat!(options)
+    def heavy_checks_repeat!
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
@@ -634,16 +609,14 @@ class Node < ApplicationRecord
       end
 
       loop do
-        options[:coins].each do |coin|
-          LightningTransaction.check!({ coin: coin.downcase.to_sym, max: 1000 }) if coin == 'BTC'
-          LightningTransaction.check_public_channels! if coin == 'BTC'
-          Block.match_missing_pools!(coin.downcase.to_sym, 3)
-          Block.process_templates!(coin.downcase.to_sym)
-          StaleCandidate.process!(coin.downcase.to_sym)
-          StaleCandidate.prime_cache(coin.downcase.to_sym)
-          Softfork.notify!
-          Node.destroy_if_requested(coin.downcase.to_sym)
-        end
+        LightningTransaction.check!({ max: 1000 })
+        LightningTransaction.check_public_channels!
+        Block.match_missing_pools!(3)
+        Block.process_templates!
+        StaleCandidate.process!
+        StaleCandidate.prime_cache
+        Softfork.notify!
+        Node.destroy_if_requested
 
         if Rails.env.test?
           break
@@ -653,7 +626,7 @@ class Node < ApplicationRecord
       end
     end
 
-    def getblocktemplate_repeat!(options)
+    def getblocktemplate_repeat!
       # Trap ^C
       Signal.trap('INT') do
         Rails.logger.info "\nShutting down gracefully..."
@@ -671,9 +644,7 @@ class Node < ApplicationRecord
       loop do
         if @last_checked.nil? || @last_checked < 20.seconds.ago
           @last_checked = Time.zone.now
-          options[:coins].each do |coin|
-            Node.getblocktemplate!(coin.downcase.to_sym)
-          end
+          Node.getblocktemplate!
         end
 
         if Rails.env.test?
@@ -684,21 +655,14 @@ class Node < ApplicationRecord
       end
     end
 
-    def check_chaintips!(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      case coin
-      when :btc
-        Chaintip.check!(:btc, bitcoin_core_by_version + bitcoin_alternative_implementations)
-      else
-        throw 'Unknown coin'
-      end
-      InvalidBlock.check!(coin)
+    def check_chaintips!
+      Chaintip.check!(bitcoin_core_by_version + bitcoin_alternative_implementations)
+      InvalidBlock.check!
     end
 
-    def getblocktemplate!(coin)
-      nodes = Node.where(coin: coin, enabled: true, getblocktemplate: true, unreachable_since: nil)
-      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{coin} nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
+    def getblocktemplate!
+      nodes = Node.where(enabled: true, getblocktemplate: true, unreachable_since: nil)
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
       threads = []
       nodes.each do |node|
         threads << Thread.new do
@@ -712,37 +676,31 @@ class Node < ApplicationRecord
     end
 
     # Deleting a node takes very long, causing a timeout when done from the admin panel
-    def destroy_if_requested(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Node.where(coin: coin, to_destroy: true).limit(1).each do |node|
-        Rails.logger.info "Deleting #{node.coin.upcase} node #{node.id}: #{node.name_with_version}"
+    def destroy_if_requested
+      Node.where(to_destroy: true).limit(1).each do |node|
+        Rails.logger.info "Deleting node #{node.id}: #{node.name_with_version}"
         node.destroy
       end
     end
 
     # Sometimes an empty chaintip is left over
-    def prune_empty_chaintips!(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Chaintip.includes(:node).where(coin: coin).where(nodes: { id: nil }).destroy_all
+    def prune_empty_chaintips!
+      Chaintip.includes(:node).where(nodes: { id: nil }).destroy_all
     end
 
     def check_laggards!(options = {})
       Lag.where('created_at < ?', 1.day.ago).destroy_all
-      if options[:coins].blank? || options[:coins].include?('BTC')
-        core_nodes = bitcoin_core_by_version
-        core_nodes.drop(1).each do |node|
-          lag = node.check_if_behind!(core_nodes.first)
-          Rails.logger.info "Check if #{node.name_with_version} is behind #{core_nodes.first.name_with_version}... #{lag.present?}"
-        end
+      core_nodes = bitcoin_core_by_version
+      core_nodes.drop(1).each do |node|
+        lag = node.check_if_behind!(core_nodes.first)
+        Rails.logger.info "Check if #{node.name_with_version} is behind #{core_nodes.first.name_with_version}... #{lag.present?}"
+      end
 
-        bitcoin_alternative_implementations.each do |node|
-          next if options[:repeat] && node.client_type.to_sym == :libbitcoin
+      bitcoin_alternative_implementations.each do |node|
+        next if options[:repeat] && node.client_type.to_sym == :libbitcoin
 
-          lag  = node.check_if_behind!(core_nodes.first)
-          Rails.logger.info "Check if #{node.name_with_version} is behind #{core_nodes.first.name_with_version}... #{lag.present?}"
-        end
+        lag  = node.check_if_behind!(core_nodes.first)
+        Rails.logger.info "Check if #{node.name_with_version} is behind #{core_nodes.first.name_with_version}... #{lag.present?}"
       end
     end
 
@@ -753,32 +711,24 @@ class Node < ApplicationRecord
       node.block.find_ancestors!(node, false, true, until_height)
     end
 
-    def first_with_txindex(coin, client_type = :core)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Node.find_by(coin: coin, txindex: true, client_type: client_type, ibd: false,
+    def first_with_txindex(client_type = :core)
+      Node.find_by(txindex: true, client_type: client_type, ibd: false,
                    enabled: true) or raise BitcoinUtil::RPC::NoTxIndexError
     end
 
-    def newest(coin, client_type)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Node.where(coin: coin, client_type: client_type, unreachable_since: nil, ibd: false,
+    def newest(client_type)
+      Node.where(client_type: client_type, unreachable_since: nil, ibd: false,
                  enabled: true).order(version: :desc).first or raise NoMatchingNodeError
     end
 
-    def first_newer_than(coin, version, client_type)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Node.where(coin: coin, client_type: client_type, unreachable_since: nil,
+    def first_newer_than(version, client_type)
+      Node.where(client_type: client_type, unreachable_since: nil,
                  ibd: false, enabled: true).find_by('version >= ?', version) or raise NoMatchingNodeError
     end
 
-    def last_updated_cached(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin.downcase.to_sym)
-
-      Rails.cache.fetch("Node.last_updated(#{coin})") do
-        where(coin: coin.downcase.to_sym).order(updated_at: :desc).first
+    def last_updated_cached
+      Rails.cache.fetch('Node.last_updated') do
+        order(updated_at: :desc).first
       end
     end
   end

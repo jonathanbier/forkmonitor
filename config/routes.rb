@@ -17,19 +17,20 @@ Rails.application.routes.draw do
 
   namespace :api, { format: %w[json csv] } do
     namespace :v1 do # rubocop:disable Naming/VariableNumber
-      get '/blocks/:coin/max_height', to: 'blocks#max_height', as: 'api_max_height_for_coin'
+      get '/blocks/max_height', to: 'blocks#max_height', as: 'api_max_height'
       get '/blocks/hash/:block_hash', to: 'blocks#with_hash', as: 'api_block_with_hash'
-      get '/nodes/coin/:coin', to: 'nodes#index_coin', as: 'api_nodes_for_coin'
-      get '/chaintips/:coin', to: 'chaintips#index_coin', as: 'chaintips_for_coin'
+      get '/nodes/coin/btc', to: 'nodes#index_coin', as: 'api_nodes_for_coin'
+      get '/chaintips', to: 'chaintips#index', as: 'chaintips'
       resources :nodes, only: %i[index show update destroy create]
+      get '/inflated_blocks/admin', to: 'inflated_blocks#admin_index'
       resources :inflated_blocks, only: %i[index show destroy]
+      get '/invalid_blocks/admin', to: 'invalid_blocks#admin_index'
       resources :invalid_blocks, only: %i[index show destroy]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
+      resources :stale_candidates, only: [:index, :show]
       namespace :stale_candidates do
-        get ':coin', action: :index
-        get ':coin/:height', action: :show
-        get ':coin/:height/double_spend_info', action: :double_spend_info
+        get ':height/double_spend_info', action: :double_spend_info
       end
       resources :ln_penalties, only: %i[index show]
       resources :ln_sweeps, only: %i[index show]
@@ -38,33 +39,34 @@ Rails.application.routes.draw do
       resources :blocks, only: %i[index show]
       resources :subscriptions, only: [:create]
       resources :block_templates, only: [:index]
-      namespace :softforks do
-        get ':coin', action: :index
-      end
+      resources :softforks, only: [:index]
     end
   end
 
   scope format: true, constraints: { format: /rss/ } do
+    # RSS feed URLs contain "btc" for backward compatibility.
+    # This could be dropped, as long as there's a redirect.
     namespace :feeds do
-      get ':coin/blocks/invalid', action: :blocks_invalid
-      get 'inflated_blocks/:coin', action: :inflated_blocks
-      get 'invalid_blocks/:coin', action: :invalid_blocks
-      get '/blocks/unknown_pools/:coin', action: :unknown_pools
+      get 'btc/blocks/invalid', action: :blocks_invalid
+      get 'inflated_blocks/btc', action: :inflated_blocks
+      get 'invalid_blocks/btc', action: :invalid_blocks
+      get '/blocks/unknown_pools/btc', action: :unknown_pools
       get 'lagging_nodes'
       get 'nodes/unreachable', action: :unreachable_nodes
       get 'version_bits'
-      get 'stale_candidates/:coin', action: :stale_candidates, as: 'stale_candidate'
-      get 'orphan_candidates/:coin', action: :stale_candidates # deprecated alias
-      get 'ln_penalties/:coin', action: :ln_penalties
-      get 'ln_sweeps/:coin', action: :ln_sweeps, as: 'ln_sweeps'
-      get 'ln_uncoops/:coin', action: :ln_uncoops, as: 'ln_uncoops'
+      get 'stale_candidates/btc', action: :stale_candidates, as: 'stale_candidate'
+      get 'orphan_candidates/btc', action: :stale_candidates # deprecated alias
+      get 'ln_penalties/btc', action: :ln_penalties
+      get 'ln_sweeps/btc', action: :ln_sweeps, as: 'ln_sweeps'
+      get 'ln_uncoops/btc', action: :ln_uncoops, as: 'ln_uncoops'
     end
   end
 
-  get 'blocks/:coin/:block_hash', to: 'pages#root'
+  get 'blocks/:block_hash', to: 'pages#root'
   get 'lightning', to: 'pages#root'
-  get 'nodes/:coin', to: 'pages#root', as: 'nodes_for_coin'
-  get 'stale/:coin/:height', to: 'pages#root', as: 'stale_candidate'
+  # Landing page has /btc for both backward compatibility and disambiguating the admin page
+  get 'nodes/btc', to: 'pages#root', as: 'nodes'
+  get 'stale/:height', to: 'pages#root', as: 'stale_candidate'
   get 'admin', to: 'pages#root'
   get 'notifications', to: 'pages#root'
 

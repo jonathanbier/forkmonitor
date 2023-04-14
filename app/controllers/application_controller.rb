@@ -9,16 +9,4 @@ class ApplicationController < ActionController::Base
   def no_cookies
     request.session_options[:skip] = true
   end
-
-  def set_coin
-    @coin = params[:coin].downcase.to_sym
-    unless params.key?(:coin) && Rails.configuration.supported_coins.include?(@coin)
-      render json: 'invalid param', status: :unprocessable_entity
-      nil
-    end
-  end
-
-  def set_coin_optional
-    set_coin if params.key?(:coin)
-  end
 end

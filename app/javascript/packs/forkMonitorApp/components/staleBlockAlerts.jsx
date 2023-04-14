@@ -17,24 +17,12 @@ class StaleBlockAlerts extends React.Component {
   }
 
   componentDidMount() {
-    this.getStaleBlocks(this.props.coin);
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    const currentCoin = state.coin;
-    const nextCoin = props.coin;
-
-    if (currentCoin !== nextCoin) {
-      state.coin = props.coin;
-      state.fresh = true;
-    }
-
-    return state;
+    this.getStaleBlocks();
   }
 
   componentDidUpdate() {
     if (this.state.fresh) {
-      this.getStaleBlocks(this.state.coin);
+      this.getStaleBlocks();
       this.setState({
           fresh: false
       });
@@ -42,8 +30,8 @@ class StaleBlockAlerts extends React.Component {
 
   }
 
-   getStaleBlocks(coin) {
-     axios.get(`/api/v1/stale_candidates/${ coin }.json`).then(function (response) {
+   getStaleBlocks() {
+     axios.get(`/api/v1/stale_candidates.json`).then(function (response) {
        return response.data;
      }).then(function (stale_candidates) {
        this.setState({
@@ -60,7 +48,7 @@ class StaleBlockAlerts extends React.Component {
         {(this.state && this.state.stale_candidates || []).filter(
           c => this.props.currentHeight - c.height < 1000
         ).map(function (candidate) {
-          return (<AlertStale candidate={ candidate }  coin={ this.state.coin } currentHeight={ this.props.currentHeight } key={ candidate.height }/>)
+          return (<AlertStale candidate={ candidate } currentHeight={ this.props.currentHeight } key={ candidate.height }/>)
         }.bind(this))}
       </div>
     );

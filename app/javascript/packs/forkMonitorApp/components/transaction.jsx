@@ -27,7 +27,6 @@ class Transaction extends React.Component {
 }
 
 Transaction.propTypes = {
-  coin: PropTypes.string.isRequired,
   tx_id: PropTypes.string.isRequired,
   fee_rate: PropTypes.number
 }

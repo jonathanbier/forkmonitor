@@ -22,7 +22,6 @@ class Nodes extends React.Component {
     super(props);
 
     this.state = {
-      coin: props.match.params.coin,
       chaintips: [],
       nodesWithoutTip: [],
       currentHeight: null,
@@ -31,37 +30,22 @@ class Nodes extends React.Component {
   }
 
   componentDidMount() {
-    this.getChaintips(this.state.coin);
-    this.getNodes(this.state.coin);
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    const currentCoin = state.coin;
-    const nextCoin = props.match.params.coin;
-
-    if (currentCoin !== nextCoin) {
-      state.coin = props.match.params.coin;
-      state.nodesWithoutTip = [];
-      state.chaintips = [];
-      state.currentHeight = null;
-      state.fresh = true;
-    }
-
-    return state;
+    this.getChaintips();
+    this.getNodes();
   }
 
   componentDidUpdate() {
     if (this.state.fresh) {
-      this.getChaintips(this.state.coin);
-      this.getNodes(this.state.coin);
+      this.getChaintips();
+      this.getNodes();
       this.setState({
           fresh: false
       })
     }
   }
 
-  getChaintips(coin) {
-    axios.get('/api/v1/chaintips/' + coin).then(function (response) {
+  getChaintips() {
+    axios.get('/api/v1/chaintips').then(function (response) {
       return response.data;
     }).then(function (chaintips) {
       this.setState({
@@ -73,14 +57,13 @@ class Nodes extends React.Component {
       });
    }
 
-  getNodes(coin) {
-    axios.get('/api/v1/nodes/coin/' + coin).then(function (response) {
+  getNodes() {
+    axios.get('/api/v1/nodes/coin/btc').then(function (response) {
       return response.data;
     }).then(function (nodes) {
       var unique = (arrArg) => arrArg.filter((elem, pos, arr) => arr.findIndex(x => x && elem && x.hash === elem.hash) == pos)
 
       this.setState({
-        coin: coin,
         nodesWithoutTip: nodes.filter(node => node.ibd || node.height == null || node.unreachable_since ),
       });
 
@@ -92,12 +75,11 @@ class Nodes extends React.Component {
   render() {
       return(
         <TabPane align="left" >
-          <Alerts coin={ this.state.coin } currentHeight={ this.state.currentHeight } />
+          <Alerts currentHeight={ this.state.currentHeight } />
           <Container>
               {(this.state && this.state.chaintips || []).map(function (chaintip, index) {
                 return (<Chaintip
                   key={ chaintip.id }
-                  coin={ this.props.match.params.coin }
                   chaintip={ chaintip }
                   nodes={ chaintip.nodes }
                   index={ index }
@@ -107,7 +89,6 @@ class Nodes extends React.Component {
               }.bind(this))}
               { this.state.nodesWithoutTip.length > 0 &&
                 <NodesWithoutTip
-                  coin={ this.state.coin }
                   nodes={ this.state.nodesWithoutTip }
                   cableApp={ this.props.cableApp }
                 />

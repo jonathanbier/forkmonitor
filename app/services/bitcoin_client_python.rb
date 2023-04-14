@@ -3,8 +3,7 @@
 class BitcoinClientPython
   include ::BitcoinUtil
 
-  def initialize(node_id, name_with_version, coin, client_type, client_version)
-    @coin = coin
+  def initialize(node_id, name_with_version, client_type, client_version)
     @client_type = client_type
     @client_version = client_version
     @node_id = node_id
@@ -130,7 +129,7 @@ class BitcoinClientPython
   def getblockhash(height)
     @node.getblockhash(height = height) # rubocop:disable Lint/SelfAssignment
   rescue PyCall::PyError => e
-    raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@coin} #{@name_with_version} (id=#{@node_id}): " + e.message
+    raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockheader(block_hash, verbose = true)

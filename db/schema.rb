@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_02_19_210008) do
+ActiveRecord::Schema.define(version: 2023_04_14_100311) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -24,7 +24,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "n_transactions", null: false
-    t.integer "coin", null: false
     t.index ["node_id"], name: "index_block_templates_on_node_id"
     t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
   end
@@ -40,7 +39,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.integer "mediantime"
     t.integer "first_seen_by_id"
     t.integer "version"
-    t.integer "coin", null: false
     t.string "pool"
     t.integer "tx_count"
     t.integer "size"
@@ -54,7 +52,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.decimal "total_fee", precision: 16, scale: 8
     t.decimal "template_txs_fee_diff", precision: 16, scale: 8
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
-    t.index ["coin"], name: "index_blocks_on_coin"
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
     t.index ["height"], name: "index_blocks_on_height"
     t.index ["parent_id"], name: "index_blocks_on_parent_id"
@@ -65,7 +62,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.bigint "node_id"
     t.bigint "block_id"
     t.bigint "parent_chaintip_id"
-    t.integer "coin", null: false
     t.string "status", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -176,7 +172,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.integer "mempool_bytes"
     t.integer "mempool_max"
     t.boolean "mirror_ibd", default: false, null: false
-    t.integer "coin", null: false
     t.boolean "to_destroy", default: false, null: false
     t.boolean "getblocktemplate", default: false, null: false
     t.boolean "coinstatsindex"
@@ -195,7 +190,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
   end
 
   create_table "softforks", force: :cascade do |t|
-    t.integer "coin"
     t.bigint "node_id"
     t.integer "fork_type"
     t.string "name"
@@ -225,7 +219,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.datetime "notified_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.integer "coin"
     t.string "confirmed_in_one_branch", default: [], null: false, array: true
     t.decimal "confirmed_in_one_branch_total", precision: 16, scale: 8
     t.string "double_spent_in_one_branch", default: [], null: false, array: true
@@ -237,7 +230,6 @@ ActiveRecord::Schema.define(version: 2023_02_19_210008) do
     t.string "double_spent_by", default: [], null: false, array: true
     t.string "rbf_by", default: [], null: false, array: true
     t.boolean "missing_transactions", default: false, null: false
-    t.index ["coin", "height"], name: "index_stale_candidates_on_coin_and_height", unique: true
   end
 
   create_table "subscriptions", force: :cascade do |t|

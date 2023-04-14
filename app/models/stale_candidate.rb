@@ -5,8 +5,6 @@ class StaleCandidate < ApplicationRecord
   DOUBLE_SPEND_RANGE = Rails.env.production? ? 30 : 10
   STALE_BLOCK_WINDOW = Rails.env.test? ? 5 : 100
 
-  enum coin: { btc: 0 }
-
   has_many :children, class_name: 'StaleCandidateChild', dependent: :destroy
 
   scope :feed, lambda {
@@ -18,14 +16,14 @@ class StaleCandidate < ApplicationRecord
 
   def as_json(options = nil)
     if options[:short]
-      super({ only: %i[coin height n_children] })
+      super({ only: %i[height n_children] })
     else
-      super({ only: %i[coin height n_children] }).merge({
-                                                          children: children.sort_by do |c|
-                                                                      c.root.timestamp || c.root.created_at.to_i
-                                                                    end,
-                                                          headers_only: children.any? { |c| c.root.headers_only }
-                                                        })
+      super({ only: %i[height n_children] }).merge({
+                                                     children: children.sort_by do |c|
+                                                                 c.root.timestamp || c.root.created_at.to_i
+                                                               end,
+                                                     headers_only: children.any? { |c| c.root.headers_only }
+                                                   })
     end
   end
 
@@ -190,17 +188,17 @@ class StaleCandidate < ApplicationRecord
   def expire_cache
     Rails.cache.delete("StaleCandidate(#{id}).json")
     Rails.cache.delete("StaleCandidate(#{id})/double_spend_info.json")
-    Rails.cache.delete("StaleCandidate.index.for_coin(#{coin}).json")
-    Rails.cache.delete("StaleCandidate.last_updated(#{coin})")
+    Rails.cache.delete('StaleCandidate.index.json')
+    Rails.cache.delete('StaleCandidate.last_updated')
     (1...((StaleCandidate.feed.count / PER_PAGE) + 1)).each do |page|
-      Rails.cache.delete("StaleCandidate.feed.for_coin(#{coin},#{page})")
+      Rails.cache.delete("StaleCandidate.feed(#{page})")
     end
-    Rails.cache.delete("StaleCandidate.feed.count(#{coin})")
+    Rails.cache.delete('StaleCandidate.feed.count')
   end
 
   def fetch_transactions_for_descendants!
     # Iterate over descendant blocks to add their transactions
-    Block.where(coin: coin, height: height).find_each do |candidate_block|
+    Block.where(height: height).find_each do |candidate_block|
       candidate_block.fetch_transactions!
       candidate_block.descendants.where('height <= ?', height + DOUBLE_SPEND_RANGE).find_each(&:fetch_transactions!)
     end
@@ -208,7 +206,7 @@ class StaleCandidate < ApplicationRecord
 
   def set_children!
     children.destroy_all # TODO: update records instead
-    Block.where(coin: coin, height: height).find_each do |root|
+    Block.where(height: height).find_each do |root|
       chain = Block.where('height <= ?', height + STALE_BLOCK_WINDOW).join_recursive do
         start_with(block_hash: root.block_hash)
           .connect_by(id: :parent_id)
@@ -224,7 +222,7 @@ class StaleCandidate < ApplicationRecord
   end
 
   def set_conflicting_tx_info!(tip_height)
-    Rails.logger.info "Prime confirmed in one branch cache for #{coin.to_s.upcase} stale candidate #{height}..."
+    Rails.logger.info "Prime confirmed in one branch cache for stale candidate #{height}..."
     missing_transactions = false
     update n_children: children.count
     confirmed_in_one_branch = get_confirmed_in_one_branch
@@ -239,13 +237,13 @@ class StaleCandidate < ApplicationRecord
                                       Transaction.where('tx_id in (?)',
                                                         confirmed_in_one_branch).select('tx_id, max(amount) as amount').group(:tx_id).collect(&:amount).inject(:+)
                                     end
-    Rails.logger.info "Prime doublespend cache for #{coin.to_s.upcase} stale candidate #{height}..."
+    Rails.logger.info "Prime doublespend cache for stale candidate #{height}..."
     spent_coins_with_tx = get_spent_coins_with_tx
     txs_short, txs_long = get_double_spent_inputs(spent_coins_with_tx)
     double_spent_in_one_branch = txs_short.nil? ? [] : txs_short.collect(&:tx_id)
     double_spent_in_one_branch_total = txs_short.nil? ? 0 : txs_short.collect(&:amount).inject(:+)
     double_spent_by = txs_long.nil? ? [] : txs_long.collect(&:tx_id)
-    Rails.logger.info "Prime fee-bump cache for #{coin.to_s.upcase} stale candidate #{height}..."
+    Rails.logger.info "Prime fee-bump cache for stale candidate #{height}..."
     txs_short, txs_long = get_rbf(spent_coins_with_tx)
     rbf = txs_short.nil? ? [] : txs_short.collect(&:tx_id)
     rbf_by = txs_long.nil? ? [] : txs_long.collect(&:tx_id)
@@ -270,11 +268,11 @@ class StaleCandidate < ApplicationRecord
     # lengths, and scan for duplicate transactions. This is a slow operation,
     # so we wait with updating database records and expiring JSON cache until it's complete.
     ActiveRecord::Base.transaction do
-      tip_height = Block.where(coin: coin).maximum(:height)
+      tip_height = Block.maximum(:height)
       if children.count.zero? ||
          height_processed.nil? ||
          (height_processed < tip_height && height_processed <= height + STALE_BLOCK_WINDOW)
-        Rails.logger.info "Update #{coin.to_s.upcase} stale candidate #{height} for tip at #{tip_height}..."
+        Rails.logger.info "Update stale candidate #{height} for tip at #{tip_height}..."
         set_children!
         set_conflicting_tx_info!(tip_height)
         expire_cache
@@ -289,7 +287,7 @@ class StaleCandidate < ApplicationRecord
       end
       update notified_at: Time.zone.now
       Subscription.blast("stale-candidate-#{id}",
-                         "#{coin.upcase} stale candidate",
+                         'stale candidate',
                          "At height #{height}")
     end
   end
@@ -303,86 +301,76 @@ class StaleCandidate < ApplicationRecord
   end
 
   class << self
-    def check!(coin)
+    def check!
       # Look for potential stale blocks, i.e. more than one block at the same height
-      tip_height = Block.where(coin: coin).maximum(:height)
+      tip_height = Block.maximum(:height)
       return if tip_height.nil?
 
-      Block.select(:height).where(coin: coin).where('height > ?',
-                                                    tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).each do |block|
+      Block.select(:height).where('height > ?',
+                                  tip_height - STALE_BLOCK_WINDOW).group(:height).having('count(height) > 1').order(height: :asc).each do |block|
         # If there are is more than 1 block at the previous height, assume we already have a stale block entry:
-        next if Block.where(coin: coin, height: block.height - 1).count > 1
+        next if Block.where(height: block.height - 1).count > 1
         # If there is an ongoing invalid block alert, assume there's a fork:
         # TODO: check the chaintips; perhaps there's both a fork and a stale block on one side
         #       until then, we assume a forked node is deleted and the alert is dismissed
-        next if InvalidBlock.joins(:block).where(dismissed_at: nil).where('blocks.coin = ?',
-                                                                          Block.coins[coin]).count.positive?
+        next if InvalidBlock.joins(:block).where(dismissed_at: nil).count.positive?
 
         # If one of the blocks is marked invalid by any node ignore it:
-        Block.where(coin: coin, height: block.height).find_each do |b|
+        Block.where(height: block.height).find_each do |b|
           return unless b.marked_invalid_by.empty? # rubocop:disable Lint/NonLocalExitFromIterator
         end
 
-        stale_candidate = find_or_generate(coin, block.height)
+        stale_candidate = find_or_generate(block.height)
         stale_candidate.notify!
       end
     end
 
-    def find_or_generate(coin, height)
-      throw "Expected at least two #{coin} blocks at height #{height}" unless Block.where(coin: coin,
-                                                                                          height: height).count > 1
-      s = StaleCandidate.create_with(n_children: Block.where(coin: coin, height: height).count).find_or_create_by(
-        coin: coin, height: height
+    def find_or_generate(height)
+      throw "Expected at least two blocks at height #{height}" unless Block.where(height: height).count > 1
+      s = StaleCandidate.create_with(n_children: Block.where(height: height).count).find_or_create_by(
+        height: height
       )
       # Fetch transactions for all blocks at this height
-      Block.where(coin: coin, height: height).find_each(&:fetch_transactions!)
+      Block.where(height: height).find_each(&:fetch_transactions!)
       s
     end
 
-    def process!(coin)
+    def process!
       # Only process the 3 most recent stale candidates
-      StaleCandidate.where(coin: coin).order(height: :desc).limit(3).each(&:process!)
+      StaleCandidate.order(height: :desc).limit(3).each(&:process!)
     end
 
-    def prime_cache(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      unless Rails.cache.exist?("StaleCandidate.index.for_coin(#{coin}).json")
-        Rails.logger.info "Prime stale candidate index for #{coin.to_s.upcase}..."
-        StaleCandidate.index_json_cached(coin)
+    def prime_cache
+      unless Rails.cache.exist?('StaleCandidate.index.json')
+        Rails.logger.info 'Prime stale candidate index...'
+        StaleCandidate.index_json_cached
       end
 
-      min_height = Block.where(coin: coin).maximum(:height) - 20_000
-      StaleCandidate.where(coin: coin).where('height > ?', min_height).order(height: :desc).each do |s|
+      min_height = Block.maximum(:height) - 20_000
+      StaleCandidate.where('height > ?', min_height).order(height: :desc).each do |s|
         # Prime cache one at a time
         break if s.prime_cache
       end
     end
 
-    def index_json_cached(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
+    def index_json_cached
+      Rails.cache.fetch('StaleCandidate.index.json') do
+        return [] if Block.count.zero?
 
-      Rails.cache.fetch("StaleCandidate.index.for_coin(#{coin}).json") do
-        return nil if Block.where(coin: coin).count.zero?
-
-        min_height = Block.where(coin: coin).maximum(:height) - 1000
-        where(coin: coin).where('height > ?', min_height).order(height: :desc).limit(3).to_json({ short: true })
+        min_height = Block.maximum(:height) - 1000
+        where('height > ?', min_height).order(height: :desc).limit(3).to_json({ short: true })
       end
     end
 
-    def last_updated_cached(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Rails.cache.fetch("StaleCandidate.last_updated(#{coin})") do
-        where(coin: coin).order(updated_at: :desc).first
+    def last_updated_cached
+      Rails.cache.fetch('StaleCandidate.last_updated') do
+        order(updated_at: :desc).first
       end
     end
 
-    def page_cached(coin, page)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      Rails.cache.fetch("StaleCandidate.feed.for_coin(#{coin},#{page})") do
-        feed.where(coin: coin).order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
+    def page_cached(page)
+      Rails.cache.fetch("StaleCandidate.feed(#{page})") do
+        feed.order(created_at: :desc).offset((page - 1) * PER_PAGE).limit(PER_PAGE).to_a
       end
     end
   end

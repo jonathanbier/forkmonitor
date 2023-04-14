@@ -16,18 +16,15 @@ function flushPromises() {
 }
 
 axios.get.mockImplementation(url => {
-  if (url == "/api/v1/invalid_blocks?coin=BTC") {
+  if (url == "/api/v1/invalid_blocks.json") {
     return Promise.resolve({data: [{id: 1}]})
-  } else if (url == "/api/v1/invalid_blocks?coin=BCH") {
-    return Promise.resolve({data: [
-    ]})
   } else {
     return Promise.reject({})
   }
 });
 
 test('should show invalid block', async () => {
-  const wrapper = shallow(<InvalidBlockAlerts coin='BTC' />);
+  const wrapper = shallow(<InvalidBlockAlerts />);
   await flushPromises();
   expect(wrapper.text()).toContain("<AlertInvalid />");
 });

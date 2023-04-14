@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe Api::V1::BlocksController do
   describe 'GET /api/v1/blocks' do
     before do
-      create(:node_with_block, coin: :btc)
+      create(:node_with_block)
     end
 
     it 'lists blocks' do

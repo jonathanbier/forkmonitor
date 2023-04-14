@@ -19,7 +19,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{@invalid_block.node.name_with_version} considers #{@invalid_block.block.coin.upcase} block #{@invalid_block.block.height} (#{@invalid_block.block.block_hash}) invalid"
+      subject: "[ForkMonitor] #{@invalid_block.node.name_with_version} considers block #{@invalid_block.block.height} (#{@invalid_block.block.block_hash}) invalid"
     )
   end
 
@@ -39,11 +39,11 @@ class UserMailer < ApplicationMailer
   def stale_candidate_email
     @user = params[:user]
     @stale_candidate = params[:stale_candidate]
-    @blocks = Block.where(coin: @stale_candidate.coin, height: @stale_candidate.height)
+    @blocks = Block.where(height: @stale_candidate.height)
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] potential #{@stale_candidate.coin.upcase} stale block at height #{@stale_candidate.height}"
+      subject: "[ForkMonitor] potential stale block at height #{@stale_candidate.height}"
     )
   end
 
@@ -53,7 +53,7 @@ class UserMailer < ApplicationMailer
 
     mail(
       to: @user.email,
-      subject: "[ForkMonitor] #{@inflated_block.node.name_with_version} detected too much inflation in #{@inflated_block.block.coin.upcase} block #{@inflated_block.block.height} (#{@inflated_block.block.block_hash})"
+      subject: "[ForkMonitor] #{@inflated_block.node.name_with_version} detected too much inflation in block #{@inflated_block.block.height} (#{@inflated_block.block.block_hash})"
     )
   end
 

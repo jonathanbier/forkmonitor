@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class Softfork < ApplicationRecord
-  enum coin: { btc: 0 }
   enum fork_type: { bip9: 0, bip8: 1 } # rubocop:disable Naming/VariableNumber
   enum status: { defined: 0, started: 1, locked_in: 2, active: 3, failed: 4, must_signal: 5 }
   belongs_to :node
@@ -21,7 +20,7 @@ class Softfork < ApplicationRecord
       end
       update notified_at: Time.zone.now
       Subscription.blast("softfork-#{id}",
-                         "#{coin.upcase} #{name} softfork #{status}",
+                         "#{name} softfork #{status}",
                          "#{name.capitalize} #{fork_type.to_s.upcase} status became #{status.to_s.upcase} at height #{since.to_s(:delimited)} according to #{node.name_with_version}.")
     end
   end
@@ -33,31 +32,26 @@ class Softfork < ApplicationRecord
 
     # Only supported on Bitcoin Core v23+
     def process_deploymentinfo(node, deploymentinfo)
-      return unless node.btc? && node.core? && node.version.present? && node.version >= 230_000
+      return unless node.core? && node.version.present? && node.version >= 230_000
 
       deploymentinfo['deployments'].each do |key, value|
         process_fork(node, key, value)
       end
     end
 
-    # Only supported on Bitcoin mainnet
     # Only tested with v0.18.1 and up
     def process(node, blockchaininfo)
-      return unless node.btc?
-
       if node.version < 190_000
         return if blockchaininfo['bip9_softforks'].nil?
 
         blockchaininfo['bip9_softforks'].each do |key, value|
           fork = Softfork.find_by(
-            coin: node.coin,
             node: node,
             fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key
           )
           if fork.nil?
             Softfork.create(
-              coin: node.coin,
               node: node,
               fork_type: :bip9, # rubocop:disable Naming/VariableNumber
               name: key,
@@ -86,14 +80,12 @@ class Softfork < ApplicationRecord
       if value['bip9'].present?
         bip9 = value['bip9'] # rubocop:disable Naming/VariableNumber
         fork = Softfork.find_by(
-          coin: node.coin,
           node: node,
           fork_type: :bip9, # rubocop:disable Naming/VariableNumber
           name: key
         )
         if fork.nil?
           Softfork.create(
-            coin: node.coin,
             node: node,
             fork_type: :bip9, # rubocop:disable Naming/VariableNumber
             name: key,
@@ -114,14 +106,12 @@ class Softfork < ApplicationRecord
 
       bip8 = value['bip8'] # rubocop:disable Naming/VariableNumber
       fork = Softfork.find_by(
-        coin: node.coin,
         node: node,
         fork_type: :bip8, # rubocop:disable Naming/VariableNumber
         name: key
       )
       if fork.nil?
         Softfork.create(
-          coin: node.coin,
           node: node,
           fork_type: :bip8, # rubocop:disable Naming/VariableNumber
           name: key,

@@ -33,9 +33,9 @@ const mockChaintips = [
 ]
 
 axios.get.mockImplementation(url => {
-  if (url == "/api/v1/nodes/coin/BTC") {
+  if (url == "/api/v1/nodes/coin/btc") {
     return Promise.resolve({data: mockNodes})
-  } else if (url == "/api/v1/chaintips/BTC") {
+  } else if (url == "/api/v1/chaintips") {
      return Promise.resolve({data: mockChaintips})
   } else {
       return Promise.reject({})
@@ -44,7 +44,6 @@ axios.get.mockImplementation(url => {
 
 test('rendered component', async () => {
   const wrapper = shallow(<Nodes
-    match={{params: {coin: 'BTC'}}}
     cableApp={ MockCableApp }
   />);
   await flushPromises();
@@ -62,7 +61,6 @@ test('can handle node without best block', async () => {
   mockNodes[0].height = null
 
   const wrapper = shallow(<Nodes
-    match={{params: {coin: 'BTC'}}}
     cableApp={ MockCableApp }
   />);
   await flushPromises();

@@ -9,10 +9,9 @@ namespace 'blocks' do
     Node.fetch_ancestors!(args.height.to_i)
   end
 
-  desc 'Check for unwanted inflation for [coin] (limit to [max=10])'
-  task :check_inflation, %i[coin max] => :environment do |_action, args|
-    InflatedBlock.check_inflation!({ coin: args.coin.downcase.to_sym,
-                                     max: args[:max]&.to_i })
+  desc 'Check for unwanted inflation (limit to [max=10])'
+  task :check_inflation, %i[max] => :environment do |_action, args|
+    InflatedBlock.check_inflation!({ max: args[:max]&.to_i })
   end
 
   desc 'Get chaintips for all nodes'
@@ -29,19 +28,18 @@ namespace 'blocks' do
     end
   end
 
-  desc 'Match missing pools [coin] [n]'
-  task :match_missing_pools, %i[coin n] => :environment do |_action, args|
-    Block.match_missing_pools!(args.coin.downcase.to_sym, args.n.to_i)
+  desc 'Match missing pools [n]'
+  task :match_missing_pools, %i[n] => :environment do |_action, args|
+    Block.match_missing_pools!(args.n.to_i)
   end
 
-  desc 'Perform lightning related checks for [coin] (limit to [max=10000])'
-  task :check_lightning, %i[coin max] => :environment do |_action, args|
-    LightningTransaction.check!({ coin: args.coin.downcase.to_sym,
-                                  max: args[:max] ? args[:max].to_i : 10_000 })
+  desc 'Perform lightning related checks (limit to [max=10000])'
+  task :check_lightning, %i[max] => :environment do |_action, args|
+    LightningTransaction.check!({ max: args[:max] ? args[:max].to_i : 10_000 })
   end
 
-  desc 'Process stale candidates for [coin]'
-  task :stale_candidates, [:coin] => :environment do |_action, args|
-    StaleCandidate.process!(args.coin.downcase.to_sym)
+  desc 'Process stale candidates'
+  task stale_candidates: :environment do |_action, _args|
+    StaleCandidate.process!
   end
 end
