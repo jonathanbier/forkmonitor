@@ -3,10 +3,8 @@
 module Api
   module V1
     class SoftforksController < ApplicationController
-      before_action :set_coin
-
       def index
-        render json: Softfork.where(coin: @coin)
+        render json: Softfork.all
       end
     end
   end

@@ -2,7 +2,6 @@
 
 class BlockTemplate < ApplicationRecord
   include ::TxIdConcern
-  enum coin: { btc: 0 }
   belongs_to :parent_block, class_name: 'Block', optional: true
   belongs_to :node
 
@@ -26,7 +25,6 @@ class BlockTemplate < ApplicationRecord
         end
         tx_ids = hashes_to_binary(template['transactions'].collect { |tx| tx['txid'] })
         template = create!(
-          coin: node.coin,
           height: template['height'],
           parent_block: parent_block,
           node: node,

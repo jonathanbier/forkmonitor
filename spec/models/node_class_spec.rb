@@ -10,50 +10,50 @@ RSpec.describe Node do
     describe 'set_pool_for_block!' do
       before do
         @block = create(:block, block_hash: '0000000000000000002593e1504eb5c5813cac4657d78a04d81ff4e2250d3377')
-        @node = create(:node, coin: :btc, block: @block, version: 160_000)
+        @node = create(:node, block: @block, version: 160_000)
 
-        @modern_node = create(:node, coin: :btc, txindex: true)
+        @modern_node = create(:node, txindex: true)
         @modern_node.client.mock_set_height(560_178)
         @modern_node.poll!
 
-        expect(described_class).to receive(:first_newer_than).with(:btc, 160_000, :core).and_return @modern_node
+        expect(described_class).to receive(:first_newer_than).with(160_000, :core).and_return @modern_node
       end
 
       it 'fetches the block' do
         expect(@modern_node.client).to receive('getblock').and_call_original
-        described_class.set_pool_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(@block)
       end
 
       it 'does not fetch the block if getblock is cached' do
         expect(@modern_node.client).not_to receive('getblock')
-        described_class.set_pool_for_block!(:btc, @block,
+        described_class.set_pool_for_block!(@block,
                                             { height: 1, 'tx' => ['74e243e5425edfce9486e26aa6449e56c68351210e8edc1fe81ddcdc8d478085'] })
       end
 
       it 'calls getrawtransaction on the coinbase' do
         expect(@modern_node.client).to receive('getrawtransaction').and_call_original
-        described_class.set_pool_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(@block)
       end
 
       it 'passes getrawtransaction output to pool_from_coinbase_tx' do
         expect(Block).to receive(:pool_from_coinbase_tx)
-        described_class.set_pool_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(@block)
       end
 
       it 'calculates the total fee' do
-        described_class.set_pool_for_block!(:btc, @block)
+        described_class.set_pool_for_block!(@block)
         expect(@block.total_fee).to eq(0.5)
       end
     end
 
     describe 'poll!' do
       it 'calls poll! on all nodes, followed by check_laggards!, check_chaintips! and check_versionbits!' do
-        create(:node_with_block, coin: :btc, version: 170_000)
-        create(:node_with_block, coin: :btc, version: 160_000)
+        create(:node_with_block, version: 170_000)
+        create(:node_with_block, version: 160_000)
 
         expect(described_class).to receive(:check_laggards!)
 
-        expect(described_class).to receive(:check_chaintips!).with(:btc)
+        expect(described_class).to receive(:check_chaintips!)
 
         # rubocop:disable RSpec/IteratedExpectation
         expect(described_class).to(receive(:bitcoin_core_by_version).and_wrap_original do |relation|
@@ -75,9 +75,9 @@ RSpec.describe Node do
 
     describe 'poll_repeat!' do
       it 'calls poll!' do
-        expect(described_class).to receive(:poll!).with({ repeat: true, coins: ['BTC'] })
+        expect(described_class).to receive(:poll!).with({ repeat: true })
 
-        described_class.poll_repeat!({ coins: ['BTC'] })
+        described_class.poll_repeat!({})
       end
     end
 
@@ -117,18 +117,18 @@ RSpec.describe Node do
       end
 
       it 'checks inflation' do
-        expect(InflatedBlock).to receive(:check_inflation!).with({ coin: :btc, max: 10 })
-        described_class.rollback_checks_repeat!({ coins: ['BTC'] })
+        expect(InflatedBlock).to receive(:check_inflation!).with({ max: 10 })
+        described_class.rollback_checks_repeat!
       end
 
       it 'checks for valid-headers chaintips' do
         expect(Chaintip).to receive(:validate_forks!)
-        described_class.rollback_checks_repeat!({ coins: ['BTC'] })
+        described_class.rollback_checks_repeat!
       end
 
       it 'calls find_missing' do
-        expect(Block).to receive(:find_missing).with(:btc, 40_000, 20)
-        described_class.rollback_checks_repeat!({ coins: ['BTC'] })
+        expect(Block).to receive(:find_missing).with(40_000, 20)
+        described_class.rollback_checks_repeat!
       end
     end
 
@@ -136,7 +136,7 @@ RSpec.describe Node do
       before do
         @node = create(:node_with_mirror)
         @node.mirror_client.mock_set_height(560_176)
-        allow(described_class).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
+        allow(described_class).to receive(:by_version).and_return [@node] # Preserve mirror client instance
         allow(described_class).to receive(:destroy_if_requested).and_return true
         allow(LightningTransaction).to receive(:check!).and_return true
         allow(LightningTransaction).to receive(:check_public_channels!).and_return true
@@ -145,43 +145,43 @@ RSpec.describe Node do
         allow(Softfork).to receive(:notify!).and_return true
       end
 
-      it 'runs Lightning checks, on BTC only' do
-        expect(LightningTransaction).to receive(:check!).with({ coin: :btc, max: 1000 })
+      it 'runs Lightning checks' do
+        expect(LightningTransaction).to receive(:check!).with({ max: 1000 })
 
-        described_class.heavy_checks_repeat!({ coins: %w[BTC] })
+        described_class.heavy_checks_repeat!
       end
 
       it 'calls check_public_channels!' do
         expect(LightningTransaction).to receive(:check_public_channels!)
-        described_class.heavy_checks_repeat!({ coins: ['BTC'] })
+        described_class.heavy_checks_repeat!
       end
 
       it 'calls match_missing_pools!' do
-        expect(Block).to receive(:match_missing_pools!).with(:btc, 3)
-        described_class.heavy_checks_repeat!({ coins: ['BTC'] })
+        expect(Block).to receive(:match_missing_pools!).with(3)
+        described_class.heavy_checks_repeat!
       end
 
       it 'calls process_stale_candidates' do
-        expect(StaleCandidate).to receive(:process!).with(:btc)
-        described_class.heavy_checks_repeat!({ coins: ['BTC'] })
+        expect(StaleCandidate).to receive(:process!)
+        described_class.heavy_checks_repeat!
       end
 
       it 'calls process_templates' do
-        expect(Block).to receive(:process_templates!).with(:btc)
-        described_class.heavy_checks_repeat!({ coins: ['BTC'] })
+        expect(Block).to receive(:process_templates!)
+        described_class.heavy_checks_repeat!
       end
     end
 
     describe 'getblocktemplate_repeat!' do
       before do
         @node = create(:node)
-        allow(described_class).to receive(:coin_by_version).with(:btc).and_return [@node] # Preserve mirror client instance
+        allow(described_class).to receive(:by_version).and_return [@node] # Preserve mirror client instance
       end
 
       it 'calls getblocktemplate' do
-        expect(described_class).to receive(:getblocktemplate!).with(:btc)
+        expect(described_class).to receive(:getblocktemplate!)
 
-        described_class.getblocktemplate_repeat!({ coins: ['BTC'] })
+        described_class.getblocktemplate_repeat!
       end
     end
 
@@ -222,9 +222,9 @@ RSpec.describe Node do
       end
 
       it 'calls check! on Chaintip and on InvalidBlock' do
-        expect(Chaintip).to receive(:check!).with(:btc, [@node_a, @node_b])
+        expect(Chaintip).to receive(:check!).with([@node_a, @node_b])
         expect(InvalidBlock).to receive(:check!)
-        described_class.check_chaintips!(:btc)
+        described_class.check_chaintips!
       end
     end
 
@@ -270,17 +270,13 @@ RSpec.describe Node do
         @node_b.poll!
       end
 
-      it 'is called with an known coin' do
-        expect { described_class.first_with_txindex(:bbbbbbtc) }.to raise_error BitcoinUtil::RPC::InvalidCoinError
-      end
-
       it 'throws if no node has txindex' do
         @node_b.update txindex: false
-        expect { described_class.first_with_txindex(:btc) }.to raise_error BitcoinUtil::RPC::NoTxIndexError
+        expect { described_class.first_with_txindex }.to raise_error BitcoinUtil::RPC::NoTxIndexError
       end
 
       it 'returns node' do
-        expect(described_class.first_with_txindex(:btc)).to eq(@node_b)
+        expect(described_class.first_with_txindex).to eq(@node_b)
       end
     end
 
@@ -294,9 +290,9 @@ RSpec.describe Node do
       end
 
       it 'calls getrawtransaction on a node with txindex' do
-        expect(described_class).to receive(:first_with_txindex).with(:btc).and_return @node_a
+        expect(described_class).to receive(:first_with_txindex).and_return @node_a
         expect(@node_a).to receive(:getrawtransaction).with(@tx_id, false, nil)
-        described_class.getrawtransaction(@tx_id, :btc)
+        described_class.getrawtransaction(@tx_id)
       end
     end
   end

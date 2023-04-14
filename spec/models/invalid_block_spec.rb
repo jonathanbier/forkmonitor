@@ -15,7 +15,7 @@ RSpec.describe InvalidBlock do
     end
 
     it 'stores an InvalidBlock entry' do
-      described_class.check!(:btc)
+      described_class.check!
       disputed_block = node_a.block
       expect(described_class.count).to eq(1)
       expect(described_class.first.block).to eq(disputed_block)
@@ -23,21 +23,21 @@ RSpec.describe InvalidBlock do
     end
 
     it 'sends an email to all users' do
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check! }.to change { ActionMailer::Base.deliveries.count }.by(1)
     end
 
     it 'sends email only once' do
-      expect { described_class.check!(:btc) }.to change { ActionMailer::Base.deliveries.count }.by(1)
-      expect { described_class.check!(:btc) }.not_to(change { ActionMailer::Base.deliveries.count })
+      expect { described_class.check! }.to change { ActionMailer::Base.deliveries.count }.by(1)
+      expect { described_class.check! }.not_to(change { ActionMailer::Base.deliveries.count })
     end
 
     it 'node should have invalid blocks' do
-      described_class.check!(:btc)
+      described_class.check!
       expect(node_b.invalid_blocks.count).to eq(1)
     end
 
     it 'node can not be deleleted' do
-      described_class.check!(:btc)
+      described_class.check!
       expect { node_b.destroy }.to raise_error ActiveRecord::DeleteRestrictionError
     end
   end

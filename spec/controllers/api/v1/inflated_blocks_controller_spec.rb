@@ -3,36 +3,36 @@
 require 'rails_helper'
 
 RSpec.describe Api::V1::InflatedBlocksController do
-  let!(:node_1) { create(:node_with_block, coin: :btc) }
+  let!(:node_1) { create(:node_with_block) }
   let!(:inflated_block) { create(:inflated_block, node: node_1) }
 
-  describe 'GET /api/v1/inflated_blocks' do
+  describe 'GET /api/v1/inflated_blocks/admin' do
     it 'lists inflated blocks' do
-      get :index, format: :json
+      get :admin_index, format: :json
       expect(response).to have_http_status :ok
       expect(response_body.length).to eq 1
     end
 
     it 'lists dismissed entries' do
       inflated_block.update dismissed_at: Time.zone.now
+      get :admin_index, format: :json
+      expect(response).to have_http_status :ok
+      expect(response_body.length).to eq 1
+    end
+  end
+
+  describe 'GET /api/v1/inflated_blocks' do
+    it 'lists entries' do
       get :index, format: :json
       expect(response).to have_http_status :ok
       expect(response_body.length).to eq 1
     end
 
-    describe 'with coin param' do
-      it 'lists entries for this coin' do
-        get :index, format: :json, params: { coin: 'BTC' }
-        expect(response).to have_http_status :ok
-        expect(response_body.length).to eq 1
-      end
-
-      it 'does not list dismissed entries' do
-        inflated_block.update dismissed_at: Time.zone.now
-        get :index, format: :json, params: { coin: 'BTC' }
-        expect(response).to have_http_status :ok
-        expect(response_body.length).to eq 0
-      end
+    it 'does not list dismissed entries' do
+      inflated_block.update dismissed_at: Time.zone.now
+      get :index, format: :json
+      expect(response).to have_http_status :ok
+      expect(response_body.length).to eq 0
     end
   end
 

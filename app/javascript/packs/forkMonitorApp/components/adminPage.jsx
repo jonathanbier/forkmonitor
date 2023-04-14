@@ -29,8 +29,8 @@ class AdminPage extends React.Component {
       <Admin dataProvider={dataProvider} authProvider={authProvider}>
         <Resource name="nodes" list={NodeList} edit={NodeEdit}  create={NodeCreate} />
         <Resource name="blocks" list={BlockList} />
-        <Resource name="invalid_blocks" list={InvalidBlockList} edit={InvalidBlockEdit} />
-        <Resource name="inflated_blocks" list={InflatedBlockList} edit={InflatedBlockEdit} />
+        <Resource name="invalid_blocks/admin" list={InvalidBlockList} edit={InvalidBlockEdit} />
+        <Resource name="inflated_blocks/admin" list={InflatedBlockList} edit={InflatedBlockEdit} />
       </Admin>
     );
   }

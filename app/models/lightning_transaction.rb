@@ -36,7 +36,7 @@ class LightningTransaction < ApplicationRecord
       next if tx_in.script_witness.empty?
 
       opening_tx_id = close_tx.in.first.prev_out_hash.reverse.unpack1('H*')
-      opening_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(opening_tx_id, true)
+      opening_tx_raw = Node.first_with_txindex.getrawtransaction(opening_tx_id, true)
       return opening_tx_id, opening_tx_raw['blockhash']
     end
     # Could not find an opening transaction
@@ -94,19 +94,17 @@ class LightningTransaction < ApplicationRecord
     # Used once for migration
     def get_opening_blocks!
       PenaltyTransaction.all.find_each do |penalty|
-        coin = penalty.block.coin.to_sym
-        opening_tx = Node.first_with_txindex(coin).getrawtransaction(penalty.opening_tx_id, true)
-        block = Block.find_by coin: coin, block_hash: opening_tx['blockhash']
+        opening_tx = Node.first_with_txindex.getrawtransaction(penalty.opening_tx_id, true)
+        block = Block.find_by block_hash: opening_tx['blockhash']
         penalty.update opening_block: block
       end
     end
 
     def check!(options)
-      throw 'Only BTC mainnet supported' unless options[:coin].nil? || options[:coin] == :btc
       throw 'Must specifiy :max' unless options.key?(:max)
       throw 'Parameter :max should be at least 1' if options[:max] < 1
       begin
-        node = Node.first_with_txindex(:btc, :core)
+        node = Node.first_with_txindex(:core)
       rescue BitcoinUtil::RPC::NoTxIndexError
         Rails.logger.info 'Unable to perform lightning checks, because no suitable node is available'
         return

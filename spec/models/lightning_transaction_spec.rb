@@ -17,8 +17,7 @@ RSpec.describe LightningTransaction do
 
     # throw the first time for lacking a previously checked block
     expect do
-      described_class.check!({ coin: :btc,
-                               max: 1 })
+      described_class.check!({ max: 1 })
     end.to raise_error('Unable to perform lightning checks due to missing intermediate block')
     @node.client.mock_set_height(560_177)
     @node.poll!
@@ -46,33 +45,33 @@ RSpec.describe LightningTransaction do
 
     it 'fetches the raw block' do
       expect(@node).to receive(:getblock).with(@block.block_hash, 0).and_call_original
-      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
+      expect(described_class.check!(max: 1)).to be(true)
     end
 
     it 'calls PenaltyTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(PenaltyTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
+      expect(described_class.check!(max: 1)).to be(true)
     end
 
     it 'calls SweepTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(SweepTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
+      expect(described_class.check!(max: 1)).to be(true)
     end
 
     it 'calls MaybeUncoopTransaction.check! with the parsed block' do
       raw_block = @node.getblock(@block.block_hash, 0)
       parsed_block = Bitcoin::Protocol::Block.new([raw_block].pack('H*'))
       expect(MaybeUncoopTransaction).to receive(:check!).with(@node, @block, parsed_block)
-      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
+      expect(described_class.check!(max: 1)).to be(true)
     end
 
     it 'gracefullies fail if node connection is lost' do
       expect(@node).to receive(:getblock).and_raise(BitcoinUtil::RPC::ConnectionError)
-      expect(described_class.check!(coin: :btc, max: 1)).to be(false)
+      expect(described_class.check!(max: 1)).to be(false)
       @node.reload
       expect(@node.unreachable_since).not_to be_nil
     end
@@ -80,12 +79,12 @@ RSpec.describe LightningTransaction do
     it 'retries if a partial result is returned' do
       expect(@node).to receive(:getblock).ordered.and_raise(BitcoinUtil::RPC::PartialFileError)
       expect(@node).to receive(:getblock).ordered.and_call_original
-      expect(described_class.check!(coin: :btc, max: 1)).to be(true)
+      expect(described_class.check!(max: 1)).to be(true)
     end
 
     it 'gives up if a partial result is returned twice' do
       expect(@node).to receive(:getblock).twice.and_raise(BitcoinUtil::RPC::PartialFileError)
-      expect { described_class.check!(coin: :btc, max: 1) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
+      expect { described_class.check!(max: 1) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
     end
   end
 

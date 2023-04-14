@@ -4,7 +4,7 @@ class PenaltyTransaction < LightningTransaction
   def get_opening_tx_id_and_block_hash!
     justice_tx = Bitcoin::Protocol::Tx.new([raw_tx].pack('H*'))
     close_tx_id = justice_tx.in[input].prev_out_hash.reverse.unpack1('H*')
-    close_tx_raw = Node.first_with_txindex(:btc).getrawtransaction(close_tx_id)
+    close_tx_raw = Node.first_with_txindex.getrawtransaction(close_tx_id)
     close_tx = Bitcoin::Protocol::Tx.new([close_tx_raw].pack('H*'))
     super(close_tx)
   end
@@ -66,9 +66,8 @@ class PenaltyTransaction < LightningTransaction
             amount: get_input_amount(node, tx, input)
           )
           tx_id, block_hash = ln.get_opening_tx_id_and_block_hash!
-          coin = node.coin.to_sym
           ln.opening_tx_id = tx_id
-          ln.opening_block = Block.find_by coin: coin, block_hash: block_hash
+          ln.opening_block = Block.find_by block_hash: block_hash
           ln.save
 
           ln.find_parent!

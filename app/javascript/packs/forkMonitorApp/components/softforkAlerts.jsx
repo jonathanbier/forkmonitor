@@ -18,24 +18,12 @@ class SoftforkAlerts extends React.Component {
   }
 
   componentDidMount() {
-    this.getSoftforks(this.props.coin);
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    const currentCoin = state.coin;
-    const nextCoin = props.coin;
-
-    if (currentCoin !== nextCoin) {
-      state.coin = props.coin;
-      state.fresh = true;
-    }
-
-    return state;
+    this.getSoftforks();
   }
 
   componentDidUpdate() {
     if (this.state.fresh) {
-      this.getSoftforks(this.state.coin);
+      this.getSoftforks();
       this.setState({
           fresh: false
       });
@@ -43,8 +31,8 @@ class SoftforkAlerts extends React.Component {
 
   }
 
-   getSoftforks(coin) {
-     axios.get(`/api/v1/softforks/${ coin }.json`).then(function (response) {
+   getSoftforks() {
+     axios.get(`/api/v1/softforks.json`).then(function (response) {
        return response.data;
      }).then(function (softforks) {
        this.setState({
@@ -61,7 +49,7 @@ class SoftforkAlerts extends React.Component {
         { (this.state && this.state.softforks || []).filter(
           c => this.props.currentHeight - c.height < 2096 * 4
         ).map(function (softfork) {
-          return (<AlertSoftfork softfork={ softfork }  coin={ this.state.coin } key={ softfork.id }/>)
+          return (<AlertSoftfork softfork={ softfork } key={ softfork.id }/>)
         }.bind(this))}
       </div>
     );

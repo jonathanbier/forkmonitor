@@ -6,15 +6,13 @@ class Block < ApplicationRecord
   include ::TxIdConcern
   include ::BitcoinUtil
 
-  MINIMUM_BLOCK_HEIGHTS = {
-    btc: if Rails.env.test?
-           0
-         else
-           # For production, mid December 2017, around Lightning network launch
-           # For development: something recent
-           (Rails.env.development? ? 763_000 : 500_000)
-         end
-  }.freeze
+  # For production, mid December 2017, around Lightning network launch
+  # For development: something recent
+  MINIMUM_BLOCK_HEIGHT = if Rails.env.test?
+                           0
+                         else
+                           Rails.env.development? ? 785000 : 500_000
+                         end
 
   COIN = 100_000_000
 
@@ -31,7 +29,6 @@ class Block < ApplicationRecord
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
   has_many :chaintips, dependent: :destroy
-  enum coin: { btc: 0 }
 
   # Used to trigger and restore reorgs on the mirror node
   attr_accessor :invalidated_block_hashes
@@ -39,7 +36,7 @@ class Block < ApplicationRecord
   after_initialize :set_invalidated_block_hashes
 
   def as_json(options = nil)
-    super({ only: %i[id coin height timestamp created_at pool tx_count size total_fee
+    super({ only: %i[id height timestamp created_at pool tx_count size total_fee
                      template_txs_fee_diff] }.merge(options || {})).merge({
                                                                             hash: block_hash,
                                                                             work: log2_pow,
@@ -80,10 +77,9 @@ class Block < ApplicationRecord
   def descendants(depth_limit = nil)
     block_hash = self.block_hash
     height = self.height
-    coin = self.coin
     max_height = depth_limit.nil? ? 10_000_000 : height + depth_limit
-    # Constrain query by coin and minimum height to reduce memory usage
-    Block.where(coin: coin).where('height > ? AND height <= ?', height, max_height).join_recursive do
+    # Constrain query by minimum height to reduce memory usage
+    Block.where('height > ? AND height <= ?', height, max_height).join_recursive do
       start_with(block_hash: block_hash)
         .connect_by(id: :parent_id)
         .order_siblings(:work)
@@ -97,7 +93,7 @@ class Block < ApplicationRecord
 
     candidate_branch_start = self
     until candidate_branch_start.nil?
-      raise "parent of #{coin.upcase} block #{candidate_branch_start.block_hash} (#{candidate_branch_start.height}) missing" if candidate_branch_start.parent.nil?
+      raise "parent of block #{candidate_branch_start.block_hash} (#{candidate_branch_start.height}) missing" if candidate_branch_start.parent.nil?
 
       if candidate_branch_start.parent.descendants.include? other_block
         raise 'same branch' if self == candidate_branch_start
@@ -119,7 +115,7 @@ class Block < ApplicationRecord
         node = this_block.first_seen_by
         # getblock argument verbosity 2 was added in v0.16.0
         # Knots doesn't return the transaction hash
-        node = Node.newest_node(this_block.coin.to_sym) if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
+        node = Node.newest_node if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
         block_info = node.getblock(block_hash, 2, false, nil)
       rescue BitcoinUtil::RPC::BlockPrunedError
         update pruned: true
@@ -128,7 +124,7 @@ class Block < ApplicationRecord
         # Perhaps the newest node hasn't seen this block yet, just try again later
         return
       end
-      throw "Missing transaction data for #{coin.upcase} block #{height} (#{block_hash}) on #{node.name_with_version}" if block_info['tx'].nil?
+      throw "Missing transaction data for block #{height} (#{block_hash}) on #{node.name_with_version}" if block_info['tx'].nil?
       block_info['tx'].each_with_index do |tx, i|
         transactions.create(
           is_coinbase: i.zero?,
@@ -148,7 +144,7 @@ class Block < ApplicationRecord
       block_ids.append(block_id)
       block = Block.find(block_id)
       # Prevent new instances from going too far back:
-      minimum_height = node.client.instance_of?(BitcoinClientMock) ? 560_176 : Block::MINIMUM_BLOCK_HEIGHTS[block.coin.to_sym]
+      minimum_height = node.client.instance_of?(BitcoinClientMock) ? 560_176 : Block::MINIMUM_BLOCK_HEIGHT
       break if block.height.zero? || block.height <= minimum_height
       break if until_height && block.height == until_height
 
@@ -256,7 +252,7 @@ class Block < ApplicationRecord
   end
 
   def expire_stale_candidate_cache
-    StaleCandidate.where(coin: coin).find_each do |c|
+    StaleCandidate.find_each do |c|
       c.expire_cache if height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
     end
   end
@@ -323,7 +319,7 @@ class Block < ApplicationRecord
   end
 
   def throw_unable_to_roll_back!(node, blocks_to_invalidate = nil, invalidated_block_hashes = nil)
-    error = "Unable to roll active #{coin.upcase} chaintip to #{block_hash} (#{height}) on node #{node.id} #{node.name_with_version}"
+    error = "Unable to roll active chaintip to #{block_hash} (#{height}) on node #{node.id} #{node.name_with_version}"
     error += "\nChaintips: #{node.mirror_client.getchaintips.filter do |t|
                                t['height'] > height - 100
                              end.collect { |t| "#{t['hash']} (#{t['height']})=#{t['status']}" }.join(', ')}"
@@ -458,12 +454,11 @@ class Block < ApplicationRecord
     def create_or_update_with(block_info, _use_mirror, node, mark_valid)
       block = Block.find_or_create_by(
         block_hash: block_info['hash'],
-        coin: node.coin,
         height: block_info['height']
       )
       tx_count = extract_tx_count(block_info)
 
-      Rails.logger.error "Missing version for #{node.coin.to_s.upcase} #{block.block_hash} (#{block.height}) from #{node.name_with_version}}" if block_info['version'].nil?
+      Rails.logger.error "Missing version for #{block.block_hash} (#{block.height}) from #{node.name_with_version}}" if block_info['version'].nil?
 
       block.update(
         mediantime: block_info['mediantime'],
@@ -483,13 +478,10 @@ class Block < ApplicationRecord
         end
       end
       # Set pool:
-      Node.set_pool_for_block!(node.coin.to_sym, block, block_info)
+      Node.set_pool_for_block!(block, block_info)
 
       # Fetch transactions if there was a stale block recently
-      if StaleCandidate.where(coin: node.coin).where('height >= ?',
-                                                     block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive?
-        block.fetch_transactions!
-      end
+      block.fetch_transactions! if StaleCandidate.where('height >= ?', block.height - StaleCandidate::DOUBLE_SPEND_RANGE).count.positive?
       block.expire_stale_candidate_cache
       block
     end
@@ -499,7 +491,6 @@ class Block < ApplicationRecord
       throw 'height missing' if height.nil?
       begin
         block = Block.create(
-          coin: node.coin,
           height: height,
           block_hash: block_hash,
           headers_only: true,
@@ -550,9 +541,9 @@ class Block < ApplicationRecord
       nil
     end
 
-    def match_missing_pools!(coin, limit)
-      Block.where(coin: coin, pool: nil).order(height: :desc).limit(limit).each do |b|
-        Node.set_pool_for_block!(coin, b)
+    def match_missing_pools!(limit)
+      Block.where(pool: nil).order(height: :desc).limit(limit).each do |b|
+        Node.set_pool_for_block!(b)
       end
     end
 
@@ -589,29 +580,24 @@ class Block < ApplicationRecord
     end
 
     # This method returns nil if at any point the mirror node can't be reached or is restarting
-    def find_missing(coin, max_depth, patience)
-      throw "Invalid coin argument #{coin}" unless Rails.configuration.supported_coins.include?(coin)
-
+    def find_missing(max_depth, patience)
       # Find recent headers_only blocks
-      tip_height = Block.where(coin: coin).maximum(:height)
-      blocks = Block.where(coin: coin, headers_only: true).where('height >= ?',
-                                                                 tip_height - max_depth).order(height: :asc)
+      tip_height = Block.maximum(:height)
+      blocks = Block.where(headers_only: true).where('height >= ?',
+                                                     tip_height - max_depth).order(height: :asc)
       return if blocks.count.zero?
 
       getblockfrompeer_blocks = []
       # Ensure the most recent node supports getblockfrompeer or is patched:
       # https://github.com/BitMEXResearch/bitcoin/pull/2
-      gbfp_node = coin == :btc ? Node.with_mirror(coin).first : nil
+      gbfp_node = Node.with_mirror.first
       gbfp_node = nil if Rails.env.test? # TODO: add test coverage, maybe after v22.0 release
 
       blocks.each do |block|
         block_info = nil
         raw_block = nil
         # Try to fetch from other nodes.
-        nodes_to_try = case coin.to_sym
-                       when :btc
-                         Node.bitcoin_core_by_version
-                       end
+        nodes_to_try = Node.bitcoin_core_by_version
         # Keep track of the original first seen node
         # To make mocks easier, require that it's part of nodes_to_try:
         originally_seen_by = nodes_to_try.find { |node| node.id == block.first_seen_by_id }
@@ -622,7 +608,7 @@ class Block < ApplicationRecord
             raw_block = node.getblock(block.block_hash, 0)
             block.update_fields(block_info)
             block.update headers_only: false, first_seen_by: node
-            Node.set_pool_for_block!(coin, block, block_info)
+            Node.set_pool_for_block!(block, block_info)
             break
           rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::TimeOutError # rubocop:disable Lint/SuppressedException
           end
@@ -632,7 +618,7 @@ class Block < ApplicationRecord
             originally_seen_by.client.submitblock(raw_block, block.block_hash) if originally_seen_by.present? && !(originally_seen_by.core? && originally_seen_by.version < 130_100)
             # Feed block to node with transaction index:
             begin
-              Node.first_with_txindex(coin.to_sym, :core).client.submitblock(raw_block, block.block_hash)
+              Node.first_with_txindex(:core).client.submitblock(raw_block, block.block_hash)
             rescue BitcoinUtil::RPC::NoTxIndexError # rubocop:disable Lint/SuppressedException
             end
           end
@@ -687,7 +673,7 @@ class Block < ApplicationRecord
         raw_block = nil
         getblockfrompeer_blocks.each do |block|
           raw_block = gbfp_node.getblock(block.block_hash, 0, true)
-          Rails.logger.info "Retrieved #{block.coin.upcase} block #{block.block_hash} (#{block.height}) on the mirror node"
+          Rails.logger.info "Retrieved block #{block.block_hash} (#{block.height}) on the mirror node"
           found_block = true
           # Feed block to original node
           if block.first_seen_by.present? && !(block.first_seen_by.core? && block.first_seen_by.version < 130_100)
@@ -696,7 +682,7 @@ class Block < ApplicationRecord
             block_info = gbfp_node.getblock(block.block_hash, 1, true)
             block.update_fields(block_info)
             block.update headers_only: false
-            Node.set_pool_for_block!(coin, block, block_info)
+            Node.set_pool_for_block!(block, block_info)
           end
         rescue BitcoinUtil::RPC::TimeOutError
           Rails.logger.error "Timeout on mirror node while trying to fetch #{block.block_hash} (#{block.height})"
@@ -722,12 +708,9 @@ class Block < ApplicationRecord
       nil
     end
 
-    def process_templates!(coin)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      min_height = BlockTemplate.where(coin: coin).minimum(:height)
-      Block.where(coin: coin, template_txs_fee_diff: nil).where('height >= ?',
-                                                                min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
+    def process_templates!
+      min_height = BlockTemplate.minimum(:height)
+      Block.where(template_txs_fee_diff: nil).where('height >= ?', min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
     end
   end
 end

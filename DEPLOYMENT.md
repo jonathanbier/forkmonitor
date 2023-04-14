@@ -60,14 +60,11 @@ User `crontab`:
 ```
 # MAILTO=...
 # m h  dom mon dow   command
-* * * * * /usr/bin/flock -n /tmp/pollBTC.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat[BTC]
-* * * * * /usr/bin/flock -n /tmp/pollTBTC.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat[TBTC]
-# * * * * * /usr/bin/flock -n /tmp/pollBTC_stale.lock /usr/bin/cronic ~/rake.sh nodes:poll_unless_fresh[BTC]
-* * * * * /usr/bin/flock -n /tmp/heavyTBTC.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat[TBTC]
-* * * * * /usr/bin/flock -n /tmp/heavyBTC.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat[BTC]
-* * * * * /usr/bin/flock -n /tmp/rollbackBTC.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat[BTC]
-* * * * * /usr/bin/flock -n /tmp/rollbackTBTC.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat[TBTC]
-* * * * * /usr/bin/flock -n /tmp/blockTemplate.lock /usr/bin/cronic ~/rake.sh nodes:getblocktemplate_repeat[BTC]
+* * * * * /usr/bin/flock -n /tmp/poll.lock /usr/bin/cronic ~/rake.sh nodes:poll_repeat
+# * * * * * /usr/bin/flock -n /tmp/poll_stale.lock /usr/bin/cronic ~/rake.sh nodes:poll_unless_fresh
+* * * * * /usr/bin/flock -n /tmp/heavy.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat
+* * * * * /usr/bin/flock -n /tmp/rollback.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat
+* * * * * /usr/bin/flock -n /tmp/blockTemplate.lock /usr/bin/cronic ~/rake.sh nodes:getblocktemplate_repeat
 0 0 * * * ~/rake.sh pools:fetch
 ```
 

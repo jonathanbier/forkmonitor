@@ -56,38 +56,36 @@ To poll nodes:
 
 ```
 rake nodes:poll
-rake nodes:poll[BTC]
 ```
 
 Prefix rake command with `debug` or `info` to see more progress details:
 
 ```
-rake debug nodes:poll[BTC]
+rake debug nodes:poll
 ```
 
-To poll all nodes continuously, or filter by coin:
+To poll all nodes continuously
 
 ```sh
 rake nodes:poll_repeat
-rake nodes:poll_repeat[BTC]
 ```
 
 To check inflation, you need to run a mirror node and add it in the admin panel.
 
 ```
-rake debug blocks:check_inflation[BTC]
+rake debug blocks:check_inflation
 ```
 
-To run inflation checks continuously, filtered by coin:
+To run inflation checks continuously:
 
 ```
-rake debug nodes:rollback_checks_repeat[BTC]
+rake debug nodes:rollback_checks_repeat
 ```
 
 The other long running heavy work tasks:
 
 ```
-rake debug nodes:heavy_checks_repeat[BTC]
+rake debug nodes:heavy_checks_repeat
 ```
 
 To manually query a node:
@@ -109,7 +107,7 @@ Node.first.client.request("getblock", ...)
 To communicate with the first Bitcoin Core mirror node:
 
 ```
-Node.where(coin:"BTC").where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
+Node.where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
 ```
 
 ## Test suite

@@ -5,20 +5,16 @@ module Api
     class InflatedBlocksController < ApplicationController
       before_action :authenticate_user!, only: [:destroy]
       before_action :set_inflated_block, only: %i[show destroy]
-      before_action :set_coin_optional
+
+      def admin_index
+        @inflated_blocks = InflatedBlock.joins(:block)
+        render json: @inflated_blocks
+      end
 
       def index
-        if @coin.present?
-          latest = InflatedBlock.joins(:block).where('blocks.coin = ?',
-                                                     Block.coins[@coin]).order(updated_at: :desc).first
-          if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-            @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil).where('blocks.coin = ?',
-                                                                                          Block.coins[@coin])
-            response.headers['Content-Range'] = @inflated_blocks.count
-            render json: @inflated_blocks
-          end
-        else
-          @inflated_blocks = InflatedBlock.all
+        latest = InflatedBlock.joins(:block).order(updated_at: :desc).first
+        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
+          @inflated_blocks = InflatedBlock.joins(:block).where(dismissed_at: nil)
           response.headers['Content-Range'] = @inflated_blocks.count
           render json: @inflated_blocks
         end

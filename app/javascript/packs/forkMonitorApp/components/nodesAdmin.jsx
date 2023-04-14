@@ -16,10 +16,6 @@ import {
   DateInput,
 } from 'react-admin';
 
-const coin_choices = [
-  { id: "btc", name: "Bitcoin"},
-]
-
 const client_choices = [
     { id: "core", name: "Bitcoin Core"},
     { id: "bcoin", name: "bcoin"},
@@ -38,7 +34,6 @@ export const NodeList = props => (
         >
         <Datagrid rowClick="edit">
             <NumberField source="id" />
-            <TextField source="coin" />
             <TextField source="name_with_version" />
             <DateField source="unreachable_since" />
             <BooleanField source="enabled" />
@@ -49,7 +44,6 @@ export const NodeList = props => (
 export const NodeEdit = props => (
     <Edit {...props}>
         <SimpleForm>
-            <TextField source="coin" />
             <TextField source="name_with_version" readOnly />
             <TextInput source="name" />
             <TextInput source="version_extra" />
@@ -79,7 +73,6 @@ export const NodeEdit = props => (
 export const NodeCreate = props => (
     <Create {...props}>
         <SimpleForm>
-            <SelectInput source="coin" defaultValue="btc" choices={ coin_choices } />
             <TextInput source="name" defaultValue="Bitcoin Core" />
             <SelectInput source="client_type" defaultValue="core" choices={ client_choices } />
             <TextInput source="version_extra" />

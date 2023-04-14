@@ -15,7 +15,7 @@ class RSSFeeds extends React.Component {
         <h3>Invalid Blocks</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/btc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/btc/blocks/invalid.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -27,7 +27,7 @@ class RSSFeeds extends React.Component {
         <h3>Inconsistent validity (blocks)</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/invalid_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -48,7 +48,7 @@ class RSSFeeds extends React.Component {
         <h3>Inflated Blocks</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/inflated_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/inflated_blocks/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -59,7 +59,7 @@ class RSSFeeds extends React.Component {
         <h3>Stale block candidates</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/stale_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/stale_candidates/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -73,7 +73,7 @@ class RSSFeeds extends React.Component {
         <h3>Unidentified mining pools</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/blocks/unknown_pools/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/blocks/unknown_pools/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -83,7 +83,7 @@ class RSSFeeds extends React.Component {
         <h3>Version bit signaling</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/version_bits.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/version_bits.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>Version bits flagged in the past 100 blocks (currently uses 10 as lower threshold).</p>
@@ -91,7 +91,7 @@ class RSSFeeds extends React.Component {
         <h3>Lagging nodes</h3>
 
         <ul>
-          <li>BTC <a href="/feeds/lagging_nodes.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li>coing<a href="/feeds/lagging_nodes.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <p>
@@ -105,7 +105,7 @@ class RSSFeeds extends React.Component {
         <p>This includes mirror nodes, which are used for inflation checks.</p>
 
         <ul>
-          <li>All coins <a href="/feeds/nodes/unreachable.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/nodes/unreachable.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <h3>Lightning transactions</h3>
@@ -117,13 +117,13 @@ class RSSFeeds extends React.Component {
         <b>Penalties</b>
 
         <ul>
-          <li>BTC <a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
         <b>Delayed sweeps</b>
 
         <ul>
-          <li>BTC <a href="/feeds/ln_sweeps/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
+          <li><a href="/feeds/ln_sweeps/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a></li>
         </ul>
 
       </div>

@@ -3,11 +3,10 @@
 module Api
   module V1
     class StaleCandidatesController < ApplicationController
-      before_action :set_coin
       before_action :set_stale_candidate, except: [:index]
 
       def index
-        render json: StaleCandidate.index_json_cached(@coin)
+        render json: StaleCandidate.index_json_cached
       end
 
       def show
@@ -33,7 +32,7 @@ module Api
       private
 
       def set_stale_candidate
-        @stale_candidate = StaleCandidate.find_by!(coin: @coin, height: params[:height])
+        @stale_candidate = StaleCandidate.find_by!(height: params[:height])
       end
     end
   end

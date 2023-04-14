@@ -22,17 +22,16 @@ class Block extends React.Component {
     super(props);
 
     this.state = {
-      coin: props.match.params.coin,
       hash: props.match.params.hash,
       block: null,
     };
   }
 
   componentDidMount() {
-    this.getBlock(this.state.coin, this.state.hash);
+    this.getBlock(this.state.hash);
   }
 
-  getBlock(coin, hash) {
+  getBlock(hash) {
     axios.get('/api/v1/blocks/hash/' + hash).then(function (response) {
       return response.data;
     }).then(function (block) {
@@ -45,14 +44,13 @@ class Block extends React.Component {
    }
 
   render() {
-    const coin = this.state.coin;
     return(
       <TabPane align="left" >
         <Container>
           <Row><Col>
             <Breadcrumb className="chaintip-header">
               <BreadcrumbItem className="chaintip-hash">
-                { this.state.hash } ({ coin.toUpperCase() })
+                { this.state.hash }
               </BreadcrumbItem>
             </Breadcrumb>
             { this.state.block &&

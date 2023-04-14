@@ -37,7 +37,6 @@ class StaleCandidate extends React.Component {
 }
 
 StaleCandidate.propTypes = {
-  coin: PropTypes.string.isRequired
 }
 
 export default StaleCandidate

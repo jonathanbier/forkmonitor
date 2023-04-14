@@ -10,13 +10,8 @@ class Explorer extends React.Component {
   render() {
     let url;
     let image;
-    const coin = this.props.coin;
     if (this.props.blockstream) {
       var rootUrl = "https://blockstream.info/";
-      if (coin == "btc") {
-      } else {
-        return null;
-      }
       if (this.props.tx) {
         url = rootUrl + "tx/" + this.props.tx
       } else {
@@ -25,10 +20,6 @@ class Explorer extends React.Component {
       image = ImageBlockstream
     } else if (this.props.btcCom) {
       var rootUrl = "https://btc.com/";
-      if (coin == "btc") {
-      } else {
-        return null;
-      }
       if (this.props.tx) {
         url = rootUrl + this.props.tx
       } else {
@@ -51,7 +42,6 @@ class Explorer extends React.Component {
 }
 
 Explorer.propTypes = {
-  coin: PropTypes.string.isRequired,
   tx: PropTypes.string,
   channelId: PropTypes.string
 }

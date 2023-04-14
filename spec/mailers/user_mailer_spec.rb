@@ -16,12 +16,6 @@ RSpec.describe UserMailer do
     it 'renders the body' do
       expect(mail.body.encoded).to include('https://forkmonitor.info/nodes/btc')
     end
-
-    it 'links to the right coin' do
-      lag.node_a.update coin: :btc
-      lag.node_b.update coin: :btc
-      expect(mail.body.encoded).to include('https://forkmonitor.info/nodes/btc')
-    end
   end
 
   describe 'invalid block notify' do
@@ -35,7 +29,7 @@ RSpec.describe UserMailer do
     end
 
     it 'renders the headers' do
-      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 23.0 considers BTC block #{invalid_block.block.height} (#{invalid_block.block.block_hash}) invalid")
+      expect(mail.subject).to eq("[ForkMonitor] Bitcoin Core 23.0 considers block #{invalid_block.block.height} (#{invalid_block.block.block_hash}) invalid")
       expect(mail.to).to eq([user.email])
     end
 
@@ -66,7 +60,7 @@ RSpec.describe UserMailer do
   describe 'stale candidate notify' do
     let(:user) { create(:user) }
     let(:mail) { described_class.with(user: user, stale_candidate: stale_candidate).stale_candidate_email }
-    let(:stale_candidate) { create(:stale_candidate, coin: :btc, height: 500_000) }
+    let(:stale_candidate) { create(:stale_candidate, height: 500_000) }
 
     before do
       @block_1 = create(:block, height: 500_000)
@@ -74,7 +68,7 @@ RSpec.describe UserMailer do
     end
 
     it 'renders the headers' do
-      expect(mail.subject).to eq("[ForkMonitor] potential BTC stale block at height #{stale_candidate.height}")
+      expect(mail.subject).to eq("[ForkMonitor] potential stale block at height #{stale_candidate.height}")
       expect(mail.to).to eq([user.email])
     end
 

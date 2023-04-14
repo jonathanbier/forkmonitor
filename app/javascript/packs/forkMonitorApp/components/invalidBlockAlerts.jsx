@@ -17,7 +17,7 @@ class InvalidBlockAlerts extends React.Component {
   }
 
   componentDidMount() {
-    this.getInvalidBlocks(this.props.coin);
+    this.getInvalidBlocks();
   }
 
   static getDerivedStateFromProps(props, state) {
@@ -36,7 +36,7 @@ class InvalidBlockAlerts extends React.Component {
 
   componentDidUpdate() {
     if (this.state.fresh) {
-      this.getInvalidBlocks(this.state.coin);
+      this.getInvalidBlocks();
       this.setState({
           fresh: false
       });
@@ -44,8 +44,8 @@ class InvalidBlockAlerts extends React.Component {
 
   }
 
-   getInvalidBlocks(coin) {
-     axios.get('/api/v1/invalid_blocks?coin=' + coin).then(function (response) {
+   getInvalidBlocks() {
+     axios.get('/api/v1/invalid_blocks.json').then(function (response) {
        return response.data;
      }).then(function (invalid_blocks) {
        this.setState({

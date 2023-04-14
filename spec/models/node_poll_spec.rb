@@ -145,17 +145,16 @@ RSpec.describe Node do
         expect(@node.block).to be_nil
       end
 
-      it 'does not fetch parent blocks older than MINIMUM_BLOCK_HEIGHTS' do
+      it 'does not fetch parent blocks older than MINIMUM_BLOCK_HEIGHT' do
         # Exit IBD, fetching all previous blocks would take forever, so don't:
         @node.client.generate(2)
         # rubocop:disable RSpec/LeakyConstantDeclaration
-        before = Block::MINIMUM_BLOCK_HEIGHTS[:btc]
         Kernel.silence_warnings do
-          Block::MINIMUM_BLOCK_HEIGHTS = { btc: 4 }.freeze
+          Block::MINIMUM_BLOCK_HEIGHT = 4
         end
         @node.poll!
         Kernel.silence_warnings do
-          Block::MINIMUM_BLOCK_HEIGHTS = { btc: before }.freeze
+          Block::MINIMUM_BLOCK_HEIGHT = 4
         end
         # rubocop:enable RSpec/LeakyConstantDeclaration
         @node.reload

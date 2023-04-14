@@ -5,18 +5,17 @@ module Api
     class NodesController < ApplicationController
       before_action :authenticate_user!, except: [:index_coin]
       before_action :set_node, only: %i[show update destroy]
-      before_action :set_coin, only: :index_coin
 
-      # Unauthenticated list of nodes, per coin:
+      # Unauthenticated list of nodes
       def index_coin
-        latest = Node.last_updated_cached(@coin.upcase)
+        latest = Node.last_updated_cached
         if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @nodes = Node.where(enabled: true, coin: @coin).order(client_type: :asc, name: :asc, version: :desc)
+          @nodes = Node.where(enabled: true).order(client_type: :asc, name: :asc, version: :desc)
           render json: @nodes
         end
       end
 
-      # Authenticated list of nodes, for all coins
+      # Authenticated list of nodes
       def index
         @nodes = Node.where(to_destroy: false)
         response.headers['Content-Range'] = @nodes.count
@@ -63,7 +62,7 @@ module Api
       end
 
       def node_params
-        params.require(:node).permit(:name, :coin, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport,
+        params.require(:node).permit(:name, :client_type, :version_extra, :rpchost, :mirror_rpchost, :rpcport,
                                      :mirror_rpcport, :rpcuser, :rpcpassword, :pruned, :txindex, :os, :cpu, :ram, :storage, :cve_2018_17144, :checkpoints, :released, :enabled, :link, :link_text, :getblocktemplate, :to_destroy)
       end
     end

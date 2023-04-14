@@ -33,7 +33,7 @@ RSpec.describe Block do
 
     expect(Chaintip.count).to eq(0)
 
-    allow(Node).to receive(:with_mirror).with(:btc).and_return [@node_a]
+    allow(Node).to receive(:with_mirror).and_return [@node_a]
     allow(Node).to receive(:bitcoin_core_by_version).and_return [@node_a, @node_b]
   end
 

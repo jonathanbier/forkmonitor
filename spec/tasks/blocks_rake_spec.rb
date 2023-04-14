@@ -18,36 +18,36 @@ end
 describe 'blocks:check_inflation' do
   include_context 'with rake'
 
-  it 'calls check_inflation! on Block for coin' do
-    expect(InflatedBlock).to receive(:check_inflation!).with({ coin: :btc, max: nil })
-    subject.invoke('BTC')
+  it 'calls check_inflation! on Block' do
+    expect(InflatedBlock).to receive(:check_inflation!).with({ max: nil })
+    subject.invoke
   end
 end
 
 describe 'blocks:check_lightning' do
   include_context 'with rake'
 
-  it 'calls check! for a given coin' do
-    expect(LightningTransaction).to receive(:check!).with({ coin: :btc, max: 10_000 })
-    subject.invoke('BTC')
+  it 'calls check!' do
+    expect(LightningTransaction).to receive(:check!).with({ max: 10_000 })
+    subject.invoke
   end
 end
 
 describe 'blocks:match_missing_pools' do
   include_context 'with rake'
 
-  it 'calls match_missing_pools! for a given coin' do
-    expect(Block).to receive(:match_missing_pools!).with(:btc, 100)
-    subject.invoke('BTC', '100')
+  it 'calls match_missing_pools!' do
+    expect(Block).to receive(:match_missing_pools!).with(100)
+    subject.invoke('100')
   end
 end
 
 describe 'blocks:stale_candidates' do
   include_context 'with rake'
 
-  it 'calls StaleCandidate.process! for a given coin' do
-    expect(StaleCandidate).to receive(:process!).with(:btc)
-    subject.invoke('BTC')
+  it 'calls StaleCandidate.process!' do
+    expect(StaleCandidate).to receive(:process!)
+    subject.invoke
   end
 end
 # rubocop:enable RSpec/NamedSubject

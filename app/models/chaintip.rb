@@ -8,8 +8,6 @@ class Chaintip < ApplicationRecord
 
   after_commit :expire_cache
 
-  enum coin: { btc: 0 }
-
   validates :status, uniqueness: { scope: :node }
 
   def nodes_for_identical_chaintips
@@ -62,8 +60,8 @@ class Chaintip < ApplicationRecord
     # Use their chaintip instead unless we consider it invalid:
     return if parent_chaintip.present?
 
-    Chaintip.joins(:block, :node).where(coin: coin, status: 'active').where('blocks.height > ?',
-                                                                            block.height).order('client_type asc, name asc, nodes.version desc').each do |candidate_tip|
+    Chaintip.joins(:block, :node).where(status: 'active').where('blocks.height > ?',
+                                                                block.height).order('client_type asc, name asc, nodes.version desc').each do |candidate_tip|
       # Traverse candidate tip down, abort if block is from a chaintip we consider
       # invalid. Abort early if we marked the block invalid.
       parent = candidate_tip.block
@@ -83,7 +81,7 @@ class Chaintip < ApplicationRecord
   def match_children!(node)
     # Check if any of the other nodes are behind of us. If they don't have a parent,
     # mark us their parent chaintip, unless they consider us invalid.
-    Chaintip.joins(:block, :node).where(coin: coin, status: 'active', parent_chaintip: nil).where(
+    Chaintip.joins(:block, :node).where(status: 'active', parent_chaintip: nil).where(
       'blocks.height < ?', block.height
     ).order('client_type asc, name asc, nodes.version desc').each do |candidate_tip|
       # Traverse down from ourselfves to find candidate tip
@@ -104,12 +102,12 @@ class Chaintip < ApplicationRecord
   private
 
   def expire_cache
-    Rails.cache.delete("Chaintip.#{coin}.index.json")
+    Rails.cache.delete('Chaintip.index.json')
   end
 
   class << self
     def process_chaintip_result(chaintip, node)
-      block = Block.find_by(block_hash: chaintip['hash'], coin: node.coin)
+      block = Block.find_by(block_hash: chaintip['hash'])
       case chaintip['status']
       when 'active'
         # A block may have arrived between when we called getblockchaininfo and getchaintips.
@@ -128,12 +126,12 @@ class Chaintip < ApplicationRecord
         return nil if chaintip['height'] < node.block.height - (Rails.env.test? ? 1000 : 10)
 
         block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, true)
-        node.chaintips.create(status: 'valid-fork', block: block, coin: block.coin) # There can be multiple valid-block chaintips
+        node.chaintips.create(status: 'valid-fork', block: block) # There can be multiple valid-block chaintips
         block.update marked_valid_by: block.marked_valid_by | [node.id]
       when 'invalid'
         block = Block.find_or_create_block_and_ancestors!(chaintip['hash'], node, false, false)
         block.update marked_invalid_by: block.marked_invalid_by | [node.id]
-        node.chaintips.create(status: 'invalid', block: block, coin: block.coin)
+        node.chaintips.create(status: 'invalid', block: block)
       end
     end
 
@@ -145,7 +143,7 @@ class Chaintip < ApplicationRecord
 
     # Update the existing active chaintip or create a fresh one. Then update parents and children.
     def process_active!(node, block)
-      tip = Chaintip.find_or_initialize_by(coin: block.coin, node: node, status: 'active')
+      tip = Chaintip.find_or_initialize_by(node: node, status: 'active')
       if tip.block != block
         tip.block = block
         tip.parent_chaintip = nil
@@ -159,13 +157,13 @@ class Chaintip < ApplicationRecord
 
     def process_valid_headers!(node, chaintip, block)
       return unless block.nil?
-      return if chaintip['height'] < Block::MINIMUM_BLOCK_HEIGHTS[node.coin.to_sym]
+      return if chaintip['height'] < Block::MINIMUM_BLOCK_HEIGHT
       return if Block.find_by(block_hash: chaintip['hash']).present?
 
       Block.create_headers_only(node, chaintip['height'], chaintip['hash'])
     end
 
-    def check!(coin, nodes)
+    def check!(nodes)
       # Delete existing (non-active chaintips)
       nodes.each do |node|
         Chaintip.purge!(node)
@@ -194,7 +192,7 @@ class Chaintip < ApplicationRecord
             chaintip.match_parent!(node)
           end
         end
-        Node.prune_empty_chaintips!(coin)
+        Node.prune_empty_chaintips!
       end
     end
 

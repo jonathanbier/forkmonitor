@@ -3,7 +3,7 @@
 class BitcoinClientMock
   include ::BitcoinUtil
 
-  def initialize(node_id, name_with_version, coin, client_type, client_version, _rpchost, _rpcport, _rpcuser, _rpcpassword)
+  def initialize(node_id, name_with_version, client_type, client_version, _rpchost, _rpcport, _rpcuser, _rpcpassword)
     @height = 560_176
     @block_hash = '0000000000000000000b1e380c92ea32288b0106ef3ed820db3b374194b15aab'
     @best_height = 560_176
@@ -11,7 +11,6 @@ class BitcoinClientMock
     @ibd = false
     @peer_count = 100
     @version = 230_000
-    @coin = coin
     @client_type = client_type
     @client_version = client_version
     @extra_inflation = 0
@@ -69,10 +68,6 @@ class BitcoinClientMock
                          'ee066740f15430fb088ca425a1ddf327a05bffdeea938e70f739cff1f54cdd9b', '02000000000101e9278556ee629fd6a0b32f44ee09a282318dbff95a5243992776567126058c400000000000a0968d8002141e0000000000001600145df1a821232e62f5878d915515ab2b4b8cc9909d837f070000000000220020890b197b34f9b1120572d8a81fe4283915bdbbca95dc6299df6ee38bad16028b04004730440220212b6ccb6aafaad6a0dbfcc9a2290f28d33f7b5c541526d82ef4415c0f55c9f902204c55aeacd4c6b7281df10b4c2c47004466c743d2279e8076786270730ac2ada7014830450221008a5be807a1fec879f5e72e1c1be8e50433ac662ff0f260440eef3d0a66cfa6da0220469a5c29bf24271d0422839d4a5c6509e46a9073b71a29694170a25f5beaf3e0014752210338fafcc3b7f167562fed25f0a94eb079ba8d1c7c3df0d9d5b4720e83c59b07f02103a3508b15bca26aeca9257172e2205d7dba9baa7bff6555395cc2f7828465239152aef7b9d920')
     mock_add_transaction('0000000000000000002faaf421dc1716d7a74623da57209a05edb19542344068',
                          '035418233d5289983a723bf30f8d25d6e432bdfe8145ed7b4d2e7b6876371778', '020000000001014efa33deb5c5eb8965371728ae22cc9c56967de3d2c4251d68161b08b397996d00000000008fe5a58002a0b7000000000000220020996abb9cc3d2cb53a92815207eb1bebfdc8135eb1f6a7bf138e4dc51203d101601900400000000001600141b91a2a10a948f0643e9fe67100bcdf7f19391d3040047304402205af5a1456226c3a26b3dc482db078ff7c8faa7923d2f3cf803a41c371479546b022029829555e0a10a4fd510f8cbce2af76a2845af5b89c56bcd403df6c72f948e70014730440220105d225b77401db30485efbd22cfab67f104da7976bd9ea642120c9e528e81aa02200ca51ce526ea336f95fa139cf2f3573da16d18ffeeab25f5ca83d5184699d90c0147522102627888db5169deadcf9dfda1cbecef0f4676af594176520068de3bd43a33f129210302a1c864f082a7c630ec8f60719ccb1f87067df8d348a9ff1a52b7e11eb035af52ae04096820')
-  end
-
-  def mock_coin(coin)
-    @coin = coin
   end
 
   def mock_version(version)
@@ -133,36 +128,34 @@ class BitcoinClientMock
   def getinfo
     raise Error unless @reachable
 
-    if @coin == :btc
-      case @client_type
-      when :core
-        res = {
-          80_600 => {
-            'version' => 80_600,
-            'protocolversion' => 70_001,
-            'blocks' => @height,
-            # "difficulty" => 5883988430955.408,
-            'warnings' => '',
-            'errors' => 'URGENT: Alert key compromised, upgrade required',
-            'connections' => 8
-          }
+    case @client_type
+    when :core
+      res = {
+        80_600 => {
+          'version' => 80_600,
+          'protocolversion' => 70_001,
+          'blocks' => @height,
+          # "difficulty" => 5883988430955.408,
+          'warnings' => '',
+          'errors' => 'URGENT: Alert key compromised, upgrade required',
+          'connections' => 8
         }
-      when :btcd
-        res = {
-          120_000 => {
-            'version' => 120_000,
-            'protocolversion' => 70_002,
-            'blocks' => @height,
-            'timeoffset' => 0,
-            'connections' => 8,
-            'proxy' => '',
-            # "difficulty"=>7934713219630.606,
-            'testnet' => false,
-            'relayfee' => 1.0e-05,
-            'errors' => ''
-          }
+      }
+    when :btcd
+      res = {
+        120_000 => {
+          'version' => 120_000,
+          'protocolversion' => 70_002,
+          'blocks' => @height,
+          'timeoffset' => 0,
+          'connections' => 8,
+          'proxy' => '',
+          # "difficulty"=>7934713219630.606,
+          'testnet' => false,
+          'relayfee' => 1.0e-05,
+          'errors' => ''
         }
-      end
+      }
     end
 
     throw "No getinfo mock for #{@client_type}" if res.blank?
@@ -172,80 +165,75 @@ class BitcoinClientMock
   def getnetworkinfo
     raise Error unless @reachable
 
-    case @coin
-    when :btc
-      case @client_type
-      when :core
-        raise Error if @version < 100_000
+    case @client_type
+    when :core
+      raise Error if @version < 100_000
 
+      {
+        100_300 => {
+          'version' => 100_300,
+          'subversion' => '/Satoshi:0.10.3/',
+          'protocolversion' => 70_002,
+          'localservices' => '0000000000000001',
+          'timeoffset' => 0,
+          'connections' => @peer_count,
+          'relayfee' => 5.0e-05
+        },
+        130_000 =>
         {
-          100_300 => {
-            'version' => 100_300,
-            'subversion' => '/Satoshi:0.10.3/',
-            'protocolversion' => 70_002,
-            'localservices' => '0000000000000001',
-            'timeoffset' => 0,
-            'connections' => @peer_count,
-            'relayfee' => 5.0e-05
-          },
-          130_000 =>
-          {
-            'version' => 130_000,
-            'subversion' => '/Satoshi:0.13.0/',
-            'protocolversion' => 70_014,
-            'localservices' => '0000000000000005',
-            'localrelay' => true,
-            'timeoffset' => 0,
-            'connections' => 8,
-            'networks' => [],
-            'relayfee' => 0.00001000,
-            'localaddresses' => [],
-            'warnings' => ''
-          },
-          160_300 => {
-            'version' => 160_300,
-            'subversion' => '/Satoshi:0.16.3/',
-            'protocolversion' => 70_015,
-            'localservices' => '0000000000000409',
-            'localrelay' => true,
-            'timeoffset' => -1,
-            'networkactive' => @network_active,
-            'connections' => @peer_count,
-            'warnings' => ''
-          },
-          230_000 => {
-            'version' => 230_000,
-            'subversion' => '/Satoshi:23.0.0/',
-            'protocolversion' => 70_016,
-            'localservices' => '0000000000000409',
-            'localrelay' => true,
-            'timeoffset' => -1,
-            'networkactive' => @network_active,
-            'connections' => @peer_count,
-            'warnings' => ''
-          }
-        }[@version]
-      when :bcoin
-        {
-          '2.0.0' => {
-            'version' => '2.0.0',
-            'subversion' => '/bcoin:2.0.0/',
-            'protocolversion' => 70_015,
-            'localservices' => '00000009',
-            'localrelay' => true,
-            'timeoffset' => 0,
-            'networkactive' => @network_active,
-            'connections' => @peer_count,
-            'warnings' => ''
-          }
-        }[@version]
-      when :btcd
-        raise Error
-      else
-        throw "No getnetworkinfo mock for #{@client_type}"
-      end
+          'version' => 130_000,
+          'subversion' => '/Satoshi:0.13.0/',
+          'protocolversion' => 70_014,
+          'localservices' => '0000000000000005',
+          'localrelay' => true,
+          'timeoffset' => 0,
+          'connections' => 8,
+          'networks' => [],
+          'relayfee' => 0.00001000,
+          'localaddresses' => [],
+          'warnings' => ''
+        },
+        160_300 => {
+          'version' => 160_300,
+          'subversion' => '/Satoshi:0.16.3/',
+          'protocolversion' => 70_015,
+          'localservices' => '0000000000000409',
+          'localrelay' => true,
+          'timeoffset' => -1,
+          'networkactive' => @network_active,
+          'connections' => @peer_count,
+          'warnings' => ''
+        },
+        230_000 => {
+          'version' => 230_000,
+          'subversion' => '/Satoshi:23.0.0/',
+          'protocolversion' => 70_016,
+          'localservices' => '0000000000000409',
+          'localrelay' => true,
+          'timeoffset' => -1,
+          'networkactive' => @network_active,
+          'connections' => @peer_count,
+          'warnings' => ''
+        }
+      }[@version]
+    when :bcoin
+      {
+        '2.0.0' => {
+          'version' => '2.0.0',
+          'subversion' => '/bcoin:2.0.0/',
+          'protocolversion' => 70_015,
+          'localservices' => '00000009',
+          'localrelay' => true,
+          'timeoffset' => 0,
+          'networkactive' => @network_active,
+          'connections' => @peer_count,
+          'warnings' => ''
+        }
+      }[@version]
+    when :btcd
+      raise Error
     else
-      throw "Unsporrted coin: #{@coin}"
+      throw "No getnetworkinfo mock for #{@client_type}"
     end
   end
 
@@ -256,101 +244,98 @@ class BitcoinClientMock
   def getblockchaininfo
     raise Error unless @reachable
 
-    case @coin
-    when :btc
-      case @client_type
-      when :core
-        raise Error if @version < 100_000
+    case @client_type
+    when :core
+      raise Error if @version < 100_000
 
-        res = {
-          230_000 => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hash,
-            # "difficulty" => 5883988430955.408,
-            'mediantime' => 1_548_515_214,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'initialblockdownload' => @ibd,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
-            'pruned' => false,
-            'softforks' => [],
-            'bip9_softforks' => {},
-            'warnings' => ''
-          },
-          160_300 => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hash,
-            # "difficulty" => 5883988430955.408,
-            'mediantime' => 1_548_515_214,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'initialblockdownload' => @ibd,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
-            'pruned' => false,
-            'softforks' => [],
-            'bip9_softforks' => {},
-            'warnings' => ''
-          },
-          130_000 => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hash,
-            # "difficulty" => 1,
-            'mediantime' => 1_232_327_230,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'pruned' => false,
-            'softforks' => [],
-            'bip9_softforks' => {}
-          },
-          100_300 => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hash,
-            'verificationprogress' => @ibd ? 0.5 : 1.0,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork']
-          }
+      res = {
+        230_000 => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hash,
+          # "difficulty" => 5883988430955.408,
+          'mediantime' => 1_548_515_214,
+          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
+          'initialblockdownload' => @ibd,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
+          'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
+          'pruned' => false,
+          'softforks' => [],
+          'bip9_softforks' => {},
+          'warnings' => ''
+        },
+        160_300 => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hash,
+          # "difficulty" => 5883988430955.408,
+          'mediantime' => 1_548_515_214,
+          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
+          'initialblockdownload' => @ibd,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
+          'size_on_disk' => 229_120_703_086 + ((@height - 560_179) * 2_000_000),
+          'pruned' => false,
+          'softforks' => [],
+          'bip9_softforks' => {},
+          'warnings' => ''
+        },
+        130_000 => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hash,
+          # "difficulty" => 1,
+          'mediantime' => 1_232_327_230,
+          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
+          'pruned' => false,
+          'softforks' => [],
+          'bip9_softforks' => {}
+        },
+        100_300 => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hash,
+          'verificationprogress' => @ibd ? 0.5 : 1.0,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork']
         }
-      when :btcd
-        res = {
-          120_000 => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hashes[@height],
-            # "difficulty" => 1,
-            'mediantime' => 1_232_327_230,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'pruned' => false,
-            'softforks' => [],
-            'bip9_softforks' => {}
-          }
+      }
+    when :btcd
+      res = {
+        120_000 => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hashes[@height],
+          # "difficulty" => 1,
+          'mediantime' => 1_232_327_230,
+          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
+          'pruned' => false,
+          'softforks' => [],
+          'bip9_softforks' => {}
         }
-      when :bcoin
-        res = {
-          '2.0.0' => {
-            'chain' => 'main',
-            'blocks' => @height,
-            'headers' => @height,
-            'bestblockhash' => @block_hashes[@height],
-            # "difficulty" => 7934713219630.606,
-            'mediantime' => 1_562_238_877,
-            'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
-            'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
-            'pruned' => true,
-            'softforks' => [],
-            'bip9_softforks' => {},
-            'pruneheight' => @height - 1000
-          }
+      }
+    when :bcoin
+      res = {
+        '2.0.0' => {
+          'chain' => 'main',
+          'blocks' => @height,
+          'headers' => @height,
+          'bestblockhash' => @block_hashes[@height],
+          # "difficulty" => 7934713219630.606,
+          'mediantime' => 1_562_238_877,
+          'verificationprogress' => @ibd ? 1.753483709675226e-06 : 1.0,
+          'chainwork' => @blocks[@block_hashes[@height]]['chainwork'],
+          'pruned' => true,
+          'softforks' => [],
+          'bip9_softforks' => {},
+          'pruneheight' => @height - 1000
         }
-      end
+      }
     end
     throw "No getblockchaininfo mock for #{@client_type}" if res.blank?
     res[@version]
@@ -359,18 +344,15 @@ class BitcoinClientMock
   def getdeploymentinfo
     raise Error unless @reachable
 
-    case @coin
-    when :btc
-      case @client_type
-      when :core
-        raise Error if @version < 230_000
+    case @client_type
+    when :core
+      raise Error if @version < 230_000
 
-        res = {
-          230_000 => {
-            'deployments' => {}
-          }
+      res = {
+        230_000 => {
+          'deployments' => {}
         }
-      end
+      }
     end
     throw "No getdeploymentinfo mock for #{@client_type}" if res.blank?
     res[@version]

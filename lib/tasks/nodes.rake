@@ -2,32 +2,32 @@
 
 namespace 'nodes' do
   desc 'Update database with latest info from each node'
-  task :poll, [] => :environment do |_action, args|
-    Node.poll!({ coins: args.extras })
+  task :poll, [] => :environment do |_action, _args|
+    Node.poll!
   end
 
   desc 'Update database with latest info from each node, unless this happened recently'
-  task poll_unless_fresh: :environment do |_action, args|
-    Node.poll!(unless_fresh: true, coins: args.extras)
+  task poll_unless_fresh: :environment do |_action, _args|
+    Node.poll!(unless_fresh: true)
   end
 
   desc 'Poll nodes continuously'
-  task :poll_repeat, [] => :environment do |_action, args|
-    Node.poll_repeat!({ coins: args.extras })
+  task :poll_repeat, [] => :environment do |_action, _args|
+    Node.poll_repeat!
   end
 
   desc 'Continuous checks that require rollbacks'
-  task :rollback_checks_repeat, [] => :environment do |_action, args|
-    Node.rollback_checks_repeat!({ coins: args.extras })
+  task :rollback_checks_repeat, [] => :environment do |_action, _args|
+    Node.rollback_checks_repeat!
   end
 
   desc 'Heavy duty continuous checks'
-  task :heavy_checks_repeat, [] => :environment do |_action, args|
-    Node.heavy_checks_repeat!({ coins: args.extras })
+  task :heavy_checks_repeat, [] => :environment do |_action, _args|
+    Node.heavy_checks_repeat!
   end
 
   desc 'Continuous getblocktemplate checks'
-  task :getblocktemplate_repeat, [] => :environment do |_action, args|
-    Node.getblocktemplate_repeat!({ coins: args.extras })
+  task :getblocktemplate_repeat, [] => :environment do |_action, _args|
+    Node.getblocktemplate_repeat!
   end
 end

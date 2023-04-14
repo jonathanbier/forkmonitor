@@ -10,7 +10,6 @@ class InflatedBlock < ApplicationRecord
 
   def as_json(_options = nil)
     super({ only: %i[id max_inflation actual_inflation dismissed_at] }).merge({
-                                                                                coin: block.coin.upcase,
                                                                                 extra_inflation: actual_inflation - max_inflation,
                                                                                 block: block,
                                                                                 node: {
@@ -28,13 +27,11 @@ class InflatedBlock < ApplicationRecord
   class << self
     def check_inflation!(options)
       max = options.key?(:max) ? options[:max] : 10
-      throw 'Missing :coin argument' unless options.key?(:coin)
-      throw "Invalid :coin argument #{options[:coin]}" unless Rails.configuration.supported_coins.include?(options[:coin])
 
       threads = []
-      nodes = Node.with_mirror(options[:coin])
-      Rails.logger.info "Check #{options[:coin].to_s.upcase} inflation for #{nodes.count} nodes..."
-      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} #{options[:coin]} mirror nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
+      nodes = Node.with_mirror
+      Rails.logger.info "Check inflation for #{nodes.count} nodes..."
+      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} mirror nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
 
       nodes.each do |node|
         max_exceeded = false
@@ -54,7 +51,7 @@ class InflatedBlock < ApplicationRecord
           end
         end
 
-        Rails.logger.info "Check #{node.coin.to_s.upcase} inflation for #{node.name_with_version}..."
+        Rails.logger.info "Check inflation for #{node.name_with_version}..."
         if node.ibd
           Rails.logger.info 'Node in Initial Blockchain Download'
           next

@@ -11,7 +11,7 @@ class NodesMailerPreview < ActionMailer::Preview
   end
 
   def stale_candidate_email
-    @stale_candidate = StaleCandidate.new(height: Block.last.height, coin: :btc)
+    @stale_candidate = StaleCandidate.new(height: Block.last.height)
     UserMailer.with(user: User.first, stale_candidate: @stale_candidate).stale_candidate_email
   end
 

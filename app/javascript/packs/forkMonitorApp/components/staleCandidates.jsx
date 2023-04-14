@@ -52,7 +52,6 @@ class StaleCandidates extends React.Component {
       doubleSpentTotal: null,
       rfb: null,
       rbfBy: null,
-      coin: this.props.match.params.coin,
       height: this.props.match.params.height
     };
 
@@ -68,7 +67,7 @@ class StaleCandidates extends React.Component {
   }
 
   getDoubleSpendInfo() {
-    axios.get(`/api/v1/stale_candidates/${ this.state.coin }/${ this.state.height }/double_spend_info.json`).then(function (response) {
+    axios.get(`/api/v1/stale_candidates/${ this.state.height }/double_spend_info.json`).then(function (response) {
       return response.data;
     }).then(function (res) {
       this.setState({
@@ -88,11 +87,10 @@ class StaleCandidates extends React.Component {
    }
 
   getStaleCandidates() {
-    axios.get(`/api/v1/stale_candidates/${ this.state.coin }/${ this.state.height }.json`).then(function (response) {
+    axios.get(`/api/v1/stale_candidates/${ this.state.height }.json`).then(function (response) {
       return response.data;
     }).then(function (res) {
       this.setState({
-        coin: res.coin,
         staleCandidates: res.children,
         headersOnly: res.headers_only
       });
@@ -106,7 +104,7 @@ class StaleCandidates extends React.Component {
   }
 
   getMaxHeight() {
-    axios.get(`/api/v1/blocks/${ this.state.coin }/max_height.json`).then(function (response) {
+    axios.get(`/api/v1/blocks/max_height.json`).then(function (response) {
       return response.data;
     }).then(function (res) {
       this.setState({
@@ -117,12 +115,11 @@ class StaleCandidates extends React.Component {
 
   render() {
     const { redirect } = this.state;
-    const coin = this.state.coin;
     const doubleSpentBy = this.state.doubleSpentBy;
     const rbfBy = this.state.rbfBy;
 
     if (redirect) {
-      return <Redirect to={ `/nodes/${ coin }` } />;
+      return <Redirect to={ `/nodes/btc` } />;
     }
 
     return(

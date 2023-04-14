@@ -17,26 +17,12 @@ class InflatedBlockAlerts extends React.Component {
   }
 
   componentDidMount() {
-    this.getInflatedBlocks(this.props.coin);
-  }
-
-  static getDerivedStateFromProps(props, state) {
-    const currentCoin = state.coin;
-    const nextCoin = props.coin;
-
-    if (currentCoin !== nextCoin) {
-      state.coin = props.coin;
-      state.nodesWithoutTip = [];
-      state.chaintips = [];
-      state.fresh = true;
-    }
-
-    return state;
+    this.getInflatedBlocks();
   }
 
   componentDidUpdate() {
     if (this.state.fresh) {
-      this.getInflatedBlocks(this.state.coin);
+      this.getInflatedBlocks();
       this.setState({
           fresh: false
       });
@@ -44,8 +30,8 @@ class InflatedBlockAlerts extends React.Component {
 
   }
 
-  getInflatedBlocks(coin) {
-    axios.get('/api/v1/inflated_blocks?coin=' + coin).then(function (response) {
+  getInflatedBlocks() {
+    axios.get('/api/v1/inflated_blocks.json').then(function (response) {
       return response.data;
     }).then(function (inflated_blocks) {
       this.setState({

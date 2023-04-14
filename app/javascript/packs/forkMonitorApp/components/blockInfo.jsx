@@ -45,7 +45,7 @@ class BlockInfo extends React.Component {
         }
         <br />
         { this.props.link &&
-          <Link to={ `/blocks/${ this.props.block.coin }/${ this.props.block.hash }` }>More info...</Link>
+          <Link to={ `/blocks/${ this.props.block.hash }` }>More info...</Link>
         }
         { this.props.extra &&
           <span>

@@ -10,7 +10,7 @@ xml.rss version: '2.0' do
     @unreachable_nodes.each do |node|
       cache node do
         xml.item do
-          title_prefix = "#{node.name_with_version} (#{node.coin}) "
+          title_prefix = "#{node.name_with_version} "
           title_node = node.unreachable_since.nil? ? '' : "has been unreachable since #{node.unreachable_since.to_s(:rfc822)} "
           title_mirror_node = node.mirror_unreachable_since.nil? ? '' : "mirror has been unreachable since #{node.mirror_unreachable_since.to_s(:rfc822)}."
           title_node += 'and ' if !node.unreachable_since.nil? && !node.mirror_unreachable_since.nil?

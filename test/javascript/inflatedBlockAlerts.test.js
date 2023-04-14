@@ -16,21 +16,15 @@ function flushPromises() {
 }
 
 axios.get.mockImplementation(url => {
-  if (url == "/api/v1/invalid_blocks?coin=BCH") {
-    return Promise.resolve({data: [
-    ]})
-  } else if (url == "/api/v1/inflated_blocks?coin=BCH") {
-      return Promise.resolve({data: [{id: 1}]})
-    } else if (url == "/api/v1/inflated_blocks?coin=BTC") {
-      return Promise.resolve({data: [
-      ]})
-    } else {
+  if (url == "/api/v1/inflated_blocks.json") {
+    return Promise.resolve({data: [{id: 1}]})
+  } else {
     return Promise.reject({})
   }
 });
 
 test('should show inflated block', async () => {
-  const wrapper = shallow(<InflatedBlockAlerts coin='BCH' />);
+  const wrapper = shallow(<InflatedBlockAlerts />);
   await flushPromises();
   expect(wrapper.text()).toContain("<AlertInflation />");
 });

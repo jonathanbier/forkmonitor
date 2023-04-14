@@ -15,7 +15,6 @@ test('rendered component', () => {
   ]
 
   const wrapper = shallow(<NodesWithoutTip
-    coin="BTC"
     nodes={ nodes }
     cableApp={ MockCableApp }
   />);

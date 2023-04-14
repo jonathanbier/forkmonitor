@@ -4,7 +4,6 @@
 # generic by making it also work on self.node.
 
 # Methods assume the existence of:
-# * coin (:btc, etc)
 # * client_type (:core, etc)
 # * client or mirror_client
 
@@ -14,10 +13,8 @@
 module RpcConcern
   extend ActiveSupport::Concern
   class_methods do
-    def getrawtransaction(tx_id, coin, verbose = false, block_hash = nil)
-      raise BitcoinUtil::RPC::InvalidCoinError unless Rails.configuration.supported_coins.include?(coin)
-
-      first_with_txindex(coin).getrawtransaction(tx_id, verbose, block_hash)
+    def getrawtransaction(tx_id, verbose = false, block_hash = nil)
+      first_with_txindex.getrawtransaction(tx_id, verbose, block_hash)
     end
   end
 
@@ -54,7 +51,7 @@ module RpcConcern
     # Reconsider all invalid chaintips above the currently active one:
     chaintips = mirror_client.getchaintips
     active_chaintip = chaintips.find { |t| t['status'] == 'active' }
-    throw "#{coin} mirror node  does not have an active chaintip" if active_chaintip.nil?
+    throw 'mirror node  does not have an active chaintip' if active_chaintip.nil?
     chaintips.select { |t| t['status'] == 'invalid' && t['height'] >= active_chaintip['height'] }.each do |t|
       mirror_client.reconsiderblock(t['hash'])
     end

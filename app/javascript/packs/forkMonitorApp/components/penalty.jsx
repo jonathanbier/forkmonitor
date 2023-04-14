@@ -57,7 +57,6 @@ class Penalty extends React.Component {
 Penalty.propTypes = {
   penalty: PropTypes.shape({
     block: PropTypes.shape({
-      coin: PropTypes.string.isRequired
     })
   })
 }

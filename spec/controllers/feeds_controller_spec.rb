@@ -10,13 +10,13 @@ RSpec.describe FeedsController do
       let!(:inflated_block) { create(:inflated_block) }
 
       it 'is rendered' do
-        get :inflated_blocks, params: { coin: 'btc' }, format: :rss
+        get :inflated_blocks, format: :rss
         expect(response).to render_template('feeds/inflated_blocks')
-        expect(response.body).to include('Inflated BTC blocks')
+        expect(response.body).to include('Inflated blocks')
       end
 
       it 'contains inflated blocks' do
-        get :inflated_blocks, params: { coin: 'btc' }, format: :rss
+        get :inflated_blocks, format: :rss
         expect(response.body).to include("#{inflated_block.actual_inflation - inflated_block.max_inflation} BTC")
       end
     end
@@ -30,13 +30,13 @@ RSpec.describe FeedsController do
       end
 
       it 'is rendered' do
-        get :blocks_invalid, params: { coin: 'btc' }, format: :rss
+        get :blocks_invalid, format: :rss
         expect(response).to render_template('feeds/blocks_invalid')
-        expect(response.body).to include('Invalid BTC blocks')
+        expect(response.body).to include('Invalid blocks')
       end
 
       it 'contains invalid blocks' do
-        get :blocks_invalid, params: { coin: 'btc' }, format: :rss
+        get :blocks_invalid, format: :rss
         expect(response.body).to include(node.name_with_version)
       end
     end
@@ -50,13 +50,13 @@ RSpec.describe FeedsController do
       end
 
       it 'is rendered' do
-        get :invalid_blocks, params: { coin: 'btc' }, format: :rss
+        get :invalid_blocks, format: :rss
         expect(response).to render_template('feeds/invalid_blocks')
-        expect(response.body).to include('Invalid BTC blocks')
+        expect(response.body).to include('Invalid blocks')
       end
 
       it 'contains invalid blocks' do
-        get :invalid_blocks, params: { coin: 'btc' }, format: :rss
+        get :invalid_blocks, format: :rss
         expect(response.body).to include(invalid_block.node.name_with_version)
       end
     end
@@ -108,30 +108,30 @@ RSpec.describe FeedsController do
     end
 
     describe 'GET stale_candidates feed' do
-      let!(:block_1) { create(:block, coin: :btc, height: 500_000) }
+      let!(:block_1) { create(:block, height: 500_000) }
 
       before do
-        create(:stale_candidate, coin: :btc, height: 500_000)
+        create(:stale_candidate, height: 500_000)
       end
 
       it 'is rendered' do
-        get :stale_candidates, params: { coin: 'btc' }, format: :rss
+        get :stale_candidates, format: :rss
         expect(response).to render_template('feeds/stale_candidates')
-        expect(response.body).to include('BTC stale block candidates')
+        expect(response.body).to include('Stale block candidates')
       end
 
       it 'contains block hashes' do
-        get :stale_candidates, params: { coin: 'btc' }, format: :rss
+        get :stale_candidates, format: :rss
         expect(response.body).to include(block_1.block_hash)
       end
 
       it 'is paginated' do
-        get :stale_candidates, params: { coin: 'btc', page: 2 }, format: :rss
+        get :stale_candidates, params: { page: 2 }, format: :rss
         expect(response.body).not_to include(block_1.block_hash)
       end
 
       it 'rejects negative page numbers' do
-        get :stale_candidates, params: { coin: 'btc', page: -2 }, format: :rss
+        get :stale_candidates, params: { page: -2 }, format: :rss
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -142,13 +142,13 @@ RSpec.describe FeedsController do
       end
 
       it 'is rendered' do
-        get :ln_penalties, params: { coin: 'btc' }, format: :rss
+        get :ln_penalties, format: :rss
         expect(response).to render_template('feeds/ln_penalties')
         expect(response.body).to include('Lightning penalty transactions')
       end
 
       it 'contains penalty transactions' do
-        get :ln_penalties, params: { coin: 'btc' }, format: :rss
+        get :ln_penalties, format: :rss
         expect(response.body).to include('c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6')
       end
     end
@@ -159,13 +159,13 @@ RSpec.describe FeedsController do
       end
 
       it 'is rendered' do
-        get :ln_sweeps, params: { coin: 'btc' }, format: :rss
+        get :ln_sweeps, format: :rss
         expect(response).to render_template('feeds/ln_sweeps')
         expect(response.body).to include('Lightning sweep transactions')
       end
 
       it 'contains sweep transactions' do
-        get :ln_sweeps, params: { coin: 'btc' }, format: :rss
+        get :ln_sweeps, format: :rss
         expect(response.body).to include('a08e6620d21b8f451c63dfe8d0164f0ba1b2dc781ea163c7990634747b57282c')
       end
     end
@@ -176,13 +176,13 @@ RSpec.describe FeedsController do
       end
 
       it 'is rendered' do
-        get :ln_uncoops, params: { coin: 'btc' }, format: :rss
+        get :ln_uncoops, format: :rss
         expect(response).to render_template('feeds/ln_uncoops')
         expect(response.body).to include('uncooperative')
       end
 
       it 'contains potential uncooperative close transactions' do
-        get :ln_uncoops, params: { coin: 'btc' }, format: :rss
+        get :ln_uncoops, format: :rss
         expect(response.body).to include('5cc28d4a2deeb4e6079c649645e36a1e2813605f65fdea242afb70d7677c1e03')
       end
     end
