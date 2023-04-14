@@ -31,18 +31,6 @@ class FeedsController < ApplicationController
     end
   end
 
-  def unknown_pools
-    respond_to do |format|
-      format.rss do
-        latest = Block.order(height: :desc).first
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @unknown_pools = Block.where(pool: nil).where('height > ?',
-                                                        latest.height - 10_000).where.not(coinbase_message: nil).order(height: :desc).limit(50)
-        end
-      end
-    end
-  end
-
   def lagging_nodes
     respond_to do |format|
       format.rss do

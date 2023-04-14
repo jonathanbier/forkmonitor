@@ -49,7 +49,6 @@ Rails.application.routes.draw do
       get 'btc/blocks/invalid', action: :blocks_invalid
       get 'inflated_blocks/btc', action: :inflated_blocks
       get 'invalid_blocks/btc', action: :invalid_blocks
-      get '/blocks/unknown_pools/btc', action: :unknown_pools
       get 'lagging_nodes'
       get 'nodes/unreachable', action: :unreachable_nodes
       get 'version_bits'

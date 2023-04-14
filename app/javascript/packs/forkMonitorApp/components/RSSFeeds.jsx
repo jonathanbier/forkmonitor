@@ -60,13 +60,6 @@ class RSSFeeds extends React.Component {
             </p>
           </li>
           <li>
-            <a href="/feeds/blocks/unknown_pools/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a>&nbsp;
-            <b>Unidentified mining pools</b>
-            <p>
-              List of recent blocks mined by a pool that can't be matched <a href="https://github.com/BitMEXResearch/forkmonitor/blob/master/app/models/block.rb#L158">by this list</a>
-              </p>
-          </li>
-          <li>
             <a href="/feeds/version_bits.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a>&nbsp;
             <b>Version bits signalling</b>
             <p>
