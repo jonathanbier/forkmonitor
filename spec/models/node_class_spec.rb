@@ -165,24 +165,6 @@ RSpec.describe Node do
         expect(StaleCandidate).to receive(:process!)
         described_class.heavy_checks_repeat!
       end
-
-      it 'calls process_templates' do
-        expect(Block).to receive(:process_templates!)
-        described_class.heavy_checks_repeat!
-      end
-    end
-
-    describe 'getblocktemplate_repeat!' do
-      before do
-        @node = create(:node)
-        allow(described_class).to receive(:by_version).and_return [@node] # Preserve mirror client instance
-      end
-
-      it 'calls getblocktemplate' do
-        expect(described_class).to receive(:getblocktemplate!)
-
-        described_class.getblocktemplate_repeat!
-      end
     end
 
     describe 'check_laggards!' do

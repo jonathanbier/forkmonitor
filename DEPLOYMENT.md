@@ -64,7 +64,6 @@ User `crontab`:
 # * * * * * /usr/bin/flock -n /tmp/poll_stale.lock /usr/bin/cronic ~/rake.sh nodes:poll_unless_fresh
 * * * * * /usr/bin/flock -n /tmp/heavy.lock /usr/bin/cronic ~/rake.sh nodes:heavy_checks_repeat
 * * * * * /usr/bin/flock -n /tmp/rollback.lock /usr/bin/cronic ~/rake.sh nodes:rollback_checks_repeat
-* * * * * /usr/bin/flock -n /tmp/blockTemplate.lock /usr/bin/cronic ~/rake.sh nodes:getblocktemplate_repeat
 0 0 * * * ~/rake.sh pools:fetch
 ```
 

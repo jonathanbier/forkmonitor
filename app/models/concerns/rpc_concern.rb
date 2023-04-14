@@ -18,14 +18,6 @@ module RpcConcern
     end
   end
 
-  def rpc_getblocktemplate
-    if version >= 130_100
-      client.getblocktemplate({ rules: ['segwit'] })
-    else
-      client.getblocktemplate({ rules: [] })
-    end
-  end
-
   def getblock(block_hash, verbosity, use_mirror = false, timeout = nil)
     throw 'Specify block hash' if block_hash.nil?
     throw 'Specify verbosity' if verbosity.nil?

@@ -42,14 +42,6 @@ describe 'nodes:rollback_checks_repeat' do
   end
 end
 
-describe 'nodes:getblocktemplate_repeat' do
-  include_context 'with rake'
-
-  it 'calls :getblocktemplate_repeat! on Node' do
-    expect(Node).to receive(:getblocktemplate_repeat!)
-    subject.invoke
-  end
-end
 # rubocop:enable RSpec/NamedSubject
 # rubocop:enable RSpec/DescribeClass
 # rubocop:enable RSpec/MultipleDescribes

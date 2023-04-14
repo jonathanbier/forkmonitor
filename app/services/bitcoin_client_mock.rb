@@ -116,8 +116,6 @@ class BitcoinClientMock
     end
   end
 
-  def getblocktemplate(rules); end
-
   def getindexinfo
     {
       'txindex' => @txindex,

@@ -54,29 +54,16 @@ class Block extends React.Component {
               </BreadcrumbItem>
             </Breadcrumb>
             { this.state.block &&
-              <BlockInfo block={ this.state.block } extra />
+              <div>
+                <BlockInfo block={ this.state.block } extra />
+                <h3>Predicted block transactions</h3>
+                <p>
+                  Both <a href={"https://miningpool.observer/template-and-block/" + this.state.block.hash}>Miningpool.Observer</a> and <a href={"https://mempool.space/block/" + this.state.block.hash}>Mempool.Space </a>
+                  compare the mempool right before each block with the real block, in order to find differences in the transactions and amount of fees collected. Usually any difference
+                  is due to timing coincidence and variations for how transactions propagate between nodes.
+                </p>
+              </div>
             }
-            <div>
-              <h3>Predicted block transactions</h3>
-              <p>We call <code>getblocktemplate</code> on our node several times
-              per minute to construct a candidate block. We then compare the amount
-              of fees collected to the real block. Usually any difference
-              is due to timing coincidence and variations for how transactions
-              propagate between nodes.</p>
-              { this.state.block && this.state.block.template_txs_fee_diff &&
-                <p>
-                  This block contained <NumberFormat value={ Math.abs(this.state.block.template_txs_fee_diff) } displayType={'text'} decimalScale={8} fixedDecimalScale={true} /> BTC {
-                    this.state.block.template_txs_fee_diff > 0 ? "more " : "less "
-                  }
-                  transaction fees than expected from our most recent template.
-                </p>
-              }
-              { this.state.block &&
-                <p>
-                  For a more detailed analysis see <a href={"https://miningpool.observer/template-and-block/" + this.state.block.hash}>miningpool.observer</a>. It also shows an overview of which transactions are missing compared to the template, and which ones were unexpected.
-                </p>
-              }
-            </div>
           </Col></Row>
         </Container>
       </TabPane>

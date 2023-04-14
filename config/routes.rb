@@ -28,7 +28,7 @@ Rails.application.routes.draw do
       resources :invalid_blocks, only: %i[index show destroy]
       resources :lagging_nodes, only: [:show]
       resources :version_bits, only: [:show]
-      resources :stale_candidates, only: [:index, :show]
+      resources :stale_candidates, only: %i[index show]
       namespace :stale_candidates do
         get ':height/double_spend_info', action: :double_spend_info
       end
@@ -38,7 +38,6 @@ Rails.application.routes.draw do
       resources :ln_stats, only: [:index]
       resources :blocks, only: %i[index show]
       resources :subscriptions, only: [:create]
-      resources :block_templates, only: [:index]
       resources :softforks, only: [:index]
     end
   end

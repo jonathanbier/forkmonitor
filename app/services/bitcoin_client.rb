@@ -295,12 +295,6 @@ class BitcoinClient
     raise BitcoinUtil::RPC::Error, "submitheader failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
-  def getblocktemplate(rules)
-    request('getblocktemplate', rules)
-  rescue Bitcoiner::Client::JSONRPCError => e
-    raise BitcoinUtil::RPC::Error, "getblocktemplate failed for #{@name_with_version} (id=#{@node_id}): " + e.message
-  end
-
   private
 
   def request(*args)

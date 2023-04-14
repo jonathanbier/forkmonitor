@@ -11,7 +11,7 @@ class Block < ApplicationRecord
   MINIMUM_BLOCK_HEIGHT = if Rails.env.test?
                            0
                          else
-                           Rails.env.development? ? 785000 : 500_000
+                           Rails.env.development? ? 785_000 : 500_000
                          end
 
   COIN = 100_000_000
@@ -36,17 +36,16 @@ class Block < ApplicationRecord
   after_initialize :set_invalidated_block_hashes
 
   def as_json(options = nil)
-    super({ only: %i[id height timestamp created_at pool tx_count size total_fee
-                     template_txs_fee_diff] }.merge(options || {})).merge({
-                                                                            hash: block_hash,
-                                                                            work: log2_pow,
-                                                                            first_seen_by: if first_seen_by
-                                                                                             {
-                                                                                               id: first_seen_by.id,
-                                                                                               name_with_version: first_seen_by.name_with_version
-                                                                                             }
-                                                                                           end
-                                                                          })
+    super({ only: %i[id height timestamp created_at pool tx_count size total_fee] }.merge(options || {})).merge({
+                                                                                                                  hash: block_hash,
+                                                                                                                  work: log2_pow,
+                                                                                                                  first_seen_by: if first_seen_by
+                                                                                                                                   {
+                                                                                                                                     id: first_seen_by.id,
+                                                                                                                                     name_with_version: first_seen_by.name_with_version
+                                                                                                                                   }
+                                                                                                                                 end
+                                                                                                                })
   end
 
   def log2_pow
@@ -241,16 +240,6 @@ class Block < ApplicationRecord
     true
   end
 
-  def set_template_diff!
-    # Transactions and total fee may be missing e.g. if this is a headers only block:
-    return if total_fee.nil?
-
-    last_template = BlockTemplate.where(height: height).last
-    return if last_template.nil?
-
-    update template_txs_fee_diff: total_fee - last_template.fee_total
-  end
-
   def expire_stale_candidate_cache
     StaleCandidate.find_each do |c|
       c.expire_cache if height - c.height <= StaleCandidate::STALE_BLOCK_WINDOW
@@ -433,8 +422,7 @@ class Block < ApplicationRecord
 
   class << self
     def to_csv
-      attributes = %w[height block_hash timestamp mediantime work version tx_count size pool total_fee
-                      template_txs_fee_diff]
+      attributes = %w[height block_hash timestamp mediantime work version tx_count size pool total_fee]
 
       CSV.generate(headers: true) do |csv|
         csv << attributes
@@ -706,11 +694,6 @@ class Block < ApplicationRecord
       end
     rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
       nil
-    end
-
-    def process_templates!
-      min_height = BlockTemplate.minimum(:height)
-      Block.where(template_txs_fee_diff: nil).where('height >= ?', min_height).where.not(total_fee: nil).find_each(&:set_template_diff!)
     end
   end
 end

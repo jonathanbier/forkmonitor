@@ -25,9 +25,4 @@ namespace 'nodes' do
   task :heavy_checks_repeat, [] => :environment do |_action, _args|
     Node.heavy_checks_repeat!
   end
-
-  desc 'Continuous getblocktemplate checks'
-  task :getblocktemplate_repeat, [] => :environment do |_action, _args|
-    Node.getblocktemplate_repeat!
-  end
 end

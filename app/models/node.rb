@@ -65,7 +65,6 @@ class Node < ApplicationRecord
       mempool_max
       mirror_ibd
       to_destroy
-      getblocktemplate
     ]
     fields << :id << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled if options && options[:admin]
     super({ only: fields }.merge(options || {})).merge({
@@ -612,7 +611,6 @@ class Node < ApplicationRecord
         LightningTransaction.check!({ max: 1000 })
         LightningTransaction.check_public_channels!
         Block.match_missing_pools!(3)
-        Block.process_templates!
         StaleCandidate.process!
         StaleCandidate.prime_cache
         Softfork.notify!
@@ -626,53 +624,9 @@ class Node < ApplicationRecord
       end
     end
 
-    def getblocktemplate_repeat!
-      # Trap ^C
-      Signal.trap('INT') do
-        Rails.logger.info "\nShutting down gracefully..."
-        exit # rubocop:disable Rails/Exit
-      end
-
-      # Trap `Kill `
-      Signal.trap('TERM') do
-        Rails.logger.info "\nShutting down gracefully..."
-        exit # rubocop:disable Rails/Exit
-      end
-
-      @last_checked = nil
-
-      loop do
-        if @last_checked.nil? || @last_checked < 20.seconds.ago
-          @last_checked = Time.zone.now
-          Node.getblocktemplate!
-        end
-
-        if Rails.env.test?
-          break
-        else
-          sleep 0.5
-        end
-      end
-    end
-
     def check_chaintips!
       Chaintip.check!(bitcoin_core_by_version + bitcoin_alternative_implementations)
       InvalidBlock.check!
-    end
-
-    def getblocktemplate!
-      nodes = Node.where(enabled: true, getblocktemplate: true, unreachable_since: nil)
-      throw "Increase RAILS_MAX_THREADS to match #{nodes.count} nodes." if nodes.count > ENV.fetch('RAILS_MAX_THREADS', '5').to_i
-      threads = []
-      nodes.each do |node|
-        threads << Thread.new do
-          ActiveRecord::Base.connection_pool.with_connection do
-            template = node.rpc_getblocktemplate
-            BlockTemplate.create_with(node, template)
-          end
-        end
-      end
-      threads.each(&:join)
     end
 
     # Deleting a node takes very long, causing a timeout when done from the admin panel
