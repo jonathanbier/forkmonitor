@@ -178,7 +178,7 @@ class StaleCandidates extends React.Component {
               <tbody>
                 {this.state.staleCandidates.map(function (child, index) {
                   return (
-                    <StaleCandidate coin={ coin } root={ child.root } tip={ child.tip } length={ child.length } key={index} />
+                    <StaleCandidate root={ child.root } tip={ child.tip } length={ child.length } key={index} />
                   )
                 })}
               </tbody>
@@ -221,7 +221,7 @@ class StaleCandidates extends React.Component {
                         <tbody>
                           {this.state.doubleSpent.map(function (tx, index) {
                             return (
-                              <ConflictingTransaction key={index} coin={ coin } tx={ tx } conflict={ doubleSpentBy[index] }/>
+                              <ConflictingTransaction key={index} tx={ tx } conflict={ doubleSpentBy[index] }/>
                             )
                           })}
                         </tbody>
@@ -250,7 +250,6 @@ class StaleCandidates extends React.Component {
                           {this.state.rbf.map(function (tx, index) {
                             return (<ConflictingTransaction
                                 key={index}
-                                coin={ coin }
                                 tx={ tx }
                                 conflict={ rbfBy[index] }
                               />)
@@ -295,8 +294,8 @@ class StaleCandidates extends React.Component {
                               { tx.amount }
                             </td>
                             <td>
-                              <Explorer blockstream coin={ coin } tx={ tx.tx_id }/>&nbsp;
-                              <Explorer btcCom coin={ coin } tx={ tx.tx_id }/>
+                              <Explorer blockstream tx={ tx.tx_id }/>&nbsp;
+                              <Explorer btcCom tx={ tx.tx_id }/>
                             </td>
                           </tr>
                         )
