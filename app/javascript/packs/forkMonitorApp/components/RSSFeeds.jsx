@@ -68,7 +68,7 @@ class RSSFeeds extends React.Component {
           </li>
           <li>
             <a href="/feeds/lagging_nodes.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a>&nbsp;
-            <b>Unreachable nodes</b>
+            <b>Lagging nodes</b>
             <p>
               Checks if any of the nodes fell behind. This doesn't have to be
               a consensus problem, but we filter common reasons like being offline,
