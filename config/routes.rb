@@ -30,6 +30,7 @@ Rails.application.routes.draw do
       resources :version_bits, only: [:show]
       resources :stale_candidates, only: %i[index show]
       namespace :stale_candidates do
+        get ':height', action: :show
         get ':height/double_spend_info', action: :double_spend_info
       end
       resources :ln_penalties, only: %i[index show]

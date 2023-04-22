@@ -12,7 +12,7 @@ class AlertStale extends React.Component {
     return(
       <UncontrolledAlert color="warning">
         There are { branchCount } blocks at height { this.props.candidate.height }
-        . <Link to={ `/stale/${ this.props.coin }/${ this.props.candidate.height }` }>More info</Link>
+        . <Link to={ `/stale/${ this.props.candidate.height }` }>More info</Link>
       </UncontrolledAlert>
     );
   }
