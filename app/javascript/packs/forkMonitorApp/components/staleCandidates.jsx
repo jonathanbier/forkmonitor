@@ -190,13 +190,16 @@ class StaleCandidates extends React.Component {
                 transaction occurs in the other branch</i>, then it could be an RBF
                 fee increase or a double-spend attempt.
               </p>
+              <p>
+                This feature has been temporarily disabled to investigate a bug.
+              </p>
               { this.state.loading &&
                 <FontAwesomeIcon
                   className="fa-pulse"
                   icon={ faSpinner }
                 />
               }
-              { !this.state.loading &&
+              { /* disable feature */ false && !this.state.loading &&
                 <span>
                   { (this.state.headersOnly || this.state.missingTransactions ) &&
                     <p>Due to missing block data we are currently unable to check this.</p>
@@ -260,7 +263,7 @@ class StaleCandidates extends React.Component {
                   }
                 </span>
               }
-              { this.state.missingTransactions == false && this.state.confirmedInOneBranch.length > 0 &&
+              { /* disable feature */ false && this.state.missingTransactions == false && this.state.confirmedInOneBranch.length > 0 &&
                 <div>
                   <h3>Transactions not seen in both branches</h3>
                   <p>
