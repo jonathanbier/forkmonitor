@@ -13,13 +13,13 @@ class ConflictingTransaction extends React.Component {
           { this.props.tx.amount }
         </td>
         <td>
-          <Explorer blockstream coin={ this.props.coin } tx={ this.props.tx.tx_id }/>&nbsp;
-          <Explorer btcCom coin={ this.props.coin } tx={ this.props.tx.tx_id }/>&nbsp;
+          <Explorer blockstream tx={ this.props.tx.tx_id }/>&nbsp;
+          <Explorer btcCom tx={ this.props.tx.tx_id }/>&nbsp;
           { this.props.tx.tx_id }
         </td>
         <td>
-          <Explorer blockstream coin={ this.props.coin } tx={ this.props.conflict.tx_id }/>&nbsp;
-          <Explorer btcCom coin={ this.props.coin } tx={ this.props.conflict.tx_id }/>&nbsp;
+          <Explorer blockstream tx={ this.props.conflict.tx_id }/>&nbsp;
+          <Explorer btcCom tx={ this.props.conflict.tx_id }/>&nbsp;
           { this.props.conflict.tx_id }
         </td>
       </tr>
