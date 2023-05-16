@@ -2,7 +2,7 @@
 
 Rails.application.configure do
   # Allow access via forkmonitor.local:
-  config.hosts << "forkmonitor.local"
+  config.hosts << 'forkmonitor.local'
 
   # Verifies that versions and hashed value of the package contents in the project's package.json
   config.webpacker.check_yarn_integrity = true
