@@ -190,7 +190,7 @@ class StaleCandidate < ApplicationRecord
     Rails.cache.delete("StaleCandidate(#{id})/double_spend_info.json")
     Rails.cache.delete('StaleCandidate.index.json')
     Rails.cache.delete('StaleCandidate.last_updated')
-    (1...((StaleCandidate.feed.count / PER_PAGE) + 1)).each do |page|
+    (1..((StaleCandidate.feed.count / PER_PAGE) + 1)).each do |page|
       Rails.cache.delete("StaleCandidate.feed(#{page})")
     end
     Rails.cache.delete('StaleCandidate.feed.count')
