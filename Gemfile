@@ -83,6 +83,7 @@ gem 'capistrano-rails', '~> 1.6.1'
 gem 'capistrano-rake'
 gem 'capistrano-rbenv', '~> 2.1', '>= 2.1.6'
 gem 'capistrano-rbenv-vars'
+gem 'capistrano-nvm', require: false
 gem 'ed25519'
 gem 'net-imap', require: false
 gem 'net-pop', require: false
