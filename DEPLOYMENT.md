@@ -71,7 +71,7 @@ User `crontab`:
 
 ## Tor configuration
 
-Roughly follows the tutorial [here](https://chown.io/guide-host-your-own-onion-site-tor-nginx/). Suggestions to improve our [/etc/tor/torrc](deploy/etc/tor/torrc) are welcome.
+Roughly follows the tutorial [here](https://bluegrid.io/edu/how-to-open-your-local-nginx-website-to-the-tor-network/). Suggestions to improve our [/etc/tor/torrc](deploy/etc/tor/torrc) are welcome.
 
 ## Bitcoin nodes
 
