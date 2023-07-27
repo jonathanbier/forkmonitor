@@ -2,9 +2,9 @@
 
 task :restart_rake_tasks do
   on 'forkmonitor' do
-    execute 'pkill -f rake'
+    execute 'if pgrep rake; then pkill rake; fi'
     sleep 10
-    execute '(ps aux | grep rake && pkill -9 -f rake) || true'
+    execute 'if pgrep rake; then pkill -9 rake; fi'
   end
 end
 
