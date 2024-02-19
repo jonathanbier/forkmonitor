@@ -608,8 +608,8 @@ class Node < ApplicationRecord
       end
 
       loop do
-        LightningTransaction.check!({ max: 1000 })
-        LightningTransaction.check_public_channels!
+        # LightningTransaction.check!({ max: 1000 })
+        # LightningTransaction.check_public_channels!
         Block.match_missing_pools!(3)
         StaleCandidate.process!
         StaleCandidate.prime_cache
