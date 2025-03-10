@@ -58,5 +58,5 @@
 
 set :nvm_node, 'v12.22.12'
 set :nvm_type, :user
-set :nvm_map_bins, %w{node npm yarn rake}
+set :nvm_map_bins, %w[node npm yarn rake]
 server 'forkmonitor', user: 'forkmonitor', roles: %w[app db web]
