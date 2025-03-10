@@ -4,7 +4,7 @@ Install ZeroMQ (for Libbitcoin), e.g. on macOS: `brew install zeromq`
 
 Install Postgres, e.g. on macOS: `brew install postgresql`
 
-Install Redis, e.g. on macOS: `brew install redis` and see [instructions](https://medium.com/@petehouston/install-and-config-redis-on-mac-os-x-via-homebrew-eb8df9a4f298).
+Install Redis, e.g. on macOS: `brew install redis` and see [instructions](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/install-redis-on-mac-os/).
 
 To use Rails cache, install memcacher, e.g. on macOS: `brew install memcached`. To toggle cache, use `rails dev:cache`
 
