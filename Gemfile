@@ -5,6 +5,9 @@ git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
 ruby '3.1.4'
 
+# https://stackoverflow.com/a/79361034
+gem 'concurrent-ruby', '1.3.4'
+
 gem 'rails', '~> 6.1.3'
 # Use Puma as the app server
 gem 'puma', '~> 4.3.11'
