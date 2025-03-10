@@ -11,7 +11,7 @@ class Block < ApplicationRecord
   MINIMUM_BLOCK_HEIGHT = if Rails.env.test?
                            0
                          else
-                           Rails.env.development? ? 785_000 : 500_000
+                           Rails.env.development? ? 887_000 : 500_000
                          end
 
   COIN = 100_000_000
