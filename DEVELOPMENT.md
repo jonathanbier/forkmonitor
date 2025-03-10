@@ -40,6 +40,9 @@ foreman start -f Procfile.dev -p 3000
 
 In order to log in to /admin and add nodes, you need to create an admin user:
 
+On Apple Silicon you may need to set `OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES`
+in order to make RPC calls (e.g. when adding a node). Or use `rails console`.
+
 ```
 rails console
 
