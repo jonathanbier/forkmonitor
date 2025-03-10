@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 
 import ImageBlockstream from '../assets/images/blockstream.png'
 import ImageBtcCom from '../assets/images/btc.png'
-import ImageOneML from '../assets/images/1ml.png'
-import ImageMempool from '../assets/images/mempool.png'
 
 class Explorer extends React.Component {
   render() {
@@ -26,12 +24,6 @@ class Explorer extends React.Component {
         url = rootUrl + this.props.block
       }
       image = ImageBtcCom
-    } else if (this.props.oneML) {
-      url = "https://1ml.com/channel/" + this.props.channelId
-      image = ImageOneML
-    } else if (this.props.mempool) {
-      url = "https://mempool.space/lightning/channel/" + this.props.channelId
-      image = ImageMempool
     } else {
       console.error("Must specify explorer")
     }

@@ -73,46 +73,6 @@ class FeedsController < ApplicationController
     end
   end
 
-  def ln_penalties
-    respond_to do |format|
-      format.rss do
-        latest = PenaltyTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @ln_penalties = []
-          @ln_penalties = PenaltyTransaction.all_with_block_cached
-        end
-      end
-    end
-  end
-
-  def ln_sweeps
-    respond_to do |format|
-      format.rss do
-        latest = SweepTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @page_count = Rails.cache.fetch 'SweepTransaction.count' do
-            (SweepTransaction.count / SweepTransaction::PER_PAGE.to_f).ceil
-          end
-          @ln_sweeps = SweepTransaction.page_with_block_cached(@page)
-        end
-      end
-    end
-  end
-
-  def ln_uncoops
-    respond_to do |format|
-      format.rss do
-        latest = MaybeUncoopTransaction.last_updated_cached
-        if stale?(etag: latest.try(:updated_at), last_modified: latest.try(:updated_at))
-          @page_count = Rails.cache.fetch 'MaybeUncoopTransaction.count' do
-            (MaybeUncoopTransaction.count / MaybeUncoopTransaction::PER_PAGE.to_f).ceil
-          end
-          @ln_uncoops = MaybeUncoopTransaction.page_with_block_cached(@page)
-        end
-      end
-    end
-  end
-
   private
 
   def set_page

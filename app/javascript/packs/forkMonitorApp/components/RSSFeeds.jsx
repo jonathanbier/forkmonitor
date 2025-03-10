@@ -80,22 +80,6 @@ class RSSFeeds extends React.Component {
             <b>Unreachable nodes</b>
             <p>This includes mirror nodes, which are used for inflation checks.</p>
           </li>
-          <li>
-            <b>Lightning transactions</b>
-            <p>
-              See <a href="https://blog.bitmex.com/lightning-network-justice/">Lightning Network (Part 3) – Where Is The Justice?</a> for background.
-            </p>
-            <ul>
-              <li>
-                <a href="/feeds/ln_penalties/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a>&nbsp;
-                <b>Penalties</b>
-              </li>
-              <li>
-                <a href="/feeds/ln_sweeps/btc.rss" target="_blank"><FontAwesomeIcon icon={faRss} /></a>&nbsp;
-                <b>Delayed sweeps</b>
-              </li>
-            </ul>
-          </li>
         </ul>
       </div>
     )

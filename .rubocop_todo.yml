@@ -38,10 +38,7 @@ Metrics/PerceivedComplexity:
 # Offense count: 8
 Naming/AccessorMethodName:
   Exclude:
-    - 'app/models/lightning_transaction.rb'
-    - 'app/models/penalty_transaction.rb'
     - 'app/models/stale_candidate.rb'
-    - 'app/models/sweep_transaction.rb'
     - 'app/services/bitcoin_client_python.rb'
     - 'app/models/concerns/rpc_concern.rb'
 
@@ -51,7 +48,6 @@ Naming/AccessorMethodName:
 Rails/HasManyOrHasOneDependent:
   Exclude:
     - 'app/models/block.rb'
-    - 'app/models/lightning_transaction.rb'
     - 'app/models/node.rb'
 
 # Offense count: 9
@@ -61,7 +57,6 @@ Rails/InverseOf:
   Exclude:
     - 'app/models/block.rb'
     - 'app/models/chaintip.rb'
-    - 'app/models/lightning_transaction.rb'
     - 'app/models/node.rb'
     - 'app/models/version_bit.rb'
 

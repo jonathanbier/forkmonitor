@@ -33,11 +33,6 @@ namespace 'blocks' do
     Block.match_missing_pools!(args.n.to_i)
   end
 
-  desc 'Perform lightning related checks (limit to [max=10000])'
-  task :check_lightning, %i[max] => :environment do |_action, args|
-    LightningTransaction.check!({ max: args[:max] ? args[:max].to_i : 10_000 })
-  end
-
   desc 'Process stale candidates'
   task stale_candidates: :environment do |_action, _args|
     StaleCandidate.process!

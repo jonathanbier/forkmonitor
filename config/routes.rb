@@ -33,10 +33,6 @@ Rails.application.routes.draw do
         get ':height', action: :show
         get ':height/double_spend_info', action: :double_spend_info
       end
-      resources :ln_penalties, only: %i[index show]
-      resources :ln_sweeps, only: %i[index show]
-      resources :ln_uncoops, only: %i[index show]
-      resources :ln_stats, only: [:index]
       resources :blocks, only: %i[index show]
       resources :subscriptions, only: [:create]
       resources :softforks, only: [:index]
@@ -55,14 +51,10 @@ Rails.application.routes.draw do
       get 'version_bits'
       get 'stale_candidates/btc', action: :stale_candidates, as: 'stale_candidate'
       get 'orphan_candidates/btc', action: :stale_candidates # deprecated alias
-      get 'ln_penalties/btc', action: :ln_penalties
-      get 'ln_sweeps/btc', action: :ln_sweeps, as: 'ln_sweeps'
-      get 'ln_uncoops/btc', action: :ln_uncoops, as: 'ln_uncoops'
     end
   end
 
   get 'blocks/:block_hash', to: 'pages#root'
-  get 'lightning', to: 'pages#root'
   # Landing page has /btc for both backward compatibility and disambiguating the admin page
   get 'nodes/btc', to: 'pages#root', as: 'nodes'
   get 'stale/:height', to: 'pages#root', as: 'stale_candidate'

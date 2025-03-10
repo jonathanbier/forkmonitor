@@ -24,15 +24,6 @@ describe 'blocks:check_inflation' do
   end
 end
 
-describe 'blocks:check_lightning' do
-  include_context 'with rake'
-
-  it 'calls check!' do
-    expect(LightningTransaction).to receive(:check!).with({ max: 10_000 })
-    subject.invoke
-  end
-end
-
 describe 'blocks:match_missing_pools' do
   include_context 'with rake'
 

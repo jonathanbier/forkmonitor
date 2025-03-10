@@ -10,23 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_14_100311) do
+ActiveRecord::Schema.define(version: 2025_03_10_094932) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
-
-  create_table "block_templates", force: :cascade do |t|
-    t.bigint "parent_block_id"
-    t.bigint "node_id"
-    t.decimal "fee_total", precision: 16, scale: 8
-    t.datetime "timestamp"
-    t.integer "height"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.integer "n_transactions", null: false
-    t.index ["node_id"], name: "index_block_templates_on_node_id"
-    t.index ["parent_block_id"], name: "index_block_templates_on_parent_block_id"
-  end
 
   create_table "blocks", force: :cascade do |t|
     t.string "block_hash"
@@ -43,14 +30,12 @@ ActiveRecord::Schema.define(version: 2023_04_14_100311) do
     t.integer "tx_count"
     t.integer "size"
     t.boolean "connected", default: false
-    t.boolean "checked_lightning", default: false
     t.integer "marked_invalid_by", default: [], array: true
     t.integer "marked_valid_by", default: [], array: true
     t.string "coinbase_message"
     t.boolean "pruned"
     t.boolean "headers_only", default: false, null: false
     t.decimal "total_fee", precision: 16, scale: 8
-    t.decimal "template_txs_fee_diff", precision: 16, scale: 8
     t.index ["block_hash"], name: "index_blocks_on_block_hash", unique: true
     t.index ["first_seen_by_id"], name: "index_blocks_on_first_seen_by_id"
     t.index ["height"], name: "index_blocks_on_height"
@@ -111,28 +96,6 @@ ActiveRecord::Schema.define(version: 2023_04_14_100311) do
     t.index ["node_b_id"], name: "index_lags_on_node_b_id"
   end
 
-  create_table "lightning_transactions", force: :cascade do |t|
-    t.bigint "block_id"
-    t.string "tx_id"
-    t.string "raw_tx"
-    t.decimal "amount", precision: 16, scale: 8
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.string "opening_tx_id"
-    t.boolean "channel_is_public"
-    t.bigint "channel_id_1ml"
-    t.integer "type", null: false
-    t.bigint "parent_id"
-    t.integer "input", null: false
-    t.integer "parent_tx_vout"
-    t.bigint "opening_block_id"
-    t.index ["block_id"], name: "index_lightning_transactions_on_block_id"
-    t.index ["opening_block_id"], name: "index_lightning_transactions_on_opening_block_id"
-    t.index ["parent_id"], name: "index_lightning_transactions_on_parent_id"
-    t.index ["tx_id", "input"], name: "index_lightning_transactions_on_tx_id_and_input", unique: true
-    t.index ["type"], name: "index_lightning_transactions_on_type"
-  end
-
   create_table "nodes", force: :cascade do |t|
     t.string "name"
     t.integer "version"
@@ -173,7 +136,6 @@ ActiveRecord::Schema.define(version: 2023_04_14_100311) do
     t.integer "mempool_max"
     t.boolean "mirror_ibd", default: false, null: false
     t.boolean "to_destroy", default: false, null: false
-    t.boolean "getblocktemplate", default: false, null: false
     t.boolean "coinstatsindex"
     t.boolean "checkpoints", default: true, null: false
     t.index ["block_id"], name: "index_nodes_on_block_id"
@@ -291,13 +253,11 @@ ActiveRecord::Schema.define(version: 2023_04_14_100311) do
     t.index ["deactivate_block_id"], name: "index_version_bits_on_deactivate_block_id"
   end
 
-  add_foreign_key "block_templates", "nodes"
   add_foreign_key "chaintips", "blocks"
   add_foreign_key "chaintips", "chaintips", column: "parent_chaintip_id"
   add_foreign_key "chaintips", "nodes"
   add_foreign_key "inflated_blocks", "blocks"
   add_foreign_key "inflated_blocks", "nodes"
-  add_foreign_key "lightning_transactions", "blocks"
   add_foreign_key "stale_candidate_children", "blocks", column: "root_id"
   add_foreign_key "stale_candidate_children", "blocks", column: "tip_id"
   add_foreign_key "stale_candidate_children", "stale_candidates"

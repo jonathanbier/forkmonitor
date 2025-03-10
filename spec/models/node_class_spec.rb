@@ -138,22 +138,9 @@ RSpec.describe Node do
         @node.mirror_client.mock_set_height(560_176)
         allow(described_class).to receive(:by_version).and_return [@node] # Preserve mirror client instance
         allow(described_class).to receive(:destroy_if_requested).and_return true
-        allow(LightningTransaction).to receive(:check!).and_return true
-        allow(LightningTransaction).to receive(:check_public_channels!).and_return true
         allow(Block).to receive(:find_missing).and_return true
         allow(StaleCandidate).to receive(:prime_cache).and_return true
         allow(Softfork).to receive(:notify!).and_return true
-      end
-
-      it 'runs Lightning checks' do
-        expect(LightningTransaction).to receive(:check!).with({ max: 1000 })
-
-        described_class.heavy_checks_repeat!
-      end
-
-      it 'calls check_public_channels!' do
-        expect(LightningTransaction).to receive(:check_public_channels!)
-        described_class.heavy_checks_repeat!
       end
 
       it 'calls match_missing_pools!' do

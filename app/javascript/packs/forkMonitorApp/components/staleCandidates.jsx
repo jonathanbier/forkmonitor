@@ -163,7 +163,7 @@ class StaleCandidates extends React.Component {
                 }
               </p>
             }
-            <Table striped responsive size="sm" className="lightning">
+            <Table striped responsive size="sm" className="bitcoin-tx">
               <thead>
                 <tr align="left">
                   <th>Length</th>
@@ -241,7 +241,7 @@ class StaleCandidates extends React.Component {
                         on the longest chain. Presence of an RBF flag is not considered here.
                         For each output, we check if was changed by less than 0.0001 BTC.
                       </p>
-                      <Table striped responsive size="sm" className="lightning">
+                      <Table striped responsive size="sm" className="bitcoin-tx">
                         <thead>
                           <tr align="left">
                             <th style={ {width: "100pt"} }>BTC</th>
@@ -278,7 +278,7 @@ class StaleCandidates extends React.Component {
                   <p>
                     The list below is updated every block until 30 blocks after the split.
                   </p>
-                  <Table striped responsive size="sm" className="lightning">
+                  <Table striped responsive size="sm" className="bitcoin-tx">
                     <thead>
                       <tr align="left">
                         <th>Hash</th>

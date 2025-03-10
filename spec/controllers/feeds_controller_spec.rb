@@ -135,56 +135,5 @@ RSpec.describe FeedsController do
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
-
-    describe 'GET lightning penalty feed' do
-      before do
-        create(:penalty_transaction_public)
-      end
-
-      it 'is rendered' do
-        get :ln_penalties, format: :rss
-        expect(response).to render_template('feeds/ln_penalties')
-        expect(response.body).to include('Lightning penalty transactions')
-      end
-
-      it 'contains penalty transactions' do
-        get :ln_penalties, format: :rss
-        expect(response.body).to include('c64564a132778ba71ffb6188f7b92dac7c5d22afabeaec31f130bbd201ebb1b6')
-      end
-    end
-
-    describe 'GET lightning sweep feed' do
-      before do
-        create(:sweep_transaction_public)
-      end
-
-      it 'is rendered' do
-        get :ln_sweeps, format: :rss
-        expect(response).to render_template('feeds/ln_sweeps')
-        expect(response.body).to include('Lightning sweep transactions')
-      end
-
-      it 'contains sweep transactions' do
-        get :ln_sweeps, format: :rss
-        expect(response.body).to include('a08e6620d21b8f451c63dfe8d0164f0ba1b2dc781ea163c7990634747b57282c')
-      end
-    end
-
-    describe 'GET lightning potential close feed' do
-      before do
-        create(:maybe_uncoop_transaction)
-      end
-
-      it 'is rendered' do
-        get :ln_uncoops, format: :rss
-        expect(response).to render_template('feeds/ln_uncoops')
-        expect(response.body).to include('uncooperative')
-      end
-
-      it 'contains potential uncooperative close transactions' do
-        get :ln_uncoops, format: :rss
-        expect(response.body).to include('5cc28d4a2deeb4e6079c649645e36a1e2813605f65fdea242afb70d7677c1e03')
-      end
-    end
   end
 end

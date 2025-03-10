@@ -38,7 +38,6 @@ import LogoImage from '../assets/images/logo.png'
 import classnames from 'classnames';
 
 import Block from './block';
-import Lightning from './lightning';
 import Nodes from './nodes';
 import StaleCandidates from './staleCandidates';
 import AdminPage from './adminPage';
@@ -68,11 +67,6 @@ class Navigation extends React.Component {
                 </LinkContainer>
               </NavItem>
               <NavItem className="NavItem">
-                <LinkContainer to="/lightning">
-                  <NavLink><FontAwesomeIcon icon={faBolt} color="orange" /></NavLink>
-                </LinkContainer>
-              </NavItem>
-              <NavItem className="NavItem">
                 <LinkContainer to="/notifications">
                   <NavLink><FontAwesomeIcon icon={faRss} /></NavLink>
                 </LinkContainer>
@@ -99,7 +93,6 @@ class Navigation extends React.Component {
                 <Redirect exact path="/" to="/nodes/btc" />
                 <Route path='/blocks/:hash' component={withTracker(Block, { /* additional attributes */ })} />
                 <Route path='/nodes/btc' component={withTracker(Nodes, { /* additional attributes */ }, {cableApp: CableApp} )} />
-                <Route path='/lightning' component={withTracker(Lightning, { /* additional attributes */ } )} />
                 <Route path='/admin' component={AdminPage} />
                 <Route path='/notifications' component={withTracker(NotificationsPage, { /* additional attributes */ } )} />
                 <Route path='/stale/:height' component={withTracker(StaleCandidates, { /* additional attributes */ } )} />
