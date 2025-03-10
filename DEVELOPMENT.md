@@ -145,6 +145,12 @@ cp ../bitcoin-config.ini test/config.ini
 test/get_previous_releases.py -b -t .. v23.0
 ```
 
+On macOS you need to codesign the binaries (before v29):
+
+```
+codesign -s - vendor/v23.0/bin/bitcoin*
+```
+
 ## Specs
 
 To debug a test, use:
