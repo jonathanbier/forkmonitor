@@ -119,7 +119,12 @@ class BitcoinClientPython
     begin
       @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
     rescue PyCall::PyError => e
-      raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
+      # Since v29 this can be either:
+      # - Block not available (not fully downloaded)
+      # - not available (pruned data)
+      # - Block not found on disk
+      # In earlier versions the second one would just say "not found".
+      raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('not')
 
       raise BitcoinUtil::RPC::Error,
             "getblock(#{block_hash}, #{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
