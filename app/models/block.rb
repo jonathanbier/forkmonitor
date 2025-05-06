@@ -598,7 +598,7 @@ class Block < ApplicationRecord
             block.update headers_only: false, first_seen_by: node
             Node.set_pool_for_block!(block, block_info)
             break
-          rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::TimeOutError # rubocop:disable Lint/SuppressedException
+          rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::BlockNotFullyDownloadedError, BitcoinUtil::RPC::TimeOutError # rubocop:disable Lint/SuppressedException
           end
 
           if raw_block.present?
@@ -678,6 +678,8 @@ class Block < ApplicationRecord
           Rails.logger.info "Block #{block.block_hash} (#{block.height}) not found on the mirror node"
         rescue BitcoinUtil::RPC::BlockPrunedError
           Rails.logger.info "Block #{block.block_hash} (#{block.height}) was pruned from the mirror node"
+        rescue BitcoinUtil::RPC::BlockNotFullyDownloadedError
+          Rails.logger.info "Block #{block.block_hash} (#{block.height}) is not fully downloaded on the mirror node"
         end
       end
 
