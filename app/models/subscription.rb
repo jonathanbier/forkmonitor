@@ -17,7 +17,7 @@ class Subscription < ApplicationRecord
             private_key: ENV.fetch('VAPID_PRIVATE_KEY', nil)
           }
         )
-      rescue WebPush::Unauthorized, WebPush::ExpiredSubscription
+      rescue WebPush::Unauthorized, WebPush::ExpiredSubscription, WebPush::InvalidSubscription
         s.destroy
       end
     end
