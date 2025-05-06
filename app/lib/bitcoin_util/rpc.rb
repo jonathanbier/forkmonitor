@@ -14,6 +14,8 @@ module BitcoinUtil
 
     class BlockPrunedError < Error; end
 
+    class BlockNotFullyDownloadedError < Error; end
+
     class BlockNotFoundError < Error; end
 
     class MethodNotFoundError < Error; end

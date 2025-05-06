@@ -69,6 +69,11 @@ RSpec.describe Node do
       @node.client.mock_block_pruned_error(true)
       expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::BlockPrunedError
     end
+
+    it 'throws BlockNotFullyDownloadedError' do
+      @node.client.mock_block_not_fully_download_error(true)
+      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::BlockNotFullyDownloadedError
+    end
   end
 
   describe 'getblockheader' do

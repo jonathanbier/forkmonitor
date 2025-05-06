@@ -144,6 +144,7 @@ class BitcoinClient
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::PartialFileError if e.message.include?('partial_file')
     raise BitcoinUtil::RPC::BlockPrunedError if e.message.include?('pruned data')
+    raise BitcoinUtil::RPC::BlockNotFullyDownloadedError if e.message.include?('not fully downloaded')
     raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
 
     raise BitcoinUtil::RPC::Error,

@@ -10,6 +10,7 @@ class BitcoinClientPython
     @name_with_version = name_with_version
     @mock_connection_error = false
     @mock_block_pruned_error = false
+    @mock_block_not_fully_download_error = false
     @mock_partial_file_error = false
     @mock_extra_inflation = 0
   end
@@ -28,6 +29,10 @@ class BitcoinClientPython
 
   def mock_set_extra_inflation(amount)
     @mock_extra_inflation = amount
+  end
+
+  def mock_block_not_fully_download_error(status)
+    @mock_block_not_fully_download_error = status
   end
 
   def mock_block_pruned_error(status)
@@ -113,6 +118,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
     raise BitcoinUtil::RPC::PartialFileError if @mock_partial_file_error
+    raise BitcoinUtil::RPC::BlockNotFullyDownloadedError if @mock_block_not_fully_download_error
     raise BitcoinUtil::RPC::BlockPrunedError if @mock_block_pruned_error
     raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 

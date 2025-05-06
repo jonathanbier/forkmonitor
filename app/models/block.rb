@@ -119,7 +119,7 @@ class Block < ApplicationRecord
       rescue BitcoinUtil::RPC::BlockPrunedError
         update pruned: true
         return
-      rescue BitcoinUtil::RPC::BlockNotFoundError
+      rescue BitcoinUtil::RPC::BlockNotFoundError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
         # Perhaps the newest node hasn't seen this block yet, just try again later
         return
       end
@@ -154,7 +154,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(block.block_hash, 1, use_mirror)
-          rescue BitcoinUtil::RPC::BlockPrunedError
+          rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
             block_info = client.getblockheader(block.block_hash)
           end
         end
@@ -174,7 +174,7 @@ class Block < ApplicationRecord
         else
           begin
             block_info = node.getblock(block_info['previousblockhash'], 1, use_mirror)
-          rescue BitcoinUtil::RPC::BlockPrunedError
+          rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
             block_info = client.getblockheader(block_info['previousblockhash'])
           end
         end
@@ -551,7 +551,7 @@ class Block < ApplicationRecord
           else
             begin
               block_info = node.getblock(hash, 1, use_mirror)
-            rescue BitcoinUtil::RPC::BlockPrunedError
+            rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
               block_info = client.getblockheader(hash)
             end
           end
