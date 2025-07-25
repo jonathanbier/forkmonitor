@@ -344,7 +344,7 @@ class Block < ApplicationRecord
     # Feed header and block to mirror node if needed:
     begin
       node.mirror_client.getblock(block_hash, 1)
-    rescue BitcoinUtil::RPC::BlockNotFoundError
+    rescue BitcoinUtil::RPC::BlockNotFoundError, BlockNotFullyDownloadedError
       return nil if first_seen_by.libbitcoin?
 
       Rails.logger.info "Feed block #{block_hash} (#{height}) from #{first_seen_by.name_with_version} to mirror of #{node.name_with_version}"
