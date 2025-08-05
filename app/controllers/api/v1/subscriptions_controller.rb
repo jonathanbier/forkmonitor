@@ -15,7 +15,9 @@ module Api
       private
 
       def subscription_params
-        params.require(:subscription).permit(:endpoint, :expirationTime, keys: %i[p256dh auth])
+        return {} unless params[:subscription].is_a? ActionController::Parameters
+
+        params.fetch(:subscription, {}).permit(:endpoint, :expirationTime, keys: %i[p256dh auth])
       end
     end
   end
