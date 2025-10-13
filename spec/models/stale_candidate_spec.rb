@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'bitcoind_helper'
 
 RSpec.describe StaleCandidate do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   before do
     allow(Node).to receive('set_pool_for_block!').and_return(nil)

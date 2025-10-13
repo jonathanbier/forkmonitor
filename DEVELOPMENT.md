@@ -122,14 +122,14 @@ Some of the tests require (a specific version of) Bitcoin Core. To install:
 
 ```
 cd vendor/bitcoin
-test/get_previous_releases.py -b -t .. v23.0
+cp ../bitcoin-config.ini test/config.ini
+test/get_previous_releases.py -t .. v28.2
 ```
 
-On macOS you need to codesign the binaries (before v29):
-
-```
-codesign -s - vendor/v23.0/bin/bitcoin*
-```
+Upgrade node: `chaintip_spec.rb` relies on `vbparams` to maniuplate when
+taproot is active. If `taproot` is removed from there, the test will no
+longer work. As of v30 that's not the case yet. See:
+https://github.com/bitcoin/bitcoin/pull/26201
 
 ## Specs
 

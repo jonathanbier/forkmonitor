@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'bitcoind_helper'
 
 RSpec.describe Node do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   describe 'check_if_behind!' do
     after do

@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'bitcoind_helper'
 
 RSpec.describe Node do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   describe 'poll!' do
     describe 'on first run' do
@@ -34,7 +34,7 @@ RSpec.describe Node do
 
         it 'stores the node version' do
           @node.poll!
-          expect(@node.version).to be 230_000
+          expect(@node.version).to eq(280_200)
         end
 
         it 'gets IBD status' do

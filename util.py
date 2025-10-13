@@ -2,14 +2,33 @@ import argparse
 import os
 import sys
 import importlib.util
+import tempfile
+import textwrap
 from pathlib import Path
 
 VENDOR_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor"
 
+
+def _resolve_version_dir():
+    """Return the expected packaged bitcoind version directory."""
+    path = Path(VENDOR_DIRECTORY) / "v28.2"
+    if path.exists():
+        return path
+    raise FileNotFoundError("Required bitcoind version v28.2 not found under vendor/")
+
+
+def _version_code(version_dir: Path) -> int:
+    """Translate a directory name like v28.2 into the numeric version code expected by BitcoinTestFramework."""
+    name = version_dir.name.lstrip('v')
+    parts = name.split('.')
+    while len(parts) < 3:
+        parts.append('0')
+    major, minor, patch = (int(part) for part in parts[:3])
+    return major * 10000 + minor * 100 + patch
+
 sys.path.append(VENDOR_DIRECTORY + "/bitcoin/test/functional")
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import BitcoinTestFramework, TestStatus
 from test_framework.util import assert_equal
-from test_framework.test_node import RPCOverloadWrapper
 from feature_taproot import create_block
 from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
 
@@ -40,7 +59,6 @@ class TestWrapper(BitcoinTestFramework):
               trace_rpc=False,
               port_seed=os.getpid(),
               coveragedir=None,
-              configfile=os.path.abspath(VENDOR_DIRECTORY + "/bitcoin/test/config.ini"),
               pdbonfailure=False,
               usecli=False,
               perf=False,
@@ -54,44 +72,39 @@ class TestWrapper(BitcoinTestFramework):
         self.supports_cli = supports_cli
         self.bind_to_localhost_only = bind_to_localhost_only
         self.extra_args = extra_args
+        self.uses_wallet = True
 
-        self.options = argparse.Namespace
-        self.options.nocleanup = nocleanup
-        self.options.noshutdown = noshutdown
-        self.options.cachedir = cachedir
-        self.options.tmpdir = tmpdir
-        self.options.loglevel = loglevel
-        self.options.trace_rpc = trace_rpc
-        self.options.port_seed = port_seed
-        self.options.coveragedir = coveragedir
-        self.options.configfile = configfile
-        self.options.pdbonfailure = pdbonfailure
-        self.options.usecli = usecli
-        self.options.perf = perf
-        self.options.randomseed = randomseed
-        self.options.valgrind = False
-        self.options.timeout_factor = 2
-        self.options.descriptors = True
+        version_dir = _resolve_version_dir()
 
-        self.options.bitcoind = None
-        self.options.bitcoincli = None
+        options = self.options
+        options.nocleanup = nocleanup
+        options.noshutdown = noshutdown
+        options.cachedir = cachedir
+        options.tmpdir = tmpdir
+        options.loglevel = loglevel
+        options.trace_rpc = trace_rpc
+        options.port_seed = port_seed
+        options.coveragedir = coveragedir
+        options.pdbonfailure = pdbonfailure
+        options.usecli = usecli
+        options.perf = perf
+        options.randomseed = randomseed
+        options.valgrind = False
+        options.timeout_factor = 2
+        options.descriptors = True
+        options.v2transport = getattr(options, 'v2transport', False)
+        options.previous_releases_path = str(version_dir.parent)
+
+        options.bitcoind = None
+        options.bitcoincli = None
 
         super().setup()
 
     def setup_nodes(self):
-        # Bypass RPCOverloadWrapper's createwallet, because it adds an additional
-        # argument "external_signer" which causes the command to fail when run
-        # against v0.21
-        if hasattr(RPCOverloadWrapper, 'createwallet'):
-            delattr(RPCOverloadWrapper, "createwallet")
-
-        self.add_nodes(self.num_nodes,
-            versions=[230000] * self.num_nodes,
-            binary=[os.path.abspath(VENDOR_DIRECTORY + "/v23.0/bin/bitcoind")] * self.num_nodes,
-            binary_cli=[os.path.abspath(VENDOR_DIRECTORY + "/v23.0/bin/bitcoin-cli")] * self.num_nodes,
-            # binary=[str(Path.home()) + "/bin/bitcoind"] * self.num_nodes,
-            # binary_cli=[str(Path.home()) + "/bin/bitcoin-cli"] * self.num_nodes,
+        self.add_nodes(
+            self.num_nodes,
             extra_args=self.extra_args,
+            versions=[_version_code(_resolve_version_dir())] * self.num_nodes,
         )
         self.start_nodes()
 
@@ -99,15 +112,67 @@ class TestWrapper(BitcoinTestFramework):
         BitcoinTestFramework.connect_nodes(self, a, b)
 
     def disconnect_nodes(self, a, b):
-        BitcoinTestFramework.disconnect_nodes(self, a, b)        
+        BitcoinTestFramework.disconnect_nodes(self, a, b)
 
     def shutdown(self):
+        if not hasattr(self, "success"):
+            self.success = TestStatus.FAILED
         super().shutdown()
 
     def createtaprootblock(self, txlist):
         # Code borrowed from feature_taproot.py
         block = create_block(tmpl=self.nodes[1].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS), txlist=txlist)
         add_witness_commitment(block)
-        block.rehash()
         block.solve()
         return block.serialize().hex()
+
+if __name__ == '__main__':
+    TestWrapper(__file__).main()
+
+
+def build_test_wrapper(test_file=None):
+    """Instantiate TestWrapper with a temporary config file pointing at vendor binaries."""
+
+    version_dir = _resolve_version_dir()
+    bitcoin_src_dir = Path(VENDOR_DIRECTORY) / "bitcoin"
+
+    config_content = textwrap.dedent(
+        f"""
+        [environment]
+        CLIENT_NAME=forkmonitor
+        CLIENT_BUGREPORT=https://forkmonitor.info
+        SRCDIR={bitcoin_src_dir}
+        BUILDDIR={version_dir}
+        EXEEXT=
+        RPCAUTH={bitcoin_src_dir / 'share' / 'rpcauth' / 'rpcauth.py'}
+
+        [components]
+        ENABLE_WALLET=true
+        ENABLE_CLI=true
+        BUILD_BITCOIN_TX=true
+        ENABLE_BITCOIN_UTIL=true
+        ENABLE_BITCOIN_CHAINSTATE=true
+        ENABLE_WALLET_TOOL=true
+        ENABLE_BITCOIND=true
+        ENABLE_FUZZ_BINARY=true
+        ENABLE_EXTERNAL_SIGNER=true
+        ENABLE_IPC=true
+        """
+    ).strip()
+
+    with tempfile.NamedTemporaryFile("w", delete=False, suffix=".ini") as config_file:
+        config_file.write(config_content)
+        config_path = Path(config_file.name)
+
+    argv_snapshot = sys.argv[:]
+    argv0 = argv_snapshot[0] if argv_snapshot else ""
+
+    try:
+        sys.argv = [argv0, f"--configfile={config_path}"]
+        return TestWrapper(str(test_file or Path(__file__)))
+    finally:
+        sys.argv = argv_snapshot
+        try:
+            config_path.unlink()
+        except FileNotFoundError:
+            pass

@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'bitcoind_helper'
 
 RSpec.describe Block do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   def setup_python_nodes
     # Node A with mirror node, node B

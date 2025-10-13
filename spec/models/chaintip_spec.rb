@@ -9,7 +9,7 @@ RSpec.configure do |c|
 end
 
 RSpec.describe Chaintip do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   before do
     setup_chaintip_spec_nodes
@@ -205,7 +205,7 @@ RSpec.describe Chaintip do
         expect(@node_a.chaintips.count).to eq(0)
         described_class.check!([@node_a])
         expect(@node_a.chaintips.count).to eq(1)
-        expect(@node_a.chaintips.first.block.height).to eq(2)
+        expect(@node_a.chaintips.first.block.height).to eq(@initial_height)
       end
     end
 
@@ -231,12 +231,12 @@ RSpec.describe Chaintip do
       it 'adds the valid fork blocks up to the common ancenstor' do
         described_class.check!([@node_a])
         @node_a.reload
-        split_block = Block.find_by(height: 2)
+        split_block = Block.find_by(height: @initial_height)
         fork_tip = @node_a.block
-        expect(fork_tip.height).to eq(4)
+        expect(fork_tip.height).to eq(@initial_height + 2)
         expect(fork_tip).not_to be_nil
         expect(fork_tip.parent).not_to be_nil
-        expect(fork_tip.parent.height).to eq(3)
+        expect(fork_tip.parent.height).to eq(@initial_height + 1)
         expect(fork_tip.parent.parent).to eq(split_block)
       end
 
@@ -279,12 +279,6 @@ RSpec.describe Chaintip do
 
     describe 'invalid chaintip' do
       before do
-        # Reach coinbase maturity
-        @node_b.client.generatetoaddress(99, @r_addr)
-
-        # Fund a taproot address and mine it
-        @node_b.client.sendtoaddress(@addr_1, 1)
-        @node_b.client.generate(1)
         test.sync_blocks([@node_a.client, @node_b.client])
 
         # Spend from taproot address
@@ -309,17 +303,20 @@ RSpec.describe Chaintip do
 
         # Taproot is treated as always active in the mempool: https://github.com/bitcoin/bitcoin/pull/23512
         expect(mempool_broken_no_tap['allowed']).to be(false)
-        expect(mempool_broken_no_tap['reject-reason']).to eq('non-mandatory-script-verify-flag (Invalid Schnorr signature)')
+        expect(mempool_broken_no_tap['reject-reason']).to eq('mandatory-script-verify-flag-failed (Invalid Schnorr signature)')
 
         expect(mempool_broken_tap['allowed']).to be(false)
-        expect(mempool_broken_tap['reject-reason']).to eq('non-mandatory-script-verify-flag (Invalid Schnorr signature)')
+        expect(mempool_broken_tap['reject-reason']).to eq('mandatory-script-verify-flag-failed (Invalid Schnorr signature)')
 
-        # But Taproot is still inactive for block validation (in v23):
+        # But Taproot is still inactive for block validation (on node B):
         block_hex = test.createtaprootblock([tx_hex])
         @node_b.client.submitblock(block_hex)
         sleep(1)
 
-        @disputed_block_hash = @node_b.client.getbestblockhash
+        invalid_tip = @node_a.client.getchaintips.find { |tip| tip['status'] == 'invalid' }
+        expect(invalid_tip).not_to be_nil
+
+        @disputed_block_hash = invalid_tip['hash']
       end
 
       describe 'not in our db' do
@@ -376,29 +373,28 @@ RSpec.describe Chaintip do
   end
 
   describe 'self.validate_forks!' do
-    before do
-      # Feed blocks from node B to node C so their status changes from 'headers-only'
-      # to 'valid-headers'
-      expect(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(1), 0))).to eq('inconclusive')
-      expect(@node_c.client.submitblock(@node_b.client.getblock(@node_b.client.getblockhash(2), 0))).to eq('inconclusive')
-
-      # Now connect them (node_b will reorg)
-      @node_c.client.setnetworkactive(true)
-      test.connect_nodes(1, 2)
-      test.sync_blocks([@node_b.client, @node_c.client])
-    end
-
     it "calls block.validate_fork! on 'valid-headers' tips" do
+      chaintips = [
+        { 'height' => @initial_height, 'hash' => 'active-tip', 'status' => 'active', 'branchlen' => 0 },
+        { 'height' => @initial_height - 1, 'hash' => 'valid-headers-hash', 'status' => 'valid-headers', 'branchlen' => 1 }
+      ]
+      allow(@node_c.client).to receive(:getchaintips).and_return(chaintips)
+
       block = Block.new
-      expect(Block).to receive(:find_by).and_return block
+      expect(Block).to receive(:find_by).with(block_hash: 'valid-headers-hash').and_return block
       expect(block).to receive(:validate_fork!)
       described_class.validate_forks!(@node_c, 100)
     end
 
     it 'ignores old tips' do
+      chaintips = [
+        { 'height' => @initial_height, 'hash' => 'active-tip', 'status' => 'active', 'branchlen' => 0 },
+        { 'height' => @initial_height - 200, 'hash' => 'stale-valid-headers', 'status' => 'valid-headers', 'branchlen' => 200 }
+      ]
+      allow(@node_c.client).to receive(:getchaintips).and_return(chaintips)
+
       expect(Block).not_to receive(:find_by)
-      @node_c.client.generatetoaddress(1, @addr_3)
-      described_class.validate_forks!(@node_c, 1)
+      described_class.validate_forks!(@node_c, 100)
     end
   end
 end

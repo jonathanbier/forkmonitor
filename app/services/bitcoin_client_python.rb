@@ -244,8 +244,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::ConnectionError if @mock_connection_error
 
     begin
-      coinbase_dest = @node.get_deterministic_priv_key.address
-      @node.generatetoaddress(n_blocks, coinbase_dest, invalid_call: false)
+      @node.generate(n_blocks, called_by_framework: true)
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
@@ -258,7 +257,7 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::Error, 'Specify address' if address.nil?
 
     begin
-      @node.generatetoaddress(n_blocks, address, invalid_call: false)
+      @node.generatetoaddress(n_blocks, address, called_by_framework: true)
     rescue PyCall::PyError => e
       raise BitcoinUtil::RPC::Error, "generatetoaddress failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end

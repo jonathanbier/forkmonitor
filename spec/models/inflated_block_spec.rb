@@ -4,7 +4,7 @@ require 'rails_helper'
 require 'bitcoind_helper'
 
 RSpec.describe InflatedBlock do
-  let(:test) { TestWrapper.new }
+  let(:test) { new_test_wrapper }
 
   def setup_python_nodes
     @use_python_nodes = true
