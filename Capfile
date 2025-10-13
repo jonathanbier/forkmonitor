@@ -43,4 +43,4 @@ require 'capistrano/nvm'
 Dir.glob('lib/capistrano/tasks/*.rake').each { |r| import r }
 
 set :rbenv_type, :user
-set :rbenv_ruby, '3.1.4'
+set :rbenv_ruby, '3.4.7'
