@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.1.4'
+ruby '3.1.7'
 
 # https://stackoverflow.com/a/79361034
 gem 'concurrent-ruby', '1.3.4'
