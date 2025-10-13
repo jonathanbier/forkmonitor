@@ -31,7 +31,7 @@ const App = (props) => (
             loss arising from the use of this publication/communication or its contents.
           </p>
           <p className="text-muted disclaimer">
-            Source code on <a href="https://github.com/BitMEXResearch/forkmonitor">Github</a>
+            Source code on <a href="https://github.com/jonathanbier/forkmonitor">Github</a>
           </p>
         </span>
        </div>

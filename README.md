@@ -1,4 +1,4 @@
-# Fork Monitor [![Build Status](https://travis-ci.com/BitMEXResearch/forkmonitor.svg?branch=master)](https://travis-ci.com/BitMEXResearch/forkmonitor) [![Coverage Status](https://coveralls.io/repos/github/BitMEXResearch/forkmonitor/badge.svg?branch=master)](https://coveralls.io/github/BitMEXResearch/forkmonitor?branch=master)
+# Fork Monitor [![Build Status](https://travis-ci.com/jonathanbier/forkmonitor.svg?branch=master)](https://travis-ci.com/jonathanbier/forkmonitor) [![Coverage Status](https://coveralls.io/repos/github/jonathanbier/forkmonitor/badge.svg?branch=master)](https://coveralls.io/github/jonathanbier/forkmonitor?branch=master)
 
 * [DEVELOPEMT.md](DEVELOPMENT.md): instructions for local development
 * [DEPLOYMENT.md](DEPLOYMENT.md): instructions for production deployment

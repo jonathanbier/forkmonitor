@@ -4,7 +4,7 @@
 lock '~> 3.19.2'
 
 set :application, 'forkmonitor'
-set :repo_url, 'https://github.com/BitMEXResearch/forkmonitor.git'
+set :repo_url, 'https://github.com/jonathanbier/forkmonitor.git'
 
 # Default branch is :master
 set :branch, `git rev-parse --abbrev-ref HEAD`.chomp
