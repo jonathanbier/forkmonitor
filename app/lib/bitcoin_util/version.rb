@@ -32,15 +32,11 @@ module BitcoinUtil
           end
           return name
         end
-        if client_type == :core && version >= 220_000
+        if %i[core knots].include?(client_type) && version >= 220_000
           version_arr = version.to_s.rjust(6, '0').scan(/.{1,2}/).map(&:to_i)
           name + " #{(version_arr[2]).zero? ? version_arr[0..1].join('.') : version_arr.join('.')}" + version_extra
         else
-          version_arr = if client_type == :sv
-                          (version - 100_000_000).to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
-                        else
-                          version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
-                        end
+          version_arr = version.to_s.rjust(8, '0').scan(/.{1,2}/).map(&:to_i)
           name + " #{(version_arr[3]).zero? && client_type != :bu ? version_arr[0..2].join('.') : version_arr.join('.')}" + version_extra
         end
       end
