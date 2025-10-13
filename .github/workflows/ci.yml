@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  RAILS_ENV: test
+  NODE_ENV: test
+  BUNDLE_WITHOUT: development:production
+  DATABASE_URL: postgres://postgres:postgres@localhost:5432/fork_monitor_test
+  VAPID_CONTACT_EMAIL: hello@example.com
+  DEVISE_JWT_SECRET_KEY: b160a79b5b8de31f84e0d73ebb7d6f2aeb2a4105ee7431209ba8b88412658b48312ba11c08f6ff8700f6bb234d5d63d8a8fac9509df1b38f27d035e46b874d59
+  VAPID_PRIVATE_KEY: OFCgfJWR0XKh8frilK9Mmv7TLiwhekEflehHDIyzhJI
+  VAPID_PUBLIC_KEY: BODzsAyEftxIpLZLncvsR0nueOwPKtS-pxTGUKtj6n6qPXKSEdkqb7mrtE8oLVx-WQcUYvmnB1QhqwHR3v9KHhI=
+
+jobs:
+  rubocop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3-dev
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.4
+          bundler-cache: true
+      - name: Run RuboCop
+        run: bundle exec rubocop
+
+  server:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:14
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3 python3-dev
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.4
+          bundler-cache: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install Yarn dependencies
+        run: yarn install --frozen-lockfile
+      - name: Prepare Bitcoin Core binaries
+        run: |
+          mkdir -p vendor/bitcoin/test
+          cp vendor/bitcoin-config.ini vendor/bitcoin/test/config.ini
+          cd vendor/bitcoin
+          python3 test/get_previous_releases.py -t .. v28.2
+      - name: Prepare database
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:schema:load
+      - name: Run server checks
+        run: bundle exec rake
+
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Install Yarn dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run client checks
+        run: yarn test
+        env:
+          CI: true
