@@ -35,7 +35,7 @@ jobs:
             libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
       - name: Set up Python (pyenv)
         env:
-          PYTHON_VERSION: 3.10.16
+          PYTHON_VERSION: 3.10.19
           PYTHON_CONFIGURE_OPTS: --enable-shared
         run: |
           curl https://pyenv.run | bash
@@ -98,7 +98,7 @@ jobs:
             libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
       - name: Set up Python (pyenv)
         env:
-          PYTHON_VERSION: 3.10.16
+          PYTHON_VERSION: 3.10.19
           PYTHON_CONFIGURE_OPTS: --enable-shared
         run: |
           curl https://pyenv.run | bash
