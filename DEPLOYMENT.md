@@ -81,25 +81,6 @@ For the mirror nodes, use `-datadir=/home/bitcoin/.bitcoin2`.
 
 Installing / updating Bitcoin Core is a matter of stopping these services and then: `sudo tar -xzvf bitcoin-0.21.1-x86_64-linux-gnu.tar.gz -C /usr/local --strip 1`
 
-### Patches
-
-Currently the Bitcoin Core v0.21.0 mirror node is patched: https://github.com/BitMEXResearch/bitcoin/pull/1
-
-To run a patched node instead, install [dependencies](https://github.com/bitcoin/bitcoin/blob/master/doc/build-unix.md#linux-distribution-specific-instructions), clone the source in `/home/bitcoin/src` and compile locally:
-
-```
-git clone https://github.com/bitcoin/bitcoin.git
-cd bitcoin
-git remote add BitMEXResearch https://github.com/BitMEXResearch/bitcoin.git
-git checkout v0.21.0-patched
-./autogen.sh
-./configure --with-miniupnpc=no --disable-bench --disable-tests --without-gui --disable-wallet --disable-zmq --prefix=/home/bitcoin
-make -j5
-make install
-```
-
-In the systemd service file, change `ExecStart=` to `/home/bitcoin/bin/bitcoind`.
-
 ## Log files
 
 To keep the log files from spiraling out of control, see [/etc/logrotate.conf](deploy/etc/logrotate.conf).
