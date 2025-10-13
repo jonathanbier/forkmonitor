@@ -33,7 +33,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.1.7
+          ruby-version: 3.4.7
           bundler-cache: true
       - name: Run RuboCop
         run: bundle exec rubocop
@@ -68,7 +68,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.1.7
+          ruby-version: 3.4.7
           bundler-cache: true
       - name: Reconfigure Bundler path for act
         if: ${{ env.ACT == 'true' }}

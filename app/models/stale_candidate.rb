@@ -207,11 +207,8 @@ class StaleCandidate < ApplicationRecord
   def set_children!
     children.destroy_all # TODO: update records instead
     Block.where(height: height).find_each do |root|
-      chain = Block.where('height <= ?', height + STALE_BLOCK_WINDOW).join_recursive do
-        start_with(block_hash: root.block_hash)
-          .connect_by(id: :parent_id)
-          .order_siblings(:work)
-      end
+      chain_limit = [height + STALE_BLOCK_WINDOW, Block.maximum(:height) || height].min
+      chain = Block.descendant_chain(root.id, max_height: chain_limit)
       tip = chain[-1]
       children.create(
         root: root,

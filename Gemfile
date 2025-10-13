@@ -3,7 +3,7 @@
 source 'https://rubygems.org'
 git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
-ruby '3.1.7'
+ruby '3.4.7'
 
 # https://stackoverflow.com/a/79361034
 gem 'concurrent-ruby', '1.3.4'
@@ -44,6 +44,12 @@ gem 'bitcoin-ruby', require: 'bitcoin'
 
 gem 'rack-cors', require: 'rack/cors'
 
+gem 'bigdecimal'
+gem 'csv'
+gem 'drb'
+gem 'mutex_m'
+gem 'observer'
+
 # Authentication
 gem 'devise-jwt'
 
@@ -72,8 +78,6 @@ gem '0mq', '~> 0.5.3'
 
 # Use Postgres as the database for Active Record
 gem 'pg'
-# Switch to release after merge: https://github.com/take-five/activerecord-hierarchical_query/pull/32
-gem 'activerecord-hierarchical_query', github: 'walski/activerecord-hierarchical_query', branch: 'rails-6-1'
 
 # Memcachier
 gem 'dalli'

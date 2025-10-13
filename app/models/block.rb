@@ -74,14 +74,47 @@ class Block < ApplicationRecord
   end
 
   def descendants(depth_limit = nil)
-    block_hash = self.block_hash
-    height = self.height
     max_height = depth_limit.nil? ? 10_000_000 : height + depth_limit
-    # Constrain query by minimum height to reduce memory usage
-    Block.where('height > ? AND height <= ?', height, max_height).join_recursive do
-      start_with(block_hash: block_hash)
-        .connect_by(id: :parent_id)
-        .order_siblings(:work)
+    self.class.descendants_for(id, max_height: max_height)
+  end
+
+  class << self
+    def descendant_chain(root_id, max_height:)
+      # This CTE mirrors the behaviour we previously obtained via:
+      #
+      #   Block.where('height > ? AND height <= ?', height, max_height).join_recursive do
+      #     start_with(block_hash: block_hash)
+      #       .connect_by(id: :parent_id)
+      #       .order_siblings(:work)
+      #   end
+      #
+      # The activerecord-hierarchical_query gem that provided join_recursive is outdated and
+      # incompatible with newer Ruby/Rails releases, so we inline the recursion. The recursive
+      # CTE starts from the root block and follows parent links in the same way, while the
+      # max_height guard limits the working set to roughly the same bounds as the old query.
+      sql = <<~SQL.squish
+        WITH RECURSIVE block_descendants AS (
+          SELECT id, parent_id, height, work
+          FROM blocks
+          WHERE id = :root_id AND height <= :max_height
+        UNION ALL
+          SELECT child.id, child.parent_id, child.height, child.work
+          FROM blocks child
+          INNER JOIN block_descendants bd ON child.parent_id = bd.id
+          WHERE child.height <= :max_height
+        )
+        SELECT id FROM block_descendants
+      SQL
+      ids = connection.select_values(
+        sanitize_sql_array([sql, { root_id: root_id, max_height: max_height }])
+      ).map!(&:to_i)
+      return none if ids.empty?
+
+      where(id: ids).order(:height, :work)
+    end
+
+    def descendants_for(root_id, max_height:)
+      descendant_chain(root_id, max_height: max_height).where.not(id: root_id)
     end
   end
 
