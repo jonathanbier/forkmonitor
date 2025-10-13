@@ -46,7 +46,7 @@ python contrib/create-old-pools-json.py pools.json
 The site is deployed using Capistrano:
 
 ```
-cap production deploy
+bundle exec cap production deploy
 ```
 
 On the server, ruby is installed using rbenv. Env vars are set in [.rbenv-vars](deploy/home/forkmonitor/forkmonitor/.rbenv-vars). Be sure to install [rbenv-vars](https://github.com/rbenv/rbenv-vars).
