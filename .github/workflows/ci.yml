@@ -29,7 +29,35 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3-dev libssl-dev
+          sudo apt-get install --no-install-recommends --yes \
+            build-essential libpq-dev libzmq3-dev pkg-config libssl-dev zlib1g-dev libbz2-dev \
+            libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev \
+            libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+      - name: Set up Python (pyenv)
+        env:
+          PYTHON_VERSION: 3.10.16
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+        run: |
+          curl https://pyenv.run | bash
+          echo "PYENV_ROOT=$HOME/.pyenv" >> "$GITHUB_ENV"
+          echo "$HOME/.pyenv/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.pyenv/shims" >> "$GITHUB_PATH"
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+          eval "$("$HOME/.pyenv/bin/pyenv" init -)"
+          pyenv install -s "$PYTHON_VERSION"
+          pyenv global "$PYTHON_VERSION"
+          pyenv rehash
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          PYTHON_BIN="$(pyenv which python)"
+          echo "PYTHON=${PYTHON_BIN}" >> "$GITHUB_ENV"
+          echo "PYCALL_PYTHON=${PYTHON_BIN}" >> "$GITHUB_ENV"
+          if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+            echo "LD_LIBRARY_PATH=$(pyenv prefix)/lib:${LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          else
+            echo "LD_LIBRARY_PATH=$(pyenv prefix)/lib" >> "$GITHUB_ENV"
+          fi
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -64,7 +92,35 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3 python3-dev libssl-dev
+          sudo apt-get install --no-install-recommends --yes \
+            build-essential libpq-dev libzmq3-dev pkg-config libssl-dev zlib1g-dev libbz2-dev \
+            libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev xz-utils tk-dev \
+            libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+      - name: Set up Python (pyenv)
+        env:
+          PYTHON_VERSION: 3.10.16
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+        run: |
+          curl https://pyenv.run | bash
+          echo "PYENV_ROOT=$HOME/.pyenv" >> "$GITHUB_ENV"
+          echo "$HOME/.pyenv/bin" >> "$GITHUB_PATH"
+          echo "$HOME/.pyenv/shims" >> "$GITHUB_PATH"
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PYENV_ROOT/shims:$PATH"
+          eval "$("$HOME/.pyenv/bin/pyenv" init -)"
+          pyenv install -s "$PYTHON_VERSION"
+          pyenv global "$PYTHON_VERSION"
+          pyenv rehash
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          PYTHON_BIN="$(pyenv which python)"
+          echo "PYTHON=${PYTHON_BIN}" >> "$GITHUB_ENV"
+          echo "PYCALL_PYTHON=${PYTHON_BIN}" >> "$GITHUB_ENV"
+          if [ -n "${LD_LIBRARY_PATH:-}" ]; then
+            echo "LD_LIBRARY_PATH=$(pyenv prefix)/lib:${LD_LIBRARY_PATH}" >> "$GITHUB_ENV"
+          else
+            echo "LD_LIBRARY_PATH=$(pyenv prefix)/lib" >> "$GITHUB_ENV"
+          fi
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
