@@ -114,29 +114,7 @@ Node.where.not(mirror_rpchost: nil).first.mirror_client.getchaintips
 ```
 
 ## Test suite
-
-When switching between a binary and custom Bitcoin Core branch, comment
-the `binary` and `binary_cli` lines in `util.py`, update `travis.yml`
-and update the commit hash in `bitcoind.sh`.
-
-Currently the tests use a downloaded binary and don't require a custom compiled version of Bitcoin Core.
-
-### Custom Bitcoin Core branch
-
-
-```sh
-TRAVIS_BUILD_DIR=$PWD ./bitcoind.sh
-```
-
-Edit `bitcoin/test/config.ini` and replace `$TRAVIS_BUILD_DIR` with the root path
-of this project.
-
-To run Rails tests and monitor for changes:
-
-```sh
-guard
-<hit enter>
-```
+The tests use a downloaded Bitcoin Core binary and don't require a custom compiled version.
 
 ### Bitcoin Core binary
 
@@ -144,7 +122,6 @@ Some of the tests require (a specific version of) Bitcoin Core. To install:
 
 ```
 cd vendor/bitcoin
-cp ../bitcoin-config.ini test/config.ini
 test/get_previous_releases.py -b -t .. v23.0
 ```
 
