@@ -16,9 +16,31 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
-if ENV.fetch('COVERALLS_DISABLE', '0') != '1'
-  require 'coveralls'
-  Coveralls.wear!
+coverage_enabled = ENV.fetch('COVERAGE', '0') == '1' || ENV.fetch('COVERALLS_DISABLE', '0') != '1'
+
+if coverage_enabled
+  require 'simplecov'
+
+  formatters = [SimpleCov::Formatter::HTMLFormatter]
+
+  if ENV.fetch('COVERALLS_DISABLE', '0') != '1'
+    require 'coveralls'
+    formatters.unshift(Coveralls::SimpleCov::Formatter)
+  end
+
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(formatters)
+  SimpleCov.use_merging true if SimpleCov.respond_to?(:use_merging)
+  SimpleCov.command_name "RSpec#{ENV.fetch('TEST_ENV_NUMBER', '0')}"
+
+  SimpleCov.start('rails')
+
+  if ENV.fetch('TEST_ENV_NUMBER', '').to_s.empty?
+    SimpleCov.at_exit do
+      SimpleCov.result.format!
+    rescue StandardError => e
+      warn "[SimpleCov] coverage reporting failed: #{e.class}: #{e.message}"
+    end
+  end
 end
 
 require 'helpers/controller_spec_helpers'

@@ -64,7 +64,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3 python3-dev
+          sudo apt-get install --no-install-recommends --yes build-essential libpq-dev libzmq3-dev pkg-config python3 python3-dev libssl-dev
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -111,17 +111,20 @@ jobs:
       - name: Prepare database
         run: |
           bundle exec rake parallel:drop parallel:create parallel:load_schema
-      - name: Disable Coveralls network (act only)
+      - name: Configure coverage collection
         run: |
-          if [ "${ACT:-}" = "true" ]; then
-            echo "COVERALLS_DISABLE=1" >> "$GITHUB_ENV"
+          if [ "${ACT:-}" != "true" ]; then
+            echo "COVERAGE=1" >> "$GITHUB_ENV"
           fi
+          echo "COVERALLS_DISABLE=1" >> "$GITHUB_ENV"
       - name: Run server checks
-        run: |
-          if [ "${ACT:-}" = "true" ]; then
-            export COVERALLS_DISABLE=1
-          fi
-          bundle exec rake parallel:spec
+        run: bundle exec rake parallel:spec
+      - name: Upload coverage to Coveralls
+        if: ${{ env.ACT != 'true' }}
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: server
   client:
     runs-on: ubuntu-latest
     steps:
