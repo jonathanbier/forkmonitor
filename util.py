@@ -11,6 +11,13 @@ VENDOR_DIRECTORY = os.path.dirname(os.path.abspath(__file__)) + "/vendor"
 
 def _resolve_version_dir():
     """Return the expected packaged bitcoind version directory."""
+    override = os.environ.get("BITCOIN_VERSION_DIR")
+    if override:
+        path = Path(override).expanduser()
+        if path.exists():
+            return path
+        raise FileNotFoundError(f"Required bitcoind version v28.2 not found at {path}")
+
     path = Path(VENDOR_DIRECTORY) / "v28.2"
     if path.exists():
         return path

@@ -42,3 +42,5 @@ yarn-debug.log*
 .env
 
 /vendor/bitcoin-*
+
+.cache

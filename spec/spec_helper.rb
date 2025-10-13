@@ -16,8 +16,10 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
-require 'coveralls'
-Coveralls.wear!
+if ENV.fetch('COVERALLS_DISABLE', '0') != '1'
+  require 'coveralls'
+  Coveralls.wear!
+end
 
 require 'helpers/controller_spec_helpers'
 

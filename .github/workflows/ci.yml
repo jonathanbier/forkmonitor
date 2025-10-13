@@ -8,17 +8,24 @@ env:
   RAILS_ENV: test
   NODE_ENV: test
   BUNDLE_WITHOUT: development:production
-  DATABASE_URL: postgres://postgres:postgres@localhost:5432/fork_monitor_test
+  PGHOST: localhost
+  PGUSER: postgres
+  PGPASSWORD: postgres
   VAPID_CONTACT_EMAIL: hello@example.com
   DEVISE_JWT_SECRET_KEY: b160a79b5b8de31f84e0d73ebb7d6f2aeb2a4105ee7431209ba8b88412658b48312ba11c08f6ff8700f6bb234d5d63d8a8fac9509df1b38f27d035e46b874d59
   VAPID_PRIVATE_KEY: OFCgfJWR0XKh8frilK9Mmv7TLiwhekEflehHDIyzhJI
   VAPID_PUBLIC_KEY: BODzsAyEftxIpLZLncvsR0nueOwPKtS-pxTGUKtj6n6qPXKSEdkqb7mrtE8oLVx-WQcUYvmnB1QhqwHR3v9KHhI=
+  DEVISE_SECRET_KEY: c33b2d30ef4810db85f89989ccd9f33219ad12838ce62020d1fa87dbb7d64681e1c5b08896afbc6e3cc7db3e7d1162711ebfa7b50e92ab9346212883bb93fac3
+  SECRET_KEY_BASE: 4ab38a58bf15320d16aa0797bd9513d4e9a4f0d5806fdb4fcf2745f9bf9ad33d3f4d8de8cbfb394a7436b3d7df854bf3d7fbb30c3b298adbda19a73cff40f879
+  ACT: 'false'
 
 jobs:
   rubocop:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -52,6 +59,8 @@ jobs:
           - 6379:6379
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -61,31 +70,64 @@ jobs:
         with:
           ruby-version: 3.1.4
           bundler-cache: true
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Reconfigure Bundler path for act
+        if: ${{ env.ACT == 'true' }}
+        run: |
+          bundle config set path vendor/bundle/linux
+          bundle install --jobs 4
+      - name: Configure ForkMonitor cache root
+        id: bitcoin_paths
+        run: |
+          echo "FM_CACHE_ROOT (incoming): ${FM_CACHE_ROOT:-<unset>}"
+          CACHE_ROOT_INPUT="${FM_CACHE_ROOT:-vendor}"
+          CACHE_ROOT="$(python3 -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "${CACHE_ROOT_INPUT}")"
+          VERSION_DIR="${CACHE_ROOT}/v28.2"
+          mkdir -p "${VERSION_DIR}"
+
+          echo "FM_CACHE_ROOT=${CACHE_ROOT}" >> "$GITHUB_ENV"
+          echo "BITCOIN_VERSION_DIR=${VERSION_DIR}" >> "$GITHUB_ENV"
+          echo "cache-root=${CACHE_ROOT}" >> "$GITHUB_OUTPUT"
+          echo "version-dir=${VERSION_DIR}" >> "$GITHUB_OUTPUT"
+      - name: Cache Bitcoin Core binaries
+        uses: actions/cache@v4
         with:
-          node-version: 18
-      - name: Enable Corepack
-        run: corepack enable
-      - name: Install Yarn dependencies
-        run: yarn install --frozen-lockfile
+          path: ${{ steps.bitcoin_paths.outputs.version-dir }}
+          key: bitcoin-core-v28-2-${{ runner.os }}
       - name: Prepare Bitcoin Core binaries
         run: |
           mkdir -p vendor/bitcoin/test
-          cp vendor/bitcoin-config.ini vendor/bitcoin/test/config.ini
-          cd vendor/bitcoin
-          python3 test/get_previous_releases.py -t .. v28.2
+          if [ ! -x "${BITCOIN_VERSION_DIR}/bin/bitcoind" ]; then
+            rm -rf "${BITCOIN_VERSION_DIR}"
+            mkdir -p "${FM_CACHE_ROOT}"
+            (cd vendor/bitcoin && python3 test/get_previous_releases.py -t "${FM_CACHE_ROOT}" v28.2)
+          fi
+      - name: Suppress runtime warnings (act only)
+        if: ${{ env.ACT == 'true' }}
+        run: |
+          {
+            echo "RUBYOPT=-W0"
+            echo "PYTHONWARNINGS=ignore::DeprecationWarning"
+          } >> "$GITHUB_ENV"
       - name: Prepare database
         run: |
-          bundle exec rails db:create
-          bundle exec rails db:schema:load
+          bundle exec rake parallel:drop parallel:create parallel:load_schema
+      - name: Disable Coveralls network (act only)
+        run: |
+          if [ "${ACT:-}" = "true" ]; then
+            echo "COVERALLS_DISABLE=1" >> "$GITHUB_ENV"
+          fi
       - name: Run server checks
-        run: bundle exec rake
-
+        run: |
+          if [ "${ACT:-}" = "true" ]; then
+            export COVERALLS_DISABLE=1
+          fi
+          bundle exec rake parallel:spec
   client:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

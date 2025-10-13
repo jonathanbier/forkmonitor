@@ -147,6 +147,29 @@ rake parallel:prepare
 rake parallel:spec
 ```
 
+## Continuous Integration
+
+You can exercise the GitHub Actions workflow locally with [`act`](https://github.com/nektos/act). The repository expects Ruby to run in Docker, so map your CPU and optional caches explicitly:
+
+```sh
+cd forkmonitor
+CPUS=$(( $(sysctl -n hw.ncpu) - 1 ))
+CACHE_ROOT="$HOME/.cache/forkmonitor"
+mkdir -p "$CACHE_ROOT"
+BASE=(act -P ubuntu-latest=catthehacker/ubuntu:act-latest --container-architecture linux/amd64 --container-options "--cpus=${CPUS}" --env ACT=true --env COVERALLS_DISABLE=1 --env FM_CACHE_ROOT=/github/workspace/.cache/forkmonitor)
+
+# RuboCop job
+"${BASE[@]}" --job rubocop
+
+# Rails spec suite (bind-mount a cached Bitcoin Core binary to skip downloads)
+"${BASE[@]}" --bind "$CACHE_ROOT:/github/workspace/.cache/forkmonitor" --job server
+
+# Client (Jest) job
+"${BASE[@]}" --job client
+```
+
+Populate `vendor/v28.2` with the native binaries required by your host using the Bitcoin Core instructions above. The workflow points the container at `/github/workspace/.cache/forkmonitor`, so the first act run downloads Linux `amd64` releases into `~/.cache/forkmonitor/v28.2` and reuses them on subsequent runs without modifying your host-specific `vendor/v28.2` directory.
+
 ## Javascript tests
 
 To run Javascript tests and monitor for changes:
