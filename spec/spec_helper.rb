@@ -16,15 +16,18 @@
 #
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 
-coverage_enabled = ENV.fetch('COVERAGE', '0') == '1' || ENV.fetch('COVERALLS_DISABLE', '0') != '1'
+ci_environment = ENV.fetch('CI', '').match?(/\Atrue\z/i) || ENV.key?('GITHUB_ACTIONS')
+coverage_enabled = ENV.fetch('COVERAGE', '0') == '1' || ci_environment
 
 if coverage_enabled
   require 'simplecov'
+  require 'stringio' unless ci_environment
 
   formatters = [SimpleCov::Formatter::HTMLFormatter]
 
   if ENV.fetch('COVERALLS_DISABLE', '0') != '1'
     require 'coveralls'
+    Coveralls::Output.silent = true unless ci_environment
     formatters.unshift(Coveralls::SimpleCov::Formatter)
   end
 
@@ -36,7 +39,19 @@ if coverage_enabled
 
   if ENV.fetch('TEST_ENV_NUMBER', '').to_s.empty?
     SimpleCov.at_exit do
-      SimpleCov.result.format!
+      result = SimpleCov.result
+
+      if ci_environment
+        result.format!
+      else
+        original_stdout = $stdout
+        $stdout = StringIO.new
+        begin
+          result.format!
+        ensure
+          $stdout = original_stdout
+        end
+      end
     rescue StandardError => e
       warn "[SimpleCov] coverage reporting failed: #{e.class}: #{e.message}"
     end
