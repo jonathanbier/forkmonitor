@@ -306,4 +306,21 @@ RSpec.describe Node do
       expect(@node.mirror_block).to be_nil
     end
   end
+
+  describe '#supports_getmempoolinfo?' do
+    it 'returns false for Core nodes older than v0.10.0' do
+      node = build(:node, version: 90_000, client_type: :core)
+      expect(node.send(:supports_getmempoolinfo?)).to be(false)
+    end
+
+    it 'returns true for Core nodes at v0.10.0 and newer' do
+      node = build(:node, version: 100_000, client_type: :core)
+      expect(node.send(:supports_getmempoolinfo?)).to be(true)
+    end
+
+    it 'returns false for libbitcoin nodes' do
+      node = build(:node, client_type: :libbitcoin)
+      expect(node.send(:supports_getmempoolinfo?)).to be(false)
+    end
+  end
 end

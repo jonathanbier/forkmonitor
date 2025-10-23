@@ -199,7 +199,7 @@ class Node < ApplicationRecord
     mempool_bytes = nil
     mempool_count = nil
     mempool_max = nil
-    unless libbitcoin?
+    if supports_getmempoolinfo?
       begin
         mempool_info = client.getmempoolinfo
         mempool_bytes = mempool_info['bytes']
@@ -207,8 +207,9 @@ class Node < ApplicationRecord
         mempool_max = mempool_info['maxmempool']
       rescue BitcoinUtil::RPC::TimeOutError
         # Ignore the occasional timeout
+      rescue BitcoinUtil::RPC::MethodNotFoundError
+        Rails.logger.info "Skipping getmempoolinfo for #{name_with_version} (id=#{id}): RPC not available" unless Rails.env.test?
       end
-
     end
 
     has_tx_index = nil
@@ -409,6 +410,13 @@ class Node < ApplicationRecord
   end
 
   private
+
+  def supports_getmempoolinfo?
+    return false if libbitcoin?
+    return false if (core? || knots?) && version.present? && version < 100_000
+
+    true
+  end
 
   def client_klass
     Rails.env.test? ? BitcoinClientMock : BitcoinClient
