@@ -43,6 +43,23 @@ if coverage_enabled
   end
 end
 
+# Filter noisy duplicate option warnings emitted by the 0mq gem during test boot.
+if defined?(Warning) && Warning.respond_to?(:warn)
+  module Warning
+    class << self
+      unless method_defined?(:__forkmonitor_original_warn)
+        alias __forkmonitor_original_warn warn
+
+        def warn(message, *args)
+          return if message&.include?('/0mq/socket/options.rb') && message&.include?('RECONNECT_IVL')
+
+          __forkmonitor_original_warn(message, *args)
+        end
+      end
+    end
+  end
+end
+
 require 'helpers/controller_spec_helpers'
 
 RSpec.configure do |config|
