@@ -52,27 +52,27 @@ RSpec.describe Node do
 
     it 'calls getblock on the client' do
       expect(@node.client).to receive('getblock').and_call_original
-      @node.getblock(@block_hash, 1)
+      @node.getblock(@block_hash, :summary)
     end
 
     it 'throws ConnectionError' do
       @node.client.mock_connection_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::ConnectionError
+      expect { @node.getblock(@block_hash, :summary) }.to raise_error BitcoinUtil::RPC::ConnectionError
     end
 
     it 'throws PartialFileError' do
       @node.client.mock_partial_file_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::PartialFileError
+      expect { @node.getblock(@block_hash, :summary) }.to raise_error BitcoinUtil::RPC::PartialFileError
     end
 
     it 'throws BlockPrunedError' do
       @node.client.mock_block_pruned_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::BlockPrunedError
+      expect { @node.getblock(@block_hash, :summary) }.to raise_error BitcoinUtil::RPC::BlockPrunedError
     end
 
     it 'throws BlockNotFullyDownloadedError' do
       @node.client.mock_block_not_fully_download_error(true)
-      expect { @node.getblock(@block_hash, 1) }.to raise_error BitcoinUtil::RPC::BlockNotFullyDownloadedError
+      expect { @node.getblock(@block_hash, :summary) }.to raise_error BitcoinUtil::RPC::BlockNotFullyDownloadedError
     end
   end
 

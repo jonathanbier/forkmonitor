@@ -532,7 +532,7 @@ class Node < ApplicationRecord
         return nil
       end
       begin
-        block_info ||= node.getblock(block.block_hash, 1)
+        block_info ||= node.getblock(block.block_hash, :summary)
       rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFoundError
         return nil
       rescue BitcoinUtil::RPC::Error

@@ -122,8 +122,14 @@ class BitcoinClientPython
     raise BitcoinUtil::RPC::BlockPrunedError if @mock_block_pruned_error
     raise BitcoinUtil::RPC::Error, 'Specify block hash' if block_hash.blank?
 
+    normalized = getblock_verbosity_resolver.normalize(verbosity)
+    raw_verbose = normalized.raw_verbose
+
     begin
-      @node.getblock(blockhash = block_hash, verbosity = verbosity) # rubocop:disable Lint/SelfAssignment,Lint/UselessAssignment
+      args = [block_hash]
+      args << normalized.rpc_value unless normalized.omit_argument
+
+      @node.getblock(*args)
     rescue PyCall::PyError => e
       # Since v29 this can be either:
       # - Block not available (not fully downloaded)
@@ -133,7 +139,7 @@ class BitcoinClientPython
       raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('not')
 
       raise BitcoinUtil::RPC::Error,
-            "getblock(#{block_hash}, #{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+            "getblock(#{block_hash}, #{raw_verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
 
@@ -192,6 +198,14 @@ class BitcoinClientPython
       raise BitcoinUtil::RPC::Error, "getdeploymentinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
     end
   end
+
+  def getblock_verbosity_resolver
+    @getblock_verbosity_resolver ||= BitcoinClient::GetBlockVerbosityResolver.new(
+      client_type: @client_type, client_version: @client_version
+    )
+  end
+
+  private :getblock_verbosity_resolver
 
   def getindexinfo
     raise BitcoinUtil::RPC::Error, 'Set Python node' if @node.nil?

@@ -48,17 +48,58 @@ describe BitcoinClient do
     describe 'getblock' do
       it 'getblocks rpc method with hash' do
         expect(@client).to receive(:request).with('getblock', 'hash', 1)
-        @client.getblock('hash', 1)
+        @client.getblock('hash', :summary)
+      end
+
+      it 'uses summary when verbosity omitted' do
+        expect(@client).to receive(:request).with('getblock', 'hash', 1)
+        @client.getblock('hash')
+      end
+
+      it 'translates transactions mode to numeric verbosity for modern nodes' do
+        expect(@client).to receive(:request).with('getblock', 'hash', 2)
+        @client.getblock('hash', :transactions)
+      end
+
+      it 'rejects nil verbosity' do
+        expect { @client.getblock('hash', nil) }.to raise_error(ArgumentError, /verbosity/)
+      end
+
+      it 'rejects boolean verbosity' do
+        expect { @client.getblock('hash', true) }.to raise_error(ArgumentError, /verbosity/)
+        expect { @client.getblock('hash', false) }.to raise_error(ArgumentError, /verbosity/)
+      end
+
+      it 'rejects numeric verbosity' do
+        expect { @client.getblock('hash', 1) }.to raise_error(ArgumentError, /verbosity/)
       end
 
       it 'catches connection error' do
         expect(@client.client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'couldnt_connect')
-        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinUtil::RPC::ConnectionError)
+        expect { @client.getblock('hash', :summary) }.to raise_error(BitcoinUtil::RPC::ConnectionError)
       end
 
       it 'catches partial file error' do
         expect(@client).to receive(:request).and_raise(Bitcoiner::Client::JSONRPCError, 'partial_file')
-        expect { @client.getblock('hash', 1) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
+        expect { @client.getblock('hash', :summary) }.to raise_error(BitcoinUtil::RPC::PartialFileError)
+      end
+
+      context 'when using a legacy node' do
+        before do
+          @legacy_client = described_class.new(
+            1, 'Bitcoin Core v0.9.2', :core, 90_200, '127.0.0.1', '8332', 'user', 'password'
+          )
+        end
+
+        it 'omits verbosity argument when requesting verbose block data' do
+          expect(@legacy_client).to receive(:request).with('getblock', 'hash')
+          @legacy_client.getblock('hash', :summary)
+        end
+
+        it 'passes false explicitly when requesting raw block data' do
+          expect(@legacy_client).to receive(:request).with('getblock', 'hash', false)
+          @legacy_client.getblock('hash', :raw)
+        end
       end
     end
 

@@ -381,29 +381,20 @@ class BitcoinClientMock
 
     raise BitcoinUtil::RPC::BlockPrunedError if @pruned_blocks.include? hash
 
-    if [false, 0].include?(verbosity)
+    normalized = getblock_verbosity_resolver.normalize(verbosity)
+
+    case normalized.mode
+    when BitcoinClient::GetBlockVerbosity::RAW
       raise Error, "Raw block #{hash}  not found" unless @raw_blocks[hash]
 
       @raw_blocks[hash]
-    elsif [true, 1].include?(verbosity)
-      raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
-
-      @blocks[hash].tap { |b| b.delete('mediantime') if @version <= 100_300 }
-    elsif verbosity == 2
-      raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
-
-      @blocks[hash].tap do |b|
-        b['tx'] = b['tx'].collect do |tx_id|
-          {
-            'txid' => tx_id,
-            'vout' => [{ 'value' => 0.001 }],
-            'hex' => @transactions[tx_id]
-          }
-        end
-        b.delete('mediantime') if @version <= 100_300
-      end
+    when BitcoinClient::GetBlockVerbosity::SUMMARY
+      fetch_block_summary(hash)
+    when BitcoinClient::GetBlockVerbosity::TRANSACTIONS,
+         BitcoinClient::GetBlockVerbosity::TRANSACTIONS_WITH_PREVOUT
+      fetch_block_with_transactions(hash)
     else
-      raise Error, "Unexpected verbosity=#{verbosity}"
+      raise Error, "Unexpected verbosity=#{normalized.mode}"
     end
   end
 
@@ -485,5 +476,34 @@ class BitcoinClientMock
       @blocks[block_hash]['size'] = @blocks[block_hash]['size'] + 150
     end
     @transactions[tx_hash] = raw_transaction
+  end
+
+  private
+
+  def getblock_verbosity_resolver
+    @getblock_verbosity_resolver ||= BitcoinClient::GetBlockVerbosityResolver.new(
+      client_type: @client_type, client_version: @client_version
+    )
+  end
+
+  def fetch_block_summary(hash)
+    raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
+
+    @blocks[hash].tap { |b| b.delete('mediantime') if @version <= 100_300 }
+  end
+
+  def fetch_block_with_transactions(hash)
+    raise BitcoinUtil::RPC::BlockNotFoundError unless @blocks[hash]
+
+    @blocks[hash].tap do |b|
+      b['tx'] = b['tx'].collect do |tx_id|
+        {
+          'txid' => tx_id,
+          'vout' => [{ 'value' => 0.001 }],
+          'hex' => @transactions[tx_id]
+        }
+      end
+      b.delete('mediantime') if @version <= 100_300
+    end
   end
 end

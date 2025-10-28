@@ -119,12 +119,12 @@ RSpec.describe Block do
     end
 
     it "skips if the mirror node doesn't have the block" do
-      expect { @node_a.mirror_client.getblock(@block.block_hash, 1) }.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
+      expect { @node_a.mirror_client.getblock(@block.block_hash, :summary) }.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
     end
 
     describe 'when mirror client has block' do
       before do
-        expect(@node_a.mirror_client.submitblock(@node_b.client.getblock(@block.block_hash, 0))).to eq('inconclusive')
+        expect(@node_a.mirror_client.submitblock(@node_b.client.getblock(@block.block_hash, :raw))).to eq('inconclusive')
       end
 
       it 'rolls the mirror back' do

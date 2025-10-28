@@ -6,6 +6,144 @@ require 'digest'
 class BitcoinClient
   include ::BitcoinUtil
 
+  module GetBlockVerbosity
+    # These symbols mirror the numeric verbosity levels (0..3) defined in the
+    # Bitcoin Core RPC manual: https://bitcoincore.org/en/doc/0.30.0/rpc/blockchain/getblock/
+    # The resolver below converts each constant back to the integer that Core expects.
+    RAW = :raw
+    SUMMARY = :summary
+    TRANSACTIONS = :transactions
+    TRANSACTIONS_WITH_PREVOUT = :transactions_with_prevout
+
+    DEFAULT = SUMMARY
+    VALUES = [RAW, SUMMARY, TRANSACTIONS, TRANSACTIONS_WITH_PREVOUT].freeze
+  end
+
+  # Wraps the selected verbosity along with the value that will actually be
+  # sent over the wire. `raw_verbose` mirrors the argument we log in error
+  # messages, so reviewers can see whether we omitted the parameter entirely or
+  # translated it to the legacy integer/boolean form.
+  NormalizedGetblockVerbosity = Struct.new(:mode, :rpc_value, :omit_argument) do
+    def raw_verbose
+      omit_argument ? mode.to_s : "#{mode}=#{rpc_value.inspect}"
+    end
+  end
+
+  class GetBlockVerbosityResolver
+    include GetBlockVerbosity
+
+    def initialize(client_type:, client_version:)
+      @client_type = client_type
+      @client_version = client_version
+    end
+
+    def normalize(input)
+      raise ArgumentError, "getblock verbosity must be a symbol, got #{input.inspect}" unless input.is_a?(Symbol)
+
+      mode = validate_mode_symbol(input)
+      ensure_supported!(mode)
+
+      rpc_value, omit = rpc_value_for(mode)
+      NormalizedGetblockVerbosity.new(mode, rpc_value, omit)
+    end
+
+    private
+
+    attr_reader :client_type, :client_version
+
+    def validate_mode_symbol(mode)
+      return mode if VALUES.include?(mode)
+
+      raise ArgumentError, "Unknown getblock verbosity: #{mode.inspect}"
+    end
+
+    def ensure_supported!(mode)
+      case mode
+      when TRANSACTIONS
+        unless supports_transactions_mode?
+          raise BitcoinUtil::RPC::UnsupportedGetblockVerbosity,
+                "getblock verbosity #{mode} requires Bitcoin Core 0.15.0 or later"
+        end
+      when TRANSACTIONS_WITH_PREVOUT
+        unless supports_prevout_mode?
+          raise BitcoinUtil::RPC::UnsupportedGetblockVerbosity,
+                "getblock verbosity #{mode} requires Bitcoin Core 23.0 or later"
+        end
+      end
+    end
+
+    def rpc_value_for(mode)
+      return [nil, true] if omit_argument_for?(mode)
+
+      value = if use_integer_argument?
+                mode_to_integer(mode)
+              else
+                mode_to_boolean(mode)
+              end
+
+      [value, false]
+    end
+
+    def omit_argument_for?(mode)
+      mode == SUMMARY && use_implicit_verbose_default?
+    end
+
+    def use_integer_argument?
+      return false if use_boolean_argument?
+
+      true
+    end
+
+    def use_boolean_argument?
+      client_type == :core && !client_version.nil? && client_version < 150_000
+    end
+
+    def use_implicit_verbose_default?
+      client_type == :core && !client_version.nil? && client_version < 100_000
+    end
+
+    def mode_to_integer(mode)
+      case mode
+      when RAW
+        0
+      when SUMMARY
+        1
+      when TRANSACTIONS
+        2
+      when TRANSACTIONS_WITH_PREVOUT
+        3
+      else
+        raise ArgumentError, "Unhandled getblock verbosity mode: #{mode.inspect}"
+      end
+    end
+
+    def mode_to_boolean(mode)
+      case mode
+      when RAW
+        false
+      when SUMMARY
+        true
+      else
+        raise BitcoinUtil::RPC::UnsupportedGetblockVerbosity,
+              "getblock verbosity #{mode} is unavailable on boolean-only nodes"
+      end
+    end
+
+    def supports_transactions_mode?
+      return false unless client_type == :core
+      return false if client_version.nil?
+
+      client_version >= 150_000
+    end
+
+    def supports_prevout_mode?
+      return false unless client_type == :core
+      return false if client_version.nil?
+
+      client_version >= 230_000
+    end
+  end
+
   def initialize(node_id, name_with_version, client_type, client_version, rpchost, rpcport, rpcuser, rpcpassword)
     @client_type = client_type
     @client_version = client_version
@@ -134,13 +272,21 @@ class BitcoinClient
     raise BitcoinUtil::RPC::Error, "getbestblockhash failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
-  def getblock(hash, verbosity, timeout = 30)
+  def getblock(hash, verbosity = GetBlockVerbosity::SUMMARY, timeout = 30)
+    normalized = getblock_verbosity_resolver.normalize(verbosity)
+    raw_verbose = normalized.raw_verbose
+
     Timeout.timeout(timeout, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getblock', hash, verbosity) }.value
+      Thread.new do
+        rpc_args = ['getblock', hash]
+        rpc_args << normalized.rpc_value unless normalized.omit_argument
+
+        request(*rpc_args)
+      end.value
     end
   rescue BitcoinUtil::RPC::TimeOutError
     raise BitcoinUtil::RPC::TimeOutError,
-          "getblock(#{hash},#{verbosity}) timed out for #{@name_with_version} (id=#{@node_id})"
+          "getblock(#{hash},#{raw_verbose}) timed out for #{@name_with_version} (id=#{@node_id})"
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::PartialFileError if e.message.include?('partial_file')
     raise BitcoinUtil::RPC::BlockPrunedError if e.message.include?('pruned data')
@@ -148,7 +294,7 @@ class BitcoinClient
     raise BitcoinUtil::RPC::BlockNotFoundError if e.message.include?('Block not found')
 
     raise BitcoinUtil::RPC::Error,
-          "getblock(#{hash},#{verbosity}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
+          "getblock(#{hash},#{raw_verbose}) failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockfrompeer(hash, peer_id)
@@ -297,6 +443,10 @@ class BitcoinClient
   end
 
   private
+
+  def getblock_verbosity_resolver
+    @getblock_verbosity_resolver ||= GetBlockVerbosityResolver.new(client_type: @client_type, client_version: @client_version)
+  end
 
   def request(*args)
     Rails.logger.info("RPC #{args.collect do |arg|

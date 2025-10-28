@@ -28,6 +28,8 @@ module BitcoinUtil
 
     class PreviousHeaderMissing < Error; end
 
+    class UnsupportedGetblockVerbosity < Error; end
+
     # Errors not directly from Bitcoin RPC (should be moved elsewhere)
     class InvalidCoinError < Error; end
   end

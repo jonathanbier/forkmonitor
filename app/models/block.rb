@@ -145,10 +145,10 @@ class Block < ApplicationRecord
       this_block = Rails.env.test? ? Block.find_by(block_hash: block_hash) : self
       begin
         node = this_block.first_seen_by
-        # getblock argument verbosity 2 was added in v0.16.0
+        # getblock argument verbosity 2 (:transactions) was added in v0.16.0
         # Knots doesn't return the transaction hash
         node = Node.newest_node if pruned? || node.nil? || (node.core? && node.version < 160_000) || node.libbitcoin? || node.knots? || node.btcd? || node.bcoin?
-        block_info = node.getblock(block_hash, 2, false, nil)
+        block_info = node.getblock(block_hash, :transactions, false, nil)
       rescue BitcoinUtil::RPC::BlockPrunedError
         update pruned: true
         return
@@ -186,7 +186,7 @@ class Block < ApplicationRecord
           block_info = client.getblockheader(block.block_hash)
         else
           begin
-            block_info = node.getblock(block.block_hash, 1, use_mirror)
+            block_info = node.getblock(block.block_hash, :summary, use_mirror)
           rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
             block_info = client.getblockheader(block.block_hash)
           end
@@ -206,7 +206,7 @@ class Block < ApplicationRecord
           block_info = client.getblockheader(block_info['previousblockhash'])
         else
           begin
-            block_info = node.getblock(block_info['previousblockhash'], 1, use_mirror)
+            block_info = node.getblock(block_info['previousblockhash'], :summary, use_mirror)
           rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
             block_info = client.getblockheader(block_info['previousblockhash'])
           end
@@ -376,13 +376,13 @@ class Block < ApplicationRecord
 
     # Feed header and block to mirror node if needed:
     begin
-      node.mirror_client.getblock(block_hash, 1)
+      node.mirror_client.getblock(block_hash, :summary)
     rescue BitcoinUtil::RPC::BlockNotFoundError, BlockNotFullyDownloadedError
       return nil if first_seen_by.libbitcoin?
 
       Rails.logger.info "Feed block #{block_hash} (#{height}) from #{first_seen_by.name_with_version} to mirror of #{node.name_with_version}"
       raw_block_header = first_seen_by.getblockheader(block_hash, false)
-      raw_block = first_seen_by.client.getblock(block_hash, 0)
+      raw_block = first_seen_by.client.getblock(block_hash, :raw)
       begin
         node.mirror_client.submitheader(raw_block_header)
       rescue BitcoinUtil::RPC::PreviousHeaderMissing
@@ -395,7 +395,7 @@ class Block < ApplicationRecord
       sleep 3
       # Check if this succeeded
       begin
-        node.mirror_client.getblock(block_hash, 1)
+        node.mirror_client.getblock(block_hash, :summary)
       rescue BitcoinUtil::RPC::BlockNotFoundError
         Rails.logger.error 'Failed to provide mirror node with block'
         return nil
@@ -583,7 +583,7 @@ class Block < ApplicationRecord
             block_info = client.getblockheader(hash)
           else
             begin
-              block_info = node.getblock(hash, 1, use_mirror)
+              block_info = node.getblock(hash, :summary, use_mirror)
             rescue BitcoinUtil::RPC::BlockPrunedError, BitcoinUtil::RPC::BlockNotFullyDownloadedError
               block_info = client.getblockheader(hash)
             end
@@ -625,8 +625,8 @@ class Block < ApplicationRecord
         # Don't bother checking nodes for old blocks; they won't ask for them
         if tip_height - block.height < 10
           nodes_to_try.each do |node|
-            block_info = node.getblock(block.block_hash, 1)
-            raw_block = node.getblock(block.block_hash, 0)
+            block_info = node.getblock(block.block_hash, :summary)
+            raw_block = node.getblock(block.block_hash, :raw)
             block.update_fields(block_info)
             block.update headers_only: false, first_seen_by: node
             Node.set_pool_for_block!(block, block_info)
@@ -693,14 +693,14 @@ class Block < ApplicationRecord
         found_block = false
         raw_block = nil
         getblockfrompeer_blocks.each do |block|
-          raw_block = gbfp_node.getblock(block.block_hash, 0, true)
+          raw_block = gbfp_node.getblock(block.block_hash, :raw, true)
           Rails.logger.info "Retrieved block #{block.block_hash} (#{block.height}) on the mirror node"
           found_block = true
           # Feed block to original node
           if block.first_seen_by.present? && !(block.first_seen_by.core? && block.first_seen_by.version < 130_100)
             Rails.logger.info "Submit block #{block.block_hash} (#{block.height}) to #{block.first_seen_by.name_with_version}"
             block.first_seen_by.client.submitblock(raw_block, block.block_hash)
-            block_info = gbfp_node.getblock(block.block_hash, 1, true)
+            block_info = gbfp_node.getblock(block.block_hash, :summary, true)
             block.update_fields(block_info)
             block.update headers_only: false
             Node.set_pool_for_block!(block, block_info)

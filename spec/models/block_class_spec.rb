@@ -179,10 +179,10 @@ RSpec.describe Block do
 
     it 'submits block to original node' do
       expect do
-        @node_a.client.getblock(@headers_only_block.block_hash, 1)
+        @node_a.client.getblock(@headers_only_block.block_hash, :summary)
       end.to raise_error(BitcoinUtil::RPC::BlockNotFoundError)
       described_class.find_missing(1, 1)
-      res = @node_a.client.getblock(@headers_only_block.block_hash, 1)
+      res = @node_a.client.getblock(@headers_only_block.block_hash, :summary)
       expect(res['confirmations']).to eq(-1)
     end
   end
