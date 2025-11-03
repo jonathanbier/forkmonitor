@@ -297,7 +297,7 @@ class StaleCandidates extends React.Component {
                               { tx.amount }
                             </td>
                             <td>
-                              <Explorer blockstream tx={ tx.tx_id }/>&nbsp;
+                              <Explorer mempool tx={ tx.tx_id }/>&nbsp;
                             </td>
                           </tr>
                         )
