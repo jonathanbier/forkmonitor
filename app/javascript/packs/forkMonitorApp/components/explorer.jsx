@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import ImageBlockstream from '../assets/images/blockstream.png'
-import ImageBtcCom from '../assets/images/btc.png'
 
 class Explorer extends React.Component {
   render() {
@@ -16,14 +15,6 @@ class Explorer extends React.Component {
         url = rootUrl + "block/" + this.props.block
       }
       image = ImageBlockstream
-    } else if (this.props.btcCom) {
-      var rootUrl = "https://btc.com/";
-      if (this.props.tx) {
-        url = rootUrl + this.props.tx
-      } else {
-        url = rootUrl + this.props.block
-      }
-      image = ImageBtcCom
     } else {
       console.error("Must specify explorer")
     }
