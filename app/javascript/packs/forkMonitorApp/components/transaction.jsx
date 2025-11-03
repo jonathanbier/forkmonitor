@@ -10,8 +10,7 @@ class Transaction extends React.Component {
     return(
       <tr>
         <td>
-          <Explorer blockstream coin={ this.props.coin } tx={ this.props.tx_id }/>&nbsp;
-          <Explorer btcCom coin={ this.props.coin } tx={ this.props.tx_id }/>&nbsp;
+          <Explorer mempool coin={ this.props.coin } tx={ this.props.tx_id }/>
         </td>
         { this.props.fee_rate != null &&
           <td>
