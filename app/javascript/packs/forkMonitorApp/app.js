@@ -13,7 +13,7 @@ const App = (props) => (
        <div className="container">
          <span className="text-muted">
          <p>
-           <a href="https://research.bitmex.com"><img src={ LogoImage } height="100pt"/></a>
+           <a href="https://www.bitmex.com/blog/research"><img src={ LogoImage } height="100pt"/></a>
          </p>
          <p className="text-muted disclaimer">
             This material should not be the basis for making investment decisions,
