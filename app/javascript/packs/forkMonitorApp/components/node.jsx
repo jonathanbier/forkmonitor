@@ -36,7 +36,7 @@ class Node extends React.Component {
         <td align="right">
           { this.props.chaintip && this.props.chaintip.block &&
             <span>
-              <Moment format="HH:mm:ss" tz="UTC">{ this.props.chaintip.block.created_at }</Moment> UTC
+             First seen: <Moment format="HH:mm:ss" tz="UTC">{ this.props.chaintip.block.created_at }</Moment> UTC
             </span>
           }
           { this.props.node.has_mirror_node &&
