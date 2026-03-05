@@ -74,6 +74,7 @@ export const NodeEdit = props => (
             <BooleanInput source="pruned" />
             <BooleanInput source="txindex" />
             <SelectInput source="country" choices={country_choices} />
+            <TextInput source="sponsor_name" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
@@ -103,6 +104,7 @@ export const NodeCreate = props => (
             <BooleanInput source="pruned" />
             <BooleanInput source="txindex" />
             <SelectInput source="country" choices={country_choices} />
+            <TextInput source="sponsor_name" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
