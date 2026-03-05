@@ -92,6 +92,7 @@ class NodeInfo extends React.Component {
               </ul>
               </div>
             }
+            <li>Sponsor: { this.props.node.sponsor_name || "—" }</li>
           </ul>
         </Tooltip>
       </span>
