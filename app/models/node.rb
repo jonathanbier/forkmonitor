@@ -25,6 +25,7 @@ class Node < ApplicationRecord
   has_many :tx_outsets, dependent: :destroy
   belongs_to :mirror_block, optional: true, class_name: 'Block'
   has_one :active_chaintip, -> { where(status: 'active') }, class_name: 'Chaintip'
+  has_many :node_blocks, dependent: :destroy
   has_many :softforks, dependent: :destroy
 
   scope :bitcoin_core_by_version, lambda {
@@ -74,7 +75,8 @@ class Node < ApplicationRecord
                                                          last_tx_outset: tx_outsets.last,
                                                          has_mirror_node: mirror_rpchost.present?,
                                                          bip9_softforks: softforks.where(fork_type: :bip9), # rubocop:disable Naming/VariableNumber
-                                                         bip8_softforks: softforks.where(fork_type: :bip8) # rubocop:disable Naming/VariableNumber
+                                                         bip8_softforks: softforks.where(fork_type: :bip8), # rubocop:disable Naming/VariableNumber
+                                                         block_first_seen_at: active_chaintip&.block&.node_blocks&.find_by(node: self)&.first_seen_at
                                                        })
   end
 

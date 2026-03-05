@@ -13,7 +13,9 @@ class Chaintip < ApplicationRecord
   def nodes_for_identical_chaintips
     return nil if status != 'active'
 
-    chaintip_nodes = Chaintip.joins(:node).where('nodes.enabled = ? AND chaintips.status = ? AND chaintips.block_id = ?', true, status, block_id).order(
+    chaintip_nodes = Chaintip.joins(:node).where('nodes.enabled = ? AND chaintips.status = ? AND chaintips.block_id = ?', true, status, block_id)
+                             .includes(node: :node_blocks)
+                             .order(
       client_type: :asc, name: :asc, version: :desc
     )
     res = chaintip_nodes.collect(&:node)
