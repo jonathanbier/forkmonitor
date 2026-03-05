@@ -18,8 +18,8 @@ class NodeName extends React.Component {
     const flag = this.countryCodeToFlag(this.props.node.country);
     return(
       <span>
-        {flag && <span title={this.props.node.country}>{flag}&nbsp;</span>}
         {this.props.node.name_with_version}
+        {flag && <span title={this.props.node.country}>{flag}&nbsp;</span>}
       </span>
     )
   }
