@@ -67,6 +67,7 @@ class Node < ApplicationRecord
       mempool_max
       mirror_ibd
       to_destroy
+      sponsor_name
     ]
     fields << :id << :rpchost << :mirror_rpchost << :rpcport << :mirror_rpcport << :rpcuser << :rpcpassword << :version_extra << :name << :enabled if options && options[:admin]
     super({ only: fields }.merge(options || {})).merge({
