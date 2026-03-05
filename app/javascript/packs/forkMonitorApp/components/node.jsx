@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Moment from 'react-moment';
+import 'moment-timezone'
 
 import {
     BreadcrumbItem,
@@ -33,6 +34,11 @@ class Node extends React.Component {
           <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } />
         </td>
         <td align="right">
+          { this.props.chaintip && this.props.chaintip.block &&
+            <span>
+              <Moment format="HH:mm:ss" tz="UTC">{ this.props.chaintip.block.created_at }</Moment> UTC
+            </span>
+          }
           { this.props.node.has_mirror_node &&
             <NodeInflation
               node={ this.props.node }
@@ -42,6 +48,8 @@ class Node extends React.Component {
             />
           }
         </td>
+
+        
       </tr>
     )
   }
