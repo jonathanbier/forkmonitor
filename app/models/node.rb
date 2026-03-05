@@ -50,7 +50,6 @@ class Node < ApplicationRecord
       client_type
       pruned
       txindex
-      country
       os
       cpu
       ram
