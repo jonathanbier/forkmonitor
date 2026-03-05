@@ -58,6 +58,7 @@ class Node < ApplicationRecord
       cve_2018_17144
       released
       sync_height
+      country
       link
       link_text
       mempool_count
