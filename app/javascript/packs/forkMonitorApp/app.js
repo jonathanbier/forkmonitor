@@ -13,7 +13,7 @@ const App = (props) => (
        <div className="container">
          <span className="text-muted">
          <p>
-           <a href="https://www.bitmex.com/blog/research"><img src={ LogoImage } height="100pt"/></a>
+           <a href="https://lclhost.org/"><img src={ LogoImage } height="100pt"/></a>
          </p>
          <p className="text-muted disclaimer">
             This material should not be the basis for making investment decisions,
@@ -26,7 +26,7 @@ const App = (props) => (
             The information and data herein have been obtained from sources we believe to be reliable.
             Such information has not been verified and we make no representation or
             warranty as to its accuracy, completeness or correctness.
-            The website is sponsored by BitMEX Research and neither BitMEX, nor
+            The website is sponsored by Localhost Research and neither Localhost Research, nor
             any other entity, will be liable whatsoever for any direct or consequential
             loss arising from the use of this publication/communication or its contents.
           </p>
