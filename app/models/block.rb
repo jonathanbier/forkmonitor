@@ -727,6 +727,9 @@ class Block < ApplicationRecord
         end
 
       end
+    rescue BitcoinUtil::RPC::TimeOutError => e
+      Rails.logger.error "Timed out while finding missing blocks: #{e.message}"
+      nil
     rescue BitcoinUtil::RPC::NodeInitializingError, BitcoinUtil::RPC::ConnectionError
       nil
     end
