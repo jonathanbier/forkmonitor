@@ -26,14 +26,29 @@ describe BitcoinClient do
 
     describe 'getnetworkinfo' do
       it 'tries getnetworkinfo rpc first' do
-        expect(@client).to receive(:request).with('getnetworkinfo')
+        expect(@client).to receive(:request).with('getnetworkinfo', timeout: 30)
         @client.getnetworkinfo
       end
     end
 
     describe 'getblockchaininfo' do
       it 'getblockchaininfoes rpc method' do
-        expect(@client).to receive(:request).with('getblockchaininfo')
+        expect(@client).to receive(:request).with('getblockchaininfo', timeout: 30)
+        @client.getblockchaininfo
+      end
+
+      it 'maps a native HTTP timeout to an RPC timeout' do
+        expect(@client.client).to receive(:request)
+          .with('getblockchaininfo', timeout: 30)
+          .and_raise(Bitcoiner::Client::JSONRPCError, 'operation_timedout')
+
+        expect { @client.getblockchaininfo }.to raise_error(BitcoinUtil::RPC::TimeOutError)
+      end
+
+      it 'does not spawn a worker thread around the HTTP request' do
+        expect(Thread).not_to receive(:new)
+        expect(@client.client).to receive(:request).with('getblockchaininfo', timeout: 30).and_return({})
+
         @client.getblockchaininfo
       end
     end
@@ -47,17 +62,17 @@ describe BitcoinClient do
 
     describe 'getblock' do
       it 'getblocks rpc method with hash' do
-        expect(@client).to receive(:request).with('getblock', 'hash', 1)
+        expect(@client).to receive(:request).with('getblock', 'hash', 1, timeout: 30)
         @client.getblock('hash', :summary)
       end
 
       it 'uses summary when verbosity omitted' do
-        expect(@client).to receive(:request).with('getblock', 'hash', 1)
+        expect(@client).to receive(:request).with('getblock', 'hash', 1, timeout: 30)
         @client.getblock('hash')
       end
 
       it 'translates transactions mode to numeric verbosity for modern nodes' do
-        expect(@client).to receive(:request).with('getblock', 'hash', 2)
+        expect(@client).to receive(:request).with('getblock', 'hash', 2, timeout: 30)
         @client.getblock('hash', :transactions)
       end
 
@@ -92,12 +107,12 @@ describe BitcoinClient do
         end
 
         it 'omits verbosity argument when requesting verbose block data' do
-          expect(@legacy_client).to receive(:request).with('getblock', 'hash')
+          expect(@legacy_client).to receive(:request).with('getblock', 'hash', timeout: 30)
           @legacy_client.getblock('hash', :summary)
         end
 
         it 'passes false explicitly when requesting raw block data' do
-          expect(@legacy_client).to receive(:request).with('getblock', 'hash', false)
+          expect(@legacy_client).to receive(:request).with('getblock', 'hash', false, timeout: 30)
           @legacy_client.getblock('hash', :raw)
         end
       end
@@ -112,7 +127,7 @@ describe BitcoinClient do
 
     describe 'getmempoolinfo' do
       it 'calls getmempoolinfo rpc method' do
-        expect(@client).to receive(:request).with('getmempoolinfo')
+        expect(@client).to receive(:request).with('getmempoolinfo', timeout: 30)
         @client.getmempoolinfo
       end
     end

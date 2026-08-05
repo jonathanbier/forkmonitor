@@ -152,7 +152,7 @@ class BitcoinClient
       @socket_uri = "tcp://#{rpchost}:#{rpcport}"
       zmq_connect
     else
-      @client = Bitcoiner.new(rpcuser, rpcpassword, "#{rpchost}:#{rpcport}")
+      @client = BoundedBitcoinerClient.new(rpcuser, rpcpassword, "#{rpchost}:#{rpcport}")
     end
     @node_id = node_id
     @name_with_version = name_with_version
@@ -203,9 +203,7 @@ class BitcoinClient
   end
 
   def getnetworkinfo
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getnetworkinfo') }.value
-    end
+    request('getnetworkinfo', timeout: 30)
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getnetworkinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
@@ -238,20 +236,13 @@ class BitcoinClient
   end
 
   def getinfo
-    # TODO: patch https://github.com/NARKOZ/bitcoiner (which uses https://github.com/typhoeus/typhoeus)
-    # to check for timeout.
-    # See also: https://adamhooper.medium.com/in-ruby-dont-use-timeout-77d9d4e5a001
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getinfo') }.value
-    end
+    request('getinfo', timeout: 30)
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
 
   def getblockchaininfo
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getblockchaininfo') }.value
-    end
+    request('getblockchaininfo', timeout: 30)
   rescue JSON::ParserError
     raise BitcoinUtil::RPC::Error, "getblockchaininfo failed to parse JSON for #{@name_with_version} (id=#{@node_id}): " + e.message
   rescue Bitcoiner::Client::JSONRPCError => e
@@ -259,9 +250,7 @@ class BitcoinClient
   end
 
   def getblockhash(height)
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getblockhash', height) }.value
-    end
+    request('getblockhash', height, timeout: 30)
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getblockhash #{height} failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
@@ -276,14 +265,9 @@ class BitcoinClient
     normalized = getblock_verbosity_resolver.normalize(verbosity)
     raw_verbose = normalized.raw_verbose
 
-    Timeout.timeout(timeout, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new do
-        rpc_args = ['getblock', hash]
-        rpc_args << normalized.rpc_value unless normalized.omit_argument
-
-        request(*rpc_args)
-      end.value
-    end
+    rpc_args = ['getblock', hash]
+    rpc_args << normalized.rpc_value unless normalized.omit_argument
+    request(*rpc_args, timeout: timeout)
   rescue BitcoinUtil::RPC::TimeOutError
     raise BitcoinUtil::RPC::TimeOutError,
           "getblock(#{hash},#{raw_verbose}) timed out for #{@name_with_version} (id=#{@node_id})"
@@ -356,9 +340,7 @@ class BitcoinClient
   end
 
   def getchaintips
-    Timeout.timeout(120, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getchaintips') }.value
-    end
+    request('getchaintips', timeout: 120)
   rescue BitcoinUtil::RPC::TimeOutError
     raise BitcoinUtil::RPC::TimeOutError, "getchaintips timed out for #{@name_with_version} (id=#{@node_id})"
   rescue Bitcoiner::Client::JSONRPCError => e
@@ -366,9 +348,7 @@ class BitcoinClient
   end
 
   def getdeploymentinfo
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getdeploymentinfo') }.value
-    end
+    request('getdeploymentinfo', timeout: 30)
   rescue JSON::ParserError
     raise BitcoinUtil::RPC::Error, "getdeploymentinfo failed to parse JSON for #{@name_with_version} (id=#{@node_id}): " + e.message
   rescue Bitcoiner::Client::JSONRPCError => e
@@ -382,9 +362,7 @@ class BitcoinClient
   end
 
   def getmempoolinfo
-    Timeout.timeout(30, BitcoinUtil::RPC::TimeOutError) do
-      Thread.new { request('getmempoolinfo') }.value
-    end
+    request('getmempoolinfo', timeout: 30)
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getmempoolinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end
@@ -448,12 +426,12 @@ class BitcoinClient
     @getblock_verbosity_resolver ||= GetBlockVerbosityResolver.new(client_type: @client_type, client_version: @client_version)
   end
 
-  def request(*args)
+  def request(*args, timeout: nil)
     Rails.logger.info("RPC #{args.collect do |arg|
                                arg.instance_of?(String) ? arg.truncate(100) : arg
                              end.join(' ')} on #{@name_with_version} (id=#{@node_id})")
     begin
-      @client.request(*args)
+      @client.request(*args, timeout: timeout)
     rescue Bitcoiner::Client::JSONRPCError => e
       raise BitcoinUtil::RPC::MethodNotFoundError if e.message.include?('Method not found')
       raise BitcoinUtil::RPC::TimeOutError if e.message.include?('operation_timedout')
