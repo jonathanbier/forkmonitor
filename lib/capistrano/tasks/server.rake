@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+task :install_rake_launcher do
+  on 'forkmonitor' do
+    execute :install, '-m', '0755', "#{current_path}/deploy/home/forkmonitor/rake.sh", '/home/forkmonitor/rake.sh'
+  end
+end
+
 task :restart_rake_tasks do
   on 'forkmonitor' do
     execute 'if pgrep rake; then pkill rake; fi'

@@ -55,6 +55,8 @@ On the server, ruby is installed using rbenv. Env vars are set in [.rbenv-vars](
 
 In order for cron jobs to run rake tasks and play nicely with rbenv, it's a bit clunky.
 See rake.sh in home directory.
+The launcher raises the soft file-descriptor limit to 8192 by default. Set
+`FORKMONITOR_NOFILE_LIMIT` to override it.
 
 User `crontab`:
 ```
