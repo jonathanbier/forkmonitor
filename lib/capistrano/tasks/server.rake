@@ -8,9 +8,10 @@ end
 
 task :restart_rake_tasks do
   on 'forkmonitor' do
-    execute 'if pgrep rake; then pkill rake; fi'
+    rake_task_pattern = '[r]ake nodes:(poll_repeat|heavy_checks_repeat|rollback_checks_repeat)'
+    execute "if pgrep -f '#{rake_task_pattern}'; then pkill -TERM -f '#{rake_task_pattern}'; fi"
     sleep 10
-    execute 'if pgrep rake; then pkill -9 rake; fi'
+    execute "if pgrep -f '#{rake_task_pattern}'; then pkill -KILL -f '#{rake_task_pattern}'; fi"
   end
 end
 
