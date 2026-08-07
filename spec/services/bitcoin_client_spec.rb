@@ -132,6 +132,13 @@ describe BitcoinClient do
       end
     end
 
+    describe 'getindexinfo' do
+      it 'calls getindexinfo with a timeout' do
+        expect(@client).to receive(:request).with('getindexinfo', timeout: 30)
+        @client.getindexinfo
+      end
+    end
+
     describe 'gettxoutsetinfo' do
       it 'calls gettxoutsetinfo rpc method' do
         expect(@client).to receive(:request).with('gettxoutsetinfo')

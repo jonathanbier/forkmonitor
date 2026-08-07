@@ -356,7 +356,7 @@ class BitcoinClient
   end
 
   def getindexinfo
-    request('getindexinfo')
+    request('getindexinfo', timeout: 30)
   rescue Bitcoiner::Client::JSONRPCError => e
     raise BitcoinUtil::RPC::Error, "getindexinfo failed for #{@name_with_version} (id=#{@node_id}): " + e.message
   end

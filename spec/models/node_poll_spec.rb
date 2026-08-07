@@ -90,6 +90,18 @@ RSpec.describe Node do
           expect(@node.version).to eq(2_000_000)
         end
       end
+
+      it 'continues polling when index status times out' do
+        node = build(:node, txindex: true, coinstatsindex: true)
+        node.client.mock_version(230_000)
+        allow(node.client).to receive(:getindexinfo).and_raise(BitcoinUtil::RPC::TimeOutError)
+        allow(described_class).to receive('set_pool_for_block!').and_return(nil)
+
+        expect { node.poll! }.not_to raise_error
+        expect(node.polled_at).not_to be_nil
+        expect(node.txindex).to be(true)
+        expect(node.coinstatsindex).to be(true)
+      end
     end
 
     describe 'on subsequent runs' do
