@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require_relative '../smtp_settings'
+
 Rails.application.configure do
   # Verifies that versions and hashed value of the package contents in the project's package.json
   config.webpacker.check_yarn_integrity = false
@@ -19,15 +21,7 @@ Rails.application.configure do
   config.action_mailer.delivery_method = :smtp
   config.action_controller.perform_caching = true
 
-  ActionMailer::Base.smtp_settings = {
-    user_name: ENV.fetch('SENDGRID_USERNAME', nil),
-    password: ENV.fetch('SENDGRID_PASSWORD', nil),
-    domain: 'forkmonitor.info',
-    address: 'smtp.sendgrid.net',
-    port: 587,
-    authentication: :plain,
-    enable_starttls_auto: true
-  }
+  ActionMailer::Base.smtp_settings = SmtpSettings.from_env(ENV)
 
   # Ensures that a master key has been made available in either ENV["RAILS_MASTER_KEY"]
   # or in config/master.key. This key is used to decrypt credentials (and other encrypted files).
@@ -85,8 +79,6 @@ Rails.application.configure do
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
-
-  ActionMailer::Base.smtp_settings[:domain] = 'forkmonitor.info'
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).

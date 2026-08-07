@@ -3,6 +3,11 @@
 require 'rails_helper'
 
 RSpec.describe UserMailer do
+  it 'sends from the Fork Monitor .info domain' do
+    expect(described_class.default[:from]).to eq('info@forkmonitor.info')
+    expect(Devise.mailer_sender).to eq('info@forkmonitor.info')
+  end
+
   describe 'lag notify' do
     let(:user) { create(:user) }
     let(:lag) { create(:lag) }
