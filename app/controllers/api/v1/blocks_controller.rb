@@ -9,7 +9,7 @@ module Api
       def index
         respond_to do |format|
           format.json do
-            @range = JSON.parse(params['range'])
+            @range = JSON.parse(params.fetch('range', '[0,10]'))
             @offset = @range[0]
             @limit = @range[1]
             @blocks = Block.order(height: :desc).offset(@offset).limit(@limit)

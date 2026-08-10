@@ -14,6 +14,12 @@ RSpec.describe Api::V1::BlocksController do
       expect(response_body.length).to eq 1
     end
 
+    it 'uses default pagination when range is omitted' do
+      get :index, format: :json
+      expect(response).to have_http_status :ok
+      expect(response_body.length).to eq 1
+    end
+
     it 'paginates blocks' do
       get :index, format: :json, params: { range: '[10,20]' }
       expect(response).to have_http_status :ok
