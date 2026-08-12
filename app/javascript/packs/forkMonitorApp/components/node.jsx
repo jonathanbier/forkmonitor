@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import Moment from 'react-moment';
+import 'moment-timezone';
 
 import {
     BreadcrumbItem,
@@ -33,6 +34,27 @@ class Node extends React.Component {
           <NodeBehind chaintip={ this.props.chaintip } node={ this.props.node } />
         </td>
         <td align="right">
+          { this.props.chaintip && this.props.chaintip.block && this.props.node.block_first_seen_at &&
+            (() => {
+              const times = this.props.chaintip.nodes
+                .map(n => n.block_first_seen_at)
+                .filter(Boolean)
+                .map(t => new Date(t).getTime());
+              const minTime = Math.min(...times);
+              const maxTime = Math.max(...times);
+              const myTime = new Date(this.props.node.block_first_seen_at).getTime();
+              let color = 'black';
+              if (times.length > 1) {
+                if (myTime === minTime) color = 'green';
+                else if (myTime === maxTime) color = 'red';
+              }
+              return (
+                <span style={{ color }}>
+                  First seen: <Moment format="HH:mm:ss" tz="UTC">{ this.props.node.block_first_seen_at }</Moment> UTC
+                </span>
+              );
+            })()
+          }
           { this.props.node.has_mirror_node &&
             <NodeInflation
               node={ this.props.node }

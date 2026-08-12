@@ -29,6 +29,7 @@ class Block < ApplicationRecord
   has_many :sweep_transactions, dependent: :destroy
   has_many :transactions, dependent: :destroy
   has_many :chaintips, dependent: :destroy
+  has_many :node_blocks, dependent: :destroy
 
   # Used to trigger and restore reorgs on the mirror node
   attr_accessor :invalidated_block_hashes
@@ -491,6 +492,9 @@ class Block < ApplicationRecord
         first_seen_by: node,
         headers_only: false
       )
+      NodeBlock.find_or_create_by(node: node, block: block) do |nb|
+        nb.first_seen_at = Time.current
+      end
       if mark_valid.present?
         if mark_valid == true
           block.update marked_valid_by: [node.id]
@@ -518,6 +522,9 @@ class Block < ApplicationRecord
           first_seen_by: node,
           tx_count: nil
         )
+        NodeBlock.find_or_create_by(node: node, block: block) do |nb|
+          nb.first_seen_at = Time.current
+        end
         # Fetch headers
         block.fetch_header!(node)
         # TODO: connect longer branches to common ancestor (fetch more headers if needed)

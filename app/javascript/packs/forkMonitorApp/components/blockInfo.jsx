@@ -18,8 +18,6 @@ class BlockInfo extends React.Component {
         <br/>
         Miner timestamp: <Moment format="YYYY-MM-DD HH:mm:ss" tz="UTC" parse="X">{this.props.block.timestamp}</Moment> UTC
         <br/>
-        First seen: <Moment format="HH:mm:ss" tz="UTC">{this.props.block.created_at}</Moment> UTC
-        <br/>
         { this.props.block.pool &&
           <span>
             Mined by: { this.props.block.pool }
