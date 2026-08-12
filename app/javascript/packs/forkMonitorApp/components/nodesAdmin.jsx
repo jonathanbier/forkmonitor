@@ -27,6 +27,22 @@ const client_choices = [
     { id: "bu", name: "Bitcoin Unlimited"},
 ];
 
+const country_choices = [
+    { id: "US", name: "United States" },
+    { id: "DE", name: "Germany" },
+    { id: "UK", name: "United Kingdom" },
+    { id: "FI", name: "Finland" },
+    { id: "SG", name: "Singapore" },
+    { id: "JP", name: "Japan" },
+    { id: "QA", name: "Qatar" },
+    { id: "CA", name: "Canada" },
+    { id: "CH", name: "Chile" },
+    { id: "FR", name: "France" },
+    // Add more countries as needed
+];
+
+
+
 export const NodeList = props => (
     <List {...props}
         sort={{ field: "id"}}
@@ -57,6 +73,8 @@ export const NodeEdit = props => (
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />
             <BooleanInput source="txindex" />
+            <SelectInput source="country" choices={country_choices} />
+            <TextInput source="sponsor_name" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
@@ -85,6 +103,8 @@ export const NodeCreate = props => (
             <TextInput source="rpcpassword" />
             <BooleanInput source="pruned" />
             <BooleanInput source="txindex" />
+            <SelectInput source="country" choices={country_choices} />
+            <TextInput source="sponsor_name" />
             <TextInput source="os" />
             <TextInput source="cpu" />
             <NumberInput source="ram" />
